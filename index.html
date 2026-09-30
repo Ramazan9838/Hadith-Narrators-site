@@ -1069,9 +1069,12 @@ async function ortakSync(manual) {
       if (ORTAK.logNew) { ORTAK.logNew = false; if (S.view === 'settings') renderLog(); }
       if (manual) toast(r.pushed || r.changed.length ? 'Ortak kayıt eşitlendi: ' + r.pushed + ' dosya gönderildi, ' + r.changed.length + ' kayıt alındı' + (r.conflicts ? ' · ' + r.conflicts + ' çakışmada son değişiklik alındı' : '') + '.' : 'Ortak kayıt güncel.');
     } catch (e) { ORTAK.err = e.message || String(e); if (manual) toast('Ortak kayıt: ' + ORTAK.err, true); }
+  })().finally(() => {
+    ORTAK.busy = null;
     renderOrtakChip();
     if (S.view === 'settings' && $('or-state')) $('or-state').innerHTML = ortakStateText();
-  })().finally(() => { ORTAK.busy = null; if (ORTAK.again) { ORTAK.again = false; ortakSchedule(1500); } });
+    if (ORTAK.again) { ORTAK.again = false; ortakSchedule(1500); }
+  });
   return ORTAK.busy;
 }
 function ortakSchedule(ms) { const c = ortakCfg(); if (!c || c.auto === false) return; clearTimeout(ORTAK.timer); ORTAK.timer = setTimeout(() => ortakSync(), ms === undefined ? 4000 : ms); }
@@ -1172,10 +1175,12 @@ async function hesapYayinla() {
       if (HESAP.note) { toast('Yayına gönderilemedi: ' + HESAP.err + ' Değişiklik bu tarayıcıda geçerli; biraz sonra yeniden denenecek.', true); HESAP.note = ''; }
     }
     if (pulled) applyUser();
-    if (S.view === 'settings') { if (pulled && !ortakEditing()) renderSettings(); else if ($('or-hesap')) $('or-hesap').innerHTML = hesapStateText(); }
+    HESAP.pulled = pulled;
     return !HESAP.err;
   })().finally(() => {
     HESAP.busy = null;
+    if (S.view === 'settings') { if (HESAP.pulled && !ortakEditing()) renderSettings(); else if ($('or-hesap')) $('or-hesap').innerHTML = hesapStateText(); }
+    HESAP.pulled = false;
     if (HESAP.again) { HESAP.again = false; HESAP.timer = setTimeout(hesapYayinla, 800); }
     else if (HESAP.err) HESAP.timer = setTimeout(hesapYayinla, 60000);
   });
