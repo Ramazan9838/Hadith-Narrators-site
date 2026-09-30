@@ -592,6 +592,8 @@ body.resizing { user-select: none; } body.resizing-x, body.resizing-x * { cursor
 .tag.ok { color: var(--ok); border-color: currentColor; }
 .diffv { display: grid; gap: 4px; margin-top: 4px; }
 .dtext { font-size: 16px; line-height: 1.7; }
+.diffv .dtext { white-space: pre-wrap; }
+.delst { margin: 4px 0; }
 .dtext del { color: var(--bad); text-decoration: line-through; background: rgba(227, 73, 72, .08); }
 .dtext ins { color: var(--ok); text-decoration: none; background: rgba(15, 122, 58, .1); border-radius: 2px; }
 .confed { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 16px; }
@@ -797,6 +799,8 @@ for (const n of NARR) {
 for (const s of ALL) { STBY[s.uid] = s; applyFix(s); }
 refreshAdded(); ANALYSIS_MS = Math.round(performance.now() - t0); LEX = null; LEXC = null; recomputeAgg();
 }
+function stUid(b, s) { return (s.implicit ? 'z' : '') + b.id + ':' + s.start + ':' + s.end + ':' + (s.critic || s.critic_written || '-'); }
+function blockOpts(b, n) { return { sourceName: b.effective.source_name, sourceAuthor: b.effective.source_author, narratorNames: n._names, blockId: b.id, narratorId: n.id }; }
 // Bir râvinin bütün kaynak bloklarını CTX ile çözümler (genel duruma dokunmaz)
 function analyzeNarrator(n, R) {
   R = R || REV || {};
@@ -805,11 +809,15 @@ function analyzeNarrator(n, R) {
   for (const b of n.blocks) {
     applyBlockFix(b, R);
     b._n = n;
-    b._text = b.raw_text.slice(b.content_start);
+    const tx = R.txt && R.txt[b.id];
+    b._otext = b.raw_text.slice(b.content_start);                                    // özgün metin (değişmez)
+    b._text = tx && typeof tx.text === 'string' ? tx.text : b._otext;                // araştırmacı düzeltmesi varsa o
     b._title = b.raw_text.slice(0, b.content_start).replace(/[‌​]/g, '').replace(/^\s*•\s*/, '').trim();
-    const r = CTX.analyze(b._text, { sourceName: b.effective.source_name, sourceAuthor: b.effective.source_author, narratorNames: n._names, blockId: b.id, narratorId: n.id });
+    const r = CTX.analyze(b._text, blockOpts(b, n));
     b._notes = r.notes; b._markers = r.markers;
-    b._st = r.statements.map(s => { s.uid = (s.implicit ? 'z' : '') + b.id + ':' + s.start + ':' + s.end + ':' + (s.critic || s.critic_written || '-'); s.b = b; s.n = n; s.origin = 'CTX'; return s; });
+    const all = r.statements.map(s => { s.uid = stUid(b, s); s.b = b; s.n = n; s.origin = 'CTX'; return s; });
+    const gone = s => !!(R.st && R.st[s.uid] && R.st[s.uid].v === 'del');       // kaldırılan hüküm: listelerden ve sayımdan çıkar
+    b._st = all.filter(s => !gone(s)); b._del = all.filter(gone);
     // Kaynak künyesi (son köşeli parantez) — görüntüde soluk
     const ri = b._text.lastIndexOf('[');
     b._refStart = ri > 0 && b._text.length - ri < 160 ? ri : b._text.length;
@@ -963,7 +971,7 @@ const IDB = KASA.db;
 /* ---------- Hareket kaydı (kim, ne zaman, neyi değiştirdi) ----------
    Her değişiklik IndexedDB 'hareket' deposuna eklenir; kayıtlar silinmez, yalnız dışa aktarılır. */
 const LOGMEM = [];   // depo kullanılamazsa bu oturumdaki kayıtlar
-const ACT_TR = { 'giriş': 'Giriş', 'çıkış': 'Çıkış', 'giriş-hatası': 'Hatalı giriş', 'hüküm-karar': 'Hüküm kararı', 'hüküm-ekle': 'Eksik hüküm eklendi', 'hüküm-sil': 'Eklenen hüküm silindi', 'hüküm-düzelt': 'Hüküm düzeltildi', 'râvi-durum': 'Râvi durumu', 'râvi-not': 'Râvi inceleme notu', 'not': 'Araştırmacı notu', 'kimlik': 'Kimlik bilgisi', 'künye': 'Kaynak künyesi', 'teâruz': 'Teâruz çözümü', 'paket-tamamla': 'Paket tamamlandı', 'cilt-ekle': 'Cilt eklendi', 'cilt-sil': 'Cilt silindi', 'içe-aktar': 'İçe aktarım', 'dışa-aktar': 'Dışa aktarım', 'kasa': 'Şifreleme (kasa)', 'kullanıcı': 'Kullanıcı yönetimi', 'parola': 'Parola değişikliği', 'ortak': 'Ortak kayıt' };
+const ACT_TR = { 'giriş': 'Giriş', 'çıkış': 'Çıkış', 'giriş-hatası': 'Hatalı giriş', 'hüküm-karar': 'Hüküm kararı', 'hüküm-ekle': 'Eksik hüküm eklendi', 'hüküm-sil': 'Eklenen hüküm silindi', 'hüküm-düzelt': 'Hüküm düzeltildi', 'râvi-durum': 'Râvi durumu', 'râvi-not': 'Râvi inceleme notu', 'not': 'Araştırmacı notu', 'kimlik': 'Kimlik bilgisi', 'künye': 'Kaynak künyesi', 'teâruz': 'Teâruz çözümü', 'paket-tamamla': 'Paket tamamlandı', 'cilt-ekle': 'Cilt eklendi', 'cilt-sil': 'Cilt silindi', 'içe-aktar': 'İçe aktarım', 'dışa-aktar': 'Dışa aktarım', 'kasa': 'Şifreleme (kasa)', 'kullanıcı': 'Kullanıcı yönetimi', 'parola': 'Parola değişikliği', 'ortak': 'Ortak kayıt', 'metin': 'Kaynak metni düzeltme', 'hüküm-kaldır': 'Hüküm kaldırıldı', 'hüküm-geri': 'Kaldırılan hüküm geri alındı', 'paket-aç': 'Paket yeniden açıldı' };
 function logAct(act, summary, o) {
   const u = AUTH.me();
   const rec = Object.assign({ rid: 'r' + [...crypto.getRandomValues(new Uint8Array(8))].map(x => x.toString(16).padStart(2, '0')).join(''), at: new Date().toISOString(), user: u ? u.username : '—', name: u ? u.name : '', role: u ? u.role : '', act, summary: summary || '', pkg: PK ? PK.id : '' }, o || {});
@@ -999,7 +1007,8 @@ function ortakLabel(key) { const p = PKGS.find(x => rkeyOf(x) === key); return p
 function ortakApply(key, v) {
   const old = key === RKEY ? REV : store.get(key, null);
   store.set(key, v);
-  if (JSON.stringify((old && old.blk) || {}) !== JSON.stringify(v.blk || {})) store.set(key + ':blkv', store.get(key + ':blkv', 0) + 1);
+  const sig = R => JSON.stringify([(R && R.blk) || {}, (R && R.txt) || {}, Object.keys((R && R.st) || {}).filter(k => R.st[k] && R.st[k].v === 'del').sort()]);
+  if (sig(old) !== sig(v)) store.set(key + ':blkv', store.get(key + ':blkv', 0) + 1);
   if (key === RKEY) { loadRev(); ORTAK.cur = true; }   // yeni düzenlemeler hemen birleşmiş kayda yazılsın
   else { const p = PKGS.find(x => rkeyOf(x) === key); if (p && typeof HYD !== 'undefined') HYD.delete(p.id); }
 }
@@ -1302,7 +1311,7 @@ function renderPackages() {
     PKGS.map(p => {
       const d = PST.done[p.id]; const pr = pkgProgress(p); const cur = p === PK;
       const st = d ? '<span class="tag" style="color:var(--ok)">✓ Tamamlandı · ' + esc(new Date(d.at).toLocaleDateString('tr-TR')) + '</span>' : cur ? '<span class="tag warn">Açık</span>' : pr.done ? '<span class="tag">Sürüyor</span>' : '<span class="tag">Bekliyor</span>';
-      return '<tr style="cursor:default" aria-current="' + cur + '"><td><b>' + esc(pkgLabel(p, true)) + '</b><div class="small muted">Cilt ' + p.vol + '</div></td><td>' + p.from + '–' + p.to + ' <span class="muted small">(' + p.count + ')</span></td><td class="small">' + (p.kind === 'snapshot' ? 'Gömülü anlık görüntü (SQLite)' : esc((VOLS[p.vol] || {}).name || '')) + '</td><td>' + st + '</td><td class="num">' + pr.done + ' / ' + p.count + '</td><td style="white-space:nowrap">' + (cur ? '' : '<button class="btn sm" data-openpkg="' + p.id + '">Aç</button> ') + (d ? '<button class="btn ghost sm" data-arch="' + p.id + '">Arşiv</button>' : '') + '</td></tr>';
+      return '<tr style="cursor:default" aria-current="' + cur + '"><td><b>' + esc(pkgLabel(p, true)) + '</b><div class="small muted">Cilt ' + p.vol + '</div></td><td>' + p.from + '–' + p.to + ' <span class="muted small">(' + p.count + ')</span></td><td class="small">' + (p.kind === 'snapshot' ? 'Gömülü anlık görüntü (SQLite)' : esc((VOLS[p.vol] || {}).name || '')) + '</td><td>' + st + '</td><td class="num">' + pr.done + ' / ' + p.count + '</td><td style="white-space:nowrap">' + (cur ? '' : '<button class="btn sm" data-openpkg="' + p.id + '">Aç</button> ') + (d ? '<button class="btn ghost sm" data-arch="' + p.id + '">Arşiv</button>' + (AUTH.can('reopen') ? ' <button class="btn ghost sm" data-reopen="' + p.id + '">Yeniden aç</button>' : '') : '') + '</td></tr>';
     }).join('') + '</tbody></table></div>';
   if (!vols.length) out += '<div class="note info" style="margin-top:14px">Sonraki paketler için ham cilt dosyalarınızı yükleyin. 1. cilt yüklenince 51. râviden itibaren 50’şer paketler oluşur; diğer ciltler 1. paketten başlar.</div>';
   el.innerHTML = out;
@@ -1563,9 +1572,9 @@ function renderSourceTab(n) {
     out += '<article class="blk' + (selBlock === b.id ? ' active' : '') + '" id="blk-' + b.id + '" data-block="' + b.id + '">' +
       '<header class="blk-head"><span class="bno">BLOK ' + b.block_order + '</span><span class="bwork">' + esc(srcShort(b)) + '</span>' +
       '<span class="bauthor">' + esc(authorTr(b)) + '</span><span class="bloc">' + esc(b.effective.source_locator || '') + ' · s. ' + b.effective.page + (b.effective.page_end !== b.effective.page ? '–' + b.effective.page_end : '') + '</span>' +
-      '<span class="bcounts">' + Object.keys(byK).sort((x, y) => KSTACK.indexOf(x) - KSTACK.indexOf(y)).map(k => kindTag(k, KNAME[k] + ' ' + byK[k])).join('') + '<button class="btn ghost sm" data-blockinfo="' + b.id + '" title="Blok künyesi ve geçmişi">ⓘ</button></span></header>' +
+      '<span class="bcounts">' + (REV.txt && REV.txt[b.id] ? '<span class="tag" title="Metin düzeltildi · ' + esc((REV.txt[b.id].by_name || REV.txt[b.id].by || '')) + '">✎ düzeltilmiş metin</span>' : '') + Object.keys(byK).sort((x, y) => KSTACK.indexOf(x) - KSTACK.indexOf(y)).map(k => kindTag(k, KNAME[k] + ' ' + byK[k])).join('') + '<button class="btn ghost sm" data-blockinfo="' + b.id + '" title="Blok künyesi, metin düzeltme ve geçmiş">ⓘ</button></span></header>' +
       '<div class="btext" data-text="' + b.id + '">' + renderText(b._text, sts, { markers: b._markers, notes: b._notes, old: UI.showOld ? b.evaluations : [], refStart: b._refStart, hl: S.hl && S.hl.block === b.id ? S.hl : null }) + '</div>' +
-      '<footer class="blk-foot">' + (sts.length ? sts.map(stChip).join('') : '<span class="empty">Bu blokta hüküm lafzı tespit edilmedi.</span>') + '</footer></article>';
+      '<footer class="blk-foot">' + (sts.length ? sts.map(stChip).join('') : '<span class="empty">Bu blokta hüküm lafzı tespit edilmedi.</span>') + ((b._del || []).length ? '<button class="btn ghost sm" data-blockinfo="' + b.id + '" title="Kaldırılan hükümleri gör / geri al">🗑 ' + b._del.length + ' kaldırılan</button>' : '') + '</footer></article>';
   }
   return out + (n.footnotes.length ? '<div class="blk"><header class="blk-head"><span class="bno">DİPNOT</span></header>' + n.footnotes.map(f => '<div class="btext">' + esc(f.raw_text.replace(/‌/g, '')) + '</div>').join('') + '</div>' : '') + '</div>';
 }
@@ -1869,7 +1878,7 @@ function inspStatement(s) {
   out += '<div class="sec"><h4>Eski ayrıştırıcı</h4>' + (olds.length ? olds.map(ev => '<div class="hint">' + esc(ev.effective.evaluation_type) + (ev.effective.critic_standard_name ? ' · ' + esc(ev.effective.critic_standard_name) : ' · münekkit yok') + ' · güven ' + ev.confidence + (ev.effective.evaluation_type === eType(s) ? ' <span style="color:var(--ok)">(tür uyuşuyor)</span>' : ' <span style="color:var(--warn)">(tür farklı)</span>') + '</div>').join('') : '<div class="hint">Eski ayrıştırıcı bu lafzı yakalamamıştı.</div>') + '</div>';
   out += notesSection('s:' + s.uid, 'Araştırmacı notları · bu hüküm');
   out += '<div class="sec"><h4>İnceleme</h4>' + (r.v ? '<div class="hint" style="margin-bottom:6px">Son karar: <b>' + ({ ok: '✓ Doğru', no: '✗ Yanlış', fix: '✎ Düzeltildi' }[r.v] || r.v) + '</b>' + (r.at ? ' · ' + whoWhen(r) : '') + '</div>' : '') + '<div class="review-row req-edit">' +
-    '<button class="btn okb" data-rev="ok" aria-pressed="' + (r.v === 'ok') + '" title="Kısayol: A">✓ Doğru</button><button class="btn nob" data-rev="no" aria-pressed="' + (r.v === 'no') + '" title="Kısayol: X">✗ Yanlış</button><button class="btn" data-rev="fix" aria-pressed="' + (r.v === 'fix') + '" title="Kısayol: E">✎ Düzelt</button>' + (r.v ? '<button class="btn ghost" data-rev="clear">Sıfırla</button>' : '') + '</div>' +
+    '<button class="btn okb" data-rev="ok" aria-pressed="' + (r.v === 'ok') + '" title="Kısayol: A">✓ Doğru</button><button class="btn nob" data-rev="no" aria-pressed="' + (r.v === 'no') + '" title="Kısayol: X">✗ Yanlış</button><button class="btn" data-rev="fix" aria-pressed="' + (r.v === 'fix') + '" title="Kısayol: E">✎ Düzelt</button>' + (r.v ? '<button class="btn ghost" data-rev="clear">Sıfırla</button>' : '') + (AUTH.can('st-del') && s.origin === 'CTX' ? '<button class="btn ghost" data-rev="del" title="Hükmü listeden kaldır (geri alınabilir)">🗑 Kaldır</button>' : '') + '</div>' +
     (r.v === 'fix' || S.editing ? fixForm(s, r) : '') + (r.note && r.v !== 'fix' ? '<div class="hint">Not: ' + esc(r.note) + '</div>' : '') +
     (s.origin === 'user' ? '<div style="margin-top:8px"><button class="btn sm" data-del-added="' + esc(s.uid) + '">Eklemeyi sil</button></div>' : '') + '</div>';
   return out;
@@ -1903,7 +1912,12 @@ function inspBlock(b) {
   const bo = REV.blk && REV.blk[b.id];
   const edit = S.bedit === b.id ? '<form class="fixform" data-bsave="' + b.id + '"><label>Eser adı<input name="source_name" dir="rtl" class="ar" value="' + esc(b.effective.source_name) + '"></label><label>Müellif<input name="source_author" dir="rtl" class="ar" value="' + esc(b.effective.source_author || '') + '"></label><label>Yer (cilt/sayfa, tercüme no)<input name="source_locator" dir="auto" value="' + esc(b.effective.source_locator || '') + '"></label><div class="hint">Eser adı değişirse bu râvinin hükümleri eserin geleneğine göre yeniden çözümlenir (atıfsız hükmün sahibi).</div><div class="review-row"><button class="btn primary sm">Kaydet</button><button class="btn ghost sm" type="button" data-bcancel>Vazgeç</button>' + (bo ? '<button class="btn ghost sm" type="button" data-breset="' + b.id + '">Özgün künyeye dön</button>' : '') + '</div></form>'
     : '<div class="review-row req-edit" style="margin:6px 0"><button class="btn sm" data-bedit="' + b.id + '">✎ Künyeyi düzelt</button>' + (bo ? '<span class="small muted">düzeltildi · ' + whoWhen(bo) + '</span>' : '') + '</div>';
-  return '<div class="kicker">Blok ' + b.block_order + ' · #' + b.id + '</div><div class="phrase k-d" style="font-size:20px">' + esc(srcShort(b)) + '</div>' + edit + '<dl class="kv">' +
+  const tx = REV.txt && REV.txt[b.id];
+  const tbox = S.tedit === b.id ? '<form class="fixform" data-tsave="' + b.id + '"><label>Blok metni<textarea name="text" rows="12" dir="rtl" class="ar" style="font-size:18px;line-height:1.9">' + esc(b._text) + '</textarea></label><label>Düzeltme gerekçesi<input name="note" dir="auto" placeholder="ör. dizgi hatası, nüsha farkı"></label><div class="hint">Özgün metin korunur; düzeltme ayrıca kaydedilir ve geri alınabilir. Blok yeniden çözümlenir; kararlar ve notlar, lafız aynı kaldıkça yeni yerlerine taşınır.</div><div class="review-row"><button class="btn primary">Kaydet</button><button class="btn ghost" type="button" data-tcancel="1">Vazgeç</button></div></form>'
+    : '<div class="review-row" style="margin:6px 0">' + (AUTH.can('text') ? '<button class="btn sm" data-tedit="' + b.id + '">✎ Metni düzelt</button>' : '') + (tx ? '<button class="btn ghost sm" data-torig="' + b.id + '">Özgün metin</button>' + (AUTH.can('text') ? '<button class="btn ghost sm" data-treset="' + b.id + '">Özgüne dön</button>' : '') : '') + '</div>';
+  const tinfo = tx ? '<div class="note info">Metin düzeltildi · ' + whoWhen(tx) + (tx.note ? ' · ' + esc(tx.note) : '') + '</div>' : '';
+  const dels = (b._del || []).length ? '<div class="sec"><h4>Kaldırılan hükümler <span class="muted">(' + b._del.length + ')</span></h4>' + b._del.map(x => '<div class="delst"><span class="ar" style="font-size:16px">' + esc(x.phrase || '(zımnî)') + '</span> <span class="small muted">' + esc(crName(eCritic(x), x.critic_written)) + ' · kaldıran ' + whoWhen(REV.st[x.uid]) + '</span>' + (AUTH.can('st-del') ? ' <button class="btn ghost sm" data-strestore="' + esc(x.uid) + '">Geri al</button>' : '') + '</div>').join('') + '</div>' : '';
+  return '<div class="kicker">Blok ' + b.block_order + ' · #' + b.id + '</div><div class="phrase k-d" style="font-size:20px">' + esc(srcShort(b)) + '</div>' + edit + tinfo + tbox + dels + '<dl class="kv">' +
     '<dt>Müellif</dt><dd><span class="ar" style="font-size:16px">' + esc(b.effective.source_author) + '</span><div class="small muted">' + esc(authorTr(b)) + '</div></dd><dt>Yer</dt><dd>' + esc(b.effective.source_locator) + ' · el-Câmi‘ s. ' + b.effective.page + '</dd>' +
     '<dt>Râvinin kaynaktaki adı</dt><dd class="ar" style="font-size:16px">' + esc(b.effective.source_narrator_name) + '</dd>' + (b.effective.locality ? '<dt>Belde</dt><dd class="ar">' + esc(b.effective.locality) + '</dd>' : '') + '<dt>Künye metni</dt><dd class="ar" style="font-size:15px">' + esc(b.effective.reference_text) + '</dd></dl>' +
     (ae ? '<div class="sec"><h4>Eser–müellif doğrulaması</h4><div class="hint">' + esc(ae.note) + '</div>' + (ae.evidence && ae.evidence.local_text ? '<div class="ctx" style="font-size:16px">' + esc(ae.evidence.local_text.replace(/‌/g, '')) + '</div><div class="hint">' + esc(ae.evidence.local_file || '') + ' · s. ' + esc(ae.evidence.local_page || '') + '</div>' : '') + '</div>' : '') +
@@ -1934,6 +1948,98 @@ function blockChanged(id, before, after) {
   const keep = { nid: S.nid, sel: S.sel }; prepare(SNAP); S.nid = keep.nid; S.sel = keep.sel && keep.sel.type === 'block' ? keep.sel : null;
   renderAll(); toast('Künye kaydedildi; râvi yeniden çözümlendi.');
 }
+/* ---------- Kaynak metni düzeltme ----------
+   Özgün metin (b._otext) değişmez; düzeltme REV.txt[blok] = { text, at, by, note } olarak saklanır ve ortak kayda
+   gider. Metin değişince blok yeniden çözümlenir; kararlar, hüküm notları ve eklenen hükümler aynı lafza yeni
+   yerinde bağlanır (eşleşmeyen kayıt silinmez; metin geri alınırsa yeniden bağlanır). */
+function remapBlockText(b, oldText, newText) {
+  const olds = b._st.concat(b._del || []);
+  const news = CTX.analyze(newText, blockOpts(b, b._n)).statements.map(s => ({ uid: stUid(b, s), s }));
+  const L0 = oldText.length, L1 = newText.length; let p = 0, q = 0;
+  while (p < L0 && p < L1 && oldText[p] === newText[p]) p++;
+  while (q < L0 - p && q < L1 - p && oldText[L0 - 1 - q] === newText[L1 - 1 - q]) q++;
+  const mapPos = x => x <= p ? x : x >= L0 - q ? x + (L1 - L0) : null;
+  const crit = s => s.critic || s.critic_written || '-', same = (x, o) => crit(x.s) === crit(o) && !!x.s.implicit === !!o.implicit;
+  const used = new Set(), map = {}; let lost = 0;
+  for (const o of olds) {
+    const ns = mapPos(o.start), ne = mapPos(o.end);
+    let c = ns != null && ne != null ? news.find(x => !used.has(x.uid) && x.s.start === ns && x.s.end === ne && same(x, o)) : null;
+    if (!c) c = news.find(x => !used.has(x.uid) && same(x, o) && (x.s.phrase || '') === (o.phrase || ''));
+    if (c) { used.add(c.uid); if (c.uid !== o.uid) map[o.uid] = c.uid; }
+    else if (REV.st[o.uid] || (REV.notes && REV.notes['s:' + o.uid])) lost++;
+  }
+  const st = {}, nt = {};
+  for (const a of Object.keys(map)) { if (REV.st[a]) { st[a] = REV.st[a]; delete REV.st[a]; } if (REV.notes && REV.notes['s:' + a]) { nt[a] = REV.notes['s:' + a]; delete REV.notes['s:' + a]; } }
+  for (const [a, z] of Object.entries(map)) {
+    if (st[a]) { const r = st[a]; if (r.fix && r.fix.start != null) { const fs = mapPos(r.fix.start), fe = mapPos(r.fix.end); if (fs != null && fe != null) { r.fix.start = fs; r.fix.end = fe; } else { delete r.fix.start; delete r.fix.end; } } REV.st[z] = r; }
+    if (nt[a]) REV.notes['s:' + z] = nt[a];
+  }
+  for (const a of REV.added.filter(x => x.block_id === b.id)) {
+    const s0 = mapPos(a.start), e0 = mapPos(a.end);
+    if (s0 != null && e0 != null && newText.slice(s0, e0) === a.phrase) { a.start = s0; a.end = e0; continue; }
+    const i = a.phrase ? newText.indexOf(a.phrase) : -1;
+    if (i >= 0) { a.start = i; a.end = i + a.phrase.length; } else { a.start = Math.min(a.start, L1); a.end = Math.min(a.end, L1); lost++; }
+  }
+  return { moved: Object.keys(map).length, lost };
+}
+function bumpBlocks() { store.set(RKEY + ':blkv', store.get(RKEY + ':blkv', 0) + 1); }
+function saveBlockText(id, text, note) {
+  if (!need('text')) return;
+  const b = BLK[id]; if (!b) return;
+  text = String(text).replace(/\r\n?/g, '\n');
+  const oldText = b._text, orig = b._otext;
+  if (text === oldText) { S.tedit = null; renderInspector(); toast('Metin değişmedi.'); return; }
+  if (!text.trim()) { toast('Metin boş bırakılamaz.', true); return; }
+  const rm = remapBlockText(b, oldText, text);
+  REV.txt = REV.txt || {};
+  if (text === orig) delete REV.txt[id]; else REV.txt[id] = Object.assign({ text, at: new Date().toISOString(), note: note || '' }, by());
+  logAct('metin', 'Blok ' + b.block_order + ' metni ' + (text === orig ? 'özgün hâline döndürüldü' : 'düzeltildi') + (note ? ' · ' + note : '') + (rm.lost ? ' · ' + rm.lost + ' kayıt eşleşmedi' : ''), { nid: b._n.id, seq: b._n.source_sequence, before: oldText, after: text });
+  bumpBlocks(); saveRev(); S.tedit = null;
+  const nid = S.nid; prepare(SNAP); S.nid = NBYID[nid] ? nid : NARR[0].id; S.sel = { type: 'block', id }; renderAll();
+  toast((text === orig ? 'Özgün metne dönüldü' : 'Metin düzeltildi') + '; blok yeniden çözümlendi.' + (rm.lost ? ' ' + rm.lost + ' kayıt yeni metinde eşleşmedi; bu bloğun hükümlerini yeniden inceleyin.' : ''), !!rm.lost);
+}
+// Özgün ve düzeltilmiş metin: kelime düzeyinde fark
+function textDiffHTML(a, b) {
+  const A = a.split(/(\s+)/).filter(x => x !== ''), B = b.split(/(\s+)/).filter(x => x !== '');
+  if (A.length * B.length > 4e6) return '<div class="diffv"><div><span class="small muted">Özgün</span><div class="ar dtext">' + esc(a) + '</div></div><div><span class="small muted">Düzeltilmiş</span><div class="ar dtext">' + esc(b) + '</div></div></div>';
+  const m = A.length, n = B.length, L = Array.from({ length: m + 1 }, () => new Uint32Array(n + 1));
+  for (let i = m - 1; i >= 0; i--) for (let j = n - 1; j >= 0; j--) L[i][j] = A[i] === B[j] ? L[i + 1][j + 1] + 1 : Math.max(L[i + 1][j], L[i][j + 1]);
+  let i = 0, j = 0, oa = '', ob = '';
+  while (i < m && j < n) { if (A[i] === B[j]) { oa += esc(A[i]); ob += esc(B[j]); i++; j++; } else if (L[i + 1][j] >= L[i][j + 1]) { oa += /^\s+$/.test(A[i]) ? esc(A[i]) : '<del>' + esc(A[i]) + '</del>'; i++; } else { ob += /^\s+$/.test(B[j]) ? esc(B[j]) : '<ins>' + esc(B[j]) + '</ins>'; j++; } }
+  for (; i < m; i++) oa += '<del>' + esc(A[i]) + '</del>'; for (; j < n; j++) ob += '<ins>' + esc(B[j]) + '</ins>';
+  return '<div class="diffv"><div><span class="small muted">Özgün</span><div class="ar dtext">' + oa + '</div></div><div><span class="small muted">Düzeltilmiş</span><div class="ar dtext">' + ob + '</div></div></div>';
+}
+/* ---------- Motorun hükmünü kaldırma / geri alma ----------
+   REV.st[uid] = { v: 'del', prev: önceki karar } — hüküm listelerden, sayımlardan ve raporlardan çıkar; geri alınabilir. */
+function removeStatement(s) {
+  if (!need('st-del')) return;
+  if (s.origin !== 'CTX') { toast('Araştırmacı eklemesi “Eklenen hükümler” listesinden silinir.', true); return; }
+  if (!confirm('Bu hüküm listeden kaldırılsın mı? Sayımlardan ve raporlardan çıkar; blok panelindeki “Kaldırılan hükümler”den geri alınabilir.')) return;
+  const before = REV.st[s.uid] ? Object.assign({}, REV.st[s.uid]) : null, bid = s.b.id;
+  REV.st[s.uid] = Object.assign({ v: 'del', at: new Date().toISOString(), prev: before }, by());
+  logAct('hüküm-kaldır', crName(eCritic(s), s.critic_written) + ' · ' + (s.phrase || '(zımnî)'), Object.assign(stTarget(s), { before, after: REV.st[s.uid] }));
+  bumpBlocks(); saveRev(); S.editing = false;
+  prepare(SNAP); S.sel = { type: 'block', id: bid }; renderAll();
+  toast('Hüküm kaldırıldı; blok panelindeki “Kaldırılan hükümler”den geri alınabilir.');
+}
+function restoreStatement(uid) {
+  if (!need('st-del')) return;
+  const r = REV.st[uid]; if (!r || r.v !== 'del') return;
+  const bid = +String(uid).replace(/^z/, '').split(':')[0], b = BLK[bid], s = b && (b._del || []).find(x => x.uid === uid);
+  if (r.prev) REV.st[uid] = r.prev; else delete REV.st[uid];
+  logAct('hüküm-geri', (s ? crName(eCritic(s), s.critic_written) + ' · ' + (s.phrase || '(zımnî)') : uid), Object.assign(s ? stTarget(s) : { uid }, { before: r, after: REV.st[uid] || null }));
+  bumpBlocks(); saveRev();
+  prepare(SNAP); S.sel = BLK[bid] ? { type: 'block', id: bid } : null; renderAll(); toast('Hüküm geri alındı.');
+}
+// Tamamlanan paketi yeniden düzenlemeye açma (arşiv kaydı silinmez)
+function reopenPackage(id) {
+  if (!need('reopen')) return;
+  const p = PKGS.find(x => x.id === id); if (!p || !PST.done[id]) return;
+  if (!confirm(pkgLabel(p) + ' yeniden düzenlemeye açılsın mı? Tamamlanırken alınan arşiv kaydı silinmez.')) return;
+  const before = PST.done[id]; delete PST.done[id]; savePST();
+  logAct('paket-aç', pkgLabel(p) + ' yeniden açıldı', { pkg: id, before });
+  renderSourcebar(); if (S.view === 'packages') renderPackages(); toast(pkgLabel(p) + ' yeniden açıldı.');
+}
 /* ---------- Araştırmacı notları ----------
    REV.notes['n:<râvi>' | 's:<hüküm>'] = [{ id, text, at, by, by_name, edited_at }] — kişi ve zaman imzalı, birden çok not */
 const NOTE_SVG = '<svg class="nsvg" viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M3.5 1.5h6l3 3v10h-9z" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M5.5 7.5h5M5.5 10h5M5.5 12.5h3" stroke="currentColor" stroke-width="1.2"/></svg>';
@@ -1944,8 +2050,8 @@ function notesSection(key, title) {
   const list = notesOf(key); const me = AUTH.me() || {};
   return '<div class="sec notes" id="notes-' + esc(key) + '"><h4>' + NOTE_SVG + ' ' + esc(title) + (list.length ? ' <span class="muted">(' + list.length + ')</span>' : '') + '</h4>' +
     list.map(x => '<div class="note-item">' + (S.nedit === x.id ? '<textarea class="field" id="nedit-v" rows="3" dir="auto">' + esc(x.text) + '</textarea><div class="review-row"><button class="btn primary sm" data-nsave="' + esc(key) + '|' + x.id + '">Kaydet</button><button class="btn ghost sm" data-ncancel>Vazgeç</button></div>'
-      : '<div class="note-text" dir="auto">' + esc(x.text) + '</div><div class="note-meta">' + whoWhen(x) + (x.edited_at ? ' · düzenlendi ' + esc(new Date(x.edited_at).toLocaleString('tr-TR', { dateStyle: 'short', timeStyle: 'short' })) : '') +
-        ((x.by === me.username && AUTH.can('note')) || AUTH.can('users') ? ' <button class="btn ghost sm" data-nedit="' + x.id + '">Düzenle</button><button class="btn ghost sm" data-ndel="' + esc(key) + '|' + x.id + '">Sil</button>' : '') + '</div>') + '</div>').join('') +
+      : '<div class="note-text" dir="auto">' + esc(x.text) + '</div><div class="note-meta">' + whoWhen(x) + (x.edited_at ? ' · düzenlendi ' + esc(new Date(x.edited_at).toLocaleString('tr-TR', { dateStyle: 'short', timeStyle: 'short' })) + (x.edited_by && x.edited_by !== x.by ? ' (' + esc(x.edited_by_name || x.edited_by) + ')' : '') : '') +
+        ((x.by === me.username && AUTH.can('note')) || AUTH.can('note-any') ? ' <button class="btn ghost sm" data-nedit="' + x.id + '">Düzenle</button><button class="btn ghost sm" data-ndel="' + esc(key) + '|' + x.id + '">Sil</button>' : '') + '</div>') + '</div>').join('') +
     '<form class="note-add req-edit" data-nadd="' + esc(key) + '"><textarea class="field" name="t" rows="2" dir="auto" placeholder="Not ekleyin (kaynak, yorum, yapılacak iş…)"></textarea><button class="btn sm">Not ekle</button></form></div>';
 }
 function noteTarget(key) {
@@ -1982,6 +2088,7 @@ function stepStatement(d) {
 function setReview(v) {
   if (!S.sel || S.sel.type !== 'st') return;
   const s = STBY[S.sel.id]; if (!s) return;
+  if (v === 'del') { removeStatement(s); return; }
   if (v !== 'cancel' && !need('review')) return;
   const before = REV.st[s.uid] ? Object.assign({}, REV.st[s.uid]) : null;
   if (v === 'clear') delete REV.st[s.uid];
@@ -2909,11 +3016,17 @@ document.addEventListener('click', e => {
   if (t.closest('[data-ncancel]')) { S.nedit = null; renderInspector(); return; }
   const nsv = t.closest('[data-nsave],[data-ndel]'); if (nsv) {
     const [key, id] = (nsv.dataset.nsave || nsv.dataset.ndel).split('|'); const list = REV.notes[key] || []; const x = list.find(y => y.id === id); if (!x) return;
-    const me = AUTH.me() || {}; if (!((x.by === me.username && AUTH.can('note')) || AUTH.can('users'))) { need('users'); return; }
+    const me = AUTH.me() || {}; if (!((x.by === me.username && AUTH.can('note')) || AUTH.can('note-any'))) { need('note-any'); return; }
     const before = x.text;
     if (nsv.dataset.ndel) { if (!confirm('Not silinsin mi?')) return; REV.notes[key] = list.filter(y => y !== x); logAct('not', noteTarget(key).label + ' notu silindi: ' + before.slice(0, 80), Object.assign(noteTarget(key), { before })); }
-    else { x.text = $('nedit-v').value.trim(); x.edited_at = new Date().toISOString(); logAct('not', noteTarget(key).label + ' notu düzenlendi: ' + x.text.slice(0, 80), Object.assign(noteTarget(key), { before, after: x.text })); }
+    else { x.text = $('nedit-v').value.trim(); x.edited_at = new Date().toISOString(); if (x.by !== me.username) { x.edited_by = me.username; x.edited_by_name = me.name; } else { delete x.edited_by; delete x.edited_by_name; } logAct('not', noteTarget(key).label + ' notu düzenlendi: ' + x.text.slice(0, 80), Object.assign(noteTarget(key), { before, after: x.text })); }
     S.nedit = null; saveRev(); renderRail(); renderCenter(); renderInspector(); return; }
+  const te = t.closest('[data-tedit]'); if (te) { if (!need('text')) return; S.tedit = +te.dataset.tedit; renderInspector(); const f = document.querySelector('form[data-tsave] textarea'); if (f) f.focus(); return; }
+  if (t.closest('[data-tcancel]')) { S.tedit = null; renderInspector(); return; }
+  const trs = t.closest('[data-treset]'); if (trs) { if (!need('text')) return; const b = BLK[+trs.dataset.treset]; if (b && confirm('Blok ' + b.block_order + ' özgün metnine döndürülsün mü?')) saveBlockText(b.id, b._otext, ''); return; }
+  const tor = t.closest('[data-torig]'); if (tor) { const b = BLK[+tor.dataset.torig]; if (b) openDialog('Özgün ve düzeltilmiş metin · Blok ' + b.block_order, textDiffHTML(b._otext, b._text)); return; }
+  const srs = t.closest('[data-strestore]'); if (srs) { restoreStatement(srs.dataset.strestore); return; }
+  const rop = t.closest('[data-reopen]'); if (rop) { reopenPackage(rop.dataset.reopen); return; }
   const be = t.closest('[data-bedit]'); if (be) { if (!need('edit')) return; S.bedit = +be.dataset.bedit; renderInspector(); return; }
   if (t.closest('[data-bcancel]')) { S.bedit = null; renderInspector(); return; }
   const br = t.closest('[data-breset]'); if (br) { if (!need('edit')) return; const id = +br.dataset.breset; const before = REV.blk[id]; delete REV.blk[id]; blockChanged(id, before, null); return; }
@@ -2972,6 +3085,8 @@ document.addEventListener('submit', e => {
     logAct('not', noteTarget(key).label + ' notu: ' + text.slice(0, 100), Object.assign(noteTarget(key), { after: text }));
     saveRev(); renderRail(); renderHead(); renderInspector(); if (S.tab === 'kaynak' || S.tab === 'hukum') renderCenter(); toast('Not eklendi.'); return;
   }
+  const tf = e.target.closest('form[data-tsave]');
+  if (tf) { e.preventDefault(); saveBlockText(+tf.dataset.tsave, tf.querySelector('[name=text]').value, tf.querySelector('[name=note]').value.trim()); return; }
   const bf = e.target.closest('form[data-bsave]');
   if (bf) {
     e.preventDefault(); if (!need('edit')) return;
@@ -5544,10 +5659,10 @@ const AUTH = (() => {
   const ROLES = { yonetici: 'Yönetici', duzenleyici: 'Düzenleyici', gozlemci: 'Gözlemci' };
   const PERMS = {
     gozlemci: [],
-    duzenleyici: ['review', 'edit', 'note', 'conflict', 'volume', 'complete', 'import'],
-    yonetici: ['review', 'edit', 'note', 'conflict', 'volume', 'complete', 'import', 'users', 'volume-del', 'log-export', 'vault']
+    duzenleyici: ['review', 'edit', 'note', 'note-any', 'text', 'st-del', 'conflict', 'volume', 'volume-del', 'complete', 'reopen', 'import'],
+    yonetici: ['review', 'edit', 'note', 'note-any', 'text', 'st-del', 'conflict', 'volume', 'volume-del', 'complete', 'reopen', 'import', 'users', 'log-export', 'vault']
   };
-  const PERM_TR = { review: 'Hüküm kararı ve râvi durumu', edit: 'Hüküm ve kimlik düzeltme, eksik hüküm ekleme', note: 'Araştırmacı notu', conflict: 'Teâruz çözümü', volume: 'Cilt dosyası ekleme', complete: 'Paketi tamamlama', import: 'İnceleme kaydı içe aktarma', users: 'Kullanıcı yönetimi', 'volume-del': 'Cilt dosyası silme', 'log-export': 'Hareket kaydını dışa aktarma', vault: 'Şifreli kopya ve kasa' };
+  const PERM_TR = { review: 'Hüküm kararı ve râvi durumu', edit: 'Hüküm ve kimlik düzeltme, eksik hüküm ekleme', note: 'Araştırmacı notu', 'note-any': 'Başkalarının notlarını düzenleme ve silme', text: 'Kaynak metni düzeltme', 'st-del': 'Motorun bulduğu hükmü kaldırma ve geri alma', conflict: 'Teâruz çözümü', volume: 'Cilt dosyası ekleme', complete: 'Paketi tamamlama', reopen: 'Tamamlanan paketi yeniden açma', import: 'İnceleme kaydı içe aktarma', users: 'Kullanıcı yönetimi', 'volume-del': 'Cilt dosyası silme', 'log-export': 'Hareket kaydını dışa aktarma', vault: 'Şifreli kopya ve kasa' };
   let U = [], ME = null;
   const load = () => { U = KASA.store.get('kullanicilar', []); };
   const save = () => KASA.store.set('kullanicilar', U);
