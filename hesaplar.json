@@ -1,0 +1,19 @@
+{
+ "kasa": "3132b7f41affc2dac8f947bac189f1ca",
+ "guncelleme": "2026-09-30T08:33:02.943Z",
+ "yuvalar": [
+  {
+   "uid": "u1",
+   "username": "Admin",
+   "salt": "gJKn7ACmIym0hwH0zkYLUg==",
+   "iter": 600000,
+   "w": "iMibwZnVZCdjpYEb.IqSnDx/6XHog/t+rUgR8cM2j99Fyrnt/jjiNmGpYRc/w5und2kiaqz/NsIYdM/So",
+   "strong": true,
+   "at": "2026-09-30T04:34:48.012Z"
+  }
+ ],
+ "yuva_silinen": {},
+ "kullanicilar": "VETbkOGWspuI6j3n.SJ/QXpa4rdAtcMpIvbWX7B0GDi14n1j+NHLHBhL5ZIs6WVy2Ec4KzQRNXxiEQKfs/BazMmypdzvreUA7WJhszv/hYe0bwlyIyLyD9TmWat1t12NsLXUXtQ/JUqXNUnowHsXx++oL/JAJcSY3asxDRg90F4jLO5EeOZMqDfOEv8Tdv/QdmjDqQI3S2jIoaPosiTaorK9/R5YD23gVN6HIYD7eZ0Uy7XkUzP26I5n2TZyr3pYWME9MUwo+lWHHKPaAEZ4RvcbSwEEfmopD5lwli09i8Bpv0391e/DqV1zCTuRzWS2j+jzjadyoPf9adsufiD+HbanY",
+ "kullanici_silinen": {},
+ "kullanicilar_ozet": "c5a072196019de79f790e5df68bf2eef62fc38b24b7e09126a7f2f30b3d25192"
+}
