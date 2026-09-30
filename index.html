@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Cerh-Taʿdîl · Kaynak Kontrolü</title>
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src https://api.github.com; img-src data:; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self' https://api.github.com; img-src data:; base-uri 'none'; form-action 'none'">
 <meta name="generator" content="cerh-tadil/build.py CTX 2.0.0">
 <style>
 /* =========================================================
@@ -1095,15 +1095,16 @@ function renderOrtakChip(state) {
 function ortakCard() {
   const c = store.get(OKEY, null) || {}, on = !!ortakCfg(), can = AUTH.can('vault');
   let h = '<h3 class="panel-title">Ortak kayıt <span class="muted">' + (on ? esc(c.repo) + ' · ' + esc(c.branch || OBRANCH) : 'bağlı değil') + '</span></h3><div class="set-grid"><section class="card"><h3>Bağlantı</h3><dl class="kv"><dt>Durum</dt><dd id="or-state">' + ortakStateText() + '</dd>' +
-    (on ? '<dt>Depo · dal</dt><dd class="mono">' + esc(c.repo) + ' · ' + esc(c.branch || OBRANCH) + '</dd><dt>Eşitleme</dt><dd>' + (c.auto === false ? 'Elle' : 'Otomatik') + '</dd>' + (c.at ? '<dt>Bağlayan</dt><dd>' + whoWhen(c) + '</dd>' : '') : '') + '</dl>' +
+    (on ? '<dt>Depo · dal</dt><dd class="mono">' + esc(c.repo) + ' · ' + esc(c.branch || OBRANCH) + '</dd><dt>Hesaplar</dt><dd id="or-hesap">' + hesapStateText() + '</dd><dt>Eşitleme</dt><dd>' + (c.auto === false ? 'Elle' : 'Otomatik') + '</dd>' + (c.at ? '<dt>Bağlayan</dt><dd>' + whoWhen(c) + '</dd>' : '') : '') + '</dl>' +
     (on ? '<div class="review-row"><button class="btn sm" type="button" id="or-sync">Şimdi eşitle</button></div>' : '');
   if (can) h += '<form class="fixform" id="or-form" autocomplete="off"><label>Depo (kullanıcı/depo)<input id="or-repo" value="' + esc(c.repo || '') + '" placeholder="Ramazan9838/Hadith-Narrators" required></label>' +
     '<label>Dal<input id="or-branch" value="' + esc(c.branch || OBRANCH) + '" required></label>' +
+    '<label>Yayın deposu (site)<input id="or-yayin" value="' + esc(c.yayin || KASA.pubRepo() || '') + '" placeholder="Ramazan9838/Hadith-Narrators-site"></label>' +
     '<label>Erişim anahtarı (GitHub token)<input type="password" id="or-token" autocomplete="off" placeholder="' + (c.token ? 'Kayıtlı — değiştirmek için yenisini yapıştırın' : 'github_pat_…') + '"' + (c.token ? '' : ' required') + '></label>' +
     '<label class="chk"><input type="checkbox" id="or-auto"' + (c.auto === false ? '' : ' checked') + '> Otomatik eşitle (değişiklikten sonra ve dakikada bir)</label>' +
     '<div class="review-row"><button class="btn primary sm">Kaydet ve eşitle</button><button class="btn sm" type="button" id="or-test">Bağlantıyı sına</button>' + (on ? '<button class="btn ghost sm" type="button" id="or-off">Bağlantıyı kaldır</button>' : '') + '</div></form>';
   else h += '<p class="hint">Bağlantıyı yönetici kurar; şifreli kopyayla birlikte gelir.</p>';
-  h += '</section><section class="card"><h3>Nasıl çalışır</h3><p class="small" style="margin-top:0">Hüküm kararları, düzeltmeler, eklenen hükümler, kimlik ve künye düzeltmeleri, notlar, teâruz kararları, paket durumu ve hareket kaydı depoda ayrı bir dalda (<span class="mono">' + OBRANCH + '</span>) tek ortak kayıt olarak tutulur. Her araştırmacının değişikliği birkaç saniye içinde gönderilir; başkalarınınki sayfa açılınca ve dakikada bir alınır. Aynı öğede iki farklı değişiklik varsa sonra yapılan geçer; bütün değişiklikler kim ve ne zaman bilgisiyle depo geçmişinde kalır.</p>' +
+  h += '</section><section class="card"><h3>Nasıl çalışır</h3><p class="small" style="margin-top:0"><b>Hesaplar:</b> parola değişince, kullanıcı eklenince veya silinince bu bilgi yayın deposuna (' + esc(yayinRepo() || 'belirtilmedi') + ') gönderilir; yayındaki site girişte okur. Böylece yeni parola her yerde geçerli olur, yeni araştırmacı dosya yeniden yüklenmeden giriş yapabilir. Varsayılan parolalı hesaplar gönderilmez.</p><p class="small" style="margin-top:0">Hüküm kararları, düzeltmeler, eklenen hükümler, kimlik ve künye düzeltmeleri, notlar, teâruz kararları, paket durumu ve hareket kaydı depoda ayrı bir dalda (<span class="mono">' + OBRANCH + '</span>) tek ortak kayıt olarak tutulur. Her araştırmacının değişikliği birkaç saniye içinde gönderilir; başkalarınınki sayfa açılınca ve dakikada bir alınır. Aynı öğede iki farklı değişiklik varsa sonra yapılan geçer; bütün değişiklikler kim ve ne zaman bilgisiyle depo geçmişinde kalır.</p>' +
     '<p class="small"><b>Erişim anahtarı:</b> GitHub → Settings → Developer settings → Personal access tokens → <i>Fine-grained tokens</i> → Generate new token. <i>Repository access</i>: yalnız bu depo; <i>Permissions → Contents</i>: <b>Read and write</b>. Oluşan anahtarı buraya yapıştırın; süresi dolunca yenisini girin.</p>' +
     '<div class="note">Anahtar bu tarayıcıda şifreli saklanır ve şifreli kopyaya eklenebilir; kopyayı açabilen her kullanıcı ortak kayda yazabilir. Anahtarı yalnız bu depoyla ve yalnız içerik yetkisiyle sınırlayın. Depo özel olmalıdır.</div></section></div>';
   return h;
@@ -1111,7 +1112,7 @@ function ortakCard() {
 function bindOrtakCard() {
   if ($('or-sync')) $('or-sync').onclick = () => ortakSync(true);
   const form = $('or-form'); if (!form) return;
-  const read = () => { const old = store.get(OKEY, null) || {}; if (!/^[A-Za-z0-9._\/-]+$/.test($('or-branch').value.trim() || OBRANCH)) throw Error('Dal adı yalnız harf, rakam, nokta, alt çizgi, eğik çizgi ve tire içerebilir.'); return { repo: $('or-repo').value.trim(), branch: $('or-branch').value.trim() || OBRANCH, token: $('or-token').value.trim() || old.token || '', auto: $('or-auto').checked }; };
+  const read = () => { const old = store.get(OKEY, null) || {}; if (!/^[A-Za-z0-9._\/-]+$/.test($('or-branch').value.trim() || OBRANCH)) throw Error('Dal adı yalnız harf, rakam, nokta, alt çizgi, eğik çizgi ve tire içerebilir.'); return { repo: $('or-repo').value.trim(), branch: $('or-branch').value.trim() || OBRANCH, token: $('or-token').value.trim() || old.token || '', auto: $('or-auto').checked, yayin: (() => { const y = $('or-yayin').value.trim().replace(/^https?:\/\/github\.com\//, '').replace(/\/+$/, ''); if (y && !/^[\w.-]+\/[\w.-]+$/.test(y)) throw Error('Yayın deposu “kullanıcı/depo” biçiminde yazılmalı.'); return y; })() }; };
   const probe = async c => { const i = await ORT.client(c).info(); return i; };
   $('or-test').onclick = async () => {
     let c; try { c = read(); } catch (e) { toast(e.message, true); return; }
@@ -1128,7 +1129,7 @@ function bindOrtakCard() {
     store.set(OKEY, Object.assign(c, { repo: i.full_name || c.repo, at: new Date().toISOString() }, by()));
     if (old.repo !== c.repo || (old.branch || OBRANCH) !== c.branch) store.del(OSKEY);
     logAct('ortak', 'Bağlandı: ' + c.repo + ' · ' + c.branch + (c.auto ? ' · otomatik' : ' · elle') + (old.token && old.token !== c.token ? ' · anahtar yenilendi' : ''), { pkg: '' });
-    ORTAK.err = ''; renderSettings(); renderOrtakChip(); ortakSync(true);
+    ORTAK.err = ''; HESAP.err = ''; renderSettings(); renderOrtakChip(); ortakSync(true); hesapYayinla();
   };
   if ($('or-off')) $('or-off').onclick = () => {
     if (!need('vault') || !confirm('Ortak kayıt bağlantısı bu tarayıcıdan kaldırılsın mı? Kayıtlar tarayıcıda ve depoda kalır.')) return;
@@ -1140,6 +1141,55 @@ setInterval(() => { if (document.visibilityState === 'visible' && ortakCfg() && 
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && ortakCfg() && ortakCfg().auto !== false) ortakSync(); });
 window.addEventListener('online', () => { if (ortakCfg()) ortakSync(); });
 document.addEventListener('focusout', () => setTimeout(() => { if (ORTAK.needRender && !ortakEditing()) { ORTAK.needRender = false; renderAll(); } }, 60));
+
+/* ---------- Yayımlanan hesaplar (hesaplar.json, yayın deposunda) ----------
+   Parola değişince, kullanıcı eklenince/silinince anahtar yuvaları ve mühürlü kullanıcı listesi yayın deposuna
+   yazılır; yayındaki sayfa girişte bu dosyayı okur. Yalnız şifreli kopyadan (yayındaki site ya da ondan üretilen
+   kopya) gönderilir; varsayılan ve kısa parolalı hesaplar yayımlanmaz. */
+const HESAP = { busy: null, again: false, err: '', last: null, note: '', timer: 0 };
+function yayinRepo(c) { c = c || ortakCfg(); return (c && c.yayin) || KASA.pubRepo() || ''; }
+function hesapHazir() { return !!(ortakCfg() && yayinRepo() && KASA.status().mode === 'enc'); }
+function hesapPlanla() { if (!hesapHazir()) return; clearTimeout(HESAP.timer); HESAP.timer = setTimeout(hesapYayinla, 400); }
+async function hesapYayinla() {
+  if (!hesapHazir() || !AUTH.me()) return false;
+  if (HESAP.busy) { HESAP.again = true; return HESAP.busy; }
+  clearTimeout(HESAP.timer);
+  const c = ortakCfg(), me = AUTH.me();
+  HESAP.busy = (async () => {
+    let pulled = false;
+    try {
+      await ORT.putFile(ORT.client({ repo: yayinRepo(c), token: c.token }), null, 'hesaplar.json', async text => {
+        let o = null; try { o = text ? JSON.parse(text) : null; } catch (e) { }
+        if (o && o.kasa !== KASA.id && !/\.github\.io$/i.test(location.hostname)) throw Error('Yayındaki hesap dosyası başka bir kasaya ait; hesapları yayındaki sitenin içinden güncelleyin.');
+        if (o && o.kasa === KASA.id) pulled = (await KASA.applyAccounts(o)) || pulled;
+        const out = await KASA.accounts();
+        return o && KASA.sameAccounts(o, out) ? null : JSON.stringify(out, null, 1) + '\n';
+      }, me.username + ': hesaplar güncellendi', { name: me.name + ' (' + me.username + ')', email: ORT.fname(me.username).toLowerCase() + '@cerh-tadil.invalid' });
+      HESAP.err = ''; HESAP.last = new Date().toISOString();
+      if (HESAP.note) { toast(HESAP.note); HESAP.note = ''; }
+    } catch (e) {
+      HESAP.err = e.message || String(e);
+      if (HESAP.note) { toast('Yayına gönderilemedi: ' + HESAP.err + ' Değişiklik bu tarayıcıda geçerli; biraz sonra yeniden denenecek.', true); HESAP.note = ''; }
+    }
+    if (pulled) applyUser();
+    if (S.view === 'settings') { if (pulled && !ortakEditing()) renderSettings(); else if ($('or-hesap')) $('or-hesap').innerHTML = hesapStateText(); }
+    return !HESAP.err;
+  })().finally(() => {
+    HESAP.busy = null;
+    if (HESAP.again) { HESAP.again = false; HESAP.timer = setTimeout(hesapYayinla, 800); }
+    else if (HESAP.err) HESAP.timer = setTimeout(hesapYayinla, 60000);
+  });
+  return HESAP.busy;
+}
+function hesapStateText() {
+  if (!ortakCfg()) return '<span class="muted">Ortak kayıt bağlı değil</span>';
+  if (KASA.status().mode !== 'enc') return '<span class="muted">Yalnız yayındaki siteden (ya da ondan üretilen kopyadan) gönderilir</span>';
+  if (!yayinRepo()) return '<span class="muted">Yayın deposu belirtilmedi</span>';
+  if (HESAP.busy) return 'Gönderiliyor…';
+  if (HESAP.err) return '<span class="tag warn">Hata</span> ' + esc(HESAP.err);
+  return HESAP.last ? 'Yayında · ' + esc(new Date(HESAP.last).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })) + ' <span class="muted">(' + esc(yayinRepo()) + ')</span>' : 'Bekliyor';
+}
+AUTH.onChange = hesapPlanla;
 
 function registerVolume(rec) { rec.sc = CTP.scan(rec.html, { volume: rec.vol }); VOLS[rec.vol] = rec; }
 async function loadVolumes() {
@@ -2568,7 +2618,12 @@ function renderSettings() {
   $('acc-pw').onsubmit = async e => {
     e.preventDefault();
     if ($('pw-new').value !== $('pw-new2').value) { toast('Yeni parolalar aynı değil.', true); return; }
-    try { await AUTH.setPassword(u.id, $('pw-new').value, $('pw-cur').value); logAct('parola', 'Kendi parolasını değiştirdi', { pkg: '' }); toast('Parola değiştirildi.'); renderSettings(); } catch (err) { toast(err.message, true); }
+    try {
+      if (hesapHazir()) HESAP.note = 'Yeni parolanız yayında; artık her yerden bu parolayla girilir.';
+      await AUTH.setPassword(u.id, $('pw-new').value, $('pw-cur').value); logAct('parola', 'Kendi parolasını değiştirdi', { pkg: '' });
+      toast(hesapHazir() ? 'Parola değiştirildi; yayına gönderiliyor…' : 'Parola değiştirildi.' + (KASA.status().mode === 'enc' ? ' Yalnız bu tarayıcıda geçerli (yayına göndermek için Ortak kayıt bağlantısı gerekir).' : ''));
+      renderSettings();
+    } catch (err) { HESAP.note = ''; toast(err.message, true); }
   };
   if ($('user-add')) $('user-add').onsubmit = async e => {
     e.preventDefault();
@@ -2596,7 +2651,7 @@ function openVaultExport() {
     const btn = e.target.querySelector('button.primary'); btn.disabled = true; btn.textContent = 'Şifreleniyor…';
     try {
       const extra = $('vx-ortak') && $('vx-ortak').checked ? { [OKEY]: store.get(OKEY, null) } : null;
-      const html = await KASA.exportEncrypted(uids, extra);
+      const html = await KASA.exportEncrypted(uids, extra, { yayin: yayinRepo() });
       download('Cerh-Tadil-Kontrol-sifreli-' + new Date().toISOString().slice(0, 10) + '.html', new Blob([html], { type: 'text/html;charset=utf-8' }));
       logAct('kasa', 'Şifreli kopya oluşturuldu · ' + uids.length + ' kullanıcı: ' + us.filter(x => uids.includes(x.id)).map(x => x.username).join(', ') + (extra ? ' · ortak kayıt bağlantısıyla' : ''), { pkg: '' });
       $('gen-dialog').close(); toast('Şifreli kopya indirildi.');
@@ -3004,6 +3059,7 @@ function startApp() {
   loadVolumes();   // yüklü ciltler (IndexedDB) → paket listesi; son açık paket geri yüklenir
   $('ortak-chip').onclick = () => ortakSync(true); renderOrtakChip();
   if (ortakCfg()) setTimeout(() => ortakSync(), 700);
+  if (hesapHazir()) setTimeout(() => hesapYayinla(), 1500);
   const li = KASA.loginInfo() || {};
   if (li.created) logAct('kasa', 'Kasa oluşturuldu (AES-256-GCM, PBKDF2-SHA256 ' + KASA.status().iter + ' tur)', { pkg: '' });
   if (li.migrated) logAct('kasa', 'Önceki sürümün şifresiz verileri şifrelenerek taşındı: ' + li.migrated + ' kayıt', { pkg: '' });
@@ -5108,7 +5164,54 @@ const RAPOR = (() => {
     throw new GHError('Ortak kayıt art arda değişti; biraz sonra yeniden denenecek.', 409);
   }
 
-  return { VERSION, flatten, unflatten, merge3, blobSha, fname, ridOf, fnv, client, ensureBranch, syncOnce, sync, GHError, fileText };
+  /* ---------- Tek dosyayı oku–değiştir–yaz (yayın deposundaki hesaplar.json için) ----------
+     update(eskiMetin|null) → yeni metin | null (değişiklik yok). Dal araya giren bir yazmayla ilerlemişse
+     baştan okunup yeniden denenir; birleştirme zaman damgasına dayandığından eski okuma yeni bilgiyi geri almaz. */
+  async function putFile(gh, branch, path, update, message, author, tries) {
+    for (let i = 0; i < (tries || 4); i++) {
+      const br = branch || (await gh.info()).default_branch || 'main';
+      const ref = await gh.ref(br); if (!ref) throw new GHError('Yayın deposunda “' + br + '” dalı bulunamadı.', 404);
+      const head = ref.object.sha, tr = (await gh.commit(head)).tree.sha;
+      const ent = ((await gh.tree(tr)).tree || []).find(x => x.path === path && x.type === 'blob');
+      const old = ent ? await gh.blob(ent.sha) : null;
+      const next = await update(old);
+      if (next == null || next === old) return { changed: false };
+      const nt = await gh.mkTree([{ path, content: next }], tr);
+      const c = await gh.mkCommit(message, nt.sha, [head], author);
+      try { await gh.moveRef(br, c.sha); return { changed: true, commit: c.sha }; }
+      catch (e) { if (e.status !== 422 && e.status !== 409) throw e; }
+    }
+    throw new GHError('Yayın dosyası art arda değişti; biraz sonra yeniden denenecek.', 409);
+  }
+
+  /* ---------- Yayımlanan hesaplar (hesaplar.json) ----------
+     { kasa, guncelleme, yuvalar: [anahtar yuvası], yuva_silinen: {uid: at}, kullanicilar: <mühürlü liste>,
+       kullanici_silinen: {id: at}, kullanicilar_ozet }
+     Yuva ve kullanıcı kaydı kimlik başına en yeni zaman damgasıyla birleşir; silme kaydı daha yeniyse düşer.
+     Birleştirme zamana dayandığı için eski bir okuma yeni bilgiyi geri alamaz. */
+  const ts = x => String((x && (x.at || x.pw_changed_at || x.created_at)) || '');
+  function maxTomb(a, b) { const o = Object.assign({}, a || {}); for (const [k, t] of Object.entries(b || {})) if (typeof t === 'string' && (!o[k] || t > o[k])) o[k] = t; return o; }
+  function mergeSlots(local, localTomb, remote, remoteTomb) {
+    const tomb = maxTomb(localTomb, remoteTomb), m = new Map();
+    for (const s of [].concat(remote || [], local || [])) {
+      if (!s || typeof s.uid !== 'string' || typeof s.w !== 'string' || typeof s.salt !== 'string') continue;
+      const c = m.get(s.uid); if (!c || ts(s) > ts(c)) m.set(s.uid, s);
+    }
+    return { slots: [...m.values()].filter(s => !(tomb[s.uid] && tomb[s.uid] >= ts(s))), tomb };
+  }
+  function mergeUsers(local, remote, localTomb, remoteTomb) {
+    const tomb = maxTomb(localTomb, remoteTomb), m = new Map();
+    for (const u of local || []) if (u && u.id) m.set(u.id, u);
+    for (const u of remote || []) {
+      if (!u || typeof u.id !== 'string' || typeof u.username !== 'string') continue;
+      const c = m.get(u.id); if (!c || ts(u) > ts(c)) m.set(u.id, Object.assign({}, u, c && c.last_login ? { last_login: c.last_login } : {}));
+    }
+    return { users: [...m.values()].filter(u => u.founder || !(tomb[u.id] && tomb[u.id] >= ts(u))), tomb };
+  }
+  // Anahtar sırası sabit JSON (özet ve karşılaştırma için)
+  function canon(v) { return Array.isArray(v) ? '[' + v.map(canon).join(',') + ']' : v && typeof v === 'object' ? '{' + Object.keys(v).sort().map(k => JSON.stringify(k) + ':' + canon(v[k])).join(',') + '}' : JSON.stringify(v); }
+
+  return { VERSION, flatten, unflatten, merge3, blobSha, fname, ridOf, fnv, client, ensureBranch, syncOnce, sync, GHError, fileText, putFile, mergeSlots, mergeUsers, canon };
 });
 
 </script>
@@ -5166,15 +5269,62 @@ const KASA = (() => {
   async function makeSlot(uid, username, pw) {
     if (!dek) throw Error('Kasa kilitli.');
     const salt = rnd(16); const k = await kek(pw, salt, ITER);
-    return { uid, username, salt: b64.enc(salt), iter: ITER, w: await seal(k, await rawDek(), id + ':yuva:' + uid), strong: pw.length >= MINPW, at: new Date().toISOString() };
+    return { uid, username, salt: b64.enc(salt), iter: ITER, w: await seal(k, await rawDek(), id + ':yuva:' + uid), strong: pw.length >= MINPW && pw.trim().toLocaleLowerCase('tr') !== 'admin123', at: new Date().toISOString() };
   }
   async function openSlot(slot, pw) { const k = await kek(pw, b64.dec(slot.salt), slot.iter); return importDek(await unseal(k, slot.w, id + ':yuva:' + slot.uid)); }
   const slots = () => meta.get('yuvalar', []);
   const setSlots = a => meta.set('yuvalar', a);
   function putSlot(s) { setSlots(slots().filter(x => x.uid !== s.uid).concat(s)); }
-  function removeSlot(uid) { setSlots(slots().filter(x => x.uid !== uid)); }
+  function removeSlot(uid) { setSlots(slots().filter(x => x.uid !== uid)); const t = meta.get('yuva-silinen', {}); t[uid] = new Date().toISOString(); meta.set('yuva-silinen', t); }
   const hasSlot = uid => slots().find(x => x.uid === uid) || null;
   async function checkPw(uid, pw) { const s = hasSlot(uid); if (!s) return false; try { await openSlot(s, pw); return true; } catch (e) { return false; } }
+
+  /* ---------- Yayımlanan hesaplar (hesaplar.json, herkese açık yayın deposunda) ----------
+     Parola değişikliği, yeni ve silinen kullanıcılar yayındaki sayfaya dosyayı yeniden üretmeden yansır:
+     giriş ekranı açılırken bu dosya okunur, anahtar yuvaları en yeni zaman damgasıyla birleşir. Dosyada
+     yalnız kilitli yuvalar (sayfanın kendisindekiyle aynı tür) ve DEK ile mühürlü kullanıcı listesi bulunur. */
+  let pubAcc = null;
+  function pubRepo() {
+    if (header && typeof header.yayin === 'string' && /^[\w.-]+\/[\w.-]+$/.test(header.yayin)) return header.yayin;
+    const h = location.hostname;
+    if (/^[\w-]+\.github\.io$/i.test(h)) { const seg = decodeURIComponent(location.pathname.split('/').filter(Boolean)[0] || ''); if (/^[\w.-]+$/.test(seg)) return h.split('.')[0] + '/' + seg; }
+    return null;
+  }
+  async function fetchAccounts() {
+    const repo = mode === 'enc' ? pubRepo() : null; if (!repo || typeof fetch !== 'function') return null;
+    const t = Date.now().toString(36);
+    for (const [url, hd] of [['https://api.github.com/repos/' + repo + '/contents/hesaplar.json?t=' + t, { Accept: 'application/vnd.github.raw+json' }], ['hesaplar.json?t=' + t, {}]]) {
+      try {
+        const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 5000);
+        const r = await fetch(url, { headers: hd, signal: ctl.signal }); clearTimeout(tm);
+        if (r.status === 404) return null;
+        if (r.ok) { const o = await r.json(); return o && o.kasa === id ? o : null; }
+      } catch (e) { }
+    }
+    return null;
+  }
+  const withTimeout = (p, ms) => Promise.race([p, new Promise(r => setTimeout(() => r(null), ms))]);
+  // Uzak hesap dosyasını yerele katar; kasa açıksa kullanıcı listesini de. Değişiklik olduysa true.
+  async function applyAccounts(o) {
+    if (!o || o.kasa !== id) return false;
+    const before = ORT.canon(slots());
+    const r = ORT.mergeSlots(slots(), meta.get('yuva-silinen', {}), o.yuvalar, o.yuva_silinen);
+    setSlots(r.slots); meta.set('yuva-silinen', r.tomb);
+    let ch = before !== ORT.canon(r.slots);
+    if (dek && o.kullanicilar) { try { ch = AUTH._sync(JSON.parse(TD.decode(await unseal(dek, o.kullanicilar, id + ':kullanicilar'))), o.kullanici_silinen) || ch; } catch (e) { } }
+    return ch;
+  }
+  async function digest(str) { return hex(new Uint8Array(await crypto.subtle.digest('SHA-256', TE.encode(str)))); }
+  // Yayımlanacak hesap dosyası: yalnız etkin, varsayılan olmayan ve güçlü parolalı hesapların yuvaları
+  async function accounts() {
+    if (!dek) throw Error('Kasa kilitli.');
+    const us = AUTH._all().map(u => { const o = Object.assign({}, u); delete o.last_login; delete o.needs_key; return o; }).sort((a, b) => a.id < b.id ? -1 : 1);
+    const ok = new Set(us.filter(u => u.active !== false && !u.default_pw).map(u => u.id));
+    const ys = slots().filter(s => s.strong && ok.has(s.uid)).sort((a, b) => a.uid < b.uid ? -1 : 1);
+    const plain = ORT.canon(us);
+    return { kasa: id, guncelleme: new Date().toISOString(), yuvalar: ys, yuva_silinen: meta.get('yuva-silinen', {}), kullanicilar: await seal(dek, plain, id + ':kullanicilar'), kullanici_silinen: AUTH._tombs(), kullanicilar_ozet: await digest(plain) };
+  }
+  const sameAccounts = (a, b) => !!a && !!b && a.kasa === b.kasa && a.kullanicilar_ozet === b.kullanicilar_ozet && ORT.canon([a.yuvalar, a.yuva_silinen, a.kullanici_silinen]) === ORT.canon([b.yuvalar, b.yuva_silinen, b.kullanici_silinen]);
 
   /* ---------- Şifreli depo (localStorage): bellekte çözülmüş önbellek + arka planda şifreli yazma ---------- */
   const MEM = new Map(); let chain = Promise.resolve();
@@ -5267,6 +5417,7 @@ const KASA = (() => {
   function throttle() { const f = ssGet(FAILS) || { n: 0, t: 0 }; if (f.n >= 5 && Date.now() - f.t < 30000) throw Error('Çok sayıda hatalı deneme. ' + Math.ceil((30000 - (Date.now() - f.t)) / 1000) + ' saniye sonra yeniden deneyin.'); }
   async function login(username, pw, rem) {
     throttle();
+    if (pubAcc) await withTimeout(pubAcc, 6000);   // yayındaki güncel anahtar yuvaları
     const un = String(username || '').trim().toLocaleLowerCase('tr');
     let uid = null, migrated = 0, created = false;
     if (!id) {
@@ -5311,6 +5462,7 @@ const KASA = (() => {
       // Kopyayla gelen ayarlar (ör. ortak kayıt bağlantısı): yerelde yoksa ya da kopyadaki daha yeniyse alınır
       if (header.ek) { try { const ek = JSON.parse(TD.decode(await unseal(dek, header.ek, id + ':ek'))); for (const [k, v] of Object.entries(ek)) { const cur = store.get(k, null); if (!cur || (v && v.at && (!cur.at || v.at > cur.at))) store.set(k, v); } } catch (e) { } }
     }
+    if (pubAcc) { const o = await withTimeout(pubAcc, 6000); if (o) await applyAccounts(o); }
     const u = AUTH._activate(uid);
     if (!u) { dek = null; MEM.clear(); return null; }
     await saveSession(uid);
@@ -5343,6 +5495,7 @@ const KASA = (() => {
       if (!loc) { setSlots(header.yuvalar || []); if (header.created) meta.set('olusturma', header.created); }
       else setSlots(loc.concat((header.yuvalar || []).filter(s => !loc.some(x => x.uid === s.uid))));
     } else { mode = 'plain'; snapText = raw; id = lsGet(PTR, null); }
+    pubAcc = fetchAccounts().then(async o => { if (o) await applyAccounts(o); return o; }).catch(() => null);
     if (!window.crypto || !crypto.subtle) { showLogin('Bu tarayıcı şifrelemeyi (WebCrypto) desteklemiyor; güncel bir Chrome, Edge, Firefox veya Safari kullanın.'); $('login-go').disabled = true; return; }
     if (id) {
       try {
@@ -5357,12 +5510,13 @@ const KASA = (() => {
   async function logout() { await store.flush(); ssSet(SESS, null); forget(); dek = null; MEM.clear(); }
 
   /* ---------- Şifreli kopya ---------- */
-  async function exportEncrypted(uids, extra) {
+  async function exportEncrypted(uids, extra, opts) {
     if (!dek) throw Error('Kasa kilitli.');
     const ss = slots().filter(s => uids.includes(s.uid));
     if (!ss.length) throw Error('Kopyada en az bir kullanıcının anahtar yuvası olmalı.');
     const users = AUTH._all().filter(u => uids.includes(u.id)).map(u => { const o = Object.assign({}, u); delete o.last_login; return o; });
     const hdr = { v: VER, id, alg: 'AES-256-GCM · PBKDF2-SHA256', iter: ITER, created: meta.get('olusturma', null), exported_at: new Date().toISOString(), exported_by: (AUTH.me() || {}).username || '', yuvalar: ss, kullanicilar: await seal(dek, JSON.stringify(users), id + ':kullanicilar') };
+    if (opts && opts.yayin && /^[\w.-]+\/[\w.-]+$/.test(opts.yayin)) hdr.yayin = opts.yayin;
     if (extra && Object.keys(extra).length) hdr.ek = await seal(dek, JSON.stringify(extra), id + ':ek');
     const json = JSON.stringify({ kasa: hdr, veri: await seal(dek, snapText, id + ':veri') });
     const open = '<scr' + 'ipt id="snapshot-data" type="application/json">'; const a = SELF.indexOf(open), b = SELF.indexOf('</scr' + 'ipt>', a);   // satır içi betikte etiket bölünerek yazılır
@@ -5372,7 +5526,7 @@ const KASA = (() => {
   const status = () => ({ id, mode, iter: ITER, alg: 'AES-256-GCM · PBKDF2-SHA256', created: id ? meta.get('olusturma', null) : null, header: header ? { exported_at: header.exported_at, exported_by: header.exported_by } : null, slots: slots().length, minpw: MINPW });
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
   return {
-    store, db, makeSlot, putSlot, removeSlot, hasSlot, checkPw, exportEncrypted, logout, status,
+    store, db, makeSlot, putSlot, removeSlot, hasSlot, checkPw, exportEncrypted, logout, status, pubRepo, accounts, applyAccounts, sameAccounts,
     snapshotText: () => snapText, loginInfo: () => info, get id() { return id; }, MINPW,
     _raw: { lsGet, P }   // testler için
   };
@@ -5392,6 +5546,18 @@ const AUTH = (() => {
   let U = [], ME = null;
   const load = () => { U = KASA.store.get('kullanicilar', []); };
   const save = () => KASA.store.set('kullanicilar', U);
+  const now = () => new Date().toISOString();
+  const touch = u => { u.at = now(); };
+  const changed = () => { if (api.onChange) try { api.onChange(); } catch (e) { } };
+  const _tombs = () => KASA.store.get('kullanici-silinen', {});
+  // Yayındaki kullanıcı listesini katar (kimlik başına en yeni kayıt; silinenler düşer)
+  function _sync(list, tombs) {
+    load(); const r = ORT.mergeUsers(U, list, _tombs(), tombs);
+    const ch = ORT.canon(U) !== ORT.canon(r.users);
+    U = r.users; KASA.store.set('kullanici-silinen', r.tomb);
+    if (ME) ME = byId(ME.id) || ME;
+    if (ch) save(); return ch;
+  }
   const norm = u => String(u || '').trim().toLocaleLowerCase('tr');
   const byId = id => U.find(u => u.id === id);
   const pub = u => u && { id: u.id, username: u.username, name: u.name, role: u.role, founder: !!u.founder, active: u.active !== false, created_at: u.created_at, created_by: u.created_by, last_login: u.last_login, pw_changed_at: u.pw_changed_at || null, key: !!KASA.hasSlot(u.id), strong: !!(KASA.hasSlot(u.id) || {}).strong, default_pw: !!u.default_pw };
@@ -5412,27 +5578,27 @@ const AUTH = (() => {
     need('users'); load(); check(o.username, o.password);
     if (U.some(u => norm(u.username) === norm(o.username))) throw Error('Bu kullanıcı adı zaten var.');
     if (!ROLES[o.role]) throw Error('Geçersiz rol.');
-    const u = { id: newId(), username: o.username.trim(), name: (o.name || '').trim() || o.username.trim(), role: o.role, active: true, created_at: new Date().toISOString(), created_by: ME.username };
+    const u = { id: newId(), username: o.username.trim(), name: (o.name || '').trim() || o.username.trim(), role: o.role, active: true, created_at: now(), created_by: ME.username, at: now() };
     KASA.putSlot(await KASA.makeSlot(u.id, u.username, o.password));
-    U.push(u); save(); return pub(u);
+    U.push(u); save(); changed(); return pub(u);
   }
   function setRole(id, role) {
     need('users'); load(); const u = byId(id); if (!u) throw Error('Kullanıcı yok.');
     if (u.founder) throw Error('Kurucu yöneticinin rolü değiştirilemez.');
     if (!ROLES[role]) throw Error('Geçersiz rol.');
-    const old = u.role; u.role = role; save(); return old;
+    const old = u.role; u.role = role; touch(u); save(); changed(); return old;
   }
   function setActive(id, on) {
     need('users'); load(); const u = byId(id); if (!u) throw Error('Kullanıcı yok.');
     if (u.founder || u.id === ME.id) throw Error('Bu hesap pasifleştirilemez.');
     if (on && !KASA.hasSlot(id)) throw Error('Etkinleştirmek için “Parola sıfırla” ile yeni parola belirleyin (anahtar yuvası yok).');
     if (!on) KASA.removeSlot(id);   // pasif kullanıcının anahtar yuvası silinir: bu tarayıcıda kasayı açamaz
-    u.active = !!on; save();
+    u.active = !!on; touch(u); save(); changed();
   }
   function removeUser(id) {
     need('users'); load(); const u = byId(id); if (!u) throw Error('Kullanıcı yok.');
     if (u.founder || u.id === ME.id) throw Error('Bu hesap silinemez.');
-    KASA.removeSlot(id); U = U.filter(x => x !== u); save(); return pub(u);
+    KASA.removeSlot(id); U = U.filter(x => x !== u); const t = _tombs(); t[id] = now(); KASA.store.set('kullanici-silinen', t); save(); changed(); return pub(u);
   }
   async function setPassword(id, pw, current) {
     load(); const u = byId(id); if (!u) throw Error('Kullanıcı yok.');
@@ -5442,12 +5608,13 @@ const AUTH = (() => {
     if (self && !(await KASA.checkPw(u.id, current || ''))) throw Error('Mevcut parola yanlış.');
     check(u.username, pw);
     KASA.putSlot(await KASA.makeSlot(u.id, u.username, pw));
-    Object.assign(u, { pw_changed_at: new Date().toISOString(), default_pw: false, active: true }); delete u.needs_key;
-    save();
+    Object.assign(u, { pw_changed_at: now(), default_pw: false, active: true }); delete u.needs_key; touch(u);
+    save(); changed();
   }
-  function rename(id, name) { load(); const u = byId(id); if (!u) throw Error('Kullanıcı yok.'); if (!(ME && (u.id === ME.id || can('users')))) throw Error('Bu işlem için yetkiniz yok.'); u.name = String(name || '').trim() || u.username; save(); }
+  function rename(id, name) { load(); const u = byId(id); if (!u) throw Error('Kullanıcı yok.'); if (!(ME && (u.id === ME.id || can('users')))) throw Error('Bu işlem için yetkiniz yok.'); u.name = String(name || '').trim() || u.username; touch(u); save(); changed(); }
   const defaultPassword = () => !!(ME && ME.default_pw);
-  return { ROLES, PERMS, PERM_TR, me, can, list, addUser, setRole, setActive, removeUser, setPassword, rename, defaultPassword, roleName: r => ROLES[r] || r, _merge, _activate, _all };
+  const api = { ROLES, PERMS, PERM_TR, me, can, list, addUser, setRole, setActive, removeUser, setPassword, rename, defaultPassword, roleName: r => ROLES[r] || r, _merge, _activate, _all, _sync, _tombs, onChange: null };
+  return api;
 })();
 
 </script>
