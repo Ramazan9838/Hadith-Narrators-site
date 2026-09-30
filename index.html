@@ -1,5 +1,6 @@
 <!doctype html>
-<html lang="tr"><head>
+<html lang="tr">
+<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Cerh-Taʿdîl · Kaynak Kontrolü</title>
@@ -621,11 +622,11 @@ body.resizing { user-select: none; } body.resizing-x, body.resizing-x * { cursor
 </style>
 </head>
 <body class="locked">
-<div class="login" id="login" hidden="">
+<div class="login" id="login" hidden>
   <form class="login-card" id="login-form" autocomplete="on">
     <div class="brand"><div class="mark" aria-hidden="true">ج</div><div><div class="eyebrow">Yerel araştırma çalışma alanı · çevrimdışı</div><h1>Cerh-Taʿdîl <span>Kaynak Kontrolü</span></h1></div></div>
-    <label>Kullanıcı adı<input id="login-user" name="username" autocomplete="username" required="" autofocus=""></label>
-    <label>Parola<input id="login-pass" name="password" type="password" autocomplete="current-password" required=""></label>
+    <label>Kullanıcı adı<input id="login-user" name="username" autocomplete="username" required autofocus></label>
+    <label>Parola<input id="login-pass" name="password" type="password" autocomplete="current-password" required></label>
     <label class="chk"><input type="checkbox" id="login-remember"> Bu bilgisayarda oturumu açık tut</label>
     <button class="btn primary" type="submit" id="login-go">Giriş</button>
     <div class="login-kasa" id="login-kasa"></div>
@@ -655,10 +656,10 @@ body.resizing { user-select: none; } body.resizing-x, body.resizing-x * { cursor
   <div class="top-actions">
     <button class="btn" id="open-palette" title="Hızlı arama (Ctrl+K)">⌕ <span class="hide-narrow">Ara</span> <span class="kbd hide-narrow">Ctrl K</span></button>
     <button class="btn ghost" id="theme" title="Açık / koyu tema" aria-label="Temayı değiştir">◐</button>
-    <button class="btn ghost sm ortak-chip" id="ortak-chip" hidden="" title="Ortak kayıt"></button>
+    <button class="btn ghost sm ortak-chip" id="ortak-chip" hidden title="Ortak kayıt"></button>
     <div class="menu">
       <button class="btn user-btn" id="user-btn" aria-haspopup="true" aria-expanded="false"><span class="avatar" id="user-av"></span><span class="hide-narrow" id="user-name"></span> ▾</button>
-      <div class="menu-pop" id="user-menu" hidden="">
+      <div class="menu-pop" id="user-menu" hidden>
         <div class="menu-who" id="user-who"></div>
         <button data-view-go="settings">Ayarlar<small>Hesabım, kullanıcılar, hareket kaydı</small></button>
         <button data-act="logout">Çıkış</button>
@@ -666,7 +667,7 @@ body.resizing { user-select: none; } body.resizing-x, body.resizing-x * { cursor
     </div>
     <div class="menu">
       <button class="btn" id="export-btn" aria-haspopup="true" aria-expanded="false">Dışa aktar ▾</button>
-      <div class="menu-pop" id="export-menu" hidden="">
+      <div class="menu-pop" id="export-menu" hidden>
         <button data-exp="legacy">Tespitler · JSON (SQLite şeması)<small>Yeni motorun bütün hükümleri, eski alan adlarıyla + mertebe/sebep/güven</small></button>
         <button data-exp="csv">Tespitler · CSV<small>Tablo programları için (UTF-8, BOM)</small></button>
         <button data-exp="critic-report">Münekkit raporu…<small>Seçili münekkit: bilgiler, istatistik, her râvinin kimliği ve hükümleri · HTML · Markdown · Word · PDF</small></button>
@@ -678,7 +679,7 @@ body.resizing { user-select: none; } body.resizing-x, body.resizing-x * { cursor
         <button data-exp="snapshot" class="req-admin">Özgün anlık görüntü · JSON<small>SQLite’tan dışa aktarılan veri, değiştirilmeden</small></button>
         <button data-exp="print">Yazdır / PDF<small>Seçili râvinin kaynak metni</small></button>
       </div>
-      <input type="file" id="import-file" accept="application/json,.json" hidden="">
+      <input type="file" id="import-file" accept="application/json,.json" hidden>
     </div>
   </div>
 </header>
@@ -715,20 +716,20 @@ body.resizing { user-select: none; } body.resizing-x, body.resizing-x * { cursor
   </aside>
 </main>
 
-<main class="view scroll" id="view-packages" hidden=""><div class="pane" id="packages-body"></div></main>
-<main class="view scroll" id="view-critics" hidden=""><div class="pane" id="critics-body"></div></main>
-<main class="view scroll" id="view-conflicts" hidden=""><div class="pane" id="conflicts-body"></div></main>
-<main class="view scroll" id="view-lex" hidden=""><div class="pane" id="lex-body"></div></main>
-<main class="view scroll" id="view-report" hidden=""><div class="pane" id="report-body"></div></main>
-<main class="view scroll" id="view-analyze" hidden=""><div class="pane analyzer" id="analyze-body"></div></main>
-<main class="view scroll" id="view-method" hidden=""><div class="pane doc" id="method-body"></div></main>
-<main class="view scroll" id="view-settings" hidden=""><div class="pane" id="settings-body"></div></main>
+<main class="view scroll" id="view-packages" hidden><div class="pane" id="packages-body"></div></main>
+<main class="view scroll" id="view-critics" hidden><div class="pane" id="critics-body"></div></main>
+<main class="view scroll" id="view-conflicts" hidden><div class="pane" id="conflicts-body"></div></main>
+<main class="view scroll" id="view-lex" hidden><div class="pane" id="lex-body"></div></main>
+<main class="view scroll" id="view-report" hidden><div class="pane" id="report-body"></div></main>
+<main class="view scroll" id="view-analyze" hidden><div class="pane analyzer" id="analyze-body"></div></main>
+<main class="view scroll" id="view-method" hidden><div class="pane doc" id="method-body"></div></main>
+<main class="view scroll" id="view-settings" hidden><div class="pane" id="settings-body"></div></main>
 
 <footer class="footer" id="footer"></footer>
 
-<div class="scrim" id="scrim" hidden=""></div>
-<div class="tip" id="tip" hidden=""></div>
-<div class="toast" id="toast" role="status" aria-live="polite" hidden=""></div>
+<div class="scrim" id="scrim" hidden></div>
+<div class="tip" id="tip" hidden></div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 <dialog id="palette" aria-label="Hızlı arama">
   <input class="palette-input" id="palette-q" placeholder="Râvi, münekkit veya görünüm ara… (Enter: git, Esc: kapat)" autocomplete="off">
@@ -2535,7 +2536,7 @@ function renderSettings() {
   // Hesabım
   out += '<div class="set-grid"><section class="card"><h3>Hesabım</h3><dl class="kv"><dt>Kullanıcı adı</dt><dd class="mono">' + esc(u.username) + '</dd><dt>Rol</dt><dd>' + roleTag(u) + '</dd><dt>Son giriş</dt><dd>' + (u.last_login ? esc(new Date(u.last_login).toLocaleString('tr-TR')) : '—') + '</dd></dl>' +
     '<form class="fixform" id="acc-name"><label>Görünen ad<input id="acc-name-v" value="' + esc(u.name) + '"></label><button class="btn sm">Adı kaydet</button></form>' +
-    '<form class="fixform" id="acc-pw" autocomplete="off"><label>Mevcut parola<input type="password" id="pw-cur" autocomplete="current-password" required></label><label>Yeni parola (en az ' + KASA.MINPW + ' karakter)<input type="password" id="pw-new" autocomplete="new-password" required minlength="' + KASA.MINPW + '"></label><label>Yeni parola (tekrar)<input type="password" id="pw-new2" autocomplete="new-password" required minlength="' + KASA.MINPW + '"></label><button class="btn primary sm">Parolayı değiştir</button></form></section>';
+    '<form class="fixform" id="acc-pw" autocomplete="off"><label>Mevcut parola<input type="password" id="pw-cur" autocomplete="current-password" required></label><label>Yeni parola (en az ' + KASA.MINPW + ' karakter; harf ve rakam karışık önerilir)<input type="password" id="pw-new" autocomplete="new-password" required minlength="' + KASA.MINPW + '"></label><label>Yeni parola (tekrar)<input type="password" id="pw-new2" autocomplete="new-password" required minlength="' + KASA.MINPW + '"></label><button class="btn primary sm">Parolayı değiştir</button></form></section>';
   // Rol yetkileri
   const perms = Object.keys(AUTH.PERM_TR);
   out += '<section class="card"><h3>Rol yetkileri</h3><div class="wrap"><table class="tbl perm"><thead><tr><th>Yetki</th>' + Object.keys(AUTH.ROLES).map(r => '<th class="num">' + esc(AUTH.ROLES[r]) + '</th>').join('') + '</tr></thead><tbody>' +
@@ -5129,7 +5130,7 @@ const RAPOR = (() => {
    ========================================================= */
 'use strict';
 const KASA = (() => {
-  const ITER = 600000, MINPW = 12, VER = 1;
+  const ITER = 600000, MINPW = 8, VER = 1;
   const TE = new TextEncoder(), TD = new TextDecoder();
   const b64 = {
     enc(u8) { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); },
@@ -5404,6 +5405,7 @@ const AUTH = (() => {
   function check(username, pw) {
     if (!/^[\p{L}\p{N}._-]{3,32}$/u.test(username)) throw Error('Kullanıcı adı 3–32 karakter olmalı (harf, rakam, nokta, alt çizgi, tire).');
     if (pw !== null && String(pw).length < KASA.MINPW) throw Error('Parola en az ' + KASA.MINPW + ' karakter olmalı (şifreleme anahtarı parolanızdan türetilir).');
+    if (pw !== null && String(pw).trim().toLocaleLowerCase('tr') === 'admin123') throw Error('Varsayılan parola (admin123) yeni parola olarak kullanılamaz.');
   }
   const newId = () => 'u' + [...crypto.getRandomValues(new Uint8Array(5))].map(x => x.toString(16).padStart(2, '0')).join('');
   async function addUser(o) {
@@ -5449,6 +5451,5 @@ const AUTH = (() => {
 })();
 
 </script>
-
-
-</body></html>
+</body>
+</html>
