@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Cerh-Taʿdîl · Kaynak Kontrolü</title>
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self' https://api.github.com; img-src data:; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self' https://api.github.com https://generativelanguage.googleapis.com; img-src data:; base-uri 'none'; form-action 'none'">
 <meta name="generator" content="cerh-tadil/build.py CTX 2.0.0">
 <style>
 /* =========================================================
@@ -699,6 +699,15 @@ body.resizing { user-select: none; } body.resizing-x, body.resizing-x * { cursor
 .tbl td.lafiz { min-width: 170px; font-size: 16px; }
 .tag.rumuz { font-family: var(--ar); font-size: 13px; padding: 0 5px; margin-inline-end: 2px; }
 
+/* Yapay zekâ (Gemini) paneli */
+.yzbtn[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); }
+.yz-panel { border-top: 1px dashed var(--line); margin-top: 8px; padding: 8px 2px 4px; display: grid; gap: 8px; }
+.yz-row { flex-wrap: wrap; gap: 6px; align-items: center; }
+.yz-row .field { flex: 1 1 220px; min-width: 0; }
+.yz-out { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: var(--paper); }
+.yz-metin { white-space: pre-wrap; line-height: 1.6; }
+@media print { .yzbtn, .yz-panel { display: none; } }
+
 </style>
 </head>
 <body class="locked">
@@ -1080,7 +1089,7 @@ const IDB = KASA.db;
 /* ---------- Hareket kaydı (kim, ne zaman, neyi değiştirdi) ----------
    Her değişiklik IndexedDB 'hareket' deposuna eklenir; kayıtlar silinmez, yalnız dışa aktarılır. */
 const LOGMEM = [];   // depo kullanılamazsa bu oturumdaki kayıtlar
-const ACT_TR = { 'giriş': 'Giriş', 'çıkış': 'Çıkış', 'giriş-hatası': 'Hatalı giriş', 'hüküm-karar': 'Hüküm kararı', 'hüküm-ekle': 'Eksik hüküm eklendi', 'hüküm-sil': 'Eklenen hüküm silindi', 'hüküm-düzelt': 'Hüküm düzeltildi', 'râvi-durum': 'Râvi durumu', 'râvi-not': 'Râvi inceleme notu', 'not': 'Araştırmacı notu', 'kimlik': 'Kimlik bilgisi', 'künye': 'Kaynak künyesi', 'teâruz': 'Teâruz çözümü', 'paket-tamamla': 'Paket tamamlandı', 'cilt-ekle': 'Cilt eklendi', 'cilt-sil': 'Cilt silindi', 'içe-aktar': 'İçe aktarım', 'dışa-aktar': 'Dışa aktarım', 'kasa': 'Şifreleme (kasa)', 'kullanıcı': 'Kullanıcı yönetimi', 'parola': 'Parola değişikliği', 'ortak': 'Ortak kayıt', 'metin': 'Kaynak metni düzeltme', 'hüküm-kaldır': 'Hüküm kaldırıldı', 'hüküm-geri': 'Kaldırılan hüküm geri alındı', 'paket-aç': 'Paket yeniden açıldı' };
+const ACT_TR = { 'giriş': 'Giriş', 'çıkış': 'Çıkış', 'giriş-hatası': 'Hatalı giriş', 'hüküm-karar': 'Hüküm kararı', 'hüküm-ekle': 'Eksik hüküm eklendi', 'hüküm-sil': 'Eklenen hüküm silindi', 'hüküm-düzelt': 'Hüküm düzeltildi', 'râvi-durum': 'Râvi durumu', 'râvi-not': 'Râvi inceleme notu', 'not': 'Araştırmacı notu', 'kimlik': 'Kimlik bilgisi', 'künye': 'Kaynak künyesi', 'teâruz': 'Teâruz çözümü', 'paket-tamamla': 'Paket tamamlandı', 'cilt-ekle': 'Cilt eklendi', 'cilt-sil': 'Cilt silindi', 'içe-aktar': 'İçe aktarım', 'dışa-aktar': 'Dışa aktarım', 'kasa': 'Şifreleme (kasa)', 'kullanıcı': 'Kullanıcı yönetimi', 'parola': 'Parola değişikliği', 'ortak': 'Ortak kayıt', 'metin': 'Kaynak metni düzeltme', 'hüküm-kaldır': 'Hüküm kaldırıldı', 'hüküm-geri': 'Kaldırılan hüküm geri alındı', 'paket-aç': 'Paket yeniden açıldı', 'yz': 'Yapay zekâ (Gemini)' };
 function logAct(act, summary, o) {
   const u = AUTH.me();
   const rec = Object.assign({ rid: 'r' + [...crypto.getRandomValues(new Uint8Array(8))].map(x => x.toString(16).padStart(2, '0')).join(''), at: new Date().toISOString(), user: u ? u.username : '—', name: u ? u.name : '', role: u ? u.role : '', act, summary: summary || '', pkg: PK ? PK.id : '' }, o || {});
@@ -1418,7 +1427,9 @@ async function hesapYayinla() {
 // Bütün hesaplara dağıtılan bağlantı ayarı: yalnız yönetici (kasa yetkisi) yayımlar; ötekiler uzaktakini korur
 function ortakPaylas() {
   const c = ortakCfg(); if (!c || !AUTH.can('vault')) return null;
-  return { [OKEY]: { repo: c.repo, branch: c.branch || OBRANCH, token: c.token, yayin: yayinRepo(c), auto: true, at: c.at || '', by: c.by || '', by_name: c.by_name || '' } };
+  const out = { [OKEY]: { repo: c.repo, branch: c.branch || OBRANCH, token: c.token, yayin: yayinRepo(c), auto: true, at: c.at || '', by: c.by || '', by_name: c.by_name || '' } };
+  const y = store.get(YZKEY, null); if (y && y.at) out[YZKEY] = { key: y.key || '', model: y.model || '', at: y.at, by: y.by || '', by_name: y.by_name || '' };   // Gemini ortak anahtarı (kaldırma da dağıtılır)
+  return out;
 }
 function hesapStateText() {
   if (!ortakCfg()) return '<span class="muted">Ortak kayıt bağlı değil</span>';
@@ -1430,94 +1441,220 @@ function hesapStateText() {
 }
 AUTH.onChange = hesapPlanla;
 
-/* ---------- Türkçe çeviri (CTV) ----------
-   Cilt çevirisi gizli depoda (kaynak/ceviri/NNN_Turkce.html) durur; ilk istekte ortak kayıt anahtarıyla
-   çekilir, ayrıştırılır ve bu tarayıcıda şifreli IndexedDB’de saklanır (depodaki dosya değişirse yenilenir).
-   Ortak kayıt yoksa dosyadan yüklenir. Paragraflar, Arapça aslı bloğun özgün metninde geçtiği bloğa bağlanır. */
-const CEV = { data: {}, sha: {}, busy: {}, err: {}, checked: {}, open: new Set() };
-const cevYol = v => 'kaynak/ceviri/' + String(v).padStart(3, '0') + '_Turkce.html';
-const cevVol = () => (PK && PK.vol) || 1;
-async function cevKaydet(v, data, sha, kaynak) {
-  CEV.data[v] = data; CEV.sha[v] = sha || null; delete CEV.err[v];
-  for (const n of NARR) n._cev = null;
-  try { await IDB.put('ceviri', { id: 'cilt:' + v, data, sha: sha || null, kaynak, at: new Date().toISOString() }); } catch (e) { }
+/* ---------- Yapay zekâ (Gemini) ----------
+   İki yol: (1) ortak anahtar — yönetici girer; kasayla mühürlenip hesap dosyasıyla bütün hesaplara dağıtılır,
+   araştırmacılar ayrıca giriş yapmadan kullanır (Google’ın ücretsiz katmanı). (2) kişisel anahtar — kullanıcı kendi
+   Google AI Studio anahtarını girer (projesinde faturalandırma açıksa ücretli katman); yalnız bu tarayıcıda, şifreli
+   depoda durur, paylaşılmaz. Metin yalnız düğmeye basılınca gönderilir; yanıtlar öneridir, sayıma ancak araştırmacı
+   “Eksik hüküm olarak ekle” ile eklerse girer. */
+const YZKEY = 'yz-ayar', YZK_KISI = 'yz-kisisel', YZ_ONAY = 'yz-onay';
+const YZ_API = 'https://generativelanguage.googleapis.com/v1beta', YZ_MODEL = 'gemini-2.5-flash';
+const YZ_SART = 'https://ai.google.dev/gemini-api/terms';
+const YZ = { open: new Set(), res: {}, busy: {}, models: {} };
+function yzOrtak() { const c = store.get(YZKEY, null); return c && c.key ? c : null; }
+function yzKisiTum() { return store.get(YZK_KISI, {}) || {}; }
+function yzKisi() { const u = AUTH.me(), k = u && yzKisiTum()[u.id]; return k && k.key ? k : null; }
+function yzCfg() {
+  const k = yzKisi(); if (k && k.kullan !== false) return { key: k.key, model: k.model || YZ_MODEL, kaynak: 'kişisel anahtar', kisi: true };
+  const c = yzOrtak(); return c ? { key: c.key, model: c.model || YZ_MODEL, kaynak: 'ortak ücretsiz anahtar', kisi: false } : null;
 }
-function cevGetir(v) {
-  if (CEV.data[v]) { cevDenetle(v); return Promise.resolve(CEV.data[v]); }
-  if (CEV.busy[v]) return CEV.busy[v];
-  CEV.busy[v] = (async () => {
-    let rec = null; try { rec = await IDB.get('ceviri', 'cilt:' + v); } catch (e) { }
-    if (rec && rec.data) { CEV.data[v] = rec.data; CEV.sha[v] = rec.sha || null; cevDenetle(v); return rec.data; }
-    const c = ortakCfg(); if (!c) { CEV.err[v] = 'yok'; return null; }
-    try {
-      const gh = ORT.client(c), m = await gh.meta(cevYol(v)); if (!m) { CEV.err[v] = 'yok'; return null; }
-      const html = await gh.raw(cevYol(v)); if (!html) { CEV.err[v] = 'yok'; return null; }
-      await cevKaydet(v, CTV.parse(html), m.sha, 'depo'); CEV.checked[v] = true; return CEV.data[v];
-    } catch (e) { CEV.err[v] = e.message || String(e); return null; }
-  })().finally(() => { CEV.busy[v] = null; });
-  return CEV.busy[v];
-}
-// Oturumda bir kez: depodaki çeviri dosyası değiştiyse yeniden al (yerelden yüklenen çeviriye dokunmaz)
-async function cevDenetle(v) {
-  const c = ortakCfg(); if (!c || CEV.checked[v] || !CEV.sha[v]) return; CEV.checked[v] = true;
-  try {
-    const gh = ORT.client(c), m = await gh.meta(cevYol(v)); if (!m || m.sha === CEV.sha[v]) return;
-    const html = await gh.raw(cevYol(v)); if (!html) return;
-    await cevKaydet(v, CTV.parse(html), m.sha, 'depo'); renderCenter(); toast('Türkçe çeviri güncellendi.');
-  } catch (e) { }
-}
-function cevDosyaSec(v) {
-  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.html,.htm';
-  inp.onchange = async () => {
-    const f = inp.files[0]; if (!f) return;
-    try {
-      const d = CTV.parse(await f.text()); const vol = d.cilt || v;
-      await cevKaydet(vol, d, null, 'dosya: ' + f.name);
-      logAct('içe-aktar', 'Türkçe çeviri yüklendi: ' + f.name + ' · cilt ' + vol + ' · ' + Object.keys(d.sayfalar).length + ' sayfa', { pkg: '' });
-      toast('Çeviri yüklendi: cilt ' + vol + ', ' + Object.keys(d.sayfalar).length + ' sayfa.'); renderCenter();
-    } catch (e) { toast(e.message, true); }
-  };
-  inp.click();
-}
-function cevNarr(n) {
-  const d = CEV.data[cevVol()]; if (!d) return null;
-  if (n._cev && n._cev.d === d) return n._cev.m;
-  const pg = id => ((SNAP.pages || {})[id] || {}).page_number;
-  const bs = n.blocks.map(b => ({ id: b.id, text: b.raw_text, p0: b.effective.page, p1: b.effective.page_end || b.effective.page }));
-  const lo = Math.min(...bs.map(b => b.p0)), hi = Math.max(...bs.map(b => b.p1));
-  const fs = (n.footnotes || []).map((f, i) => ({ id: 'f' + i, text: f.raw_text, p0: pg(f.page_id) || lo, p1: pg(f.page_id) || hi + 1 }));
-  const m = CTV.assign(d, bs.concat(fs));
-  n._cev = { d, m }; return m;
-}
-function cevRows(pairs) {
-  return pairs.map(([a, t, k]) => '<div class="cevr' + (k === 't' || k === 'h' ? ' cevt' : '') + (k === 'f' ? ' cevf' : '') + '"><p class="cevtr" dir="ltr" lang="tr">' + esc(t) + '</p>' + (UI.cevAr === false ? '' : '<p class="cevar ar" dir="rtl" lang="ar">' + esc(a) + '</p>') + '</div>').join('');
-}
-function cevHead(extra) {
-  return '<div class="cevh"><b>Türkçe çeviri</b> <span class="muted">· otomatik (Google Çeviri), kontrol edilmedi — esas olan Arapça metindir' + (extra || '') + '</span><button class="btn ghost sm" data-cevar="1">' + (UI.cevAr === false ? 'Arapçasını yanında göster' : 'Yalnız Türkçe') + '</button></div>';
-}
-function cevPanel(key, pairsOf) {
-  const v = cevVol();
-  if (CEV.busy[v]) return '<div class="cevp"><div class="hint">Çeviri yükleniyor…</div></div>';
-  const d = CEV.data[v];
-  if (!d) {
-    const why = CEV.err[v] === 'yok' ? 'Bu cildin (' + v + ') Türkçe çevirisi bulunamadı' + (ortakCfg() ? '.' : '; ortak kayıt bağlı değil.') : CEV.err[v] ? 'Çeviri alınamadı: ' + esc(CEV.err[v]) : 'Çeviri henüz yüklenmedi.';
-    return '<div class="cevp"><div class="hint">' + why + '</div>' + (AUTH.can('volume') ? '<button class="btn sm" data-cevload="' + v + '">Çeviri dosyası yükle…</button>' : '') + '</div>';
+async function yzIste(cfg, prompt, schema) {
+  const body = { contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: Object.assign({ temperature: 0.2 }, schema ? { responseMimeType: 'application/json', responseSchema: schema } : {}) };
+  let r; try { r = await fetch(YZ_API + '/models/' + encodeURIComponent(cfg.model) + ':generateContent', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': cfg.key }, body: JSON.stringify(body) }); }
+  catch (e) { throw Error('Gemini’ye ulaşılamadı (ağ bağlantısı).'); }
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    const m = (j.error && j.error.message) || r.statusText || '';
+    throw Error(r.status === 429 ? 'Gemini kotası doldu (ücretsiz katmanın dakikalık ya da günlük sınırı). Biraz sonra yeniden deneyin ya da kendi anahtarınızı kullanın.'
+      : /API key not valid|API_KEY_INVALID/i.test(m) ? 'Gemini anahtarı geçersiz.' : r.status === 404 ? 'Model bulunamadı: ' + cfg.model + '. Ayarlar’dan başka model seçin.' : 'Gemini hatası (' + r.status + '): ' + m);
   }
-  const pairs = pairsOf(d);
-  return '<div class="cevp" data-cevpanel="' + esc(key) + '">' + (pairs && pairs.length ? cevHead(key[0] !== 'p' && REV.txt && REV.txt[+key] ? ' · özgün metnin çevirisidir (metin sonradan düzeltildi)' : '') + cevRows(pairs) : '<div class="hint">Bu bölüm için çeviri eşleşmedi.</div>') + '</div>';
+  const c = j.candidates && j.candidates[0], t = c && c.content && (c.content.parts || []).map(x => x.text || '').join('');
+  if (!t) throw Error('Gemini yanıt vermedi' + (c && c.finishReason ? ' (' + c.finishReason + ')' : j.promptFeedback && j.promptFeedback.blockReason ? ' (' + j.promptFeedback.blockReason + ')' : '') + '.');
+  return { text: t, model: j.modelVersion || cfg.model };
+}
+async function yzModeller(key) {
+  const r = await fetch(YZ_API + '/models?pageSize=200', { headers: { 'x-goog-api-key': key } }).catch(() => { throw Error('Gemini’ye ulaşılamadı (ağ bağlantısı).'); });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw Error(/API key not valid|API_KEY_INVALID/i.test((j.error && j.error.message) || '') ? 'Gemini anahtarı geçersiz.' : 'Gemini hatası (' + r.status + '): ' + ((j.error && j.error.message) || ''));
+  return (j.models || []).filter(m => (m.supportedGenerationMethods || []).includes('generateContent') && /gemini/.test(m.name)).map(m => m.name.replace(/^models\//, ''));
+}
+function yzOnay(cfg) {
+  const u = AUTH.me(), o = store.get(YZ_ONAY, {}) || {}, imza = cfg.kaynak + ':' + cfg.key.slice(-6);
+  if (u && o[u.id] === imza) return true;
+  const ok = confirm('Bu bloğun Arapça metni ve râvinin adı Google’a (Gemini) gönderilecek.\n\n' +
+    (cfg.kisi ? 'Kişisel anahtarınız kullanılıyor. Anahtarın Google Cloud projesinde faturalandırma açıksa (ücretli katman) Google, Gemini API koşullarına göre girdileri ürünlerini geliştirmek için kullanmaz; açık değilse ücretsiz katman koşulları geçerlidir.'
+      : 'Ortak ücretsiz anahtar kullanılıyor. Ücretsiz katmanda Google, Gemini API koşullarına göre girdileri ve yanıtları ürünlerini geliştirmek için kullanabilir; insanlar inceleyebilir.') +
+    '\n\nYanıtlar yalnız öneridir. Devam edilsin mi? (Bu anahtar için bir daha sorulmaz.)');
+  if (ok && u) { o[u.id] = imza; store.set(YZ_ONAY, o); }
+  return ok;
+}
+function yzBtn(bid) { return '<button class="btn ghost sm yzbtn" data-yz="' + bid + '" aria-pressed="' + YZ.open.has(String(bid)) + '" title="Gemini: hüküm önerisi, çeviri, soru">✦ YZ</button>'; }
+const YZ_TUR = ['Taʿdîl', 'Cerh', 'Karma / Mukayyed', 'Cehâlet', 'Bid‘at / mezhep', 'Rivâyet hükmü', 'Diğer'];
+function yzOlcek() { return [6, 5, 4, 3, 2, 1].map(v => '+' + v + ': ' + CTX.TLEVEL[v]).concat([1, 2, 3, 4, 5, 6].map(v => '-' + v + ': ' + CTX.CLEVEL[v])).join('\n'); }
+function yzBaglam(b) { return 'Râvi: ' + b._n.effective.canonical_name + '\nEser: ' + (b.effective.source_name || '') + (b.effective.source_author ? ' — ' + b.effective.source_author : '') + '\n\nMETİN:\n' + b._text; }
+async function yzCalistir(b, is, soru) {
+  const k = String(b.id), cfg = yzCfg();
+  if (is === 'ceviri') { CEV.open.add(k); return cevCevir(k, b._text, yzBaglam(b).split('\n\nMETİN:')[0]); }   // çeviri ortak kayda, 🌐 panelinde
+  if (!cfg) { toast('Yapay zekâ bağlı değil: Ayarlar → Yapay zekâ.', true); return; }
+  if (!yzOnay(cfg)) return;
+  YZ.busy[k] = is; const r = YZ.res[k] = YZ.res[k] || {}; delete r.err; renderCenter();
+  try {
+    if (is === 'hukum') {
+      const prompt = 'Sen hadis usulünde ve cerh–ta‘dîlde uzman bir araştırma yardımcısısın. Aşağıdaki Arapça metin, adı verilen râvinin adı verilen eserdeki tercemesidir. Metindeki bütün cerh ve ta‘dîl hükümlerini çıkar.\n' +
+        'Kurallar:\n- lafiz: hükmü taşıyan ifade; metinde AYNEN geçtiği gibi (harekeleriyle, metinden kopyalayarak), olabildiğince kısa.\n- munekkit: hükmü veren âlim, metinde yazıldığı gibi Arapça; açıkça belirtilmemişse eserin müellifi.\n' +
+        '- tur: ' + YZ_TUR.join(' | ') + '.\n- derece: es-Sehâvî’nin mertebelerine göre −6…+6 (0 = nötr):\n' + yzOlcek() + '\n- hedef: hüküm bu râvi hakkında değilse kimin hakkında olduğu; bu râvi hakkındaysa boş bırak.\n- gerekce: Türkçe, kısa (münekkitin ıstılahı varsa belirt).\n' +
+        'Metinde olmayan bir şey yazma; hüküm yoksa boş liste ver.\n\n' + yzBaglam(b);
+      const schema = { type: 'OBJECT', properties: { hukumler: { type: 'ARRAY', items: { type: 'OBJECT', properties: { lafiz: { type: 'STRING' }, munekkit: { type: 'STRING' }, tur: { type: 'STRING', enum: YZ_TUR }, derece: { type: 'INTEGER' }, hedef: { type: 'STRING' }, gerekce: { type: 'STRING' } }, required: ['lafiz', 'tur', 'derece'] } } }, required: ['hukumler'] };
+      const x = await yzIste(cfg, prompt, schema); let j; try { j = JSON.parse(x.text); } catch (e) { throw Error('Gemini’nin yanıtı okunamadı.'); }
+      r.hukum = { list: Array.isArray(j.hukumler) ? j.hukumler : [], model: x.model, at: new Date().toISOString() };
+    } else {
+      const x = await yzIste(cfg, 'Hadis usulü ve cerh–ta‘dîl alanında uzman bir araştırma yardımcısısın. Aşağıdaki metne dayanarak soruyu akademik Türkçeyle cevapla. Yalnız metindeki bilgiye dayan; metinde yoksa bunu açıkça söyle; dayandığın Arapça ifadeyi alıntıla.\n\nSORU: ' + soru + '\n\n' + yzBaglam(b));
+      r.soru = { q: soru, a: x.text.trim(), model: x.model };
+    }
+    logAct('yz', ({ hukum: 'Hüküm önerisi', ceviri: 'Çeviri', soru: 'Soru' })[is] + ' · blok ' + b.block_order + ' · ' + cfg.model + ' · ' + cfg.kaynak, { nid: b._n.id, seq: b._n.source_sequence });
+  } catch (e) { r.err = e.message || String(e); }
+  delete YZ.busy[k]; renderCenter();
+}
+// Önerinin metindeki yerleri: önce aynen, yoksa harekesiz/normalize arama (bütün geçişler)
+function yzYerler(b, lafiz) {
+  const t = b._text, q = String(lafiz || '').trim(), out = []; if (!q) return out;
+  for (let i = t.indexOf(q); i >= 0; i = t.indexOf(q, i + 1)) out.push([i, i + q.length]);
+  if (out.length) return out;
+  const N = CTX.norm(t), qn = CTX.nz(q).replace(/\s+/g, ' ').trim(); if (!qn) return out;
+  const nn = N.n.replace(/\s/g, ' ');
+  for (let j = nn.indexOf(qn); j >= 0; j = nn.indexOf(qn, j + 1)) out.push([N.map[j], N.map[j + qn.length - 1] + 1]);
+  return out;
+}
+// Motorun bu öneriyle örtüşen hükümleri; eklenecekse motorun bulmadığı ilk geçiş
+function yzEslesme(b, x) {
+  const yer = yzYerler(b, x.lafiz), sts = stOfBlock(b), ort = (s, y) => s.start < y[1] && s.end > y[0];
+  const es = sts.filter(s => yer.some(y => ort(s, y)));
+  return { yer: yer[0] || null, es, bos: yer.find(y => !sts.some(s => ort(s, y))) || null };
+}
+function yzHukumHTML(b, h) {
+  const rows = h.list.map((x, i) => {
+    const { yer, es } = yzEslesme(b, x);
+    const d = Number(x.derece) || 0;
+    return '<tr style="cursor:default"><td class="ar" style="font-size:16px">' + esc(x.lafiz || '') + (yer ? '' : ' <span class="tag warn" title="İfade metinde bulunamadı">metinde yok</span>') + '</td><td class="ar small">' + esc(x.munekkit || '') + (x.hedef ? '<div class="small muted">hedef: ' + esc(x.hedef) + '</div>' : '') + '</td>' +
+      '<td class="small">' + esc(x.tur || '') + ' · ' + (d > 0 ? '+' : '') + d + '</td><td class="small">' + (es.length ? '<span class="tag" style="color:var(--ok)">motor da buldu</span> ' + es.map(s => '<button class="btn ghost sm" data-st="' + esc(s.uid) + '">' + esc(eType(s)) + ' ' + (eSev(s) > 0 ? '+' : '') + Math.round(eSev(s)) + '</button>').join('') : yer ? '<span class="tag warn">motor bulmadı</span>' : '—') + '</td>' +
+      '<td class="small">' + esc(x.gerekce || '') + '</td><td>' + (yer && !es.length ? '<button class="btn sm req-edit" data-yzadd="' + b.id + ':' + i + '">＋ Eksik hüküm olarak ekle</button>' : '') + '</td></tr>';
+  }).join('');
+  return '<div class="yz-out"><div class="small muted">Gemini hüküm önerileri · ' + esc(h.model) + ' · ' + h.list.length + ' öneri · denetlenmemiş</div>' +
+    (h.list.length ? '<div class="wrap"><table class="tbl"><thead><tr><th>Lafız</th><th>Münekkit</th><th>Tür · derece</th><th>Motor</th><th>Gerekçe</th><th></th></tr></thead><tbody>' + rows + '</tbody></table></div>' : '<div class="hint">Gemini bu blokta hüküm bulmadı.</div>') + '</div>';
+}
+function yzPanel(b) {
+  const k = String(b.id), r = YZ.res[k] || {}, cfg = yzCfg();
+  let h = '<div class="yz-panel" data-yzp="' + k + '">';
+  if (!cfg) return h + '<div class="hint">Yapay zekâ bağlı değil. ' + (AUTH.can('vault') ? 'Ayarlar → Yapay zekâ bölümünden ortak anahtarı girin; bütün hesaplar kullanabilir.' : 'Yönetici ortak anahtarı girince herkes kullanabilir; ya da Ayarlar → Yapay zekâ bölümünden kendi Gemini anahtarınızı ekleyin.') + '</div></div>';
+  h += '<div class="row yz-row"><button class="btn sm" data-yzgo="hukum:' + k + '"' + (YZ.busy[k] ? ' disabled' : '') + '>Hükümleri tespit et</button><button class="btn sm" data-yzgo="ceviri:' + k + '"' + (YZ.busy[k] ? ' disabled' : '') + '>Türkçeye çevir</button>' +
+    '<input class="field" data-yzq="' + k + '" placeholder="Bu metin hakkında soru…" dir="auto"><button class="btn sm" data-yzgo="soru:' + k + '"' + (YZ.busy[k] ? ' disabled' : '') + '>Sor</button><span class="small muted">' + esc(cfg.model) + ' · ' + esc(cfg.kaynak) + '</span></div>';
+  if (YZ.busy[k]) h += '<div class="hint">Gemini yanıtlıyor…</div>';
+  if (r.err) h += '<div class="note">' + esc(r.err) + '</div>';
+  if (r.hukum) h += yzHukumHTML(b, r.hukum);
+  if (r.soru) h += '<div class="yz-out"><div class="small muted">Soru: ' + esc(r.soru.q) + ' · ' + esc(r.soru.model) + '</div><div class="yz-metin">' + esc(r.soru.a) + '</div></div>';
+  return h + '<div class="small muted">Yanıtlar öneridir; kayda kendiliğinden geçmez. Hüküm sayımına yalnız “Eksik hüküm olarak ekle” ile, sizin onayınızla girer.</div></div>';
+}
+function yzEkle(bid, i) {
+  if (!need('edit')) return;
+  const b = BLK[bid], x = b && YZ.res[String(bid)] && YZ.res[String(bid)].hukum && YZ.res[String(bid)].hukum.list[i]; if (!x) return;
+  const m = yzEslesme(b, x), yer = m.bos || m.yer; if (!yer) { toast('İfade metinde bulunamadı.', true); return; }
+  const d = Math.max(-6, Math.min(6, Number(x.derece) || 0));
+  const type = x.tur === 'Taʿdîl' ? 'Taʿdîl' : x.tur === 'Karma / Mukayyed' ? 'Karma / Mukayyed' : x.tur === 'Cerh' || x.tur === 'Cehâlet' ? 'Cerh' : 'Bilinmiyor / İnsan kontrolü gerekli';
+  openAdd(b, yer[0], b._text.slice(yer[0], yer[1]), { type, critic: x.munekkit || '', sev: d, note: 'Gemini önerisi (' + (YZ.res[String(bid)].hukum.model || '') + '): ' + (x.gerekce || '') + (x.hedef ? ' · hedef: ' + x.hedef : '') });
+}
+function yzKart() {
+  const c = store.get(YZKEY, null) || {}, k = yzKisi() || {}, cfg = yzCfg(), can = AUTH.can('vault');
+  const mlist = id => '<datalist id="' + id + '">' + [...new Set([YZ_MODEL, 'gemini-2.5-pro', 'gemini-2.5-flash-lite'].concat(YZ.models[id] || []))].map(m => '<option value="' + esc(m) + '">').join('') + '</datalist>';
+  let h = '<h3 class="panel-title">Yapay zekâ <span class="muted">Gemini · ' + (cfg ? esc(cfg.kaynak) + ' · ' + esc(cfg.model) : 'bağlı değil') + '</span></h3><div class="set-grid">';
+  h += '<section class="card"><h3>Ortak ücretsiz anahtar (girişsiz)</h3><p class="small" style="margin-top:0">Yönetici bir kez girer; anahtar kasayla şifrelenip hesap dosyasıyla bütün hesaplara dağıtılır. Araştırmacılar ayrıca bir şey yapmadan kullanır. Google AI Studio’nun ücretsiz katmanıdır: kota sınırlıdır ve Google girdileri ürün geliştirmede kullanabilir.</p>' +
+    '<dl class="kv"><dt>Durum</dt><dd>' + (yzOrtak() ? 'Kayıtlı · ' + esc(c.model || YZ_MODEL) + (c.at ? ' · ' + whoWhen(c) : '') : '<span class="muted">Girilmedi</span>') + '</dd></dl>' +
+    (can ? '<form class="fixform" id="yz-ortak" autocomplete="off"><label>Gemini anahtarı (AI Studio)<input type="password" id="yzo-key" autocomplete="off" placeholder="' + (c.key ? 'Kayıtlı — değiştirmek için yenisini yapıştırın' : 'AIza…') + '"></label><label>Model<input id="yzo-model" list="yzo-ml" value="' + esc(c.model || YZ_MODEL) + '">' + mlist('yzo-ml') + '</label>' +
+      '<div class="review-row"><button class="btn primary sm">Kaydet ve dağıt</button><button class="btn sm" type="button" id="yzo-test">Sına · modelleri getir</button>' + (c.key ? '<button class="btn sm" type="button" id="yzo-del">Kaldır</button>' : '') + '</div></form>' : '<p class="hint">Ortak anahtarı yönetici girer.</p>') + '</section>';
+  h += '<section class="card"><h3>Kendi Gemini anahtarım (giriş)</h3><p class="small" style="margin-top:0">Kendi Google hesabınızla <b>aistudio.google.com/apikey</b> adresinden anahtar alıp buraya girin. Anahtarın Google Cloud projesinde faturalandırmayı açarsanız <b>ücretli katman</b> geçerli olur: kota yükselir ve Google, Gemini API koşullarına göre girdilerinizi ürün geliştirmede kullanmaz. Anahtar yalnız bu tarayıcıda, şifreli depoda durur; kimseyle paylaşılmaz.</p>' +
+    '<dl class="kv"><dt>Durum</dt><dd>' + (k.key ? 'Kayıtlı · ' + esc(k.model || YZ_MODEL) + (k.kullan === false ? ' · kullanılmıyor (ortak anahtar seçili)' : ' · kullanılıyor') : '<span class="muted">Girilmedi' + (yzOrtak() ? ' — ortak anahtar kullanılıyor' : '') + '</span>') + '</dd></dl>' +
+    '<form class="fixform" id="yz-kisi" autocomplete="off"><label>Gemini anahtarım<input type="password" id="yzk-key" autocomplete="off" placeholder="' + (k.key ? 'Kayıtlı — değiştirmek için yenisini yapıştırın' : 'AIza…') + '"></label><label>Model<input id="yzk-model" list="yzk-ml" value="' + esc(k.model || YZ_MODEL) + '">' + mlist('yzk-ml') + '</label>' +
+    '<label class="chk"><input type="checkbox" id="yzk-kullan"' + (k.kullan === false ? '' : ' checked') + '> Kendi anahtarımı kullan (işaretsizse ortak anahtar)</label>' +
+    '<div class="review-row"><button class="btn primary sm">Kaydet</button><button class="btn sm" type="button" id="yzk-test">Sına · modelleri getir</button>' + (k.key ? '<button class="btn sm" type="button" id="yzk-del">Sil</button>' : '') + '</div></form>' +
+    '<p class="small muted">Google, Gemini API’de tarayıcıdan doğrudan “Google ile giriş”i yalnız kendi Cloud projenizde OAuth istemcisi kurarak destekler; bu sitede giriş, kendi anahtarınızla yapılır.</p></section></div>' +
+    '<div class="note">Gizlilik: Metin Google’a yalnız bir blokta “✦ YZ” panelindeki düğmeye basınca gönderilir; ilk kullanımda ayrıca onay istenir. Kaynak metinler gizli depodaki çalışma malzemesidir; ücretsiz katmanda gönderilen metni Google görebilir. Güncel koşullar: <a href="' + YZ_SART + '" target="_blank" rel="noopener noreferrer">Gemini API koşulları ↗</a>.</div>';
+  return h;
+}
+function bindYzKart() {
+  const testEt = async (key, ml) => { const ms = await yzModeller(key); YZ.models[ml] = ms; return ms; };
+  if ($('yz-ortak')) {
+    $('yz-ortak').onsubmit = e => {
+      e.preventDefault(); if (!need('vault')) return;
+      const old = store.get(YZKEY, null) || {}, key = $('yzo-key').value.trim() || old.key || '';
+      if (!key) { toast('Anahtar gerekli.', true); return; }
+      store.set(YZKEY, Object.assign({ key, model: $('yzo-model').value.trim() || YZ_MODEL, at: new Date().toISOString() }, by()));
+      logAct('yz', 'Ortak Gemini anahtarı ' + (old.key && old.key !== key ? 'yenilendi' : old.key ? 'güncellendi' : 'eklendi') + ' · ' + ($('yzo-model').value.trim() || YZ_MODEL), { pkg: '' });
+      hesapYayinla(); toast(hesapHazir() ? 'Kaydedildi; bütün hesaplara dağıtılıyor.' : 'Kaydedildi (yalnız bu tarayıcıda; dağıtmak için ortak kayıt ve yayındaki site gerekir).'); renderSettings();
+    };
+    $('yzo-test').onclick = async () => { const key = $('yzo-key').value.trim() || (store.get(YZKEY, null) || {}).key; if (!key) { toast('Anahtar gerekli.', true); return; } try { const ms = await testEt(key, 'yzo-ml'); toast('Anahtar çalışıyor · ' + ms.length + ' model.'); const v = $('yzo-model').value; renderSettings(); if ($('yzo-model')) $('yzo-model').value = v; } catch (err) { toast(err.message, true); } };
+    if ($('yzo-del')) $('yzo-del').onclick = () => { if (!need('vault') || !confirm('Ortak Gemini anahtarı bütün hesaplardan kaldırılsın mı?')) return; store.set(YZKEY, Object.assign({ key: '', model: '', at: new Date().toISOString() }, by())); logAct('yz', 'Ortak Gemini anahtarı kaldırıldı', { pkg: '' }); hesapYayinla(); renderSettings(); };
+  }
+  if ($('yz-kisi')) {
+    const u = AUTH.me();
+    $('yz-kisi').onsubmit = e => {
+      e.preventDefault(); const m = yzKisiTum(), old = m[u.id] || {}, key = $('yzk-key').value.trim() || old.key || '';
+      if (!key) { toast('Anahtar gerekli.', true); return; }
+      m[u.id] = { key, model: $('yzk-model').value.trim() || YZ_MODEL, kullan: $('yzk-kullan').checked, at: new Date().toISOString() }; store.set(YZK_KISI, m);
+      logAct('yz', 'Kişisel Gemini anahtarı kaydedildi · ' + m[u.id].model + (m[u.id].kullan ? '' : ' · kullanılmıyor'), { pkg: '' }); toast('Kaydedildi.'); renderSettings();
+    };
+    $('yzk-test').onclick = async () => { const key = $('yzk-key').value.trim() || (yzKisi() || {}).key; if (!key) { toast('Anahtar gerekli.', true); return; } try { const ms = await testEt(key, 'yzk-ml'); toast('Anahtar çalışıyor · ' + ms.length + ' model.'); const v = $('yzk-model').value; renderSettings(); if ($('yzk-model')) $('yzk-model').value = v; } catch (err) { toast(err.message, true); } };
+    if ($('yzk-del')) $('yzk-del').onclick = () => { const m = yzKisiTum(); delete m[u.id]; store.set(YZK_KISI, m); logAct('yz', 'Kişisel Gemini anahtarı silindi', { pkg: '' }); renderSettings(); };
+  }
+}
+
+/* ---------- Türkçe çeviri (Gemini) ----------
+   Eski otomatik çeviri paketi (1. cilt, Google Çeviri) kullanıcı isteğiyle kaldırıldı; tarayıcılardaki kopyası açılışta
+   silinir. Çeviri artık blok, sayfa ya da dipnot başına Gemini ile yapılır ve ortak kayda (REV.cev) yazılır: herkes
+   görür, metin yeniden gönderilmez; araştırmacı düzeltebilir. Esas olan Arapça metindir. */
+const CEV = { open: new Set(), busy: {}, err: {}, edit: null };
+const cevOzet = t => { let h = 0; for (const c of String(t || '')) h = (h * 31 + c.codePointAt(0)) >>> 0; return h.toString(36); };
+async function cevEskiPaketiSil() {   // kaldırılan çeviri paketinin tarayıcıdaki şifreli kopyası
+  for (let v = 1; v <= 30; v++) { try { await IDB.del('ceviri', 'cilt:' + v); } catch (e) { return; } }
+}
+async function cevCevir(key, metin, baglam) {
+  const cfg = yzCfg();
+  if (!cfg) { toast('Çeviri için yapay zekâ bağlı değil: Ayarlar → Yapay zekâ.', true); return; }
+  if (!yzOnay(cfg)) return;
+  CEV.busy[key] = true; delete CEV.err[key]; renderCenter();
+  try {
+    const x = await yzIste(cfg, 'Aşağıdaki Arapça cerh–ta‘dîl metnini akademik Türkçeye çevir. Özel adları transkripsiyonla yaz; cerh–ta‘dîl lafızlarını çevirinin içinde Arapçasıyla parantezde ver. Senetleri ve kaynak künyesini koru. Yalnız çeviriyi yaz.\n\n' + (baglam ? baglam + '\n\n' : '') + 'METİN:\n' + metin);
+    const rec = Object.assign({ text: x.text.trim(), model: x.model, kaynak: cfg.kaynak, ozet: cevOzet(metin), at: new Date().toISOString() }, by());
+    if (AUTH.can('edit')) { REV.cev = REV.cev || {}; REV.cev[key] = rec; saveRev(); } else { YZ.cevGecici = YZ.cevGecici || {}; YZ.cevGecici[key] = rec; }
+    logAct('yz', 'Çeviri · ' + key + ' · ' + cfg.model + ' · ' + cfg.kaynak, { pkg: '' });
+  } catch (e) { CEV.err[key] = e.message || String(e); }
+  delete CEV.busy[key]; renderCenter();
+}
+function cevKayit(key) { return (REV.cev && REV.cev[key]) || (YZ.cevGecici && YZ.cevGecici[key]) || null; }
+function cevPanel(key, metin, baglam) {
+  key = String(key); const r = cevKayit(key), cfg = yzCfg();
+  let h = '<div class="cevp" data-cevpanel="' + esc(key) + '">';
+  if (CEV.busy[key]) return h + '<div class="hint">Gemini çeviriyor…</div></div>';
+  if (CEV.err[key]) h += '<div class="note">' + esc(CEV.err[key]) + '</div>';
+  const cevirBtn = l => cfg ? '<button class="btn sm" data-cevgo="' + esc(key) + '">✦ ' + l + '</button>' : '';
+  if (!r) return h + '<div class="hint">Bu bölümün Türkçe çevirisi yok.' + (cfg ? ' Gemini ile çevrilebilir; çeviri ortak kayda yazılır, herkes görür.' : ' Çeviri için Ayarlar → Yapay zekâ bölümünden Gemini bağlanmalı.') + '</div>' + cevirBtn('Gemini ile çevir') + '</div>';
+  const eski = r.ozet && r.ozet !== cevOzet(metin);
+  h += '<div class="cevh"><b>Türkçe çeviri</b> <span class="muted">· ' + (r.duz ? 'Gemini çevirisi, araştırmacı düzeltti (' + whoWhen(r.duz) + ')' : 'Gemini (' + esc(r.model || '') + '), denetlenmemiş') + ' · ' + whoWhen(r) + (eski ? ' · <b>Arapça metin çeviriden sonra değişti</b>' : '') + (REV.cev && REV.cev[key] ? '' : ' · kaydedilmedi (düzenleme yetkisi yok)') + ' — esas olan Arapça metindir</span></div>';
+  if (CEV.edit === key) return h + '<form class="fixform" data-cevsave="' + esc(key) + '"><textarea class="field" rows="8" dir="ltr" lang="tr">' + esc(r.text) + '</textarea><div class="review-row"><button class="btn primary sm">Kaydet</button><button class="btn sm" type="button" data-cevedit="">Vazgeç</button></div></form></div>';
+  return h + '<div class="cevtr yz-metin" dir="ltr" lang="tr">' + esc(r.text) + '</div><div class="review-row req-edit">' + (REV.cev && REV.cev[key] ? '<button class="btn ghost sm" data-cevedit="' + esc(key) + '">✎ Düzelt</button>' : '') + cevirBtn(eski ? 'Yeniden çevir (metin değişti)' : 'Yeniden çevir') + '</div></div>';
 }
 const cevAcik = key => !!UI.cevAll || CEV.open.has(String(key));
-function cevBtn(key, label) { return '<button class="btn ghost sm cevbtn" data-cev="' + esc(key) + '" aria-pressed="' + cevAcik(key) + '" title="Türkçe çeviriyi aç / kapat">🌐 ' + (label || 'Çeviri') + '</button>'; }
+function cevBtn(key, label) { return '<button class="btn ghost sm cevbtn" data-cev="' + esc(key) + '" aria-pressed="' + cevAcik(key) + '" title="Türkçe çeviriyi aç / kapat (Gemini)">🌐 ' + (label || 'Çeviri') + (cevKayit(String(key)) ? ' ✓' : '') + '</button>'; }
 function cevToggle(key) {
   key = String(key);
   if (UI.cevAll) { UI.cevAll = false; saveUI(); for (const b of (NBYID[S.nid] || { blocks: [] }).blocks) CEV.open.add(String(b.id)); }
   if (CEV.open.has(key)) CEV.open.delete(key); else CEV.open.add(key);
   cevAc();
 }
-function cevAc() {
-  const v = cevVol();
-  if (!CEV.data[v] && !CEV.busy[v] && CEV.err[v] !== 'yok') cevGetir(v).then(() => { if (S.view === 'desk') renderCenter(); });
-  if (S.view === 'desk') renderCenter();
+function cevAc() { if (S.view === 'desk') renderCenter(); }
+// Panelin çevireceği metin ve bağlam (blok, dipnot, sayfa)
+function cevMetin(key) {
+  if (/^p\d+$/.test(key)) { const p = Object.values(SNAP.pages || {}).find(x => x.page_number === +key.slice(1)); return p ? [p.raw_text.replace(/‌/g, ''), (PK && PK.vol || 1) + '. cilt, sayfa ' + p.page_number] : null; }
+  if (/^f-/.test(key)) { const n = NBYID[key.slice(2)]; return n ? [n.footnotes.map(f => f.raw_text.replace(/‌/g, '')).join('\n'), 'Râvi: ' + n.effective.canonical_name + ' · dipnotlar'] : null; }
+  const b = BLK[+key]; return b ? [b._text, yzBaglam(b).split('\n\nMETİN:')[0]] : null;
 }
 
 /* ---------- Harf (dış kaynak: Prophetic Sunnah Encyclopedia) ----------
@@ -2107,12 +2244,12 @@ function renderSourceTab(n) {
     out += '<article class="blk' + (selBlock === b.id ? ' active' : '') + '" id="blk-' + b.id + '" data-block="' + b.id + '">' +
       '<header class="blk-head"><span class="bno">BLOK ' + b.block_order + '</span><span class="bwork">' + esc(srcShort(b)) + '</span>' +
       '<span class="bauthor">' + esc(authorTr(b)) + '</span><span class="bloc">' + esc(b.effective.source_locator || '') + ' · s. ' + b.effective.page + (b.effective.page_end !== b.effective.page ? '–' + b.effective.page_end : '') + '</span>' +
-      '<span class="bcounts">' + (REV.txt && REV.txt[b.id] ? '<span class="tag" title="Metin düzeltildi · ' + esc((REV.txt[b.id].by_name || REV.txt[b.id].by || '')) + '">✎ düzeltilmiş metin</span>' : '') + Object.keys(byK).sort((x, y) => KSTACK.indexOf(x) - KSTACK.indexOf(y)).map(k => kindTag(k, KNAME[k] + ' ' + byK[k])).join('') + cevBtn(b.id) + '<button class="btn ghost sm" data-blockinfo="' + b.id + '" title="Blok künyesi, metin düzeltme ve geçmiş">ⓘ</button></span></header>' +
-      '<div class="btext" data-text="' + b.id + '">' + renderText(b._text, sts, { markers: b._markers, notes: b._notes, old: UI.showOld ? b.evaluations : [], refStart: b._refStart, hl: S.hl && S.hl.block === b.id ? S.hl : null }) + '</div>' + (cevAcik(b.id) ? cevPanel(String(b.id), () => (cevNarr(n) || {})[b.id]) : '') +
+      '<span class="bcounts">' + (REV.txt && REV.txt[b.id] ? '<span class="tag" title="Metin düzeltildi · ' + esc((REV.txt[b.id].by_name || REV.txt[b.id].by || '')) + '">✎ düzeltilmiş metin</span>' : '') + Object.keys(byK).sort((x, y) => KSTACK.indexOf(x) - KSTACK.indexOf(y)).map(k => kindTag(k, KNAME[k] + ' ' + byK[k])).join('') + cevBtn(b.id) + yzBtn(b.id) + '<button class="btn ghost sm" data-blockinfo="' + b.id + '" title="Blok künyesi, metin düzeltme ve geçmiş">ⓘ</button></span></header>' +
+      '<div class="btext" data-text="' + b.id + '">' + renderText(b._text, sts, { markers: b._markers, notes: b._notes, old: UI.showOld ? b.evaluations : [], refStart: b._refStart, hl: S.hl && S.hl.block === b.id ? S.hl : null }) + '</div>' + (cevAcik(b.id) ? cevPanel(String(b.id), b._text) : '') + (YZ.open.has(String(b.id)) ? yzPanel(b) : '') +
       '<footer class="blk-foot">' + (sts.length ? sts.map(stChip).join('') : '<span class="empty">Bu blokta hüküm lafzı tespit edilmedi.</span>') + ((b._del || []).length ? '<button class="btn ghost sm" data-blockinfo="' + b.id + '" title="Kaldırılan hükümleri gör / geri al">🗑 ' + b._del.length + ' kaldırılan</button>' : '') + '</footer></article>';
   }
   const fkey = 'f-' + n.id;
-  return out + (n.footnotes.length ? '<div class="blk"><header class="blk-head"><span class="bno">DİPNOT</span><span class="bcounts">' + cevBtn(fkey) + '</span></header>' + n.footnotes.map(f => '<div class="btext">' + esc(f.raw_text.replace(/‌/g, '')) + '</div>').join('') + (cevAcik(fkey) ? cevPanel(fkey, () => { const m = cevNarr(n) || {}; return n.footnotes.flatMap((f, i) => m['f' + i] || []); }) : '') + '</div>' : '') + '</div>';
+  return out + (n.footnotes.length ? '<div class="blk"><header class="blk-head"><span class="bno">DİPNOT</span><span class="bcounts">' + cevBtn(fkey) + '</span></header>' + n.footnotes.map(f => '<div class="btext">' + esc(f.raw_text.replace(/‌/g, '')) + '</div>').join('') + (cevAcik(fkey) ? cevPanel(fkey, cevMetin(fkey)[0]) : '') + '</div>' : '') + '</div>';
 }
 function stChip(s) {
   const k = eKind(s); const cur = S.sel && S.sel.type === 'st' && S.sel.id === s.uid;
@@ -2463,7 +2600,7 @@ function renderPageTab(n) {
   let out = '<div class="toolbar"><span class="small muted">Kaynak sayfası:</span>' + pages.map(x => '<button class="btn sm" data-page="' + x + '" aria-pressed="' + (x === S.page) + '">s. ' + x + '</button>').join('') + '<span class="grow"></span>' + (p ? '<button class="btn sm" data-raw="page">Ham HTML</button>' : '') + '</div><div class="pane">';
   if (!p) return out + '<div class="empty-state">Bu sayfa anlık görüntüde yok.</div></div>';
   if (p.clipped) out += '<div class="note">Bu sayfa paket sınırında kırpılmıştır (yalnız ilk 50 râviye ait kısım).</div>';
-  return out + '<div class="blk"><header class="blk-head"><span class="bno">SAYFA ' + p.page_number + '</span><span class="bwork">الجامع لكتب الضعفاء والمتروكين والكذابين - جـ 1</span><span class="bcounts">' + cevBtn('p' + p.page_number) + '</span></header><div class="btext">' + esc(p.raw_text.replace(/‌/g, '')) + '</div>' + (cevAcik('p' + p.page_number) ? cevPanel('p' + p.page_number, d => d.sayfalar[p.page_number]) : '') + '</div></div>';
+  return out + '<div class="blk"><header class="blk-head"><span class="bno">SAYFA ' + p.page_number + '</span><span class="bwork">الجامع لكتب الضعفاء والمتروكين والكذابين - جـ 1</span><span class="bcounts">' + cevBtn('p' + p.page_number) + '</span></header><div class="btext">' + esc(p.raw_text.replace(/‌/g, '')) + '</div>' + (cevAcik('p' + p.page_number) ? cevPanel('p' + p.page_number, p.raw_text.replace(/‌/g, '')) : '') + '</div></div>';
 }
 
 /* ---------- Denetçi paneli ---------- */
@@ -2784,15 +2921,15 @@ function savePick(s, start, end, phrase) {
   S.pick = null; applyFix(s); LEX = null; saveRev(); recomputeAgg(); window.getSelection().removeAllRanges();
   S.sel = { type: 'st', id: s.uid }; S.editing = true; renderCenter(); renderInspector(); toast('Pasaj güncellendi.');
 }
-function openAdd(b, start, phrase) {
+function openAdd(b, start, phrase, pre) {
   const r = CTX.analyze(phrase, { sourceName: b.effective.source_name, sourceAuthor: b.effective.source_author });
-  const g = r.statements[0] || {};
+  const g = Object.assign({}, r.statements[0] || {}, pre ? { type: pre.type, critic: pre.critic, severity: pre.sev } : {});
   const crit = Object.keys(CTX.CRITICS);
   $('add-body').innerHTML = '<div class="phrase k-d" style="font-family:var(--ar);font-size:22px;direction:rtl;text-align:right">' + esc(phrase) + '</div><div class="hint">Blok ' + b.block_order + ' · ' + esc(srcShort(b)) + '</div><div class="fixform">' +
     '<label>Tür<select id="ad-type">' + TYPES.map(t => '<option' + (t === (g.type || 'Cerh') ? ' selected' : '') + '>' + esc(t) + '</option>').join('') + '</select></label>' +
     '<label>Münekkit<input id="ad-critic" list="critic-list2" dir="auto" value="' + esc(g.critic || '') + '"><datalist id="critic-list2">' + crit.map(c => '<option value="' + esc(c) + '">' + esc(CTX.critic(c).tr) + '</option>').join('') + '</datalist></label>' +
     '<label>Şiddet<select id="ad-sev">' + [6, 5, 4, 3, 2, 1, 0, -1, -2, -3, -4, -5, -6].map(v => '<option value="' + v + '"' + ((g.severity !== undefined ? Math.round(g.severity) : -2) === v ? ' selected' : '') + '>' + (v > 0 ? '+' + v + ' · ' + CTX.TLEVEL[v] : v < 0 ? v + ' · ' + CTX.CLEVEL[-v] : '0 · nötr') + '</option>').join('') + '</select></label>' +
-    '<label>Not<textarea id="ad-note" rows="2" dir="auto"></textarea></label><div class="review-row"><button class="btn primary" id="ad-save">Ekle</button><button class="btn ghost" data-close="add-dialog">Vazgeç</button></div></div>';
+    '<label>Not<textarea id="ad-note" rows="2" dir="auto">' + esc((pre && pre.note) || '') + '</textarea></label><div class="review-row"><button class="btn primary" id="ad-save">Ekle</button><button class="btn ghost" data-close="add-dialog">Vazgeç</button></div></div>';
   $('ad-save').onclick = () => {
     const uid = 'u' + b.id + ':' + start + ':' + (start + phrase.length) + ':' + Date.now().toString(36);
     const a = Object.assign({ uid, block_id: b.id, start, end: start + phrase.length, phrase, type: $('ad-type').value, critic: $('ad-critic').value.trim(), sev: Number($('ad-sev').value), note: $('ad-note').value.trim(), at: new Date().toISOString() }, by());
@@ -3421,13 +3558,14 @@ function renderSettings() {
     '<section class="card"><h3>Şifreli kopya</h3><p class="small" style="margin-top:0">Başkasına verilecek veya taşınacak dosya budur: gömülü kaynak metin AES-256-GCM ile şifrelenir; dosya, seçtiğiniz kullanıcıların parolalarıyla açılır. Kopyadaki parolalar, oluşturma anındaki parolalardır; sonradan değişen bir parola için kopyayı yeniden oluşturun.</p><div class="note">Parola unutulursa şifreli kopya açılamaz. Şifresiz asıl dosyayı güvenli bir yerde saklayın.</div>' +
     (AUTH.can('vault') ? '<button class="btn primary" id="vault-export">Şifreli kopyayı oluştur ve indir…</button>' : '<p class="hint">Şifreli kopyayı yönetici oluşturur.</p>') + '</section></div>';
   out += ortakCard();
+  out += yzKart();
   // Hareket kaydı
   out += '<h3 class="panel-title">Hareket kaydı <span class="muted" id="log-count">yükleniyor…</span></h3><div class="row log-filter"><select class="field" id="lf-user"><option value="">Bütün kullanıcılar</option></select><select class="field" id="lf-act"><option value="">Bütün işlemler</option>' + Object.entries(ACT_TR).map(([k, v]) => '<option value="' + esc(k) + '"' + (LOGF.act === k ? ' selected' : '') + '>' + esc(v) + '</option>').join('') + '</select><input class="field" id="lf-from" type="date" value="' + esc(LOGF.from) + '" aria-label="Başlangıç tarihi"><input class="field" id="lf-to" type="date" value="' + esc(LOGF.to) + '" aria-label="Bitiş tarihi"><div class="search" style="flex:1;min-width:180px"><input id="lf-q" type="search" placeholder="Ara: râvi no, lafız, not…" value="' + esc(LOGF.q) + '"></div>' +
     (AUTH.can('log-export') ? '<button class="btn sm" id="log-csv">CSV</button><button class="btn sm" id="log-json">JSON</button>' : '') + '</div><div id="log-body"></div>';
   out += '<div class="note info" style="margin-top:18px"><b>Güvenlik notu.</b> Veri anahtarı her kullanıcı için ayrı bir anahtar yuvasında, parolasından türetilen anahtarla kilitlidir; parola saklanmaz. Kasayı açan her kullanıcı veriyi okuyabildiğinden roller sunucusuz bir sistemde erişim düzeni ve sorumluluk içindir, teknik bir sınır değildir. Silinen veya pasifleştirilen kullanıcının yuvası bu tarayıcıdan kaldırılır; daha önce verilmiş şifreli kopyalarda eski yuvası kalır. Dışa aktarılan raporlar ve JSON dosyaları şifresizdir. Farklı bilgisayarlardaki araştırmacılar kararlarını “Dışa aktar → İnceleme kayıtlarım” ile paylaşır.</div>';
   el.innerHTML = out;
   if ($('vault-export')) $('vault-export').onclick = openVaultExport;
-  bindOrtakCard();
+  bindOrtakCard(); bindYzKart();
   $('acc-name').onsubmit = e => { e.preventDefault(); try { const old = u.name; AUTH.rename(u.id, $('acc-name-v').value); logAct('kullanıcı', 'Görünen ad: ' + old + ' → ' + AUTH.me().name, { pkg: '' }); applyUser(); toast('Ad kaydedildi.'); renderSettings(); } catch (err) { toast(err.message, true); } };
   $('acc-pw').onsubmit = async e => {
     e.preventDefault();
@@ -3555,7 +3693,7 @@ $('import-file').onchange = async e => {
     // Bütün bölümler (kararlar, râvi durumları, eklemeler, notlar, blok/metin/kimlik düzeltmeleri, teâruz) öğe öğe
     // birleşir: yalnız dosyada olan eklenir, ikisinde farklı olanda zaman damgası yeni olan geçer; mevcut kayıt silinmez.
     const d = JSON.parse(await f.text());
-    const SECS = ['st', 'narr', 'added', 'notes', 'blk', 'txt', 'idn', 'conf'];
+    const SECS = ['st', 'narr', 'added', 'notes', 'blk', 'txt', 'idn', 'conf', 'cev'];
     if (!d || typeof d !== 'object' || !SECS.some(k => d[k] && typeof d[k] === 'object')) throw Error('Geçerli bir inceleme dosyası değil.');
     if (d.key && d.key !== RKEY && !confirm('Bu dosya başka bir pakete ait (' + ortakLabel(d.key) + '); açık paket: ' + pkgLabel(PK) + '. Yine de bu pakete aktarılsın mı?')) { e.target.value = ''; return; }
     const pick = o => { const r = {}; for (const k of SECS) if (o[k] != null) r[k] = o[k]; return r; };
@@ -3736,10 +3874,13 @@ document.addEventListener('click', e => {
   const hs = t.closest('[data-harfs]'); if (hs) { const rec = harfKayit(NBYID[S.nid]), d = rec && HARF.data[rec.dosya]; if (!d) return; const ref = hs.dataset.harfs; let s, tx = ''; if (ref[0] === 's') { const [i, j] = ref.slice(1).split(':').map(Number); s = d.statements[i].sources[j]; tx = d.statements[i].text; } else s = d.biography_sources[+ref.slice(1)]; if (s) { openDialog('Kaynak · ' + (s.kitap_adi || ('Kitap #' + s.book_id)), harfKaynakDlg(d, s, tx)); const mk = $('gen-body').querySelector('.harf-page mark'); if (mk) mk.scrollIntoView({ block: 'center' }); } return; }
   const hg = t.closest('[data-harfgo]'); if (hg) { const el = document.getElementById('harf-' + hg.dataset.harfgo); if (el) el.scrollIntoView({ block: 'start', behavior: 'smooth' }); return; }
   if (t.closest('[data-harfload]')) { if (!need('volume')) return; harfDosyaSec(); return; }
+  const yb = t.closest('[data-yz]'); if (yb) { const k = yb.dataset.yz; if (YZ.open.has(k)) YZ.open.delete(k); else YZ.open.add(k); renderCenter(); return; }
+  const yg = t.closest('[data-yzgo]'); if (yg) { const [is, bid] = yg.dataset.yzgo.split(':'); const b = BLK[+bid]; if (!b) return; let q = ''; if (is === 'soru') { const inp = document.querySelector('[data-yzq="' + bid + '"]'); q = inp ? inp.value.trim() : ''; if (!q) { toast('Önce soruyu yazın.', true); return; } } yzCalistir(b, is, q); return; }
+  const ya = t.closest('[data-yzadd]'); if (ya) { const [bid, i] = ya.dataset.yzadd.split(':'); yzEkle(+bid, +i); return; }
   const cv = t.closest('[data-cev]'); if (cv) { cevToggle(cv.dataset.cev); if (S.view !== 'desk' && typeof renderCenter === 'function') renderCenter(); return; }
   if (t.closest('[data-cevall]')) { UI.cevAll = !UI.cevAll; if (!UI.cevAll) CEV.open.clear(); saveUI(); cevAc(); return; }
-  if (t.closest('[data-cevar]')) { UI.cevAr = UI.cevAr === false; saveUI(); renderCenter(); return; }
-  const cl = t.closest('[data-cevload]'); if (cl) { if (!need('volume')) return; cevDosyaSec(+cl.dataset.cevload); return; }
+  const cg = t.closest('[data-cevgo]'); if (cg) { const k = cg.dataset.cevgo, m = cevMetin(k); if (m) cevCevir(k, m[0], m[1]); return; }
+  const ce = t.closest('[data-cevedit]'); if (ce) { if (ce.dataset.cevedit && !need('edit')) return; CEV.edit = ce.dataset.cevedit || null; renderCenter(); return; }
   const te = t.closest('[data-tedit]'); if (te) { if (!need('text')) return; S.tedit = +te.dataset.tedit; renderInspector(); const f = document.querySelector('form[data-tsave] textarea'); if (f) f.focus(); return; }
   if (t.closest('[data-tcancel]')) { S.tedit = null; renderInspector(); return; }
   const trs = t.closest('[data-treset]'); if (trs) { if (!need('text')) return; const b = BLK[+trs.dataset.treset]; if (b && confirm('Blok ' + b.block_order + ' özgün metnine döndürülsün mü?')) saveBlockText(b.id, b._otext, ''); return; }
@@ -3789,6 +3930,14 @@ document.addEventListener('click', e => {
   }
 });
 document.addEventListener('submit', e => {
+  const cvs = e.target.closest('form[data-cevsave]');
+  if (cvs) {
+    e.preventDefault(); if (!need('edit')) return;
+    const key = cvs.dataset.cevsave, r = REV.cev && REV.cev[key]; if (!r) return;
+    const t = cvs.querySelector('textarea').value.trim(); if (!t) { toast('Çeviri boş olamaz.', true); return; }
+    if (t !== r.text) { REV.cev[key] = Object.assign({}, r, { text: t, duz: Object.assign({ at: new Date().toISOString() }, by()) }); saveRev(); logAct('yz', 'Çeviri düzeltildi · ' + key, { pkg: '' }); }
+    CEV.edit = null; renderCenter(); toast('Çeviri kaydedildi.'); return;
+  }
   const cfm = e.target.closest('form[data-confsave]');
   if (cfm) {
     e.preventDefault(); if (!need('conflict')) return;
@@ -3919,6 +4068,7 @@ function startApp() {
   if (ortakCfg()) ortakSync();
   if (hesapHazir()) setTimeout(() => hesapYayinla(), 1500);
   if (UI.cevAll) setTimeout(cevAc, 300);
+  cevEskiPaketiSil();
   harfDizinGetir().then(d => { if (d) renderCenter(); });
   tkzDizinGetir().then(d => { if (d && S.tab === 'hoca') renderCenter(); });
   const li = KASA.loginInfo() || {};
@@ -6366,8 +6516,8 @@ const KASA = (() => {
     if (dek && o.ek) ch = (await applyEk(o.ek)) || ch;
     return ch;
   }
-  // Mühürlü ayarlar (yalnız ortak kayıt bağlantısı): yerelde yoksa ya da gelen daha yeniyse alınır
-  const EK_KEYS = ['ortak-ayar'];
+  // Mühürlü ayarlar (ortak kayıt bağlantısı, Gemini ortak anahtarı): yerelde yoksa ya da gelen daha yeniyse alınır
+  const EK_KEYS = ['ortak-ayar', 'yz-ayar'];
   async function applyEk(sealed) {
     let ch = false;
     try {
