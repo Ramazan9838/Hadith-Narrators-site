@@ -637,6 +637,36 @@ body.resizing { user-select: none; } body.resizing-x, body.resizing-x * { cursor
 @media (max-width: 880px) { .cevr { grid-template-columns: minmax(0, 1fr); gap: 4px; } }
 @media print { .cevbtn, .cevh .btn { display: none; } }
 
+/* Harf (dış kaynak) sekmesi */
+.linkbtn { background: none; border: 0; padding: 0; margin: 0; font: inherit; color: var(--accent); cursor: pointer; text-align: inherit; }
+.linkbtn:hover { text-decoration: underline; }
+.linkbtn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 3px; }
+.harf .ar { font-size: 17px; line-height: 1.75; }
+.harf td.ar.small, .harf .small .ar { font-size: 14px; }
+.harf-nav { display: flex; flex-wrap: wrap; gap: 4px; margin: 10px 0 2px; position: sticky; top: 0; z-index: 2; background: var(--paper); padding: 6px 0; border-bottom: 1px solid var(--line); }
+.harf-sec { scroll-margin-top: 52px; }
+.harf-sec .kv { grid-template-columns: 170px minmax(0, 1fr); }
+.harf-sec #harf-q, .harf #harf-q { margin: 0 0 10px; }
+.harf-soz { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin: 0 0 10px; background: var(--paper); }
+.harf-soz[hidden] { display: none; }
+.harf-soz header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; font-size: 13px; }
+.harf-soz header .num { color: var(--ink-3); }
+.harf-quote { margin: 6px 0; font-size: 19px !important; line-height: 1.9 !important; text-align: right; }
+.harf-src { display: flex; align-items: flex-start; gap: 10px; border-top: 1px dashed var(--line); padding: 6px 0 4px; font-size: 12.5px; }
+.harf-src > div { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 6px; }
+.harf-src > div > .note { flex-basis: 100%; }
+.harf-src .ar { font-size: 15px; }
+.harf-src-head .harf-src { border-top: 0; padding-top: 0; }
+.harf-page { font-size: 17px; line-height: 1.95; background: var(--reading); border: 1px solid var(--line); border-radius: 6px; padding: 8px 12px; text-align: right; max-height: 46vh; overflow: auto; }
+.harf-page mark { background: var(--warn-bg); color: inherit; border-bottom: 2px solid var(--warn); border-radius: 2px; }
+.harf-h4 { text-transform: none !important; letter-spacing: 0 !important; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
+.harf-h4 .ar { font-size: 14px; color: var(--ink-2); }
+.harf a, .harf-src a, .harf-h4 a { color: var(--accent); }
+.harf-det { border-top: 1px solid var(--line); padding: 6px 0; }
+.harf-det summary { cursor: pointer; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
+@media (max-width: 880px) { .harf-sec .kv { grid-template-columns: 110px minmax(0, 1fr); } .harf-src { flex-direction: column; } .harf-sec { scroll-margin-top: 96px; } }
+@media print { .harf-nav, .harf-src .btn, #harf-q { display: none; } }
+
 </style>
 </head>
 <body class="locked">
@@ -920,7 +950,7 @@ var CONFC = {};
 /* ---------- Durum ---------- */
 const S = { scope: 'pkg', view: 'desk', nid: null, tab: 'kaynak', sel: null, railFilter: 'all', q: '', sort: 'seq', critQ: '', critSel: '', lexSel: '', lexK: '', page: null };
 const VIEWS = ['desk', 'packages', 'critics', 'conflicts', 'lex', 'report', 'analyze', 'method', 'settings'];
-const TABS = [['kaynak', 'Kaynak metin'], ['hukum', 'Hükümler'], ['sentez', 'Sentez'], ['kimlik', 'Kimlik'], ['hoca', 'Hocaları · Talebeleri'], ['rihle', 'Rıhle'], ['sayfa', 'Sayfa']];
+const TABS = [['kaynak', 'Kaynak metin'], ['hukum', 'Hükümler'], ['sentez', 'Sentez'], ['kimlik', 'Kimlik'], ['hoca', 'Hocaları · Talebeleri'], ['rihle', 'Rıhle'], ['sayfa', 'Sayfa'], ['harf', 'Harf']];
 
 /* ---------- Paketler ve ciltler ----------
    Paket = bir cildin ardışık 50 râvisi. c1-p001 gömülü anlık görüntüdür; diğer paketler
@@ -1311,6 +1341,145 @@ function cevAc() {
   if (S.view === 'desk') renderCenter();
 }
 
+/* ---------- Harf (dış kaynak: Prophetic Sunnah Encyclopedia) ----------
+   Râvi başına hazırlanmış veri (kaynak/harf/c<cilt>-<sıra>.json, tools/harf-hazirla.py ile; kitap adları ve
+   konumlar Şamile’deki karşılık sayfalarla denetlenmiş) gizli depodan kaynak/harf/dizin.json üzerinden alınır,
+   tarayıcıda şifreli saklanır; ortak kayıt yoksa dosyadan yüklenir. Harf kayıtları sitenin hüküm sayılarına
+   eklenmez; ayrı sekmede gösterilir. Eşleştirme açıktır: cilt, sıra ve kaynak metnin özeti tutmalıdır. */
+const HARF = { dizin: null, dsha: null, data: {}, busy: {}, err: {}, checked: false, q: '' };
+const HARF_DIZIN = 'kaynak/harf/dizin.json';
+function harfKayit(n) {
+  if (!HARF.dizin || !n) return null;
+  return (HARF.dizin.kayitlar || []).find(r => r.cilt === ((PK && PK.vol) || 1) && r.sira === n.source_sequence && (!r.kaynak_ozeti || r.kaynak_ozeti === SNAP.summary.source_hash)) || null;
+}
+async function harfDizinGetir() {
+  if (!HARF.dizin) { try { const r = await IDB.get('harf', 'dizin'); if (r && r.data) { HARF.dizin = r.data; HARF.dsha = r.sha || null; } } catch (e) { } }
+  const c = ortakCfg(); if (!c || HARF.checked) return HARF.dizin; HARF.checked = true;
+  try {
+    const gh = ORT.client(c), m = await gh.meta(HARF_DIZIN);
+    if (m && m.sha !== HARF.dsha) {
+      const t = await gh.raw(HARF_DIZIN);
+      if (t) { HARF.dizin = JSON.parse(t); HARF.dsha = m.sha; try { await IDB.put('harf', { id: 'dizin', data: HARF.dizin, sha: m.sha }); } catch (e) { } }
+    }
+  } catch (e) { }
+  return HARF.dizin;
+}
+function harfGetir(rec) {
+  const k = rec.dosya; if (HARF.data[k]) return Promise.resolve(HARF.data[k]);
+  if (HARF.busy[k]) return HARF.busy[k];
+  HARF.busy[k] = (async () => {
+    let r = null; try { r = await IDB.get('harf', k); } catch (e) { }
+    const c = ortakCfg();
+    try {
+      if (c) {
+        const gh = ORT.client(c), m = await gh.meta(k);
+        if (m && (!r || r.sha !== m.sha)) { const t = await gh.raw(k); if (t) { r = { id: k, data: JSON.parse(t), sha: m.sha }; try { await IDB.put('harf', r); } catch (e) { } } }
+      }
+    } catch (e) { if (!r) HARF.err[k] = e.message || String(e); }
+    if (r && r.data) { HARF.data[k] = r.data; delete HARF.err[k]; } else if (!HARF.err[k]) HARF.err[k] = 'Veri dosyası bulunamadı (' + k + ').';
+    return HARF.data[k] || null;
+  })().finally(() => { HARF.busy[k] = null; });
+  return HARF.busy[k];
+}
+function harfDosyaSec() {
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.json'; inp.multiple = true;
+  inp.onchange = async () => {
+    let ok = 0;
+    for (const f of inp.files) {
+      try {
+        const d = JSON.parse(await f.text());
+        if (!d.statements || !d.sira || !d.cilt) throw Error(f.name + ': Harf râvi dosyası değil (tools/harf-hazirla.py çıktısı beklenir).');
+        const dosya = 'kaynak/harf/c' + d.cilt + '-' + String(d.sira).padStart(3, '0') + '.json';
+        HARF.dizin = HARF.dizin || { v: 1, kayitlar: [] };
+        HARF.dizin.kayitlar = HARF.dizin.kayitlar.filter(r => !(r.cilt === d.cilt && r.sira === d.sira)).concat({ cilt: d.cilt, sira: d.sira, ravi_id: d.site_id, kaynak_ozeti: d.site_source_hash, harf_id: d.harf_id, ad: d.name, dosya });
+        HARF.data[dosya] = d;
+        await IDB.put('harf', { id: dosya, data: d, sha: null }); await IDB.put('harf', { id: 'dizin', data: HARF.dizin, sha: HARF.dsha });
+        logAct('içe-aktar', 'Harf verisi yüklendi: ' + f.name + ' · cilt ' + d.cilt + ' râvi ' + d.sira, { pkg: '' }); ok++;
+      } catch (e) { toast(e.message, true); }
+    }
+    if (ok) { toast(ok + ' Harf dosyası yüklendi.'); renderAll(); }
+  };
+  inp.click();
+}
+const HARF_BIO = [['Tabaka', 'Tabaqa'], ['Doğum', 'BirthYear'], ['Vefat', 'DeathYear'], ['Doğum yeri', 'BirthCity'], ['İkamet', 'LivingCity'], ['Vefat yeri', 'DeathCity'], ['Rıhle', 'JourneyCity'], ['Mezhep / görüş', 'Mazhb'], ['İbn Hacer (Takrîb)', 'MartabaIbnHajar'], ['Zehebî', 'MartabaZahabi'], ['Harf’taki hadis sayısı', 'HadithsCount']];
+const harfAr = t => t ? '<span class="ar">' + esc(t) + '</span>' : '<span class="muted">—</span>';
+function harfKisiler(d) {
+  if (d._kisi) return d._kisi;
+  const m = new Map();
+  for (const p of [...d.teachers, ...d.students, ...d.statements.flatMap(s => s.links.flatMap(l => [l.scientist, l.relater])), ...d.relations.flatMap(r => [r.first, r.second])]) if (p && p.id && !m.has(p.id)) m.set(p.id, p);
+  Object.defineProperty(d, '_kisi', { value: m, enumerable: false }); return m;
+}
+const harfKisi = p => p ? '<button class="linkbtn" data-harfp="' + p.id + '">' + harfAr(p.name) + '</button>' : '<span class="muted">belirtilmemiş</span>';
+function harfKaynak(s, ref) {
+  const sh = s.samile, ok = sh && sh.dogrulama !== 'bulunamadi';
+  const ad = s.kitap_adi ? harfAr(s.kitap_adi) + (s.kitap_baski ? ' <span class="small muted">(' + esc(s.kitap_baski) + ')</span>' : '') : '<span class="tag warn">Kitap #' + esc(s.book_id) + ' · adı doğrulanamadı</span>';
+  return '<div class="harf-src"><div>' + ad + ' · ' + harfAr(s.author) + ' <span class="small muted">· Harf baskısı c. ' + esc(s.volume) + ' / s. ' + esc(s.page) + '</span>' +
+    (ok ? ' <span class="tag ok" title="' + (sh.dogrulama === 'madde' ? 'Râvinin maddesi Şamile’deki sayfada bulundu' : 'Sözün metni Şamile’deki sayfada bulundu') + '">✓ Şamile’de doğrulandı' + (sh.oran < 1 ? ' · metin %' + Math.round(sh.oran * 100) + ' örtüşüyor' : '') + '</span> <a href="' + esc(sh.url) + '" target="_blank" rel="noopener noreferrer" class="small">Şamile' + (sh.cilt ? ' c. ' + sh.cilt : '') + ' s. ' + esc(sh.sayfa) + ' ↗</a>'
+      : sh ? ' <span class="tag warn">Şamile sayfasında bulunamadı</span>' : ' <span class="tag warn">Şamile’de denetlenemedi</span>') +
+    (s.warning ? '<div class="note" style="margin:4px 0 0"><span class="small muted">Harf uyarısı:</span> ' + esc(s.warning) + (ok ? ' <b>Konum ve metin Şamile’de denetlendi; bu kayıt doğru.</b>' : '') + '</div>' : '') + '</div><button class="btn ghost sm" data-harfs="' + esc(ref) + '">Kaynağı göster</button></div>';
+}
+// Şamile sayfa metninde sözün geçtiği yerleri işaretler: harekesiz karşılaştırma, 12 harflik örtüşen parçalar
+// (kısa sözde tamamı); satırın tamamı değil, yalnız eşleşen kısım işaretlenir.
+function harfIsaret(text, core) {
+  let n = ''; const map = [], rs = [];
+  for (let i = 0; i < text.length; i++) for (const ch of CTV.norm(text[i]).replace(/[٠-٩]/g, '')) { n += ch; map.push(i); }   // dipnot rakamları eşleşmeyi bölmesin
+  if (core.length >= 6) {
+    const L = Math.min(12, core.length), starts = [];
+    for (let i = 0; i + L <= core.length; i += 6) starts.push(i);
+    if (starts[starts.length - 1] !== core.length - L) starts.push(core.length - L);
+    for (const i of starts) { const k = core.slice(i, i + L); for (let p = n.indexOf(k); p >= 0; p = n.indexOf(k, p + 1)) { let e = map[p + L - 1] + 1; while (e < text.length && /[ً-ٰٟـ]/.test(text[e])) e++; rs.push([map[p], e]); } }
+  }
+  rs.sort((a, b) => a[0] - b[0]);
+  const mg = []; for (const r of rs) { const l = mg[mg.length - 1]; if (l && r[0] <= l[1] + 8) l[1] = Math.max(l[1], r[1]); else mg.push(r.slice()); }
+  const e = x => esc(x).replace(/\n/g, '<br>'); let out = '', at = 0;
+  for (const [a, b] of mg) { out += e(text.slice(at, a)) + '<mark>' + e(text.slice(a, b)) + '</mark>'; at = b; }
+  return out + e(text.slice(at));
+}
+function harfKaynakDlg(d, s, stext) {
+  const sh = s.samile;
+  let body = '<div class="harf-src-head">' + harfKaynak(s, '').replace(/<button[\s\S]*?<\/button>/, '') + '</div>' + (s.heading ? '<h3 class="ar" style="margin:8px 0">' + esc(s.heading) + '</h3>' : '');
+  if (stext) body += '<div class="sec"><h4>Söz</h4><p class="ar harf-quote">' + esc(stext) + '</p></div>';
+  if (sh && d.samile) {
+    const c1 = CTV.norm(stext && stext.includes(':') ? stext.split(':').slice(1).join(':') : stext || d.name);
+    // “ثقة” gibi kısa sözde nakil kalıbıyla, “صح” gibi işarette râvinin adıyla birlikte aranır (tools/harf-hazirla.py ile aynı kural)
+    const core = c1.length >= 6 || !stext ? c1 : CTV.norm(stext).length >= 6 ? CTV.norm(stext) : CTV.norm(stext + ' ' + d.name);
+    for (const pid of (sh.sayfalar || [sh.sayfa_id])) {
+      const pg = d.samile[sh.kitap + '/' + pid]; if (!pg) continue;
+      body += '<div class="sec"><h4 class="harf-h4">Şamile · <span class="ar">' + esc(pg.baslik) + '</span> <a href="https://shamela.ws/book/' + sh.kitap + '/' + pid + '" target="_blank" rel="noopener noreferrer" class="small">sayfayı aç ↗</a></h4><div class="ar harf-page">' + harfIsaret(pg.metin, core) + '</div></div>';
+    }
+  } else body += '<div class="note">Bu kaynak için Şamile sayfası yok; Harf’ın verdiği kitap ve konum gösteriliyor.</div>';
+  return body + '<p class="hint">Harf pasaj #' + esc(s.main_id) + '. Cilt/sayfa Harf’ın kullandığı baskıya aittir; Şamile baskısının numaraları ayrıca verilmiştir.</p>';
+}
+function renderHarfTab(n) {
+  const rec = harfKayit(n);
+  if (!rec) return '<div class="pane"><div class="empty-state">Bu râvi için Harf verisi yok.</div>' + (AUTH.can('volume') ? '<p><button class="btn sm" data-harfload="1">Harf verisi yükle (JSON)…</button></p>' : '') + '</div>';
+  const d = HARF.data[rec.dosya];
+  if (!d) {
+    if (!HARF.busy[rec.dosya] && !HARF.err[rec.dosya]) harfGetir(rec).then(() => { if (S.tab === 'harf') renderCenter(); });
+    return '<div class="pane"><div class="hint">' + (HARF.err[rec.dosya] ? 'Harf verisi alınamadı: ' + esc(HARF.err[rec.dosya]) : 'Harf verisi yükleniyor…') + '</div></div>';
+  }
+  const b = d.biography || {}, sts = d.statements || [];
+  const ver = [...sts.flatMap(x => x.sources), ...(d.biography_sources || [])], vok = ver.filter(x => x.samile && x.samile.dogrulama !== 'bulunamadi').length;
+  const pt = (id, title, pp) => '<section class="harf-sec" id="harf-' + id + '"><h3 class="panel-title">' + title + ' <span class="muted">' + pp.length + '</span></h3><div class="wrap"><table class="tbl" data-tid="harf-' + id + '"><thead><tr><th data-sk="t">Ad</th><th data-sk="t">Vefat</th><th data-sk="t">Tabaka</th><th data-sk="t">İbn Hacer</th><th data-sk="t">Zehebî</th><th data-sk="n" class="num">Kayıt</th></tr></thead><tbody>' +
+    pp.map(p => '<tr style="cursor:default"><td data-v="' + esc(p.name) + '">' + harfKisi(p) + '</td><td class="ar small">' + esc(p.death || '') + '</td><td class="ar small">' + esc(p.layer || '') + '</td><td class="ar small">' + esc(p.ibn_hajar || '') + '</td><td class="ar small">' + esc(p.dhahabi || '') + '</td><td class="num">' + esc(p.count) + '</td></tr>').join('') + '</tbody></table></div></section>';
+  return '<div class="pane harf"><div class="note info"><b>Harf</b> (' + esc(d.origin || 'Prophetic Sunnah Encyclopedia') + ') · Harf râvisi #' + esc(d.harf_id) + ' ↔ bu râvi (#' + esc(n.source_sequence) + ') açıkça eşleştirildi. Bu kayıtlar sitenin hüküm sayılarına eklenmez. Kaynakların ' + vok + ' / ' + ver.length + '’i Şamile’deki sayfasıyla doğrulandı.</div>' +
+    '<div class="harf-nav">' + [['kimlik', 'Kimlik'], ['hoca', 'Hocaları'], ['talebe', 'Talebeleri'], ['soz', 'Cerh–ta‘dîl sözleri'], ['etiket', 'Etiketler'], ['iliski', 'Özel ilişkiler'], ['kaynak', 'Biyografi kaynakları']].map(([k, l]) => '<button class="btn ghost sm" data-harfgo="' + k + '">' + l + '</button>').join('') + '</div>' +
+    '<section class="harf-sec" id="harf-kimlik"><h3 class="panel-title">Kimlik ve değerlendirmeler</h3><dl class="kv"><dt>Ad (Harf)</dt><dd>' + harfAr(d.name) + '</dd>' + HARF_BIO.map(([l, k]) => '<dt>' + l + '</dt><dd>' + harfAr(b[k] != null && b[k] !== '' ? String(b[k]) : '') + '</dd>').join('') + '</dl><p class="hint">Hadis sayısı Harf’ın kaydıdır; mükerrerlerden arındırılmış toplam değildir.</p></section>' +
+    pt('hoca', 'Hocaları', d.teachers || []) + pt('talebe', 'Talebeleri', d.students || []) + '<p class="hint">Hoca–talebe kaydı tek başına doğrudan semâı ispat etmez.</p>' +
+    '<section class="harf-sec" id="harf-soz"><h3 class="panel-title">Âlimlerin hakkındaki sözleri <span class="muted">' + sts.length + '</span></h3><input class="field" id="harf-q" type="search" placeholder="Sözlerde ara: Arapça ifade veya âlim adı…" value="' + esc(HARF.q) + '">' +
+    sts.map((x, i) => '<article class="harf-soz" data-q="' + esc(nz(x.text + ' ' + x.links.map(l => ((l.scientist || {}).name || '') + ' ' + ((l.relater || {}).name || '')).join(' '))) + '"' + (HARF.q && !nz(x.text + ' ' + x.links.map(l => ((l.scientist || {}).name || '') + ' ' + ((l.relater || {}).name || '')).join(' ')).includes(nz(HARF.q)) ? ' hidden' : '') + '><header><b class="num">' + (i + 1) + '</b> ' + x.links.map(l => '<span class="small muted">söyleyen:</span> ' + harfKisi(l.scientist) + (l.relater ? ' <span class="small muted">· nakleden:</span> ' + harfKisi(l.relater) : '')).join(' <span class="muted">|</span> ') + ' <span class="small muted">söz #' + esc(x.id) + '</span></header><p class="ar harf-quote">' + esc(x.text) + '</p>' + x.sources.map((s, j) => harfKaynak(s, 's' + i + ':' + j)).join('') + '</article>').join('') +
+    '<p class="hint" id="harf-none" hidden>Aramayla eşleşen söz yok.</p></section>' +
+    '<section class="harf-sec" id="harf-etiket"><h3 class="panel-title">Cerh–ta‘dîl etiketleri <span class="muted">' + (d.labels || []).length + '</span></h3><p class="hint">Harf’ın etiket bağlantılarıdır; bağımsız görüş sayısı değildir.</p>' + (d.labels || []).map(l => '<details class="harf-det"><summary>' + harfAr(l.text) + ' <span class="small muted">dayanak söz #' + esc(l.SayID) + '</span></summary><p class="ar harf-quote">' + esc(l.statement) + '</p></details>').join('') + '</section>' +
+    '<section class="harf-sec" id="harf-iliski"><h3 class="panel-title">Özel ilişkiler <span class="muted">' + (d.relations || []).length + '</span></h3><p class="hint">A ve B kayıttaki kişi sırasıdır; tek başına hoca–talebe yönü bildirmez.</p>' + (d.relations || []).map(r => '<details class="harf-det"><summary>' + harfAr(r.type_text) + ' · A: ' + harfKisi(r.first) + ' · B: ' + (r.second ? harfKisi(r.second) : '<span class="muted">genel kayıt</span>') + '</summary>' + (r.Reserve ? '<p dir="auto">' + esc(r.Reserve) + '</p>' : '') + '<p class="ar harf-quote">' + esc(r.statement) + '</p><span class="small muted">dayanak söz #' + esc(r.SayID) + '</span></details>').join('') + '</section>' +
+    '<section class="harf-sec" id="harf-kaynak"><h3 class="panel-title">Biyografi kaynakları <span class="muted">' + (d.biography_sources || []).length + '</span></h3>' + (d.biography_sources || []).map((s, j) => harfKaynak(s, 'b' + j)).join('') + '</section>' +
+    '<p class="hint">' + esc((d.hazirlama || {}).not || '') + '</p></div>';
+}
+function harfFiltre() {
+  const q = nz(HARF.q); let c = 0;
+  document.querySelectorAll('.harf-soz').forEach(el => { el.hidden = !!q && !el.dataset.q.includes(q); if (!el.hidden) c++; });
+  const none = $('harf-none'); if (none) none.hidden = c > 0;
+}
+
 function registerVolume(rec) { rec.sc = CTP.scan(rec.html, { volume: rec.vol }); VOLS[rec.vol] = rec; }
 async function loadVolumes() {
   try { const all = await IDB.all('ciltler'); for (const r of all || []) registerVolume(r); }
@@ -1420,6 +1589,8 @@ function renderPackages() {
       return '<tr style="cursor:default" aria-current="' + cur + '"><td><b>' + esc(pkgLabel(p, true)) + '</b><div class="small muted">Cilt ' + p.vol + '</div></td><td>' + p.from + '–' + p.to + ' <span class="muted small">(' + p.count + ')</span></td><td class="small">' + (p.kind === 'snapshot' ? 'Gömülü anlık görüntü (SQLite)' : esc((VOLS[p.vol] || {}).name || '')) + '</td><td>' + st + '</td><td class="num">' + pr.done + ' / ' + p.count + '</td><td style="white-space:nowrap">' + (cur ? '' : '<button class="btn sm" data-openpkg="' + p.id + '">Aç</button> ') + (d ? '<button class="btn ghost sm" data-arch="' + p.id + '">Arşiv</button>' + (AUTH.can('reopen') ? ' <button class="btn ghost sm" data-reopen="' + p.id + '">Yeniden aç</button>' : '') : '') + '</td></tr>';
     }).join('') + '</tbody></table></div>';
   if (!vols.length) out += '<div class="note info" style="margin-top:14px">Sonraki paketler için ham cilt dosyalarınızı yükleyin. 1. cilt yüklenince 51. râviden itibaren 50’şer paketler oluşur; diğer ciltler 1. paketten başlar.</div>';
+  const hk = (HARF.dizin && HARF.dizin.kayitlar) || [];
+  out += '<h3 class="panel-title">Dış kaynak: Harf <span class="muted">' + hk.length + ' râvi</span></h3><div class="row" style="margin-bottom:10px"><button class="btn req-edit" data-harfload="1">＋ Harf verisi yükle (JSON)…</button><span class="hint">tools/harf-hazirla.py çıktısı (<span class="mono">kaynak/harf/c&lt;cilt&gt;-&lt;sıra&gt;.json</span>). Ortak kayıt bağlıysa veri gizli depodan kendiliğinden gelir. Eşleşen râvide “Harf” sekmesi açılır.' + (hk.length ? ' Kayıtlı: ' + hk.map(r => esc('c. ' + r.cilt + ' #' + r.sira + ' ' + (r.ad || ''))).join(' · ') : '') + '</span></div>';
   el.innerHTML = out;
   $('vol-add').onclick = () => { if (need('volume')) $('vol-file').click(); };
   $('vol-file').onchange = async e => { await addVolumeFiles([...e.target.files]); e.target.value = ''; };
@@ -1582,7 +1753,7 @@ function renderHead() {
     KSTACK.map(k => '<span class="stat"><span class="sw" style="background:var(--k-' + k.toLowerCase() + ')"></span>' + KNAME[k] + ' <b>' + a.byK[k] + '</b></span>').join('') +
     '<span class="stat">Münekkit <b>' + a.critics.size + '</b></span></div>' + minibarWide(a) +
     '<div class="verdict-line">' + verdictText(n, a) + '</div></div>' +
-    '<div class="subtabs" role="tablist">' + TABS.map(([k, l], i) => {
+    '<div class="subtabs" role="tablist">' + TABS.filter(([k]) => k !== 'harf' || harfKayit(n)).map(([k, l], i) => {
       const cnt = k === 'kaynak' ? n.blocks.length : k === 'hukum' ? a.sts.length : '';
       return '<button role="tab" data-tab="' + k + '" aria-selected="' + (S.tab === k) + '" title="Kısayol: ' + (i + 1) + '">' + l + (cnt !== '' ? '<span class="n">' + cnt + '</span>' : '') + '</button>';
     }).join('') + '</div>';
@@ -1655,6 +1826,7 @@ function renderCenter() {
   else if (S.tab === 'kimlik') body.innerHTML = renderIdentityTab(n);
   else if (S.tab === 'hoca') body.innerHTML = renderTeachersTab(n);
   else if (S.tab === 'rihle') body.innerHTML = renderRihleTab(n);
+  else if (S.tab === 'harf') body.innerHTML = renderHarfTab(n);
   else body.innerHTML = renderPageTab(n);
   document.documentElement.style.setProperty('--ar-size', UI.arSize + 'px');
 }
@@ -1920,7 +2092,8 @@ function listTable(n, key, title) {
     '<form class="row ladd req-edit" data-ladd="' + key + '"><input class="field" name="v" dir="auto" placeholder="' + (key === 'rihle' ? 'Yer (ör. Bağdat) veya olay' : 'Ad (Arapça)') + '" required>' + (kinds ? '<select class="field" name="kind">' + kinds.map(([k, l]) => '<option value="' + k + '">' + l + '</option>').join('') + '</select>' : '') + '<input class="field" name="note" dir="auto" placeholder="Not / kaynak (isteğe bağlı)"><button class="btn sm">＋ Ekle</button></form></section>';
 }
 function renderTeachersTab(n) {
-  return '<div class="pane"><div class="toolbar-inline"><p class="hint" style="margin:0">Hocalar (şüyûh) “rivâ/haddese/semi‘a an …” ve Mîzân usulü “an … ve anhü …” kalıplarından; talebeler (telâmîz) “ve anhü, revâ anhü, haddese anhü …” kalıplarından çıkarılır. Olumsuz ve şartlı cümleler (“mâ haddese anhü”, “izâ revâ anhü sika”) ile senet içi adlar alınmaz. Adaylar doğrulanmamıştır.</p><label class="small"><input type="checkbox" data-act="show-rej"' + (UI.showRejected ? ' checked' : '') + '> Reddedilenleri göster</label></div>' +
+  const hk = harfKayit(n), hd = hk && HARF.data[hk.dosya];
+  return '<div class="pane">' + (hk ? '<div class="note info" style="margin-bottom:10px">Harf’ta bu râvinin ' + (hd ? (hd.teachers || []).length + ' hocası ve ' + (hd.students || []).length + ' talebesi' : 'hoca ve talebe listesi') + ' kayıtlı. <button class="btn sm" data-tab="harf">Harf sekmesini aç</button></div>' : '') + '<div class="toolbar-inline"><p class="hint" style="margin:0">Hocalar (şüyûh) “rivâ/haddese/semi‘a an …” ve Mîzân usulü “an … ve anhü …” kalıplarından; talebeler (telâmîz) “ve anhü, revâ anhü, haddese anhü …” kalıplarından çıkarılır. Olumsuz ve şartlı cümleler (“mâ haddese anhü”, “izâ revâ anhü sika”) ile senet içi adlar alınmaz. Adaylar doğrulanmamıştır.</p><label class="small"><input type="checkbox" data-act="show-rej"' + (UI.showRejected ? ' checked' : '') + '> Reddedilenleri göster</label></div>' +
     '<div class="lcols">' + listTable(n, 'hocalar', 'Hocaları (şüyûh)') + listTable(n, 'talebeler', 'Talebeleri (telâmîz)') + '</div></div>';
 }
 function renderRihleTab(n) {
@@ -3128,6 +3301,10 @@ document.addEventListener('click', e => {
     if (nsv.dataset.ndel) { if (!confirm('Not silinsin mi?')) return; REV.notes[key] = list.filter(y => y !== x); logAct('not', noteTarget(key).label + ' notu silindi: ' + before.slice(0, 80), Object.assign(noteTarget(key), { before })); }
     else { x.text = $('nedit-v').value.trim(); x.edited_at = new Date().toISOString(); if (x.by !== me.username) { x.edited_by = me.username; x.edited_by_name = me.name; } else { delete x.edited_by; delete x.edited_by_name; } logAct('not', noteTarget(key).label + ' notu düzenlendi: ' + x.text.slice(0, 80), Object.assign(noteTarget(key), { before, after: x.text })); }
     S.nedit = null; saveRev(); renderRail(); renderCenter(); renderInspector(); return; }
+  const hp = t.closest('[data-harfp]'); if (hp) { const rec = harfKayit(NBYID[S.nid]), d = rec && HARF.data[rec.dosya], p = d && harfKisiler(d).get(+hp.dataset.harfp); if (p) openDialog('Kişi kartı · Harf #' + p.id, '<h3 class="ar" style="margin:0 0 8px">' + esc(p.name) + '</h3><dl class="kv">' + [['Tabaka', p.layer], ['Vefat', p.death], ['İbn Hacer', p.ibn_hajar], ['Zehebî', p.dhahabi]].map(([k, v]) => '<dt>' + k + '</dt><dd>' + harfAr(v) + '</dd>').join('') + '</dl><p class="hint">Ad kaynağı: ' + esc(p.name_origin || '—') + '. Kart Harf’ın temel kaydıdır; tam biyografi değildir.</p>'); return; }
+  const hs = t.closest('[data-harfs]'); if (hs) { const rec = harfKayit(NBYID[S.nid]), d = rec && HARF.data[rec.dosya]; if (!d) return; const ref = hs.dataset.harfs; let s, tx = ''; if (ref[0] === 's') { const [i, j] = ref.slice(1).split(':').map(Number); s = d.statements[i].sources[j]; tx = d.statements[i].text; } else s = d.biography_sources[+ref.slice(1)]; if (s) { openDialog('Kaynak · ' + (s.kitap_adi || ('Kitap #' + s.book_id)), harfKaynakDlg(d, s, tx)); const mk = $('gen-body').querySelector('.harf-page mark'); if (mk) mk.scrollIntoView({ block: 'center' }); } return; }
+  const hg = t.closest('[data-harfgo]'); if (hg) { const el = document.getElementById('harf-' + hg.dataset.harfgo); if (el) el.scrollIntoView({ block: 'start', behavior: 'smooth' }); return; }
+  if (t.closest('[data-harfload]')) { if (!need('volume')) return; harfDosyaSec(); return; }
   const cv = t.closest('[data-cev]'); if (cv) { cevToggle(cv.dataset.cev); if (S.view !== 'desk' && typeof renderCenter === 'function') renderCenter(); return; }
   if (t.closest('[data-cevall]')) { UI.cevAll = !UI.cevAll; if (!UI.cevAll) CEV.open.clear(); saveUI(); cevAc(); return; }
   if (t.closest('[data-cevar]')) { UI.cevAr = UI.cevAr === false; saveUI(); renderCenter(); return; }
@@ -3224,6 +3401,7 @@ document.addEventListener('change', e => {
   if (e.target.id === 'narr-status' || e.target.id === 'head-status') { if (!need('review')) { e.target.value = (REV.narr[S.nid] || {}).status || 'Kontrol edilmedi'; return; } const r = REV.narr[S.nid] = REV.narr[S.nid] || {}; const old = r.status || 'Kontrol edilmedi'; r.status = e.target.value; Object.assign(r, { at: new Date().toISOString() }, by()); logAct('râvi-durum', old + ' → ' + r.status, { nid: S.nid, seq: NBYID[S.nid].source_sequence, before: old, after: r.status }); saveRev(); renderRail(); renderHead(); renderSourcebar(); if (!(S.sel)) renderInspector(); toast('Râvi durumu: ' + r.status); }
 });
 document.addEventListener('input', e => {
+  if (e.target.id === 'harf-q') { HARF.q = e.target.value; harfFiltre(); return; }
   if (e.target.id === 'narr-note') { if (!AUTH.can('review')) return; const r = REV.narr[S.nid] = REV.narr[S.nid] || {}; if (e.target._old === undefined) e.target._old = r.note || ''; r.note = e.target.value; Object.assign(r, by()); clearTimeout(e.target._t); e.target._t = setTimeout(saveRev, 400); }
 });
 let qT; $('q').addEventListener('input', () => { clearTimeout(qT); qT = setTimeout(() => { S.q = $('q').value; renderRail(); }, 120); });
@@ -3292,6 +3470,7 @@ function startApp() {
   if (ortakCfg()) setTimeout(() => ortakSync(), 700);
   if (hesapHazir()) setTimeout(() => hesapYayinla(), 1500);
   if (UI.cevAll) setTimeout(cevAc, 300);
+  harfDizinGetir().then(d => { if (d) renderCenter(); });
   const li = KASA.loginInfo() || {};
   if (li.created) logAct('kasa', 'Kasa oluşturuldu (AES-256-GCM, PBKDF2-SHA256 ' + KASA.status().iter + ' tur)', { pkg: '' });
   if (li.migrated) logAct('kasa', 'Önceki sürümün şifresiz verileri şifrelenerek taşındı: ' + li.migrated + ' kayıt', { pkg: '' });
@@ -5656,15 +5835,15 @@ const KASA = (() => {
   }
 
   /* ---------- Şifreli IndexedDB (kasa başına ayrı veritabanı) ---------- */
-  const STORES = [['ciltler', 'vol', false], ['arsiv', 'id', false], ['dizin', 'id', false], ['hareket', 'id', true], ['cihaz', 'id', false], ['ceviri', 'id', false]];
+  const STORES = [['ciltler', 'vol', false], ['arsiv', 'id', false], ['dizin', 'id', false], ['hareket', 'id', true], ['cihaz', 'id', false], ['ceviri', 'id', false], ['harf', 'id', false]];
   const KP = Object.fromEntries(STORES.map(([n, k]) => [n, k]));
   let dbp = null;
   function idb() {
     return dbp || (dbp = new Promise((res, rej) => {
       try {
-        const r = indexedDB.open('cerh-tadil-' + id, 2);
+        const r = indexedDB.open('cerh-tadil-' + id, 3);
         r.onupgradeneeded = () => { const db = r.result; for (const [n, k, ai] of STORES) if (!db.objectStoreNames.contains(n)) db.createObjectStore(n, ai ? { keyPath: k, autoIncrement: true } : { keyPath: k }); };
-        r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+        r.onsuccess = () => { const db = r.result; db.onversionchange = () => { db.close(); dbp = null; }; res(db); }; r.onerror = () => rej(r.error);   // yeni sürüm başka sekmede açılırsa yükseltmeyi bekletme
       } catch (e) { rej(e); }
     }));
   }
