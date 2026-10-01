@@ -707,6 +707,9 @@ body.resizing { user-select: none; } body.resizing-x, body.resizing-x * { cursor
 .yz-out { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: var(--paper); }
 .yz-metin { white-space: pre-wrap; line-height: 1.6; }
 @media print { .yzbtn, .yz-panel { display: none; } }
+/* Hükümler: satır işlem düğmeleri */
+td.stact { white-space: nowrap; }
+td.stact .btn { padding: 2px 6px; }
 
 </style>
 </head>
@@ -923,7 +926,7 @@ function addedStatements() {
       tMax: sev > 0 ? sev : 0, cMax: sev < 0 ? -sev : 0, severity: sev, sebebs: [], mufassar: '', grade: 'Araştırmacı eklemesi',
       critic: a.critic || '', critic_written: a.critic || '', critic_info: CTX.critic(a.critic) ? pickInfo(CTX.critic(a.critic)) : null,
       basis: 'elle', transmission: '', transmitter: '', chain: '', target: 'explicit', flags: ['elle'], question: false,
-      confidence: 1, reasons: ['Araştırmacı tarafından metinden eklendi.' + (a.note ? ' Not: ' + a.note : '')], notes: [], terms: [{ k: kind, start: a.start, end: a.end, text: a.phrase, tr: 'Elle eklenen hüküm' }], counts: true
+      confidence: 1, reasons: ['Araştırmacı tarafından metinden eklendi' + (a.by_name || a.by ? ' (' + (a.by_name || a.by) + ')' : '') + '.' + (a.duz ? ' Düzeltildi: ' + (a.duz.by_name || a.duz.by || '') + ', ' + new Date(a.duz.at).toLocaleString('tr-TR', { dateStyle: 'short', timeStyle: 'short' }) + '.' : '') + (a.note ? ' Not: ' + a.note : '')], notes: [], terms: [{ k: kind, start: a.start, end: a.end, text: a.phrase, tr: 'Elle eklenen hüküm' }], counts: true
     };
   });
 }
@@ -1089,7 +1092,7 @@ const IDB = KASA.db;
 /* ---------- Hareket kaydı (kim, ne zaman, neyi değiştirdi) ----------
    Her değişiklik IndexedDB 'hareket' deposuna eklenir; kayıtlar silinmez, yalnız dışa aktarılır. */
 const LOGMEM = [];   // depo kullanılamazsa bu oturumdaki kayıtlar
-const ACT_TR = { 'giriş': 'Giriş', 'çıkış': 'Çıkış', 'giriş-hatası': 'Hatalı giriş', 'hüküm-karar': 'Hüküm kararı', 'hüküm-ekle': 'Eksik hüküm eklendi', 'hüküm-sil': 'Eklenen hüküm silindi', 'hüküm-düzelt': 'Hüküm düzeltildi', 'râvi-durum': 'Râvi durumu', 'râvi-not': 'Râvi inceleme notu', 'not': 'Araştırmacı notu', 'kimlik': 'Kimlik bilgisi', 'künye': 'Kaynak künyesi', 'teâruz': 'Teâruz çözümü', 'paket-tamamla': 'Paket tamamlandı', 'cilt-ekle': 'Cilt eklendi', 'cilt-sil': 'Cilt silindi', 'içe-aktar': 'İçe aktarım', 'dışa-aktar': 'Dışa aktarım', 'kasa': 'Şifreleme (kasa)', 'kullanıcı': 'Kullanıcı yönetimi', 'parola': 'Parola değişikliği', 'ortak': 'Ortak kayıt', 'metin': 'Kaynak metni düzeltme', 'hüküm-kaldır': 'Hüküm kaldırıldı', 'hüküm-geri': 'Kaldırılan hüküm geri alındı', 'paket-aç': 'Paket yeniden açıldı', 'yz': 'Yapay zekâ (Gemini)' };
+const ACT_TR = { 'giriş': 'Giriş', 'çıkış': 'Çıkış', 'giriş-hatası': 'Hatalı giriş', 'hüküm-karar': 'Hüküm kararı', 'hüküm-ekle': 'Eksik hüküm eklendi', 'hüküm-sil': 'Eklenen hüküm silindi', 'hüküm-düzelt': 'Hüküm düzeltildi', 'râvi-durum': 'Râvi durumu', 'râvi-not': 'Râvi inceleme notu', 'not': 'Araştırmacı notu', 'kimlik': 'Kimlik bilgisi', 'künye': 'Kaynak künyesi', 'teâruz': 'Teâruz çözümü', 'paket-tamamla': 'Paket tamamlandı', 'cilt-ekle': 'Cilt eklendi', 'cilt-sil': 'Cilt silindi', 'içe-aktar': 'İçe aktarım', 'dışa-aktar': 'Dışa aktarım', 'kasa': 'Şifreleme (kasa)', 'kullanıcı': 'Kullanıcı yönetimi', 'parola': 'Parola değişikliği', 'ortak': 'Ortak kayıt', 'metin': 'Kaynak metni düzeltme', 'hüküm-kaldır': 'Hüküm kaldırıldı', 'hüküm-geri': 'Kaldırılan hüküm geri alındı', 'paket-aç': 'Paket yeniden açıldı', 'yz': 'Yapay zekâ (Gemini)', 'dış-düzelt': 'Dış kaynak düzeltmesi (Harf/Tehzîb)' };
 function logAct(act, summary, o) {
   const u = AUTH.me();
   const rec = Object.assign({ rid: 'r' + [...crypto.getRandomValues(new Uint8Array(8))].map(x => x.toString(16).padStart(2, '0')).join(''), at: new Date().toISOString(), user: u ? u.username : '—', name: u ? u.name : '', role: u ? u.role : '', act, summary: summary || '', pkg: PK ? PK.id : '' }, o || {});
@@ -1750,12 +1753,17 @@ async function tkzDosyaKaydet(d) {
 }
 function tkzVeri(n) { const rec = tkzKayit(n); if (!rec) return null; const d = TKZ.data[rec.dosya]; if (!d && !TKZ.busy[rec.dosya]) tkzGetir(rec).then(x => { if (x && S.tab === 'hoca') renderCenter(); }); return d || null; }
 function rumuzHTML(d, rz) { return (rz || []).map(x => '<span class="tag rumuz" title="' + esc((d.rumuz_anahtari || {})[x] || x) + '">' + esc(x) + '</span>').join(''); }
-function tkzTablo(d, key, title) {
-  const L = d[key] || [];
-  return '<section class="lsec"><h3 class="panel-title">' + title + ' <span class="muted">' + L.length + (key === 'hocalar' ? ' · rumuzsuz ' + L.filter(x => !x.rumuz.length).length : '') + '</span></h3><div class="wrap"><table class="tbl" data-tid="tk-' + key + '"><thead><tr><th data-sk="t">Ad</th><th>Rumuz</th><th data-sk="n" class="num">Vefat</th><th data-sk="n" class="num">Tabaka</th><th>Takrîb</th></tr></thead><tbody>' +
-    L.map(x => { const t = x.takrib; return '<tr style="cursor:default"><td data-v="' + esc(x.ad) + '"><span class="ar" style="font-size:16px">' + esc(x.ad) + '</span>' + (x.not ? ' <span class="small muted ar">' + esc(x.not) + '</span>' : '') + '</td><td>' + (x.rumuz.length ? rumuzHTML(d, x.rumuz) : (key === 'hocalar' ? '<span class="tag warn" title="Mizzî bu hocadan rivayeti Kütüb-i Sitte’de göstermiyor">rivayeti olmayan hoca</span>' : '<span class="muted small">rumuzsuz</span>')) + '</td>' +
-      '<td class="num" data-v="' + (t && t.vefat || '') + '">' + (t && t.vefat ? 'h. ' + t.vefat + (t.yaklasik ? ' ~' : '') : '<span class="muted">—</span>') + '</td><td class="num" data-v="' + (t && t.tabaka || '') + '">' + (t && t.tabaka ? Math.round(t.tabaka) : '<span class="muted">—</span>') + '</td>' +
-      '<td class="small">' + (t ? '<a class="ar" href="https://shamela.ws/book/8609/' + esc(t.sayfa || '') + '" target="_blank" rel="noopener noreferrer" title="' + esc(t.metin + (t.eslesme && t.eslesme !== 'ad' ? ' · eşleşme: ' + t.eslesme : '')) + '">#' + t.no + '</a>' : x.takrib_aday ? '<span class="muted" title="Birden çok aday: ' + esc(x.takrib_aday.join(', ')) + '">birden çok aday</span>' : '<span class="muted">eşleşmedi</span>') + '</td></tr>'; }).join('') + '</tbody></table></div></section>';
+function tkzTablo(n, d, key, title) {
+  const L = tkzSatirlar(n, d, key), rec = tkzKayit(n), canli = L.filter(x => !x.sil);
+  const row = x => {
+    if (S.dzed === x.rk) return dzForm(x, 6);
+    const o = x.x || {}, t = o.takrib, rz = o.rumuz || [], vef = dzVefat(x.vefat), tab = dzTabaka(x.tabaka), duz = x.ed && !x.manual;
+    return '<tr style="cursor:default" class="' + (x.sil ? 'rej' : '') + '"><td data-v="' + esc(x.ad) + '">' + dzAdHucre(x) + (o.not ? ' <span class="small muted ar">' + esc(o.not) + '</span>' : '') + '</td><td>' + (x.manual ? '<span class="muted small">—</span>' : rz.length ? rumuzHTML(d, rz) : (key === 'hocalar' ? '<span class="tag warn" title="Mizzî bu hocadan rivayeti Kütüb-i Sitte’de göstermiyor">rivayeti olmayan hoca</span>' : '<span class="muted small">rumuzsuz</span>')) + '</td>' +
+      '<td class="num" data-v="' + (vef || '') + '">' + (vef ? 'h. ' + vef + (!duz && !x.manual && t && t.yaklasik ? ' ~' : '') : '<span class="muted">—</span>') + '</td><td class="num" data-v="' + (tab || '') + '">' + (tab ? Math.round(tab) : '<span class="muted">—</span>') + '</td>' +
+      '<td class="small">' + (x.manual ? '<span class="muted">elle</span>' : t ? '<a class="ar" href="https://shamela.ws/book/8609/' + esc(t.sayfa || '') + '" target="_blank" rel="noopener noreferrer" title="' + esc(t.metin + (t.eslesme && t.eslesme !== 'ad' ? ' · eşleşme: ' + t.eslesme : '')) + '">#' + t.no + '</a>' : o.takrib_aday ? '<span class="muted" title="Birden çok aday: ' + esc(o.takrib_aday.join(', ')) + '">birden çok aday</span>' : '<span class="muted">eşleşmedi</span>') + '</td><td>' + dzButon(x) + '</td></tr>';
+  };
+  return '<section class="lsec"><h3 class="panel-title">' + title + ' <span class="muted">' + canli.length + (key === 'hocalar' ? ' · rumuzsuz ' + canli.filter(x => !x.manual && !((x.x || {}).rumuz || []).length).length : '') + (L.some(x => x.ed) ? ' · ✎ ' + L.filter(x => x.ed).length + ' düzeltme' : '') + '</span></h3><div class="wrap"><table class="tbl" data-tid="tk-' + key + '"><thead><tr><th data-sk="t">Ad</th><th>Rumuz</th><th data-sk="n" class="num">Vefat</th><th data-sk="n" class="num">Tabaka</th><th>Takrîb</th><th></th></tr></thead><tbody>' +
+    L.map(row).join('') + '</tbody></table></div>' + dzEkleForm('tkz:' + (rec ? rec.cilt + '-' + rec.sira : '?') + ':' + key) + '</section>';
 }
 function tkzBolum(n) {
   const rec = tkzKayit(n); if (!rec) return '';
@@ -1764,10 +1772,73 @@ function tkzBolum(n) {
   return '<h3 class="panel-title">Tehzîbü’l-Kemâl’e göre <span class="muted">el-Mizzî · <a href="' + esc(T.url) + '" target="_blank" rel="noopener noreferrer">c. ' + esc(T.cilt) + ' s. ' + esc(T.sayfa) + ' (#' + esc(T.no) + ') ↗</a> · râvinin rumuzu ' + rumuzHTML(d, T.rumuz) + '</span></h3>' +
     (d.takrib ? '<p class="small" style="margin:0 0 4px">Takrîbü’t-Tehzîb: <a href="' + esc(d.takrib.url) + '" target="_blank" rel="noopener noreferrer">#' + d.takrib.no + ' ↗</a> · ' + (d.takrib.tabaka ? Math.round(d.takrib.tabaka) + '. tabaka' : 'tabaka yok') + (d.takrib.vefat ? ' · vefat h. ' + d.takrib.vefat + (d.takrib.yaklasik ? ' (yaklaşık)' : '') : '') + ' — <span class="ar">' + esc(d.takrib.metin) + '</span></p>' : '') +
     '<p class="hint" style="margin:0 0 6px">' + esc(dg.durum || '') + (dg.ortak_adlar && dg.ortak_adlar.length ? ' — bizim metinlerde de geçen: <span class="ar">' + esc(dg.ortak_adlar.slice(0, 4).join('، ')) + '</span>' : '') + (dg.nisbe === false ? ' · nisbe farklı yazılmış' : '') + '. Rumuz, Kütüb-i Sitte’de o kişiden rivayet bulunan eserleri gösterir; rumuzsuz hoca, Kütüb-i Sitte’de ondan rivayeti olmayan hocadır. Vefat ve tabaka Takrîb’den (yalnız tek adayla eşleşenler; yüzyılı yazılmamış yıllar Takrîb mukaddimesindeki tabaka kuralıyla tamamlanır, “~” yaklaşık demektir).</p>' +
-    '<div class="lcols">' + tkzTablo(d, 'hocalar', 'Hocaları (Tehzîb)') + tkzTablo(d, 'talebeler', 'Talebeleri (Tehzîb)') + '</div>';
+    '<div class="lcols">' + tkzTablo(n, d, 'hocalar', 'Hocaları (Tehzîb)') + tkzTablo(n, d, 'talebeler', 'Talebeleri (Tehzîb)') + '</div>';
+}
+/* ---------- Dış kaynak tablolarında araştırmacı düzeltmesi (Harf, Tehzîb) ----------
+   Otomatik alınan hoca/talebe listeleri eksik, fazla ya da hatalı olabilir (ör. Harf’ta “İsim okunamadı”).
+   Her satır düzeltilebilir (ad, vefat, tabaka, not) ya da yanlış diye işaretlenebilir; eksik kişi eklenebilir.
+   Özgün değer korunur; kayıt ortak kayda (REV.dis) kim ve ne zaman bilgisiyle gider. Sentez düzeltilmiş
+   değerleri kullanır. Anahtar: <liste>|<satır> (liste = harf:<cilt>-<sıra>:hoca … ya da tkz:<cilt>-<sıra>:hocalar …). */
+const DZ_ALAN = [['ad', 'Ad (Arapça)'], ['vefat', 'Vefat (h.)'], ['tabaka', 'Tabaka'], ['not', 'Not / kaynak']];
+function dzListe(lk, rows) {
+  const D = REV.dis || {}, out = [];
+  for (const r of rows) {
+    const rk = lk + '|' + r.k, e = D[rk] || null, x = Object.assign({}, r, { rk, orig: r, ed: e, sil: !!(e && e.sil), manual: false });
+    if (e) for (const [f] of DZ_ALAN) if (e[f] != null && e[f] !== '') x[f] = e[f];
+    out.push(x);
+  }
+  for (const [rk, e] of Object.entries(D)) if (rk.startsWith(lk + '|+') && e && !e.sil) out.push({ rk, k: rk.slice(lk.length + 1), ad: e.ad || '', vefat: e.vefat || '', tabaka: e.tabaka || '', not: e.not || '', ed: e, sil: false, manual: true, orig: {} });
+  return out;
+}
+function dzAdHucre(x, inner) {
+  const e = x.ed;
+  return (inner || '<span class="ar" style="font-size:16px">' + esc(x.ad || '') + '</span>') +
+    (x.manual ? '<div class="small muted">elle eklendi · ' + whoWhen(e) + '</div>' : e && !x.sil ? '<div class="small muted">✎ düzeltildi · ' + whoWhen(e) + (x.orig.ad && x.orig.ad !== x.ad ? ' · kaynakta: <span class="ar">' + esc(x.orig.ad) + '</span>' : '') + '</div>' : '') +
+    (x.not ? '<div class="small muted" dir="auto">' + esc(x.not) + '</div>' : '');
+}
+function dzButon(x) {
+  const k = esc(x.rk);
+  if (x.sil) return '<span class="tag" style="color:var(--bad)">✗ yanlış</span><span class="req-edit"> <button class="btn ghost sm" data-dzgeri="' + k + '" title="Geri al">↺</button></span>';
+  return '<span class="req-edit" style="white-space:nowrap"><button class="btn ghost sm" data-dzed="' + k + '" title="Düzelt: ad, vefat, tabaka, not">✎</button>' + (x.manual ? '<button class="btn ghost sm" data-dzsil="' + k + '" title="Eklenen kişiyi sil">Sil</button>' : '<button class="btn ghost sm" data-dzsil="' + k + '" title="Yanlış: bu kişi listede olmamalı">✗</button>' + (x.ed ? '<button class="btn ghost sm" data-dzgeri="' + k + '" title="Özgün değere döndür">↺</button>' : '')) + '</span>';
+}
+function dzForm(x, cols) {
+  return '<tr class="ledit"><td colspan="' + cols + '"><form class="row ladd" data-dzsave="' + esc(x.rk) + '">' + DZ_ALAN.map(([f, l]) => '<input class="field" name="' + f + '" dir="auto" value="' + esc(x[f] || '') + '" placeholder="' + l + '"' + (f === 'ad' ? ' required' : '') + '>').join('') +
+    '<button class="btn primary sm">Kaydet</button><button class="btn sm" type="button" data-dzed="">Vazgeç</button></form>' + (x.orig && x.orig.ad ? '<div class="small muted">Kaynaktaki kayıt: <span class="ar">' + esc(x.orig.ad) + '</span>' + (x.orig.vefat ? ' · vefat ' + esc(x.orig.vefat) : '') + (x.orig.tabaka ? ' · tabaka ' + esc(x.orig.tabaka) : '') + '</div>' : '') + '</td></tr>';
+}
+function dzEkleForm(lk) {
+  return '<form class="row ladd req-edit" data-dzadd="' + esc(lk) + '">' + DZ_ALAN.map(([f, l]) => '<input class="field" name="' + f + '" dir="auto" placeholder="' + l + (f === 'ad' ? '' : ' (isteğe bağlı)') + '"' + (f === 'ad' ? ' required' : '') + '>').join('') + '<button class="btn sm">＋ Eksik kişi ekle</button></form>';
+}
+function dzYaz(rk, is, v) {
+  if (!need('edit')) return;
+  REV.dis = REV.dis || {}; const before = REV.dis[rk] ? Object.assign({}, REV.dis[rk]) : null, ek = rk.includes('|+');
+  if (is === 'geri') delete REV.dis[rk];
+  else if (is === 'sil' && ek) delete REV.dis[rk];
+  else REV.dis[rk] = Object.assign({}, before || {}, is === 'sil' ? { sil: true } : Object.assign({ sil: false }, v), { at: new Date().toISOString() }, by());
+  const ne = { geri: 'özgün değere döndürüldü', sil: ek ? 'eklenen kişi silindi' : 'yanlış diye işaretlendi', duzelt: 'düzeltildi', ekle: 'eksik kişi eklendi' }[is];
+  logAct('dış-düzelt', rk.split('|')[0] + ' · ' + ((v && (v.ad || v.deger)) || (before && (before.ad || before.deger)) || rk.split('|')[1]) + ' · ' + ne, { pkg: '', before, after: REV.dis[rk] || null });
+  S.dzed = null; saveRev(); renderCenter(); toast('Kaydedildi: ' + ne + '.');
+}
+const dzTabaka = v => { if (v == null || v === '') return null; const m = /^\s*(\d{1,2}(?:\.\d)?)\s*$/.exec(String(v)); return m ? +m[1] : CTK.tabakaOf(String(v)); };
+const dzVefat = v => { if (v == null || v === '') return null; return typeof v === 'number' ? v : CTK.yearOf(String(v)); };
+// Harf ve Tehzîb satırları (düzeltilmiş); sentezde ve tablolarda ortak kullanılır
+function harfSatirlar(n, key) {
+  const hk = harfKayit(n), hd = hk && HARF.data[hk.dosya]; if (!hd) return null;
+  const pp = (key === 'hocalar' || key === 'hoca' ? hd.teachers : hd.students) || [];
+  return dzListe('harf:' + hk.cilt + '-' + hk.sira + ':' + (key === 'hocalar' || key === 'hoca' ? 'hoca' : 'talebe'), pp.map(p => ({ k: String(p.id), ad: p.name || '', vefat: p.death || '', tabaka: p.layer || '', p })));
+}
+function tkzSatirlar(n, d, key) {
+  const rec = tkzKayit(n), seen = {};
+  return dzListe('tkz:' + (rec ? rec.cilt + '-' + rec.sira : '?') + ':' + key, (d[key] || []).map(x => { let k = nz(x.ad); seen[k] = (seen[k] || 0) + 1; if (seen[k] > 1) k += '#' + seen[k]; const t = x.takrib || {}; return { k, ad: x.ad, vefat: t.vefat || '', tabaka: t.tabaka ? String(Math.round(t.tabaka)) : '', x }; }));
 }
 const HARF_BIO = [['Tabaka', 'Tabaqa'], ['Doğum', 'BirthYear'], ['Vefat', 'DeathYear'], ['Doğum yeri', 'BirthCity'], ['İkamet', 'LivingCity'], ['Vefat yeri', 'DeathCity'], ['Rıhle', 'JourneyCity'], ['Mezhep / görüş', 'Mazhb'], ['İbn Hacer (Takrîb)', 'MartabaIbnHajar'], ['Zehebî', 'MartabaZahabi'], ['Harf’taki hadis sayısı', 'HadithsCount']];
 const harfAr = t => t ? '<span class="ar">' + esc(t) + '</span>' : '<span class="muted">—</span>';
+// Harf kimlik alanı: araştırmacı düzeltmesiyle (özgün değer korunur)
+function harfBioAlan(rec, k, orig) {
+  const rk = 'harf:' + rec.cilt + '-' + rec.sira + ':bio|' + k, e = (REV.dis || {})[rk];
+  if (S.dzed === rk) return '<form class="row ladd" data-dzbio="' + esc(rk) + '"><input class="field" name="deger" dir="auto" value="' + esc(e ? e.deger : orig) + '"><button class="btn primary sm">Kaydet</button><button class="btn sm" type="button" data-dzed="">Vazgeç</button></form>' + (orig ? '<div class="small muted">Harf: <span class="ar">' + esc(orig) + '</span></div>' : '');
+  return harfAr(e ? e.deger : orig) + (e ? ' <span class="small muted">✎ ' + whoWhen(e) + (orig && orig !== e.deger ? ' · Harf: <span class="ar">' + esc(orig) + '</span>' : '') + '</span>' : '') +
+    '<span class="req-edit"> <button class="btn ghost sm" data-dzed="' + esc(rk) + '" title="Düzelt">✎</button>' + (e ? '<button class="btn ghost sm" data-dzgeri="' + esc(rk) + '" title="Harf’taki değere döndür">↺</button>' : '') + '</span>';
+}
 function harfKisiler(d) {
   if (d._kisi) return d._kisi;
   const m = new Map();
@@ -1825,12 +1896,12 @@ function renderHarfTab(n) {
   }
   const b = d.biography || {}, sts = d.statements || [];
   const ver = [...sts.flatMap(x => x.sources), ...(d.biography_sources || [])], vok = ver.filter(x => x.samile && x.samile.dogrulama !== 'bulunamadi').length;
-  const pt = (id, title, pp) => '<section class="harf-sec" id="harf-' + id + '"><h3 class="panel-title">' + title + ' <span class="muted">' + pp.length + '</span></h3><div class="wrap"><table class="tbl" data-tid="harf-' + id + '"><thead><tr><th data-sk="t">Ad</th><th data-sk="t">Vefat</th><th data-sk="t">Tabaka</th><th data-sk="t">İbn Hacer</th><th data-sk="t">Zehebî</th><th data-sk="n" class="num">Kayıt</th></tr></thead><tbody>' +
-    pp.map(p => '<tr style="cursor:default"><td data-v="' + esc(p.name) + '">' + harfKisi(p) + '</td><td class="ar small">' + esc(p.death || '') + '</td><td class="ar small">' + esc(p.layer || '') + '</td><td class="ar small">' + esc(p.ibn_hajar || '') + '</td><td class="ar small">' + esc(p.dhahabi || '') + '</td><td class="num">' + esc(p.count) + '</td></tr>').join('') + '</tbody></table></div></section>';
+  const pt = (id, title, rows) => '<section class="harf-sec" id="harf-' + id + '"><h3 class="panel-title">' + title + ' <span class="muted">' + rows.filter(x => !x.sil).length + (rows.some(x => x.ed) ? ' · ✎ ' + rows.filter(x => x.ed).length + ' düzeltme' : '') + '</span></h3><div class="wrap"><table class="tbl" data-tid="harf-' + id + '"><thead><tr><th data-sk="t">Ad</th><th data-sk="t">Vefat</th><th data-sk="t">Tabaka</th><th data-sk="t">İbn Hacer</th><th data-sk="t">Zehebî</th><th data-sk="n" class="num">Kayıt</th><th></th></tr></thead><tbody>' +
+    rows.map(x => S.dzed === x.rk ? dzForm(x, 7) : '<tr style="cursor:default" class="' + (x.sil ? 'rej' : '') + '"><td data-v="' + esc(x.ad) + '">' + dzAdHucre(x, x.manual || (x.ed && x.ad !== x.orig.ad) ? null : harfKisi(x.p)) + '</td><td class="ar small">' + esc(x.vefat || '') + '</td><td class="ar small">' + esc(x.tabaka || '') + '</td><td class="ar small">' + esc((x.p || {}).ibn_hajar || '') + '</td><td class="ar small">' + esc((x.p || {}).dhahabi || '') + '</td><td class="num">' + esc((x.p || {}).count || '') + '</td><td>' + dzButon(x) + '</td></tr>').join('') + '</tbody></table></div>' + dzEkleForm('harf:' + rec.cilt + '-' + rec.sira + ':' + id) + '</section>';
   return '<div class="pane harf"><div class="note info"><b>Harf</b> (' + esc(d.origin || 'Prophetic Sunnah Encyclopedia') + ') · Harf râvisi #' + esc(d.harf_id) + ' ↔ bu râvi (#' + esc(n.source_sequence) + ') açıkça eşleştirildi. Bu kayıtlar sitenin hüküm sayılarına eklenmez. Kaynakların ' + vok + ' / ' + ver.length + '’i Şamile’deki sayfasıyla doğrulandı.</div>' +
     '<div class="harf-nav">' + [['kimlik', 'Kimlik'], ['hoca', 'Hocaları'], ['talebe', 'Talebeleri'], ['soz', 'Cerh–ta‘dîl sözleri'], ['etiket', 'Etiketler'], ['iliski', 'Özel ilişkiler'], ['kaynak', 'Biyografi kaynakları']].map(([k, l]) => '<button class="btn ghost sm" data-harfgo="' + k + '">' + l + '</button>').join('') + '</div>' +
-    '<section class="harf-sec" id="harf-kimlik"><h3 class="panel-title">Kimlik ve değerlendirmeler</h3><dl class="kv"><dt>Ad (Harf)</dt><dd>' + harfAr(d.name) + '</dd>' + HARF_BIO.map(([l, k]) => '<dt>' + l + '</dt><dd>' + harfAr(b[k] != null && b[k] !== '' ? String(b[k]) : '') + '</dd>').join('') + '</dl><p class="hint">Hadis sayısı Harf’ın kaydıdır; mükerrerlerden arındırılmış toplam değildir.</p></section>' +
-    pt('hoca', 'Hocaları', d.teachers || []) + pt('talebe', 'Talebeleri', d.students || []) + '<p class="hint">Hoca–talebe kaydı tek başına doğrudan semâı ispat etmez.</p>' +
+    '<section class="harf-sec" id="harf-kimlik"><h3 class="panel-title">Kimlik ve değerlendirmeler</h3><dl class="kv"><dt>Ad (Harf)</dt><dd>' + harfAr(d.name) + '</dd>' + HARF_BIO.map(([l, k]) => '<dt>' + l + '</dt><dd>' + harfBioAlan(rec, k, b[k] != null && b[k] !== '' ? String(b[k]) : '') + '</dd>').join('') + '</dl><p class="hint">Hadis sayısı Harf’ın kaydıdır; mükerrerlerden arındırılmış toplam değildir.</p></section>' +
+    pt('hoca', 'Hocaları', harfSatirlar(n, 'hoca') || []) + pt('talebe', 'Talebeleri', harfSatirlar(n, 'talebe') || []) + '<p class="hint">Hoca–talebe kaydı tek başına doğrudan semâı ispat etmez.</p>' +
     '<section class="harf-sec" id="harf-soz"><h3 class="panel-title">Âlimlerin hakkındaki sözleri <span class="muted">' + sts.length + '</span></h3><input class="field" id="harf-q" type="search" placeholder="Sözlerde ara: Arapça ifade veya âlim adı…" value="' + esc(HARF.q) + '">' +
     sts.map((x, i) => '<article class="harf-soz" data-q="' + esc(nz(x.text + ' ' + x.links.map(l => ((l.scientist || {}).name || '') + ' ' + ((l.relater || {}).name || '')).join(' '))) + '"' + (HARF.q && !nz(x.text + ' ' + x.links.map(l => ((l.scientist || {}).name || '') + ' ' + ((l.relater || {}).name || '')).join(' ')).includes(nz(HARF.q)) ? ' hidden' : '') + '><header><b class="num">' + (i + 1) + '</b> ' + x.links.map(l => '<span class="small muted">söyleyen:</span> ' + harfKisi(l.scientist) + (l.relater ? ' <span class="small muted">· nakleden:</span> ' + harfKisi(l.relater) : '')).join(' <span class="muted">|</span> ') + ' <span class="small muted">söz #' + esc(x.id) + '</span></header><p class="ar harf-quote">' + esc(x.text) + '</p>' + x.sources.map((s, j) => harfKaynak(s, 's' + i + ':' + j)).join('') + '</article>').join('') +
     '<p class="hint" id="harf-none" hidden>Aramayla eşleşen söz yok.</p></section>' +
@@ -2264,7 +2335,7 @@ function renderRulingsTab(n) {
   let out = '<div class="toolbar">' + legendHTML(kindsHere) + '<span class="grow"></span>' +
     '<button class="btn sm" data-act="counted" aria-pressed="' + UI.countedOnly + '">Yalnız sayılanlar</button>' +
     '<button class="btn sm" data-act="group" aria-pressed="' + UI.groupByCritic + '">Münekkite göre</button>' +
-    '<button class="btn sm" data-act="old" aria-pressed="' + UI.showOld + '">Eski tespitler</button></div><div class="pane"><p class="hint" style="margin:0 0 8px">Satıra tıklayınca hüküm sağ panelde açılır; aynı satıra yeniden tıklayınca kaynak metindeki yerine gidilir.</p><div class="wrap">';
+    '<button class="btn sm" data-act="old" aria-pressed="' + UI.showOld + '">Eski tespitler</button></div><div class="pane"><p class="hint" style="margin:0 0 8px">Satıra tıklayınca hüküm sağ panelde açılır; aynı satıra yeniden tıklayınca kaynak metindeki yerine gidilir. Sağdaki düğmeler: ✓ doğru, ✗ yanlış, ✎ düzelt (tür, münekkit, şiddet, lafız/pasaj, sened, aktaran, sebep — sağ panelde açılır), 🗑 kaldır.</p><div class="wrap">';
   const row = (s, grouped) => '<tr data-st="' + esc(s.uid) + '" aria-current="' + (S.sel && S.sel.id === s.uid) + '" class="' + (eCounts(s) ? '' : 'dim') + '">' +
     '<td class="num">' + s.b.block_order + '</td><td><div class="ar" style="font-size:15px">' + esc(srcShort(s.b)) + '</div><div class="small muted">' + esc(s.b.effective.source_locator || '') + '</div></td>' +
     (grouped ? '' : '<td><div>' + esc(crLabel(s)) + '</div>' + (s.critic_written && s.critic_written !== 'قلت' ? '<div class="ar small muted" style="font-size:14px">' + esc(s.critic_written) + '</div>' : '') + gorusRozet(s) + '</td>') +
@@ -2272,8 +2343,9 @@ function renderRulingsTab(n) {
     '<td>' + kindTag(eKind(s), eType(s).replace(' / İnsan kontrolü gerekli', '')) + '</td><td data-v="' + (eKind(s) === 'K' ? eTMax(s) - eCMax(s) : eSev(s)) + '">' + sevScale(s) + '</td>' +
     '<td class="small">' + esc((s.sebebs || []).map(x => CTX.SEBEB[x]).join(', ')) + (s.mufassar ? '<div class="muted">' + esc(s.mufassar) + '</div>' : '') + '</td>' +
     '<td class="small">' + esc(s.transmission) + (s.transmitter ? '<div class="muted">aktaran: ' + esc(crName(s.transmitter, s.transmitter)) + '</div>' : '') + '</td>' +
-    '<td data-v="' + s.confidence + '">' + confBar(s.confidence) + ' ' + revMark(s) + noteBadge('s:' + s.uid) + (s.flags.length ? '<div class="small muted">' + esc(s.flags.map(f => FLAGTXT[f] || f).join(', ')) + '</div>' : '') + '</td></tr>';
-  const head = '<thead><tr><th data-sk="n">Blok</th><th data-sk="t">Kaynak</th><th data-sk="t">Münekkit</th><th data-sk="t">Lafız</th><th data-sk="t">Tür</th><th data-sk="n">Şiddet (−6…+6)</th><th data-sk="t">Sebep</th><th data-sk="t">Nakil</th><th data-sk="n">Güven</th></tr></thead>';
+    '<td data-v="' + s.confidence + '">' + confBar(s.confidence) + ' ' + revMark(s) + noteBadge('s:' + s.uid) + (s.flags.length ? '<div class="small muted">' + esc(s.flags.map(f => FLAGTXT[f] || f).join(', ')) + '</div>' : '') + '</td>' +
+    '<td class="stact"><span class="req-edit"><button class="btn ghost sm" data-stact="' + esc(s.uid) + '|ok" title="Doğru">✓</button><button class="btn ghost sm" data-stact="' + esc(s.uid) + '|no" title="Yanlış (sayımdan çıkar)">✗</button></span><span class="req-edit"><button class="btn ghost sm" data-stact="' + esc(s.uid) + '|fix" title="Düzelt: tür, münekkit, şiddet, lafız/pasaj, sened, aktaran, sebep">✎</button><button class="btn ghost sm" data-stact="' + esc(s.uid) + '|del" title="Hükmü kaldır">🗑</button></span></td></tr>';
+  const head = '<thead><tr><th data-sk="n">Blok</th><th data-sk="t">Kaynak</th><th data-sk="t">Münekkit</th><th data-sk="t">Lafız</th><th data-sk="t">Tür</th><th data-sk="n">Şiddet (−6…+6)</th><th data-sk="t">Sebep</th><th data-sk="t">Nakil</th><th data-sk="n">Güven</th><th>İşlem</th></tr></thead>';
   if (UI.groupByCritic) {
     const groups = {};
     for (const s of sts) (groups[eCritic(s) || s.critic_written || '?'] = groups[eCritic(s) || s.critic_written || '?'] || []).push(s);
@@ -2282,9 +2354,9 @@ function renderRulingsTab(n) {
     for (const k of keys) {
       const gs = gorusler(groups[k].slice().sort((a, b) => a.b.block_order - b.b.block_order || a.start - b.start));
       out += '<h3 class="panel-title">' + esc(crName(k, k)) + ' <span class="muted">' + ((CTX.critic(k) || {}).death ? 'ö. ' + CTX.critic(k).death + ' · ' : '') + gs.length + ' görüş · ' + groups[k].length + ' nakil</span></h3><table class="tbl" data-tid="rulings-g">' + head.replace(/<th data-sk="t">Münekkit<\/th>/, '') + '<tbody>' +
-        gs.map(g => (g.sts.length > 1 ? '<tr class="gsep"><td colspan="8"><span class="ar" style="font-size:15px">' + esc(g.rep.phrase || '(zımnî)') + '</span> <span class="small muted">· aynı görüş, ' + g.sts.length + ' nakil</span> ' + gorusEtiket(g) + '</td></tr>' : '') + g.sts.map(x => row(x, true)).join('')).join('') + '</tbody></table>';
+        gs.map(g => (g.sts.length > 1 ? '<tr class="gsep"><td colspan="9"><span class="ar" style="font-size:15px">' + esc(g.rep.phrase || '(zımnî)') + '</span> <span class="small muted">· aynı görüş, ' + g.sts.length + ' nakil</span> ' + gorusEtiket(g) + '</td></tr>' : '') + g.sts.map(x => row(x, true)).join('')).join('') + '</tbody></table>';
     }
-  } else out += '<table class="tbl" data-tid="rulings">' + head + '<tbody>' + (sts.map(x => row(x)).join('') || '<tr><td colspan="9" class="empty-state">Hüküm yok.</td></tr>') + '</tbody></table>';
+  } else out += '<table class="tbl" data-tid="rulings">' + head + '<tbody>' + (sts.map(x => row(x)).join('') || '<tr><td colspan="10" class="empty-state">Hüküm yok.</td></tr>') + '</tbody></table>';
   out += '</div>';
   if (UI.showOld) {
     const olds = n.blocks.flatMap(b => b.evaluations.map(ev => ({ ev, b })));
@@ -2487,8 +2559,9 @@ function listItems(n, key) {
 }
 // Harf kaydında aynı adlı kişi (vefat ve tabaka için)
 function harfKisiBul(n, key, v) {
-  const hk = harfKayit(n), hd = hk && HARF.data[hk.dosya]; if (!hd) return null;
-  const q = nz(v); return ((key === 'hocalar' ? hd.teachers : hd.students) || []).find(p => { const m = nz(p.name || ''); return m && (m === q || m.startsWith(q + ' ') || q.startsWith(m + ' ')); }) || null;
+  const rows = harfSatirlar(n, key); if (!rows) return null;
+  const q = nz(v), x = rows.find(x => { const m = nz(x.ad || ''); return !x.sil && m && (m === q || m.startsWith(q + ' ') || q.startsWith(m + ' ')); });
+  return x ? { name: x.ad, death: x.vefat, layer: x.tabaka, rk: x.rk } : null;
 }
 // Vefata göre yaklaşık Takrîb tabakası (tahmindir; Takrîb mukaddimesindeki örnek râvilerin vefatlarına göre)
 const TAB_VEFAT = [[90, 2], [110, 3], [125, 4], [140, 5], [150, 6], [180, 7], [195, 8], [212, 9], [235, 10], [256, 11], [400, 12]];
@@ -2496,10 +2569,10 @@ function tabakaYaklasik(y) { if (!y) return null; for (const [u, t] of TAB_VEFAT
 // Bir kişinin vefat yılı, memleketi ve tabakası: girilen değer > Harf kaydı > addaki nisbe (memleket) / vefat (tabaka)
 function kisiBilgi(n, key, x) {
   const h = harfKisiBul(n, key, x.v);
-  const year = CTK.yearOf(x.vefat || '') || (h ? CTK.yearOf(h.death) : null);
+  const year = CTK.yearOf(x.vefat || '') || (h ? dzVefat(h.death) : null);
   const place = x.memleket ? { tr: x.memleket, region: '' } : CTK.placeOf(x.v) || (h ? CTK.placeOf(h.name) : null);
-  const tab = (h && CTK.tabakaOf(h.layer)) || tabakaYaklasik(year);
-  return { year, place, placeAuto: !x.memleket && !!place, yearHarf: !x.vefat && !!(h && year), tab, tabHarf: !!(h && CTK.tabakaOf(h.layer)), harf: h };
+  const tab = (h && dzTabaka(h.layer)) || tabakaYaklasik(year);
+  return { year, place, placeAuto: !x.memleket && !!place, yearHarf: !x.vefat && !!(h && year), tab, tabHarf: !!(h && dzTabaka(h.layer)), harf: h };
 }
 function listTable(n, key, title) {
   const items = listItems(n, key); const show = UI.showRejected;
@@ -2533,19 +2606,19 @@ function listTable(n, key, title) {
 const median = a => { const b = a.slice().sort((x, y) => x - y); return b.length ? (b.length % 2 ? b[(b.length - 1) / 2] : (b[b.length / 2 - 1] + b[b.length / 2]) / 2) : null; };
 function sentezKisiler(n, key) {
   const ppl = listItems(n, key).filter(x => x.st !== 'no').map(x => Object.assign({ v: x.v, src: 'liste' }, kisiBilgi(n, key, x)));
-  const hk = harfKayit(n), hd = hk && HARF.data[hk.dosya];
-  if (hd) for (const p of (key === 'hocalar' ? hd.teachers : hd.students) || []) {
-    if (ppl.some(q => q.harf === p)) continue;
-    const year = CTK.yearOf(p.death); ppl.push({ v: p.name, src: 'Harf', year, place: CTK.placeOf(p.name), tab: CTK.tabakaOf(p.layer) || tabakaYaklasik(year) });
+  for (const x of (harfSatirlar(n, key) || []).filter(x => !x.sil)) {     // Harf (araştırmacı düzeltmeleriyle)
+    if (ppl.some(q => q.harf && q.harf.rk === x.rk)) continue;
+    const year = dzVefat(x.vefat); ppl.push({ v: x.ad, src: 'Harf', year, place: CTK.placeOf(x.ad), tab: dzTabaka(x.tabaka) || tabakaYaklasik(year) });
   }
   // Tehzîb listesi (vefat/tabaka Takrîb’den); aynı kişi (ad + baba adı) zaten varsa eksik bilgisi tamamlanır
   const td = tkzVeri(n);
   const kok = v => nz(v || '').replace(/[^ء-ي ]/g, ' ').replace(/(^| )ابن(?= )/g, '$1بن').split(/\s+/).filter(Boolean).slice(0, 3).join(' ');
-  if (td) for (const p of td[key] || []) {
-    const t = p.takrib || {}, place = CTK.placeOf(p.ad) || (t.metin ? CTK.placeOf(t.metin.split(' ').slice(0, 14).join(' ')) : null);
-    const q = ppl.find(x => kok(x.v) && kok(x.v) === kok(p.ad));
-    if (q) { q.year = q.year || t.vefat || null; q.tab = q.tab || t.tabaka || tabakaYaklasik(t.vefat); q.place = q.place || place; continue; }
-    ppl.push({ v: p.ad, src: 'Tehzîb', year: t.vefat || null, place, tab: t.tabaka || tabakaYaklasik(t.vefat) });
+  if (td) for (const r of tkzSatirlar(n, td, key).filter(x => !x.sil)) {   // Tehzîb (araştırmacı düzeltmeleriyle)
+    const t = ((r.x || {}).takrib) || {}, place = CTK.placeOf(r.ad) || (t.metin && !r.manual ? CTK.placeOf(t.metin.split(' ').slice(0, 14).join(' ')) : null);
+    const year = dzVefat(r.vefat), tab = (r.ed ? dzTabaka(r.tabaka) : t.tabaka) || tabakaYaklasik(year);
+    const q = ppl.find(x => kok(x.v) && kok(x.v) === kok(r.ad));
+    if (q) { q.year = q.year || year || null; q.tab = q.tab || tab; q.place = q.place || place; continue; }
+    ppl.push({ v: r.ad, src: 'Tehzîb', year: year || null, place, tab });
   }
   return ppl;
 }
@@ -2649,7 +2722,7 @@ function inspStatement(s) {
   out += '<div class="sec"><h4>İnceleme</h4>' + (r.v ? '<div class="hint" style="margin-bottom:6px">Son karar: <b>' + ({ ok: '✓ Doğru', no: '✗ Yanlış', fix: '✎ Düzeltildi' }[r.v] || r.v) + '</b>' + (r.at ? ' · ' + whoWhen(r) : '') + '</div>' : '') + '<div class="review-row req-edit">' +
     '<button class="btn okb" data-rev="ok" aria-pressed="' + (r.v === 'ok') + '" title="Kısayol: A">✓ Doğru</button><button class="btn nob" data-rev="no" aria-pressed="' + (r.v === 'no') + '" title="Kısayol: X">✗ Yanlış</button><button class="btn" data-rev="fix" aria-pressed="' + (r.v === 'fix') + '" title="Kısayol: E">✎ Düzelt</button>' + (r.v ? '<button class="btn ghost" data-rev="clear">Sıfırla</button>' : '') + (AUTH.can('st-del') && s.origin === 'CTX' ? '<button class="btn ghost" data-rev="del" title="Hükmü listeden kaldır (geri alınabilir)">🗑 Kaldır</button>' : '') + '</div>' +
     (r.v === 'fix' || S.editing ? fixForm(s, r) : '') + (r.note && r.v !== 'fix' ? '<div class="hint">Not: ' + esc(r.note) + '</div>' : '') +
-    (s.origin === 'user' ? '<div style="margin-top:8px"><button class="btn sm" data-del-added="' + esc(s.uid) + '">Eklemeyi sil</button></div>' : '') + '</div>';
+    (s.origin === 'user' ? '<div style="margin-top:8px"><button class="btn sm req-edit" data-addedit="' + esc(s.uid) + '">✎ Eklemeyi düzelt (tür, münekkit, şiddet, not)</button> <button class="btn sm req-edit" data-del-added="' + esc(s.uid) + '">Eklemeyi sil</button></div>' : '') + '</div>';
   return out;
 }
 const BASIS = { 'işaret': 'Açık söz işareti (qâle X / semi‘tü X)', fiil: 'Fiilin öznesi (da‘‘afehû X, vessekahû X)', 'sonra-atıf': 'Hükümden sonra “qâlehû X”', kultu: '“Kultu” → eser müellifi', 'müellif': 'Atıfsız → eser müellifi (veya eser geleneği)', 'bağlam': 'İsimsiz “qâle” → bağlamdaki kişi', sorulan: 'Suâlât: sorulan münekkit', 'soru-cevap': 'Soru–cevap: “evet” diyen', zeame: '“Za‘ame X” (nakleden katılmıyor olabilir)', belirsiz: 'Belirlenemedi', 'zımnî': 'Kitaba alma (zımnî)', elle: 'Araştırmacı' };
@@ -2921,6 +2994,20 @@ function savePick(s, start, end, phrase) {
   S.pick = null; applyFix(s); LEX = null; saveRev(); recomputeAgg(); window.getSelection().removeAllRanges();
   S.sel = { type: 'st', id: s.uid }; S.editing = true; renderCenter(); renderInspector(); toast('Pasaj güncellendi.');
 }
+// Eklenen hükmü (elle ya da Gemini önerisinden) düzelt / sil
+function eklenenDuzelt(uid) {
+  if (!need('edit')) return;
+  const a = REV.added.find(x => x.uid === uid), b = a && BLK[a.block_id]; if (!b) return;
+  const s = STBY[uid];
+  openAdd(b, a.start, s ? s.phrase : a.phrase, { uid, type: s ? eType(s) : a.type, critic: s ? (eCritic(s) || a.critic) : a.critic, sev: s ? Math.round(eSev(s)) : a.sev, note: a.note || '' });
+  $('add-dialog').querySelector('.hint').textContent = 'Blok ' + b.block_order + ' · ' + srcShort(b) + ' · eklenen hükmü düzeltiyorsunuz (' + (a.by_name || a.by || '') + ' ekledi)';
+}
+function eklenenSil(uid) {
+  if (!need('edit')) return;
+  const a = REV.added.find(x => x.uid === uid); if (!a || !confirm('Eklenen hüküm silinsin mi?\n' + (a.phrase || ''))) return;
+  logAct('hüküm-sil', a.phrase || '', Object.assign(stTarget(STBY[uid]), { before: a }));
+  REV.added = REV.added.filter(x => x.uid !== uid); delete REV.st[uid]; saveRev(); refreshAdded(); recomputeAgg(); S.sel = null; renderAll(); toast('Ekleme silindi.');
+}
 function openAdd(b, start, phrase, pre) {
   const r = CTX.analyze(phrase, { sourceName: b.effective.source_name, sourceAuthor: b.effective.source_author });
   const g = Object.assign({}, r.statements[0] || {}, pre ? { type: pre.type, critic: pre.critic, severity: pre.sev } : {});
@@ -2930,6 +3017,20 @@ function openAdd(b, start, phrase, pre) {
     '<label>Münekkit<input id="ad-critic" list="critic-list2" dir="auto" value="' + esc(g.critic || '') + '"><datalist id="critic-list2">' + crit.map(c => '<option value="' + esc(c) + '">' + esc(CTX.critic(c).tr) + '</option>').join('') + '</datalist></label>' +
     '<label>Şiddet<select id="ad-sev">' + [6, 5, 4, 3, 2, 1, 0, -1, -2, -3, -4, -5, -6].map(v => '<option value="' + v + '"' + ((g.severity !== undefined ? Math.round(g.severity) : -2) === v ? ' selected' : '') + '>' + (v > 0 ? '+' + v + ' · ' + CTX.TLEVEL[v] : v < 0 ? v + ' · ' + CTX.CLEVEL[-v] : '0 · nötr') + '</option>').join('') + '</select></label>' +
     '<label>Not<textarea id="ad-note" rows="2" dir="auto">' + esc((pre && pre.note) || '') + '</textarea></label><div class="review-row"><button class="btn primary" id="ad-save">Ekle</button><button class="btn ghost" data-close="add-dialog">Vazgeç</button></div></div>';
+  if (pre && pre.uid) {   // eklenen hükmü düzeltme: kayıt yerinde güncellenir
+    $('ad-save').textContent = 'Kaydet';
+    $('ad-save').onclick = () => {
+      if (!need('edit')) return;
+      const a = REV.added.find(x => x.uid === pre.uid); if (!a) return;
+      const before = Object.assign({}, a);
+      Object.assign(a, { type: $('ad-type').value, critic: $('ad-critic').value.trim(), sev: Number($('ad-sev').value), note: $('ad-note').value.trim(), duz: Object.assign({ at: new Date().toISOString() }, by()) });
+      const r0 = REV.st[a.uid]; if (r0 && r0.fix) { delete r0.fix.type; delete r0.fix.critic; delete r0.fix.sev; }   // eski genel düzeltme kaydı ezilmesin
+      logAct('hüküm-düzelt', 'Eklenen hüküm düzeltildi: ' + a.type + ' · ' + (CTX.critic(a.critic) ? CTX.critic(a.critic).tr : a.critic || 'münekkit yok') + ' · ' + a.phrase, { nid: b._n.id, seq: b._n.source_sequence, uid: a.uid, phrase: a.phrase, before, after: a });
+      saveRev(); refreshAdded(); recomputeAgg(); $('add-dialog').close();
+      selectStatement(a.uid); renderSourcebar(); toast('Eklenen hüküm düzeltildi.');
+    };
+    $('add-dialog').showModal(); return;
+  }
   $('ad-save').onclick = () => {
     const uid = 'u' + b.id + ':' + start + ':' + (start + phrase.length) + ':' + Date.now().toString(36);
     const a = Object.assign({ uid, block_id: b.id, start, end: start + phrase.length, phrase, type: $('ad-type').value, critic: $('ad-critic').value.trim(), sev: Number($('ad-sev').value), note: $('ad-note').value.trim(), at: new Date().toISOString() }, by());
@@ -3694,7 +3795,7 @@ $('import-file').onchange = async e => {
     // Bütün bölümler (kararlar, râvi durumları, eklemeler, notlar, blok/metin/kimlik düzeltmeleri, teâruz) öğe öğe
     // birleşir: yalnız dosyada olan eklenir, ikisinde farklı olanda zaman damgası yeni olan geçer; mevcut kayıt silinmez.
     const d = JSON.parse(await f.text());
-    const SECS = ['st', 'narr', 'added', 'notes', 'blk', 'txt', 'idn', 'conf', 'cev'];
+    const SECS = ['st', 'narr', 'added', 'notes', 'blk', 'txt', 'idn', 'conf', 'cev', 'dis'];
     if (!d || typeof d !== 'object' || !SECS.some(k => d[k] && typeof d[k] === 'object')) throw Error('Geçerli bir inceleme dosyası değil.');
     if (d.key && d.key !== RKEY && !confirm('Bu dosya başka bir pakete ait (' + ortakLabel(d.key) + '); açık paket: ' + pkgLabel(PK) + '. Yine de bu pakete aktarılsın mı?')) { e.target.value = ''; return; }
     const pick = o => { const r = {}; for (const k of SECS) if (o[k] != null) r[k] = o[k]; return r; };
@@ -3814,6 +3915,15 @@ applySizes();
 /* ---------- Olaylar ---------- */
 document.addEventListener('click', e => {
   const t = e.target;
+  // Satır içindeki işlem düğmeleri satır tıklamasından önce (Hükümler: ✓ ✗ ✎ 🗑)
+  const sa = t.closest('[data-stact]'); if (sa) {
+    const [uid, v] = sa.dataset.stact.split('|'); if (!STBY[uid]) return;
+    if (STBY[uid].origin === 'user' && (v === 'fix' || v === 'del')) { S.sel = { type: 'st', id: uid }; renderInspector(); if (v === 'fix') eklenenDuzelt(uid); else eklenenSil(uid); return; }
+    S.sel = { type: 'st', id: uid }; S.editing = false; renderInspector(); setReview(v);
+    if (v === 'fix') { if (window.matchMedia('(max-width: 1280px)').matches) openInspector(); const ins = $('fx-type'); if (ins) ins.scrollIntoView({ block: 'center' }); }
+    if (S.view === 'desk' && v !== 'fix') renderCenter();
+    return;
+  }
   const sth = t.closest('table[data-tid] > thead th[data-sk]'); if (sth) { sortClick(sth); return; }
   const close = t.closest('[data-close]'); if (close) { $(close.dataset.close).close(); return; }
   if (t.closest('[data-onl-retry]')) { ortakSync(true); return; }
@@ -3854,7 +3964,8 @@ document.addEventListener('click', e => {
   }
   const old = t.closest('[data-old]'); if (old) { S.sel = { type: 'old', id: +old.dataset.old }; renderInspector(); if (window.matchMedia('(max-width: 1280px)').matches) openInspector(); return; }
   const bi = t.closest('[data-blockinfo]'); if (bi) { S.sel = { type: 'block', id: +bi.dataset.blockinfo }; renderCenter(); renderInspector(); if (window.matchMedia('(max-width: 1280px)').matches) openInspector(); return; }
-  const rev = t.closest('[data-rev]'); if (rev) { setReview(rev.dataset.rev); return; }
+  const rev = t.closest('[data-rev]'); if (rev) { const s0 = S.sel && STBY[S.sel.id]; if (s0 && s0.origin === 'user' && rev.dataset.rev === 'fix') { eklenenDuzelt(s0.uid); return; } setReview(rev.dataset.rev); return; }
+  const ae = t.closest('[data-addedit]'); if (ae) { eklenenDuzelt(ae.dataset.addedit); return; }
   const del = t.closest('[data-del-added]'); if (del) { if (!need('edit')) return; { const a = REV.added.find(x => x.uid === del.dataset.delAdded); const s = STBY[del.dataset.delAdded]; logAct('hüküm-sil', (a && a.phrase) || '', Object.assign(stTarget(s), { before: a })); } REV.added = REV.added.filter(a => a.uid !== del.dataset.delAdded); delete REV.st[del.dataset.delAdded]; saveRev(); refreshAdded(); recomputeAgg(); S.sel = null; renderAll(); toast('Ekleme silindi.'); return; }
   const pg = t.closest('[data-page]'); if (pg) { S.page = +pg.dataset.page; renderCenter(); return; }
   const raw = t.closest('[data-raw]'); if (raw) { showRaw(raw.dataset.raw); return; }
@@ -3875,6 +3986,9 @@ document.addEventListener('click', e => {
   const hs = t.closest('[data-harfs]'); if (hs) { const rec = harfKayit(NBYID[S.nid]), d = rec && HARF.data[rec.dosya]; if (!d) return; const ref = hs.dataset.harfs; let s, tx = ''; if (ref[0] === 's') { const [i, j] = ref.slice(1).split(':').map(Number); s = d.statements[i].sources[j]; tx = d.statements[i].text; } else s = d.biography_sources[+ref.slice(1)]; if (s) { openDialog('Kaynak · ' + (s.kitap_adi || ('Kitap #' + s.book_id)), harfKaynakDlg(d, s, tx)); const mk = $('gen-body').querySelector('.harf-page mark'); if (mk) mk.scrollIntoView({ block: 'center' }); } return; }
   const hg = t.closest('[data-harfgo]'); if (hg) { const el = document.getElementById('harf-' + hg.dataset.harfgo); if (el) el.scrollIntoView({ block: 'start', behavior: 'smooth' }); return; }
   if (t.closest('[data-harfload]')) { if (!need('volume')) return; harfDosyaSec(); return; }
+  const dze = t.closest('[data-dzed]'); if (dze) { if (dze.dataset.dzed && !need('edit')) return; S.dzed = dze.dataset.dzed || null; renderCenter(); return; }
+  const dzs = t.closest('[data-dzsil]'); if (dzs) { dzYaz(dzs.dataset.dzsil, 'sil'); return; }
+  const dzg = t.closest('[data-dzgeri]'); if (dzg) { dzYaz(dzg.dataset.dzgeri, 'geri'); return; }
   const yb = t.closest('[data-yz]'); if (yb) { const k = yb.dataset.yz; if (YZ.open.has(k)) YZ.open.delete(k); else YZ.open.add(k); renderCenter(); return; }
   const yg = t.closest('[data-yzgo]'); if (yg) { const [is, bid] = yg.dataset.yzgo.split(':'); const b = BLK[+bid]; if (!b) return; let q = ''; if (is === 'soru') { const inp = document.querySelector('[data-yzq="' + bid + '"]'); q = inp ? inp.value.trim() : ''; if (!q) { toast('Önce soruyu yazın.', true); return; } } yzCalistir(b, is, q); return; }
   const ya = t.closest('[data-yzadd]'); if (ya) { const [bid, i] = ya.dataset.yzadd.split(':'); yzEkle(+bid, +i); return; }
@@ -3931,6 +4045,15 @@ document.addEventListener('click', e => {
   }
 });
 document.addEventListener('submit', e => {
+  const dzb = e.target.closest('form[data-dzbio]');
+  if (dzb) { e.preventDefault(); dzYaz(dzb.dataset.dzbio, 'duzelt', { deger: dzb.elements.deger.value.trim() }); return; }
+  const dzf = e.target.closest('form[data-dzsave], form[data-dzadd]');
+  if (dzf) {
+    e.preventDefault(); const v = {}; for (const [f] of DZ_ALAN) v[f] = (dzf.elements[f].value || '').trim();
+    if (!v.ad) { toast('Ad gerekli.', true); return; }
+    if (dzf.dataset.dzsave) dzYaz(dzf.dataset.dzsave, 'duzelt', v); else dzYaz(dzf.dataset.dzadd + '|+' + Date.now().toString(36), 'ekle', v);
+    return;
+  }
   const cvs = e.target.closest('form[data-cevsave]');
   if (cvs) {
     e.preventDefault(); if (!need('edit')) return;
