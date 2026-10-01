@@ -684,6 +684,18 @@ body.resizing { user-select: none; } body.resizing-x, body.resizing-x * { cursor
 .gnakil { border-top: 1px dashed var(--line); padding: 4px 0; }
 .gnakil.cur { background: var(--accent-soft); border-radius: 4px; padding: 4px 6px; }
 
+/* Hoca/talebe sentezi ve ayrıştırma uyarısı */
+.sbar { display: grid; grid-template-columns: minmax(70px, 150px) 1fr auto; gap: 6px; align-items: center; font-size: 12px; margin: 2px 0; }
+.sbar .l { color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sbar .b { background: var(--paper-2); border-radius: 3px; height: 8px; overflow: hidden; }
+.sbar .b i { display: block; height: 100%; background: var(--accent); }
+.sbar .c { color: var(--ink-3); white-space: nowrap; }
+.ledit td { background: var(--accent-soft); }
+.ledit .ladd .field { flex: 1 1 120px; }
+.note.uyari { margin: 8px 0; display: grid; gap: 6px; }
+.note.uyari .ctxline { display: block; direction: rtl; font-size: 15px; margin: 4px 0; }
+.note.uyari .btn { margin-inline-start: 4px; }
+
 </style>
 </head>
 <body class="locked">
@@ -1881,7 +1893,7 @@ function renderRail() {
     return '<li><button class="nitem" role="option" data-nid="' + n.id + '" aria-current="' + (n.id === S.nid) + '" aria-selected="' + (n.id === S.nid) + '">' +
       '<span class="nseq">' + n.source_sequence + '</span><span class="nname" dir="rtl">' + esc(n.effective.canonical_name) + '</span>' +
       '<span class="nmeta"><span class="rev-dot ' + dot + '" title="' + (dot === 'done' ? 'İncelendi' : dot === 'part' ? 'Kısmen incelendi' : 'İncelenmedi') + '"></span>' + minibar(a.byK) +
-      '<span title="Aynı münekkitin aynı hükmünün farklı eserlerdeki nakilleri tek görüş sayılır">' + a.gorus.length + ' görüş' + (a.counted.length > a.gorus.length ? ' · ' + a.counted.length + ' nakil' : '') + '</span>' + (narrNoteCount(n) ? '<span class="nbadge" title="Araştırmacı notu">' + NOTE_SVG + narrNoteCount(n) + '</span>' : '') + (a.conflict ? '<span title="Teâruz: ta‘dîl ve cerh birlikte">⇄</span>' : '') + (flag ? '<span class="flag" title="Ayrıştırma uyarısı">⚠</span>' : '') + '</span></button></li>';
+      '<span title="Aynı münekkitin aynı hükmünün farklı eserlerdeki nakilleri tek görüş sayılır">' + a.gorus.length + ' görüş' + (a.counted.length > a.gorus.length ? ' · ' + a.counted.length + ' nakil' : '') + '</span>' + (narrNoteCount(n) ? '<span class="nbadge" title="Araştırmacı notu">' + NOTE_SVG + narrNoteCount(n) + '</span>' : '') + (a.conflict ? '<span title="Teâruz: ta‘dîl ve cerh birlikte">⇄</span>' : '') + (flag ? '<span class="flag" title="' + esc('Ayrıştırma uyarısı — ' + uyariListesi(n).map(u => u.title).join(' · ')) + '">⚠</span>' : '') + '</span></button></li>';
   }).join('') || '<li class="empty-state">Bu süzgeçte râvi yok.</li>';
   const done = NARR.filter(n => REVIEWED((REV.narr[n.id] || {}).status)).length;
   const sts = Object.keys(REV.st).length;
@@ -1912,7 +1924,7 @@ function renderHead() {
     '<h2>' + esc(fieldVal(n, 'isim')) + '</h2>' + idLine(n) + '<div class="nh-notes"><button class="btn ghost sm" data-act="narr-notes" title="Râvi hakkındaki araştırmacı notları">' + NOTE_SVG + ' Notlar' + (narrNoteCount(n) ? ' <b>' + narrNoteCount(n) + '</b>' : '') + '</button><button class="btn ghost sm" data-cevall="1" aria-pressed="' + !!UI.cevAll + '" title="Bütün blokların Türkçe çevirisini aç / kapat">🌐 Çeviri' + (UI.cevAll ? ': açık' : '') + '</button></div>' +
     (variants.length ? '<details class="variants"><summary>▸ ' + variants.length + ' isim varyantı</summary><div class="vlist">' + variants.map(v => '<span>' + esc(v) + '</span>').join('') + '</div></details>' : '') +
     '</div><div class="nav-arrows"><button class="btn sm" data-act="prev" aria-label="Önceki râvi" title="Önceki (K)">↑</button><button class="btn sm" data-act="next" aria-label="Sonraki râvi" title="Sonraki (J)">↓</button><button class="btn sm only-mid" data-act="insp" aria-label="Ayrıntı paneli">ⓘ</button></div></div>' +
-    reviewBar(n) +
+    reviewBar(n) + uyariNotu(n) +
     '<div class="verdict"><div class="verdict-stats">' +
     KSTACK.filter(k => k !== 'B').map(k => '<span class="stat"><span class="sw" style="background:var(--k-' + k.toLowerCase() + ')"></span>' + KNAME[k] + ' <b>' + a.byK[k] + '</b></span>').join('') +
     (a.mezhep.length ? '<span class="stat" title="Yalın bid‘at / mezhep kaydı cerh sayılmaz"><span class="sw" style="background:var(--k-b)"></span>Mezhep kaydı <b>' + gorusler(a.mezhep).length + '</b></span>' : '') +
@@ -1925,6 +1937,31 @@ function renderHead() {
     }).join('') + '</div>';
 }
 // Râvi onayı ve paket tamamlama şeridi
+// Ayrıştırma uyarıları: ne olduğu, nerede olduğu ve ne yapılabileceği (⚠ işaretinin açıklaması)
+function parantezDenetle(t) {
+  const P = { '(': ')', '[': ']', '{': '}', '«': '»', '﴿': '﴾' }, C = {}; for (const [o, c] of Object.entries(P)) C[c] = o;
+  const st = [], bad = [];
+  for (let i = 0; i < t.length; i++) { const ch = t[i]; if (P[ch]) st.push([ch, i]); else if (C[ch]) { if (st.length && st[st.length - 1][0] === C[ch]) st.pop(); else bad.push([ch, i]); } }
+  return bad.concat(st).sort((a, b) => a[1] - b[1]);
+}
+function uyariListesi(n) {
+  const out = [];
+  for (const w of n.warnings || []) {
+    const m = /Blok (\d+)/.exec(w), b = m && n.blocks.find(x => x.block_order === +m[1]);
+    if (b && /parantez/i.test(w)) {
+      const t = b._text || '', bad = parantezDenetle(t);
+      const yer = bad.length ? '<span class="ar ctxline">' + esc(t.slice(Math.max(0, bad[0][1] - 40), bad[0][1])) + '<mark>' + esc(t.slice(bad[0][1], bad[bad.length - 1][1] + 1)) + '</mark>' + esc(t.slice(bad[bad.length - 1][1] + 1, bad[bad.length - 1][1] + 25)) + '</span>' : '';
+      out.push({ html: '<b>Blok ' + b.block_order + ' (' + esc(srcShort(b)) + '):</b> kaynak metinde parantezler dengesiz' + (bad.length ? ' — fazla ya da kapanmamış: ' + bad.map(x => '“' + esc(x[0]) + '”').join(' ') : '') + '. Metin olduğu gibi korundu; hüküm tespiti etkilenmez. ' + yer +
+        ' <button class="btn ghost sm" data-gotoblk="' + b.id + '">Bloğa git</button><button class="btn ghost sm req-edit" data-gotoblk="' + b.id + '" data-fix="1">Metni düzelt</button>', title: 'Blok ' + b.block_order + ': parantez dengesiz' });
+    } else out.push({ html: esc(w), title: w });
+  }
+  [...(n.unclassified || []), ...(n.orphan_sections || [])].forEach((u, i) => {
+    const ttl = String(u.title || '').replace(/[\u200c◆]/g, '').trim();
+    out.push({ html: '<b>Ayrı tutulan bölüm' + (u.page ? ' (s. ' + u.page + ')' : '') + ':</b> ' + (ttl ? '<span class="ar" style="font-size:16px">◆ ' + esc(ttl) + '</span> — ' : '') + 'numarasız bir madde; ayrıştırıcı onu bu râviye bağlamadı, olduğu gibi korudu. Ayrı bir râvi olabilir. <button class="btn ghost sm" data-orphan="' + i + '">Metni göster</button>', title: 'Ayrı tutulan bölüm: ' + (ttl || 's. ' + u.page) });
+  });
+  return out;
+}
+function uyariNotu(n) { const U = uyariListesi(n); return U.length ? '<div class="note uyari"><b>⚠ Ayrıştırma uyarısı</b>' + U.map(u => '<div>' + u.html + '</div>').join('') + '</div>' : ''; }
 function reviewBar(n) {
   const st = (REV.narr[n.id] || {}).status || 'Kontrol edilmedi';
   const reviewed = NARR.filter(x => REVIEWED((REV.narr[x.id] || {}).status)).length;
@@ -2241,30 +2278,103 @@ function renderIdentityTab(n) {
   out += '<p><button class="btn" data-raw="narrator">Ham kaynak HTML’i göster</button></p></div>';
   return out;
 }
-// Liste alanları (hocalar, talebeler, rıhle): otomatik adaylar + onay/ret + elle ekleme
+// Liste alanları (hocalar, talebeler, rıhle): otomatik adaylar + onay/ret + elle ekleme + düzeltme
+// (ad, vefat, memleket, not). Otomatik adayın düzeltmesi L.ed[aday] olarak, kim/ne zaman imzasıyla saklanır.
+const LIST_TR = { hocalar: 'Hoca', talebeler: 'Talebe', rihle: 'Rıhle' };
+const LSEP = '::';
 function listItems(n, key) {
-  const K = kimOf(n); const L = (idnOf(n.id).l || {})[key] || { st: {}, add: [] };
-  const auto = (K[key] || []).map(x => ({ key: nz(x.v) + (key === 'rihle' ? '|' + (x.kind || '') + '|' + ((x.ev[0] || {}).block || '') : ''), v: x.v, kind: x.kind, region: x.region, ev: x.ev, auto: true }));
-  for (const a of auto) a.st = L.st[a.key] || '';
+  const K = kimOf(n); const L = (idnOf(n.id).l || {})[key] || { st: {}, add: [] }; const ED = L.ed || {};
+  const auto = (K[key] || []).map(x => ({ key: nz(x.v) + (key === 'rihle' ? '|' + (x.kind || '') + '|' + ((x.ev[0] || {}).block || '') : ''), v: x.v, orig: x.v, kind: x.kind, region: x.region, ev: x.ev, auto: true }));
+  for (const a of auto) { a.st = L.st[a.key] || ''; const e = ED[a.key]; if (e) Object.assign(a, { v: e.v || a.v, vefat: e.vefat || '', memleket: e.memleket || '', note: e.note || '', ed: e }); }
   const man = (L.add || []).map((a, i) => Object.assign({ key: 'm' + i, manual: true, st: 'ok', ev: [] }, a, { idx: i }));
   return auto.concat(man);
+}
+// Harf kaydında aynı adlı kişi (vefat ve tabaka için)
+function harfKisiBul(n, key, v) {
+  const hk = harfKayit(n), hd = hk && HARF.data[hk.dosya]; if (!hd) return null;
+  const q = nz(v); return ((key === 'hocalar' ? hd.teachers : hd.students) || []).find(p => { const m = nz(p.name || ''); return m && (m === q || m.startsWith(q + ' ') || q.startsWith(m + ' ')); }) || null;
+}
+// Vefata göre yaklaşık Takrîb tabakası (tahmindir; Takrîb mukaddimesindeki örnek râvilerin vefatlarına göre)
+const TAB_VEFAT = [[90, 2], [110, 3], [125, 4], [140, 5], [150, 6], [180, 7], [195, 8], [212, 9], [235, 10], [256, 11], [400, 12]];
+function tabakaYaklasik(y) { if (!y) return null; for (const [u, t] of TAB_VEFAT) if (y <= u) return t; return null; }
+// Bir kişinin vefat yılı, memleketi ve tabakası: girilen değer > Harf kaydı > addaki nisbe (memleket) / vefat (tabaka)
+function kisiBilgi(n, key, x) {
+  const h = harfKisiBul(n, key, x.v);
+  const year = CTK.yearOf(x.vefat || '') || (h ? CTK.yearOf(h.death) : null);
+  const place = x.memleket ? { tr: x.memleket, region: '' } : CTK.placeOf(x.v) || (h ? CTK.placeOf(h.name) : null);
+  const tab = (h && CTK.tabakaOf(h.layer)) || tabakaYaklasik(year);
+  return { year, place, placeAuto: !x.memleket && !!place, yearHarf: !x.vefat && !!(h && year), tab, tabHarf: !!(h && CTK.tabakaOf(h.layer)), harf: h };
 }
 function listTable(n, key, title) {
   const items = listItems(n, key); const show = UI.showRejected;
   const vis = items.filter(x => show || x.st !== 'no');
   const ok = items.filter(x => x.st === 'ok').length, no = items.filter(x => x.st === 'no').length;
   const kinds = key === 'rihle' ? [['rıhle', 'Rıhle'], ['kudûm', 'Kudûm'], ['tahdîs', 'Tahdîs'], ['semâ‘', 'Semâ‘'], ['ikamet', 'İkamet'], ['nüzûl', 'Nüzûl'], ['mücâveret', 'Mücâveret'], ['hac', 'Hac']] : null;
+  const kisi = key !== 'rihle', cols = kisi ? 6 : 4;
+  const editForm = x => '<tr class="ledit"><td colspan="' + cols + '"><form class="row ladd" data-lsave="' + esc(key + LSEP + x.key) + '"><input class="field" name="v" dir="auto" value="' + esc(x.v) + '" placeholder="Ad (Arapça)" required>' +
+    (kisi ? '<input class="field" name="vefat" dir="auto" value="' + esc(x.vefat || '') + '" placeholder="Vefat (h., ör. 160)"><input class="field" name="memleket" dir="auto" value="' + esc(x.memleket || '') + '" placeholder="Memleket (ör. Basra)">' : '') +
+    '<input class="field" name="note" dir="auto" value="' + esc(x.note || '') + '" placeholder="Not / kaynak"><button class="btn primary sm">Kaydet</button><button class="btn sm" type="button" data-lcancel="1">Vazgeç</button></form>' +
+    (x.orig ? '<div class="small muted">Metindeki okuma: <span class="ar" style="font-size:15px">' + esc(x.orig) + '</span></div>' : '') + '</td></tr>';
+  const row = x => {
+    if (S.ledit === key + LSEP + x.key) return editForm(x);
+    const I = kisi ? kisiBilgi(n, key, x) : null;
+    return '<tr style="cursor:default" class="' + (x.st === 'no' ? 'rej' : '') + '"><td data-v="' + esc(x.v) + '"><span class="' + (/[؀-ۿ]/.test(x.v) ? 'ar' : '') + '" style="font-size:16px">' + esc(x.v) + '</span>' + (x.kind ? ' <span class="tag">' + esc(HOW_TR[x.kind] || x.kind) + '</span>' : '') +
+      (x.ed ? '<div class="small muted">✎ düzeltildi · ' + whoWhen(x.ed) + (x.orig && x.orig !== x.v ? ' · metinde: <span class="ar">' + esc(x.orig) + '</span>' : '') + '</div>' : '') + (x.note ? '<div class="small muted">' + esc(x.note) + '</div>' : '') + '</td>' +
+      (kisi ? '<td class="num" data-v="' + (I.year || '') + '">' + (I.year ? 'h. ' + I.year + (I.yearHarf ? ' <span class="small muted" title="Harf kaydından">(Harf)</span>' : '') : (x.vefat ? esc(x.vefat) : '<span class="muted">—</span>')) + '</td><td data-v="' + esc(I.place ? I.place.tr : '') + '">' + (I.place ? esc(I.place.tr) + (I.placeAuto ? ' <span class="small muted" title="Addaki nisbeden">(nisbe)</span>' : '') : '<span class="muted">—</span>') + '</td>' : '') +
+      '<td class="num">' + new Set(x.ev.map(e => e.source)).size + '</td><td>' + (x.manual ? '<span class="small muted">elle · ' + whoWhen(x) + '</span>' : evChips(x.ev, 4)) + '</td><td style="white-space:nowrap">' +
+      (x.manual ? '<span class="tag" style="color:var(--ok)">elle</span><span class="req-edit"> <button class="btn ghost sm" data-ledit="' + esc(key + LSEP + x.key) + '" title="Düzelt">✎</button><button class="btn ghost sm" data-ldel="' + key + '|' + x.idx + '">Sil</button></span>'
+        : (x.st === 'ok' ? '<span class="tag" style="color:var(--ok)">✓ onaylı</span>' : x.st === 'no' ? '<span class="tag" style="color:var(--bad)">✗ reddedildi</span>' : '<span class="tag">aday</span>') + '<span class="req-edit"> <button class="btn ghost sm" data-lst="' + key + '|' + esc(x.key) + '|ok" title="Onayla">✓</button><button class="btn ghost sm" data-lst="' + key + '|' + esc(x.key) + '|no" title="Reddet">✗</button>' + (x.st ? '<button class="btn ghost sm" data-lst="' + key + '|' + esc(x.key) + '|" title="Adaya döndür">↺</button>' : '') + '<button class="btn ghost sm" data-ledit="' + esc(key + LSEP + x.key) + '" title="Düzelt: ad' + (kisi ? ', vefat, memleket' : '') + ', not">✎</button></span>') + '</td></tr>';
+  };
   return '<section class="lsec"><h3 class="panel-title">' + esc(title) + ' <span class="muted">' + (items.length - no) + ' kayıt · ' + ok + ' onaylı' + (no ? ' · ' + no + ' reddedildi' : '') + '</span></h3>' +
-    '<div class="wrap"><table class="tbl" data-tid="l-' + key + '"><thead><tr><th data-sk="t">' + (key === 'rihle' ? 'Yer / tür' : 'Ad') + '</th><th data-sk="n" class="num">Kaynak</th><th>Kanıt</th><th>Durum</th></tr></thead><tbody>' +
-    (vis.map(x => '<tr style="cursor:default" class="' + (x.st === 'no' ? 'rej' : '') + '"><td data-v="' + esc(x.v) + '"><span class="' + (/[؀-ۿ]/.test(x.v) ? 'ar' : '') + '" style="font-size:16px">' + esc(x.v) + '</span>' + (x.kind ? ' <span class="tag">' + esc(HOW_TR[x.kind] || x.kind) + '</span>' : '') + (x.note ? '<div class="small muted">' + esc(x.note) + '</div>' : '') + '</td><td class="num">' + new Set(x.ev.map(e => e.source)).size + '</td><td>' + (x.manual ? '<span class="small muted">elle · ' + whoWhen(x) + '</span>' : evChips(x.ev, 4)) + '</td><td style="white-space:nowrap">' +
-      (x.manual ? '<span class="tag" style="color:var(--ok)">elle</span> <button class="btn ghost sm req-edit" data-ldel="' + key + '|' + x.idx + '">Sil</button>'
-        : (x.st === 'ok' ? '<span class="tag" style="color:var(--ok)">✓ onaylı</span>' : x.st === 'no' ? '<span class="tag" style="color:var(--bad)">✗ reddedildi</span>' : '<span class="tag">aday</span>') + '<span class="req-edit"> <button class="btn ghost sm" data-lst="' + key + '|' + esc(x.key) + '|ok" title="Onayla">✓</button><button class="btn ghost sm" data-lst="' + key + '|' + esc(x.key) + '|no" title="Reddet">✗</button>' + (x.st ? '<button class="btn ghost sm" data-lst="' + key + '|' + esc(x.key) + '|" title="Adaya döndür">↺</button>' : '') + '</span>') + '</td></tr>').join('') || '<tr><td colspan="4" class="empty-state">Metinde bulunamadı; aşağıdan ekleyebilirsiniz.</td></tr>') + '</tbody></table></div>' +
-    '<form class="row ladd req-edit" data-ladd="' + key + '"><input class="field" name="v" dir="auto" placeholder="' + (key === 'rihle' ? 'Yer (ör. Bağdat) veya olay' : 'Ad (Arapça)') + '" required>' + (kinds ? '<select class="field" name="kind">' + kinds.map(([k, l]) => '<option value="' + k + '">' + l + '</option>').join('') + '</select>' : '') + '<input class="field" name="note" dir="auto" placeholder="Not / kaynak (isteğe bağlı)"><button class="btn sm">＋ Ekle</button></form></section>';
+    '<div class="wrap"><table class="tbl" data-tid="l-' + key + '"><thead><tr><th data-sk="t">' + (key === 'rihle' ? 'Yer / tür' : 'Ad') + '</th>' + (kisi ? '<th data-sk="n" class="num">Vefat</th><th data-sk="t">Memleket</th>' : '') + '<th data-sk="n" class="num">Kaynak</th><th>Kanıt</th><th>Durum</th></tr></thead><tbody>' +
+    (vis.map(row).join('') || '<tr><td colspan="' + cols + '" class="empty-state">Metinde bulunamadı; aşağıdan ekleyebilirsiniz.</td></tr>') + '</tbody></table></div>' +
+    '<form class="row ladd req-edit" data-ladd="' + key + '"><input class="field" name="v" dir="auto" placeholder="' + (key === 'rihle' ? 'Yer (ör. Bağdat) veya olay' : 'Ad (Arapça)') + '" required>' + (kinds ? '<select class="field" name="kind">' + kinds.map(([k, l]) => '<option value="' + k + '">' + l + '</option>').join('') + '</select>' : '') +
+    (kisi ? '<input class="field" name="vefat" dir="auto" placeholder="Vefat (h.)"><input class="field" name="memleket" dir="auto" placeholder="Memleket">' : '') + '<input class="field" name="note" dir="auto" placeholder="Not / kaynak (isteğe bağlı)"><button class="btn sm">＋ Ekle</button></form></section>';
+}
+/* Hoca ve talebe sentezi: vefat dağılımı, memleket yüzdeleri, tabaka dağılımı ve râvinin tahmini tabakası.
+   Kaynak: listedeki kişiler (reddedilenler hariç; düzeltmeler dahil) ve Harf kaydı; memleket bilinmiyorsa addaki
+   nisbe, tabaka bilinmiyorsa vefattan yaklaşık. Tahmin: hocaların ortanca tabakası +1 ile talebelerinki −1’in ortası. */
+const median = a => { const b = a.slice().sort((x, y) => x - y); return b.length ? (b.length % 2 ? b[(b.length - 1) / 2] : (b[b.length / 2 - 1] + b[b.length / 2]) / 2) : null; };
+function sentezKisiler(n, key) {
+  const ppl = listItems(n, key).filter(x => x.st !== 'no').map(x => Object.assign({ v: x.v, src: 'liste' }, kisiBilgi(n, key, x)));
+  const hk = harfKayit(n), hd = hk && HARF.data[hk.dosya];
+  if (hd) for (const p of (key === 'hocalar' ? hd.teachers : hd.students) || []) {
+    if (ppl.some(q => q.harf === p)) continue;
+    const year = CTK.yearOf(p.death); ppl.push({ v: p.name, src: 'Harf', year, place: CTK.placeOf(p.name), tab: CTK.tabakaOf(p.layer) || tabakaYaklasik(year) });
+  }
+  return ppl;
+}
+function sbar(rows, tot) { return rows.map(([l, c]) => '<div class="sbar"><span class="l">' + l + '</span><span class="b"><i style="width:' + Math.round(c / tot * 100) + '%"></i></span><span class="c">' + c + ' · %' + Math.round(c / tot * 100) + '</span></div>').join(''); }
+function sentezKart(ppl, title) {
+  if (!ppl.length) return '<section class="card"><h3>' + title + '</h3><div class="hint">Kayıt yok.</div></section>';
+  const ys = ppl.map(p => p.year).filter(Boolean), tabs = ppl.map(p => p.tab).filter(Boolean);
+  const dec = {}; for (const y of ys) { const d = Math.floor(y / 10) * 10; dec[d] = (dec[d] || 0) + 1; }
+  const pl = {}; let plN = 0; for (const p of ppl) if (p.place) { pl[p.place.tr] = (pl[p.place.tr] || 0) + 1; plN++; }
+  const tb = {}; for (const t of tabs) { const r = Math.round(t); tb[r] = (tb[r] || 0) + 1; }
+  const plRows = Object.entries(pl).sort((a, b) => b[1] - a[1]); const top = plRows.slice(0, 6); if (plRows.length > 6) top.push(['diğer', plRows.slice(6).reduce((a, x) => a + x[1], 0)]);
+  return '<section class="card"><h3>' + title + ' <span class="muted">' + ppl.length + ' kişi' + (ppl.some(p => p.src === 'Harf') ? ' · Harf dahil' : '') + '</span></h3>' +
+    '<div class="small"><b>Vefat</b> ' + (ys.length ? '· bilinen ' + ys.length + ' · h. ' + Math.min(...ys) + '–' + Math.max(...ys) + ' · ortanca ' + Math.round(median(ys)) : '· bilinmiyor') + '</div>' + (ys.length ? sbar(Object.keys(dec).sort((a, b) => a - b).map(d => [d + '’ler', dec[d]]), ys.length) : '') +
+    '<div class="small" style="margin-top:6px"><b>Memleket</b> ' + (plN ? '· bilinen ' + plN : '· bilinmiyor') + '</div>' + (plN ? sbar(top, plN) : '') +
+    '<div class="small" style="margin-top:6px"><b>Tabaka</b> ' + (tabs.length ? '· bilinen ' + tabs.length + ' · ortanca ' + median(tabs).toFixed(1) : '· bilinmiyor') + '</div>' + (tabs.length ? sbar(Object.keys(tb).sort((a, b) => a - b).map(t => [t + '. ' + esc(CTK.TABAKA_TR[t] || ''), tb[t]]), tabs.length) : '') + '</section>';
+}
+function listeSentez(n) {
+  const H = sentezKisiler(n, 'hocalar'), T = sentezKisiler(n, 'talebeler');
+  const tH = median(H.map(p => p.tab).filter(Boolean)), tT = median(T.map(p => p.tab).filter(Boolean));
+  const yH = median(H.map(p => p.year).filter(Boolean)), yT = median(T.map(p => p.year).filter(Boolean));
+  const est = tH != null && tT != null ? ((tH + 1) + (tT - 1)) / 2 : tH != null ? tH + 1 : tT != null ? tT - 1 : null;
+  const e = est != null ? Math.max(1, Math.min(12, Math.round(est))) : null;
+  const own = fieldVal(n, 'tabaka');
+  let out = '<h3 class="panel-title">Hoca ve talebe sentezi <span class="muted">otomatik tahmin — hüküm değildir</span></h3><div class="set-grid">' + sentezKart(H, 'Hocaları') + sentezKart(T, 'Talebeleri') + '</div>';
+  out += '<div class="note info" style="margin-top:8px"><b>Tahmini tabaka:</b> ' + (e ? e + '. tabaka (' + esc(CTK.TABAKA_TR[e] || '') + ')' : 'hesaplanamadı (hoca ve talebelerin vefat ya da tabakası bilinmiyor)') +
+    (e ? ' <span class="small muted">· dayanak: ' + [tH != null ? 'hocaların ortanca tabakası ' + tH.toFixed(1) + ' (+1)' : '', tT != null ? 'talebelerinki ' + tT.toFixed(1) + ' (−1)' : ''].filter(Boolean).join(' · ') + '</span>' : '') +
+    (yH || yT ? '<br><b>Tahmini vefat:</b> ' + (yH && yT ? 'h. ' + Math.round(yH) + ' ile ' + Math.round(yT) + ' arasında' : yH ? 'h. ' + Math.round(yH) + '’den sonra' : 'h. ' + Math.round(yT) + '’den önce') + ' <span class="small muted">(hocaların ve talebelerin ortanca vefatı)</span>' : '') +
+    (own ? '<br><span class="small">Kimlikteki tabaka: <span class="ar">' + esc(own) + '</span></span>' : '') + '<br><span class="small muted">Vefat ve memleket listedeki girişlerden, Harf kaydından ya da addaki nisbeden alınır; vefatı bilinen kişinin tabakası yaklaşık hesaplanır. Bilgisi eksik kişiyi ✎ ile tamamlayın.</span></div>';
+  return out;
 }
 function renderTeachersTab(n) {
   const hk = harfKayit(n), hd = hk && HARF.data[hk.dosya];
   return '<div class="pane">' + (hk ? '<div class="note info" style="margin-bottom:10px">Harf’ta bu râvinin ' + (hd ? (hd.teachers || []).length + ' hocası ve ' + (hd.students || []).length + ' talebesi' : 'hoca ve talebe listesi') + ' kayıtlı. <button class="btn sm" data-tab="harf">Harf sekmesini aç</button></div>' : '') + '<div class="toolbar-inline"><p class="hint" style="margin:0">Hocalar (şüyûh) “rivâ/haddese/semi‘a an …” ve Mîzân usulü “an … ve anhü …” kalıplarından; talebeler (telâmîz) “ve anhü, revâ anhü, haddese anhü …” kalıplarından çıkarılır. Olumsuz ve şartlı cümleler (“mâ haddese anhü”, “izâ revâ anhü sika”) ile senet içi adlar alınmaz. Adaylar doğrulanmamıştır.</p><label class="small"><input type="checkbox" data-act="show-rej"' + (UI.showRejected ? ' checked' : '') + '> Reddedilenleri göster</label></div>' +
-    '<div class="lcols">' + listTable(n, 'hocalar', 'Hocaları (şüyûh)') + listTable(n, 'talebeler', 'Talebeleri (telâmîz)') + '</div></div>';
+    listeSentez(n) + '<div class="lcols">' + listTable(n, 'hocalar', 'Hocaları (şüyûh)') + listTable(n, 'talebeler', 'Talebeleri (telâmîz)') + '</div></div>';
 }
 function renderRihleTab(n) {
   const K = kimOf(n); const items = listItems(n, 'rihle').filter(x => x.st !== 'no');
@@ -2521,7 +2631,7 @@ function goNarrator(pkg, seq) {
   setView('desk', false); selectNarrator(n.id, true);
 }
 function selectNarrator(id, keepTab) {
-  S.nid = id; S.sel = null; S.editing = false; S.hl = null; S.kedit = null; if (!keepTab && S.tab === 'sayfa') S.page = null;
+  S.nid = id; S.sel = null; S.editing = false; S.hl = null; S.kedit = null; S.ledit = null; if (!keepTab && S.tab === 'sayfa') S.page = null;
   renderRail(); renderCenter(); renderInspector(); writeHash();
   $('center-scroll').scrollTop = 0;
   const cur = document.querySelector('.nitem[aria-current="true"]'); if (cur) cur.scrollIntoView({ block: 'nearest' });
@@ -3518,7 +3628,11 @@ document.addEventListener('click', e => {
     if (ks.dataset.kreset) delete I.f[k]; else { const v = $('kf-input').value.trim(); I.f[k] = Object.assign({ v, at: new Date().toISOString() }, by()); }
     logAct('kimlik', (KFIELDS.find(x => x[0] === k) || [k, k])[1] + ': ' + (ks.dataset.kreset ? 'otomatik değere döndü' : I.f[k].v), { nid: n.id, seq: n.source_sequence, before, after: I.f[k] ? I.f[k].v : autoField(n, k) });
     saveRev(); S.kedit = null; renderCenter(); toast('Kimlik bilgisi kaydedildi.'); return; }
-  const ls = t.closest('[data-lst]'); if (ls) { if (!need('edit')) return; const [key, k2, v] = ls.dataset.lst.split('|'); const n = NBYID[S.nid]; const I = idnOf(n.id, true); const L = I.l[key] = I.l[key] || { st: {}, add: [] }; const before = L.st[k2] || 'aday';
+  const le = t.closest('[data-ledit]'); if (le) { if (!need('edit')) return; S.ledit = le.dataset.ledit; renderCenter(); const f = document.querySelector('form[data-lsave] input[name="v"]'); if (f) f.focus(); return; }
+  if (t.closest('[data-lcancel]')) { S.ledit = null; renderCenter(); return; }
+  const gb = t.closest('[data-gotoblk]'); if (gb) { const id = +gb.dataset.gotoblk; S.tab = 'kaynak'; S.sel = { type: 'block', id }; if (gb.dataset.fix && !need('text')) return; S.tedit = gb.dataset.fix ? id : S.tedit; renderCenter(); renderInspector(); const el = $('blk-' + id); if (el) el.scrollIntoView({ block: 'start', behavior: 'smooth' }); if (gb.dataset.fix && window.matchMedia('(max-width: 1280px)').matches) openInspector(); return; }
+  const oc = t.closest('[data-orphan]'); if (oc) { const n = NBYID[S.nid], u = [...n.unclassified, ...n.orphan_sections][+oc.dataset.orphan]; if (u) openDialog('Ayrı tutulan metin · s. ' + (u.page || '?'), '<p class="hint">Ayrıştırıcı bu bölümü numaralı bir râviye bağlamadı; olduğu gibi korundu. Ayrı bir râvi (numarasız madde) olabilir.</p><div class="btext ar" style="white-space:pre-wrap">' + esc(String(u.raw_text || '').replace(/\u200c/g, '')) + '</div>'); return; }
+  const ls = t.closest('[data-lst]'); if (ls) { if (!need('edit')) return; const ds = ls.dataset.lst, key = ds.slice(0, ds.indexOf('|')), v = ds.slice(ds.lastIndexOf('|') + 1), k2 = ds.slice(ds.indexOf('|') + 1, ds.lastIndexOf('|')); const n = NBYID[S.nid]; const I = idnOf(n.id, true); const L = I.l[key] = I.l[key] || { st: {}, add: [] }; const before = L.st[k2] || 'aday';
     if (v) L.st[k2] = v; else delete L.st[k2];
     const it = listItems(n, key).find(x => x.key === k2);
     logAct('kimlik', ({ hocalar: 'Hoca', talebeler: 'Talebe', rihle: 'Rıhle' })[key] + ' ' + (v === 'ok' ? 'onaylandı' : v === 'no' ? 'reddedildi' : 'adaya döndü') + ': ' + (it ? it.v : k2), { nid: n.id, seq: n.source_sequence, before, after: v || 'aday' });
@@ -3577,10 +3691,24 @@ document.addEventListener('submit', e => {
     if (Object.keys(o).some(k => ['source_name', 'source_author', 'source_locator'].includes(k))) REV.blk[id] = o; else delete REV.blk[id];
     blockChanged(id, before, REV.blk[id] || null); return;
   }
+  const fs = e.target.closest('form[data-lsave]');
+  if (fs) {
+    e.preventDefault(); if (!need('edit')) return;
+    const sp = fs.dataset.lsave, i0 = sp.indexOf(LSEP), key = sp.slice(0, i0), k2 = sp.slice(i0 + LSEP.length);
+    const n = NBYID[S.nid], I = idnOf(n.id, true), L = I.l[key] = I.l[key] || { st: {}, add: [] };
+    const val = { v: fs.v.value.trim(), note: fs.note.value.trim() }; if (fs.vefat) val.vefat = fs.vefat.value.trim(); if (fs.memleket) val.memleket = fs.memleket.value.trim();
+    if (!val.v) return;
+    let before;
+    if (/^m\d+$/.test(k2)) { const i = +k2.slice(1); before = Object.assign({}, L.add[i]); L.add[i] = Object.assign({}, L.add[i], val, { edited_at: new Date().toISOString(), edited_by: (AUTH.me() || {}).username || '' }); }
+    else { L.ed = L.ed || {}; before = L.ed[k2] || null; L.ed[k2] = Object.assign(val, { at: new Date().toISOString() }, by()); }
+    logAct('kimlik', LIST_TR[key] + ' düzeltildi: ' + val.v + (val.vefat ? ' · vefat ' + val.vefat : '') + (val.memleket ? ' · ' + val.memleket : ''), { nid: n.id, seq: n.source_sequence, before, after: val });
+    S.ledit = null; saveRev(); renderCenter(); toast('Kaydedildi.');
+    return;
+  }
   const f = e.target.closest('form[data-ladd]'); if (!f) return;
   e.preventDefault(); if (!need('edit')) return;
   const key = f.dataset.ladd, n = NBYID[S.nid], I = idnOf(n.id, true), L = I.l[key] = I.l[key] || { st: {}, add: [] };
-  const x = Object.assign({ v: f.v.value.trim(), note: f.note.value.trim(), at: new Date().toISOString() }, f.kind ? { kind: f.kind.value } : {}, by());
+  const x = Object.assign({ id: 'e' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), v: f.v.value.trim(), note: f.note.value.trim(), at: new Date().toISOString() }, f.kind ? { kind: f.kind.value } : {}, f.vefat && f.vefat.value.trim() ? { vefat: f.vefat.value.trim() } : {}, f.memleket && f.memleket.value.trim() ? { memleket: f.memleket.value.trim() } : {}, by());
   if (!x.v) return;
   L.add.push(x); logAct('kimlik', ({ hocalar: 'Hoca', talebeler: 'Talebe', rihle: 'Rıhle' })[key] + ' eklendi: ' + x.v, { nid: n.id, seq: n.source_sequence, after: x });
   saveRev(); renderCenter(); toast('Eklendi.');
@@ -5382,7 +5510,23 @@ const RAPOR = (() => {
     R.hocalar.sort((a, b) => b.ev.length - a.ev.length); R.talebeler.sort((a, b) => b.ev.length - a.ev.length);
     return Object.assign(R, { tabakaTahmin: tahmin });
   }
-  return { VERSION, extract, hijri, tabakaFromDeath, PLACES, TABAKA_TR };
+  // Addaki nisbeden memleket ({ tr, region }) — ör. “… البصري” → Basra / Irak; bulunamazsa null
+  function placeOf(name) {
+    for (const w of nz(name || '').split(/\s+/)) { const P = PLACE_BY[w]; if (P && w.length > 2) return { tr: P.tr, region: P.region }; }
+    return null;
+  }
+  // Takrîb tabaka ifadesi → sayı: “السابعة” 7, “كبار العاشرة” 9.7, “صغار التاسعة” 9.3
+  const TAB_KEYS = Object.keys(TABAKA_ORD).sort((a, b) => b.length - a.length);
+  function tabakaOf(t) {
+    const s = nz(t || ''); const k = TAB_KEYS.find(x => s.includes(x)); if (!k) return null;
+    return TABAKA_ORD[k] + (/كبار/.test(s) ? -0.3 : /صغار/.test(s) ? 0.3 : 0);
+  }
+  // Vefat metninden yıl: rakamla yazılmışsa ilk sayı (“في حدود 160 هـ”), değilse kelimeyle yazılmış tarih
+  function yearOf(t) {
+    const m = /([0-9٠-٩]{2,3})/.exec(String(t || '')); if (m) return +m[1].replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+    const h = hijri(nz(t || '')); return h && h.year && !h.noCentury ? h.year : null;
+  }
+  return { VERSION, extract, hijri, tabakaFromDeath, placeOf, tabakaOf, yearOf, PLACES, TABAKA_TR };
 });
 
 </script>
