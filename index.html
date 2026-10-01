@@ -466,7 +466,7 @@ button.pill:hover { border-color: var(--accent-2); }
 .scope-bar{margin:0 0 10px}
 
 /* ---------- Giriş, kullanıcı menüsü, ayarlar ---------- */
-body.locked > .topbar, body.locked > .sourcebar, body.locked > main, body.locked > .footer { display: none !important; }
+body.locked > .topbar, body.locked > .sourcebar, body.locked > .online-bar, body.locked > main, body.locked > .footer { display: none !important; }
 .login { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; background: radial-gradient(1200px 600px at 20% 0%, var(--accent-soft), transparent 60%), var(--bg); padding: 16px; }
 .login-card { width: min(400px, 100%); background: var(--paper); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow-lg); padding: 26px 24px 18px; display: flex; flex-direction: column; gap: 12px; }
 .login-card .brand { margin-bottom: 8px; }
@@ -485,7 +485,7 @@ body.locked > .topbar, body.locked > .sourcebar, body.locked > main, body.locked
 .ortak-chip.busy { color: var(--focus); }
 .avatar { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 10.5px; font-weight: 700; letter-spacing: .02em; }
 .menu-who { padding: 8px 10px 10px; border-bottom: 1px solid var(--line); margin-bottom: 4px; }
-body[data-role="gozlemci"] .req-edit { display: none !important; }
+body[data-role="gozlemci"] .req-edit, body[data-ro="1"] .req-edit { display: none !important; }
 body:not([data-role="yonetici"]) .req-admin { display: none !important; }
 .set-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; margin-bottom: 8px; }
 .set-grid .card .fixform { margin-top: 10px; }
@@ -667,6 +667,14 @@ body.resizing { user-select: none; } body.resizing-x, body.resizing-x * { cursor
 @media (max-width: 880px) { .harf-sec .kv { grid-template-columns: 110px minmax(0, 1fr); } .harf-src { flex-direction: column; } .harf-sec { scroll-margin-top: 96px; } }
 @media print { .harf-nav, .harf-src .btn, #harf-q { display: none; } }
 
+/* Çevrim içi çalışma: salt okunur uyarısı */
+.online-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 7px 18px; font-size: 13px; border-bottom: 1px solid var(--line); }
+.online-bar[hidden] { display: none; }
+.online-bar.err { background: var(--warn-bg); color: var(--warn); }
+.online-bar.info { background: var(--accent-soft); color: var(--ink-2); }
+.online-bar .btn { margin-left: 4px; }
+@media print { .online-bar { display: none !important; } }
+
 </style>
 </head>
 <body class="locked">
@@ -732,6 +740,7 @@ body.resizing { user-select: none; } body.resizing-x, body.resizing-x * { cursor
   </div>
 </header>
 
+<div class="online-bar" id="online-bar" role="status" hidden></div>
 <div class="sourcebar" id="sourcebar"></div>
 
 <main class="view desk" id="view-desk">
@@ -1032,8 +1041,11 @@ let LOGC = null;
 async function readLog() { if (LOGC) return LOGC; let a = []; try { a = (await IDB.all('hareket')) || []; } catch (e) { a = LOGMEM.slice(); } LOGC = a.sort((x, y) => (y.at || '').localeCompare(x.at || '') || (y.id || 0) - (x.id || 0)); return LOGC; }
 function stTarget(s) { return s ? { nid: s.n.id, seq: s.n.source_sequence, uid: s.uid, phrase: s.phrase || '', critic: eCritic(s) || s.critic_written || '' } : {}; }
 function by() { const u = AUTH.me(); return u ? { by: u.username, by_name: u.name } : {}; }
-// Yetki denetimi: yetki yoksa uyarır
-function need(p) { if (AUTH.can(p)) return true; const u = AUTH.me(); toast('Bu işlem için yetkiniz yok' + (u ? ' (' + AUTH.roleName(u.role) + ')' : '') + '.', true); return false; }
+// Yetki denetimi: yetki yoksa ya da site çevrim dışıyken (değişiklik ortak kayda yazılamaz) uyarır
+function need(p) {
+  if (YAZMA.has(p) && cevrimDisi()) { toast(cevrimDisiNeden() + ' Site şu an salt okunur; değişiklik yapılamaz.', true); renderOnline(); return false; }
+  if (AUTH.can(p)) return true; const u = AUTH.me(); toast('Bu işlem için yetkiniz yok' + (u ? ' (' + AUTH.roleName(u.role) + ')' : '') + '.', true); return false;
+}
 function whoWhen(o) { if (!o || !o.at) return ''; return (o.by_name || o.by ? esc(o.by_name || o.by) + ' · ' : '') + esc(new Date(o.at).toLocaleString('tr-TR', { dateStyle: 'short', timeStyle: 'short' })); }
 async function sha256(text) {
   try { const h = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text)); return [...new Uint8Array(h)].map(x => x.toString(16).padStart(2, '0')).join(''); }
@@ -1041,15 +1053,58 @@ async function sha256(text) {
 }
 /* ---------- Ortak kayıt (GitHub deposu; ctortak.js) ----------
    İnceleme kayıtları (paket başına) ve paket durumu, ayarlanan depoda ayrı bir dalda tek ortak kayıt
-   olarak tutulur; hareket kaydı da oraya eklenir. Tarayıcıdaki şifreli depo her zaman önce yazılır;
-   eşitleme değişiklikten birkaç saniye sonra, sayfa açılınca ve dakikada bir yapılır. Bağlantı yoksa
-   değişiklikler bekler. Aynı öğede iki farklı değişiklik varsa zaman damgası yeni olan geçer. */
+   olarak tutulur; hareket kaydı ve cilt dosyaları da oraya eklenir. Tarayıcıdaki şifreli depo her zaman önce
+   yazılır; eşitleme değişiklikten bir iki saniye sonra, sayfa açılınca, sekmeye dönülünce ve yarım dakikada bir
+   yapılır. Aynı öğede iki farklı değişiklik varsa zaman damgası yeni olan geçer. Bağlantı ayarı bütün hesaplara
+   şifreli olarak dağıtılır; bağlıyken site çevrim içi çalışır (bkz. “Çevrim içi çalışma”). */
 const OKEY = 'ortak-ayar', OSKEY = 'ortak-durum', OBRANCH = 'ortak-kayit';
 const ORT_DOC = /^cerh-tadil-inceleme:[A-Za-z0-9:._-]+$/;
-const ORTAK = { busy: null, timer: 0, again: false, err: '', last: null, dirty: false, cur: false, needRender: false, logNew: false };
+const ORTAK = { busy: null, timer: 0, again: false, err: '', last: null, dirty: false, cur: false, needRender: false, logNew: false, retry: 0, lastTry: 0, every: 30000 };
 function ortakCfg() { const c = store.get(OKEY, null); return c && c.repo && c.token ? c : null; }
+
+/* ---------- Çevrim içi çalışma ----------
+   Ortak kayıt bağlıysa (ya da sayfa yayındaki siteyse) site çevrim içi çalışır: değişiklik yalnız ortak kayda
+   ulaşılabilirken yapılabilir. Açılışta ilk eşitleme bitene kadar ve bağlantı koptuğunda sayfa salt okunurdur;
+   gönderilmeyi bekleyen bir değişiklik varsa bağlantı gelince kendiliğinden gönderilir. Bağlantı ayarını yönetici
+   bir kez girer; ayar kasanın anahtarıyla mühürlenip hesap dosyasıyla bütün hesaplara dağıtılır (KASA.accounts). */
+const YAZMA = new Set(['review', 'edit', 'note', 'note-any', 'text', 'st-del', 'conflict', 'volume', 'volume-del', 'complete', 'reopen', 'import']);
+const ONL = { ok: false, ro: null };
+const YAYINDA = KASA.status().mode === 'enc' && /^https?:$/.test(location.protocol);   // yayındaki site (şifreli kopya, ağdan açılmış)
+function cevrimIciGerekli() { return YAYINDA || !!ortakCfg(); }
+function cevrimDisi() { return cevrimIciGerekli() && !ONL.ok; }
+const agYok = () => typeof navigator !== 'undefined' && navigator.onLine === false;
+function cevrimDisiNeden() {
+  if (!ortakCfg()) return 'Ortak kayıt bağlantısı kurulmamış.';
+  if (agYok()) return 'İnternet bağlantısı yok.';
+  if (!ORTAK.last && !ORTAK.err) return 'Ortak kayıt yükleniyor…';
+  return 'Ortak kayda ulaşılamıyor' + (ORTAK.err ? ': ' + ORTAK.err.replace(/;.*$/, '').replace(/\.$/, '') : '') + '.';
+}
+const _authCan = AUTH.can; AUTH.can = p => _authCan(p) && !(YAZMA.has(p) && cevrimDisi());
+function renderOnline() {
+  const ro = cevrimDisi(), bar = $('online-bar');
+  document.body.dataset.ro = ro ? '1' : '';
+  if (bar) {
+    bar.hidden = !ro;
+    if (ro) {
+      const loading = !!ortakCfg() && !ORTAK.last && !ORTAK.err && !agYok();
+      bar.className = 'online-bar ' + (loading ? 'info' : 'err');
+      bar.innerHTML = '<span>' + (loading ? '☁ ' : '⚠ ') + '<b>' + esc(cevrimDisiNeden()) + '</b> ' +
+        (loading ? 'Kayıtlar yüklenince düzenleme açılır.' : !ortakCfg() ? (_authCan('vault') ? 'Site salt okunur. Ayarlar → Ortak kayıt bölümünden bağlayın.' : 'Site salt okunur; yönetici bağlantıyı kurunca düzenleme açılır.') : 'Site şu an salt okunur; bağlantı gelince düzenleme kendiliğinden açılır.') +
+        (ORTAK.dirty ? ' <span class="small">Gönderilmeyi bekleyen değişiklik var; bağlantı gelince gönderilecek.</span>' : '') + '</span>' +
+        (ortakCfg() && !loading ? ' <button class="btn sm" type="button" data-onl-retry>Yeniden dene</button>' : !ortakCfg() && _authCan('vault') ? ' <button class="btn sm" type="button" data-view-go="settings">Ayarlar</button>' : '');
+    }
+  }
+  if (ONL.ro !== null && ONL.ro !== ro && STARTED) { if (ortakEditing()) ORTAK.needRender = true; else renderAll(); }
+  ONL.ro = ro;
+}
+// Erişim anahtarı reddedilirse (ör. yönetici yeniledi) hesap dosyasındaki güncel bağlantı ayarı alınır
+let hesapTazeleAt = 0;
+async function hesapTazele() {
+  if (Date.now() - hesapTazeleAt < 120000) return; hesapTazeleAt = Date.now();
+  try { if (await KASA.refreshAccounts()) { applyUser(); renderOrtakChip(); setTimeout(() => ortakSync(), 300); } } catch (e) { }
+}
 function ortakPath(key) { return 'kayitlar/' + (key === 'paketler' ? 'paketler' : ORT.fname(key.replace(/^cerh-tadil-inceleme:/, 'inceleme-'))) + '.json'; }
-function ortakLabel(key) { const p = PKGS.find(x => rkeyOf(x) === key); return p ? pkgLabel(p) : key.replace(/^cerh-tadil-inceleme:/, ''); }
+function ortakLabel(key) { if (key === 'ciltler') return 'cilt listesi'; if (key === 'paketler') return 'paket durumu'; const p = PKGS.find(x => rkeyOf(x) === key); return p ? pkgLabel(p) : key.replace(/^cerh-tadil-inceleme:/, ''); }
 function ortakApply(key, v) {
   const old = key === RKEY ? REV : store.get(key, null);
   store.set(key, v);
@@ -1061,7 +1116,67 @@ function ortakApply(key, v) {
 function ortakDocs() {
   const keys = new Set(store.keys().filter(k => ORT_DOC.test(k) && !/:blkv$/.test(k))); keys.add(RKEY);
   return [...keys].map(k => ({ path: ortakPath(k), key: k, label: ortakLabel(k), get: () => k === RKEY ? REV : store.get(k, null), set: v => ortakApply(k, v) }))
-    .concat({ path: ortakPath('paketler'), key: 'paketler', label: 'paket durumu', get: () => ({ done: PST.done }), set: v => { PST.done = (v && v.done) || {}; store.set(PKEY, PST); } });
+    .concat({ path: ortakPath('paketler'), key: 'paketler', label: 'paket durumu', get: () => ({ done: PST.done }), set: v => { PST.done = (v && v.done) || {}; store.set(PKEY, PST); } })
+    .concat({ path: 'kayitlar/ciltler.json', key: 'ciltler', label: 'cilt listesi', get: () => store.get(CKEY, {}) || {}, set: v => { store.set(CKEY, v || {}); } });
+}
+
+/* ---------- Ortak ciltler ----------
+   Yüklenen cilt dosyası ortak kayıt dalına (ciltler/c<cilt>.html) konur; liste kayitlar/ciltler.json’da
+   { "<cilt>": { vol, name, size, sha (SHA-256), blob (git özeti), path, at, by } } ya da silinmişse { silindi, at }
+   olarak eşitlenir. Listede olup bu tarayıcıda bulunmayan (ya da daha eski olan) cilt depodan indirilir ve özeti
+   denetlenip tarayıcıda şifreli saklanır; bu tarayıcıda olup listede bulunmayan (ya da daha yeni olan) cilt depoya gönderilir. */
+const CKEY = 'ortak-ciltler';
+const CILT = { busy: null, err: '' };
+let VOLS_READY = null;
+const ciltListe = () => store.get(CKEY, {}) || {};
+function ciltEsitle() {
+  const c = ortakCfg(); if (!c || !AUTH.me()) return Promise.resolve();
+  if (CILT.busy) { CILT.again = true; return CILT.busy; }
+  CILT.busy = (async () => {
+    if (VOLS_READY) await VOLS_READY;
+    const gh = ORT.client(c), br = c.branch || OBRANCH, me = AUTH.me();
+    const author = { name: me.name + ' (' + me.username + ')', email: ORT.fname(me.username).toLowerCase() + '@cerh-tadil.invalid' };
+    let sent = 0, got = [], gone = [];
+    // 1) Bu tarayıcıdaki cilt: ortak listede yoksa ya da buradaki daha yeniyse depoya
+    for (const v of Object.values(VOLS)) {
+      const e = ciltListe()[v.vol];
+      if (e && !e.silindi && e.sha === v.sha) continue;
+      if (e && String(e.at || '') >= String(v.added_at || '')) continue;   // ortak liste daha yeni: aşağıda uygulanır
+      if (!AUTH.can('volume')) continue;
+      const path = 'ciltler/c' + v.vol + '.html';
+      const blob = await ORT.putBlob(gh, br, path, v.html, me.username + ': ' + v.vol + '. cilt dosyası [skip ci]', author);
+      store.set(CKEY, Object.assign({}, ciltListe(), { [v.vol]: Object.assign({ vol: v.vol, name: v.name, size: v.size, sha: v.sha, blob, path, at: v.added_at }, by()) }));
+      sent++;
+    }
+    // 2) Ortak listedeki cilt: burada yoksa ya da buradaki daha eskiyse depodan; silinmişse buradan da kaldırılır
+    for (const e of Object.values(ciltListe())) {
+      if (!e || !e.vol) continue;
+      const v = VOLS[e.vol];
+      if (e.silindi) { if (v && String(v.added_at || '') <= String(e.at || '')) { delete VOLS[e.vol]; try { await IDB.del('ciltler', e.vol); } catch (x) { } gone.push(e.vol); } continue; }
+      if (v && (v.sha === e.sha || String(v.added_at || '') > String(e.at || ''))) continue;
+      toast(e.vol + '. cilt ortak kayıttan alınıyor…');
+      const txt = await gh.blob(e.blob);
+      if (typeof txt !== 'string' || await sha256(txt) !== e.sha) throw Error(e.vol + '. cilt dosyası eksik indi (özet tutmuyor); yeniden denenecek.');
+      const rec = { vol: e.vol, name: e.name, size: e.size, added_at: e.at, sha: e.sha, html: txt };
+      registerVolume(rec);
+      try { await IDB.put('ciltler', { vol: rec.vol, name: rec.name, size: rec.size, added_at: rec.added_at, sha: rec.sha, html: rec.html }); } catch (x) { IDB_OK = false; }
+      got.push(e.vol);
+    }
+    CILT.err = '';
+    if (sent) ortakDirty();
+    if (got.length || gone.length) {
+      rebuildPkgs(); if (!PKGS.includes(PK)) activatePackage(SNAP_PKG.id); renderSourcebar(); if (S.view === 'packages') renderPackages();
+      toast((got.length ? got.join(', ') + '. cilt ortak kayıttan alındı' : '') + (got.length && gone.length ? ' · ' : '') + (gone.length ? gone.join(', ') + '. cilt ortak kayıttan kaldırıldı' : '') + '.');
+    } else if (sent && S.view === 'packages') renderPackages();
+  })().catch(e => { CILT.err = e.message || String(e); if (S.view === 'packages') renderPackages(); })
+    .finally(() => { CILT.busy = null; if (CILT.again) { CILT.again = false; setTimeout(ciltEsitle, 500); } });
+  return CILT.busy;
+}
+function ciltEtiket(v) {
+  if (!ortakCfg()) return '';
+  const e = ciltListe()[v.vol];
+  return e && !e.silindi && e.sha === v.sha ? ' <span class="tag ok" style="font-family:var(--ui)" title="Ortak kayıtta; diğer bilgisayarlara kendiliğinden iner">☁ ortak</span>'
+    : ' <span class="tag warn" style="font-family:var(--ui)" title="' + esc(CILT.err || 'Bağlantı kurulunca ortak kayda gönderilecek') + '">yalnız bu tarayıcıda</span>';
 }
 function ortakLogRec(e) { const o = Object.assign({}, e); delete o.id; delete o._mem; delete o.ortak; o.rid = ORT.ridOf(e); return o; }
 function ortakIO(me) {
@@ -1103,9 +1218,9 @@ function ortakRefresh(r, quiet) {
   if (!quiet) toast('Ortak kayıttan güncellendi: ' + r.changed.map(ortakLabel).filter((x, i, a) => a.indexOf(x) === i).join(', ') + (r.conflicts ? ' · ' + r.conflicts + ' çakışmada son değişiklik alındı' : ''));
 }
 async function ortakSync(manual) {
-  const cfg = ortakCfg(); if (!cfg || !AUTH.me()) { renderOrtakChip(); return; }
+  const cfg = ortakCfg(); if (!cfg || !AUTH.me()) { renderOrtakChip(); renderOnline(); return; }
   if (ORTAK.busy) { ORTAK.again = true; return ORTAK.busy; }
-  clearTimeout(ORTAK.timer);
+  clearTimeout(ORTAK.timer); ORTAK.lastTry = Date.now();
   if (ORTAK.needRender && !ortakEditing()) { ORTAK.needRender = false; renderAll(); }
   ORTAK.busy = (async () => {
     renderOrtakChip('busy');
@@ -1119,20 +1234,26 @@ async function ortakSync(manual) {
         if (manual) toast('Ortak kayıt: GitHub güncel sürümü henüz vermedi; birkaç saniye sonra yeniden denenecek.');
         return;
       }
-      ORTAK.err = ''; ORTAK.last = new Date().toISOString(); if (!ORTAK.again) ORTAK.dirty = false;
+      ORTAK.err = ''; ORTAK.last = new Date().toISOString(); ORTAK.retry = 0; ONL.ok = true; if (!ORTAK.again) ORTAK.dirty = false;
       if (r.changed.length) ortakRefresh(r, manual);
+      ciltEsitle();
       if (ORTAK.logNew) { ORTAK.logNew = false; if (S.view === 'settings') renderLog(); }
       if (manual) toast(r.pushed || r.changed.length ? 'Ortak kayıt eşitlendi: ' + r.pushed + ' dosya gönderildi, ' + r.changed.length + ' kayıt alındı' + (r.conflicts ? ' · ' + r.conflicts + ' çakışmada son değişiklik alındı' : '') + '.' : 'Ortak kayıt güncel.');
-    } catch (e) { ORTAK.err = e.message || String(e); if (manual) toast('Ortak kayıt: ' + ORTAK.err, true); }
+    } catch (e) {
+      ORTAK.err = e.message || String(e); ONL.ok = false;
+      if (manual) toast('Ortak kayıt: ' + ORTAK.err, true);
+      if (e.status === 401) hesapTazele();
+    }
   })().finally(() => {
     ORTAK.busy = null;
-    renderOrtakChip();
+    renderOrtakChip(); renderOnline();
     if (S.view === 'settings' && $('or-state')) $('or-state').innerHTML = ortakStateText();
     if (ORTAK.again) { ORTAK.again = false; ortakSchedule(1500); }
+    else if (ORTAK.err) { ORTAK.retry = Math.min(60000, (ORTAK.retry || 2500) * 2); clearTimeout(ORTAK.timer); ORTAK.timer = setTimeout(() => ortakSync(), ORTAK.retry); }
   });
   return ORTAK.busy;
 }
-function ortakSchedule(ms) { const c = ortakCfg(); if (!c || c.auto === false) return; clearTimeout(ORTAK.timer); ORTAK.timer = setTimeout(() => ortakSync(), ms === undefined ? 4000 : ms); }
+function ortakSchedule(ms) { if (!ortakCfg()) return; clearTimeout(ORTAK.timer); ORTAK.timer = setTimeout(() => ortakSync(), ms === undefined ? 1500 : ms); }
 function ortakDirty() { if (!ortakCfg()) return; ORTAK.dirty = true; if (ORTAK.busy) ORTAK.again = true; renderOrtakChip(); ortakSchedule(); }
 function ortakStateText() {
   if (!ortakCfg()) return '<span class="muted">Bağlı değil — kayıtlar yalnız bu tarayıcıda</span>';
@@ -1147,30 +1268,30 @@ function renderOrtakChip(state) {
   el.hidden = !c; if (!c) return;
   const s = state || (ORTAK.err ? 'err' : ORTAK.dirty ? 'wait' : ORTAK.last ? 'ok' : 'wait');
   el.className = 'btn ghost sm ortak-chip ' + s;
-  el.innerHTML = '☁ <span class="hide-narrow">' + ({ busy: 'Eşitleniyor…', err: 'Ortak kayıt: hata', wait: 'Ortak kayıt: bekliyor', ok: 'Ortak kayıt' })[s] + '</span>';
+  el.innerHTML = (s === 'err' ? '⚠' : '☁') + ' <span class="hide-narrow">' + ({ busy: 'Eşitleniyor…', err: 'Çevrim dışı', wait: ORTAK.last ? 'Kaydediliyor…' : 'Bağlanıyor…', ok: 'Çevrim içi' })[s] + '</span>';
   el.title = 'Ortak kayıt · ' + c.repo + ' · ' + (c.branch || OBRANCH) + '\n' + ortakStateText().replace(/<[^>]+>/g, '') + '\nŞimdi eşitlemek için tıklayın.';
 }
 function ortakCard() {
   const c = store.get(OKEY, null) || {}, on = !!ortakCfg(), can = AUTH.can('vault');
   let h = '<h3 class="panel-title">Ortak kayıt <span class="muted">' + (on ? esc(c.repo) + ' · ' + esc(c.branch || OBRANCH) : 'bağlı değil') + '</span></h3><div class="set-grid"><section class="card"><h3>Bağlantı</h3><dl class="kv"><dt>Durum</dt><dd id="or-state">' + ortakStateText() + '</dd>' +
-    (on ? '<dt>Depo · dal</dt><dd class="mono">' + esc(c.repo) + ' · ' + esc(c.branch || OBRANCH) + '</dd><dt>Hesaplar</dt><dd id="or-hesap">' + hesapStateText() + '</dd><dt>Eşitleme</dt><dd>' + (c.auto === false ? 'Elle' : 'Otomatik') + '</dd>' + (c.at ? '<dt>Bağlayan</dt><dd>' + whoWhen(c) + '</dd>' : '') : '') + '</dl>' +
+    (on ? '<dt>Depo · dal</dt><dd class="mono">' + esc(c.repo) + ' · ' + esc(c.branch || OBRANCH) + '</dd><dt>Hesaplar</dt><dd id="or-hesap">' + hesapStateText() + '</dd><dt>Çalışma</dt><dd>Çevrim içi · bağlantı bütün hesaplarda</dd>' + (c.at ? '<dt>Bağlayan</dt><dd>' + whoWhen(c) + '</dd>' : '') : '') + '</dl>' +
     (on ? '<div class="review-row"><button class="btn sm" type="button" id="or-sync">Şimdi eşitle</button></div>' : '');
   if (can) h += '<form class="fixform" id="or-form" autocomplete="off"><label>Depo (kullanıcı/depo)<input id="or-repo" value="' + esc(c.repo || '') + '" placeholder="Ramazan9838/Hadith-Narrators" required></label>' +
     '<label>Dal<input id="or-branch" value="' + esc(c.branch || OBRANCH) + '" required></label>' +
     '<label>Yayın deposu (site)<input id="or-yayin" value="' + esc(c.yayin || KASA.pubRepo() || '') + '" placeholder="Ramazan9838/Hadith-Narrators-site"></label>' +
     '<label>Erişim anahtarı (GitHub token)<input type="password" id="or-token" autocomplete="off" placeholder="' + (c.token ? 'Kayıtlı — değiştirmek için yenisini yapıştırın' : 'github_pat_…') + '"' + (c.token ? '' : ' required') + '></label>' +
-    '<label class="chk"><input type="checkbox" id="or-auto"' + (c.auto === false ? '' : ' checked') + '> Otomatik eşitle (değişiklikten sonra ve dakikada bir)</label>' +
-    '<div class="review-row"><button class="btn primary sm">Kaydet ve eşitle</button><button class="btn sm" type="button" id="or-test">Bağlantıyı sına</button>' + (on ? '<button class="btn ghost sm" type="button" id="or-off">Bağlantıyı kaldır</button>' : '') + '</div></form>';
-  else h += '<p class="hint">Bağlantıyı yönetici kurar; şifreli kopyayla birlikte gelir.</p>';
-  h += '</section><section class="card"><h3>Nasıl çalışır</h3><p class="small" style="margin-top:0"><b>Hesaplar:</b> parola değişince, kullanıcı eklenince veya silinince bu bilgi yayın deposuna (' + esc(yayinRepo() || 'belirtilmedi') + ') gönderilir; yayındaki site girişte okur. Böylece yeni parola her yerde geçerli olur, yeni araştırmacı dosya yeniden yüklenmeden giriş yapabilir. Varsayılan parolalı hesaplar gönderilmez.</p><p class="small" style="margin-top:0">Hüküm kararları, düzeltmeler, eklenen hükümler, kimlik ve künye düzeltmeleri, notlar, teâruz kararları, paket durumu ve hareket kaydı depoda ayrı bir dalda (<span class="mono">' + OBRANCH + '</span>) tek ortak kayıt olarak tutulur. Her araştırmacının değişikliği birkaç saniye içinde gönderilir; başkalarınınki sayfa açılınca ve dakikada bir alınır. Aynı öğede iki farklı değişiklik varsa sonra yapılan geçer; bütün değişiklikler kim ve ne zaman bilgisiyle depo geçmişinde kalır.</p>' +
+    '<p class="hint" style="margin:0">Kaydedilen bağlantı, kasanın anahtarıyla şifrelenip bütün hesaplara dağıtılır: her araştırmacı hangi bilgisayardan girerse girsin kendiliğinden bağlanır. Anahtarı yenilemek için yenisini yapıştırıp kaydedin.</p>' +
+    '<div class="review-row"><button class="btn primary sm">Kaydet ve eşitle</button><button class="btn sm" type="button" id="or-test">Bağlantıyı sına</button></div></form>';
+  else h += '<p class="hint">Bağlantıyı yönetici kurar; giriş yapınca bütün hesaplarda kendiliğinden gelir.</p>';
+  h += '</section><section class="card"><h3>Nasıl çalışır</h3><p class="small" style="margin-top:0"><b>Hesaplar:</b> parola değişince, kullanıcı eklenince veya silinince bu bilgi yayın deposuna (' + esc(yayinRepo() || 'belirtilmedi') + ') gönderilir; yayındaki site girişte okur. Böylece yeni parola her yerde geçerli olur, yeni araştırmacı dosya yeniden yüklenmeden giriş yapabilir. Varsayılan parolalı hesaplar gönderilmez.</p><p class="small" style="margin-top:0">Hüküm kararları, düzeltmeler, eklenen hükümler, kimlik ve künye düzeltmeleri, notlar, teâruz kararları, paket durumu ve hareket kaydı depoda ayrı bir dalda (<span class="mono">' + OBRANCH + '</span>) tek ortak kayıt olarak tutulur. Her araştırmacının değişikliği bir iki saniye içinde gönderilir; başkalarınınki sayfa açılınca, sekmeye dönülünce ve yarım dakikada bir alınır. Yüklenen cilt dosyaları da depoya konur ve diğer bilgisayarlara kendiliğinden iner. Aynı öğede iki farklı değişiklik varsa sonra yapılan geçer; bütün değişiklikler kim ve ne zaman bilgisiyle depo geçmişinde kalır.</p><p class="small" style="margin-top:0"><b>Çevrim içi çalışma:</b> bağlantı kurulduktan sonra değişiklik yalnız ortak kayda ulaşılabilirken yapılabilir. Açılışta kayıtlar yüklenene kadar ve bağlantı koptuğunda site salt okunurdur; üstte uyarı görünür.</p>' +
     '<p class="small"><b>Erişim anahtarı:</b> GitHub → Settings → Developer settings → Personal access tokens → <i>Fine-grained tokens</i> → Generate new token. <i>Repository access</i>: yalnız bu depo; <i>Permissions → Contents</i>: <b>Read and write</b>. Oluşan anahtarı buraya yapıştırın; süresi dolunca yenisini girin.</p>' +
-    '<div class="note">Anahtar bu tarayıcıda şifreli saklanır ve şifreli kopyaya eklenebilir; kopyayı açabilen her kullanıcı ortak kayda yazabilir. Anahtarı yalnız bu depoyla ve yalnız içerik yetkisiyle sınırlayın. Depo özel olmalıdır.</div></section></div>';
+    '<div class="note">Anahtar tarayıcıda ve hesap dosyasında şifreli durur; giriş yapabilen her hesap ortak kayda yazabilir. Anahtarı yalnız bu depoyla ve yalnız içerik (Contents) yetkisiyle sınırlayın, süresini belirleyin; bir araştırmacı ayrılırsa anahtarı yenileyin. Depo özel olmalıdır.</div></section></div>';
   return h;
 }
 function bindOrtakCard() {
   if ($('or-sync')) $('or-sync').onclick = () => ortakSync(true);
   const form = $('or-form'); if (!form) return;
-  const read = () => { const old = store.get(OKEY, null) || {}; if (!/^[A-Za-z0-9._\/-]+$/.test($('or-branch').value.trim() || OBRANCH)) throw Error('Dal adı yalnız harf, rakam, nokta, alt çizgi, eğik çizgi ve tire içerebilir.'); return { repo: $('or-repo').value.trim(), branch: $('or-branch').value.trim() || OBRANCH, token: $('or-token').value.trim() || old.token || '', auto: $('or-auto').checked, yayin: (() => { const y = $('or-yayin').value.trim().replace(/^https?:\/\/github\.com\//, '').replace(/\/+$/, ''); if (y && !/^[\w.-]+\/[\w.-]+$/.test(y)) throw Error('Yayın deposu “kullanıcı/depo” biçiminde yazılmalı.'); return y; })() }; };
+  const read = () => { const old = store.get(OKEY, null) || {}; if (!/^[A-Za-z0-9._\/-]+$/.test($('or-branch').value.trim() || OBRANCH)) throw Error('Dal adı yalnız harf, rakam, nokta, alt çizgi, eğik çizgi ve tire içerebilir.'); return { repo: $('or-repo').value.trim(), branch: $('or-branch').value.trim() || OBRANCH, token: $('or-token').value.trim() || old.token || '', auto: true, yayin: (() => { const y = $('or-yayin').value.trim().replace(/^https?:\/\/github\.com\//, '').replace(/\/+$/, ''); if (y && !/^[\w.-]+\/[\w.-]+$/.test(y)) throw Error('Yayın deposu “kullanıcı/depo” biçiminde yazılmalı.'); return y; })() }; };
   const probe = async c => { const i = await ORT.client(c).info(); return i; };
   $('or-test').onclick = async () => {
     let c; try { c = read(); } catch (e) { toast(e.message, true); return; }
@@ -1186,18 +1307,15 @@ function bindOrtakCard() {
     const old = store.get(OKEY, null) || {};
     store.set(OKEY, Object.assign(c, { repo: i.full_name || c.repo, at: new Date().toISOString() }, by()));
     if (old.repo !== c.repo || (old.branch || OBRANCH) !== c.branch) store.del(OSKEY);
-    logAct('ortak', 'Bağlandı: ' + c.repo + ' · ' + c.branch + (c.auto ? ' · otomatik' : ' · elle') + (old.token && old.token !== c.token ? ' · anahtar yenilendi' : ''), { pkg: '' });
+    logAct('ortak', 'Bağlandı: ' + c.repo + ' · ' + c.branch + ' · çevrim içi' + (old.token && old.token !== c.token ? ' · anahtar yenilendi' : ''), { pkg: '' });
     ORTAK.err = ''; HESAP.err = ''; renderSettings(); renderOrtakChip(); ortakSync(true); hesapYayinla();
   };
-  if ($('or-off')) $('or-off').onclick = () => {
-    if (!need('vault') || !confirm('Ortak kayıt bağlantısı bu tarayıcıdan kaldırılsın mı? Kayıtlar tarayıcıda ve depoda kalır.')) return;
-    const c = store.get(OKEY, null) || {}; store.del(OKEY); store.del(OSKEY); ORTAK.err = ''; ORTAK.last = null; ORTAK.dirty = false;
-    logAct('ortak', 'Bağlantı kaldırıldı: ' + (c.repo || ''), { pkg: '' }); renderSettings(); renderOrtakChip();
-  };
 }
-setInterval(() => { if (document.visibilityState === 'visible' && ortakCfg() && ortakCfg().auto !== false) ortakSync(); }, 60000);
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && ortakCfg() && ortakCfg().auto !== false) ortakSync(); });
-window.addEventListener('online', () => { if (ortakCfg()) ortakSync(); });
+// Başkalarının değişiklikleri: sekme görünürken yarım dakikada bir (ORTAK.every), sekmeye dönülünce ve ağ gelince
+setInterval(() => { if (document.visibilityState === 'visible' && ortakCfg() && !ORTAK.busy && Date.now() - ORTAK.lastTry >= ORTAK.every) ortakSync(); }, 5000);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && ortakCfg()) ortakSync(); });
+window.addEventListener('online', () => { if (ortakCfg()) ortakSync(); else renderOnline(); });
+window.addEventListener('offline', () => { if (cevrimIciGerekli()) { ONL.ok = false; renderOrtakChip(); renderOnline(); } });
 document.addEventListener('focusout', () => setTimeout(() => { if (ORTAK.needRender && !ortakEditing()) { ORTAK.needRender = false; renderAll(); } }, 60));
 
 /* ---------- Yayımlanan hesaplar (hesaplar.json, yayın deposunda) ----------
@@ -1220,7 +1338,7 @@ async function hesapYayinla() {
         let o = null; try { o = text ? JSON.parse(text) : null; } catch (e) { }
         if (o && o.kasa !== KASA.id && !/\.github\.io$/i.test(location.hostname)) throw Error('Yayındaki hesap dosyası başka bir kasaya ait; hesapları yayındaki sitenin içinden güncelleyin.');
         if (o && o.kasa === KASA.id) pulled = (await KASA.applyAccounts(o)) || pulled;
-        const out = await KASA.accounts();
+        const out = await KASA.accounts(ortakPaylas(), o);
         return o && KASA.sameAccounts(o, out) ? null : JSON.stringify(out, null, 1) + '\n';
       }, me.username + ': hesaplar güncellendi', { name: me.name + ' (' + me.username + ')', email: ORT.fname(me.username).toLowerCase() + '@cerh-tadil.invalid' });
       HESAP.err = ''; HESAP.last = new Date().toISOString();
@@ -1240,6 +1358,11 @@ async function hesapYayinla() {
     else if (HESAP.err) HESAP.timer = setTimeout(hesapYayinla, 60000);
   });
   return HESAP.busy;
+}
+// Bütün hesaplara dağıtılan bağlantı ayarı: yalnız yönetici (kasa yetkisi) yayımlar; ötekiler uzaktakini korur
+function ortakPaylas() {
+  const c = ortakCfg(); if (!c || !AUTH.can('vault')) return null;
+  return { [OKEY]: { repo: c.repo, branch: c.branch || OBRANCH, token: c.token, yayin: yayinRepo(c), auto: true, at: c.at || '', by: c.by || '', by_name: c.by_name || '' } };
 }
 function hesapStateText() {
   if (!ortakCfg()) return '<span class="muted">Ortak kayıt bağlı değil</span>';
@@ -1510,13 +1633,14 @@ async function addVolumeFiles(files) {
       toast(vol + '. cilt eklendi: ' + sc.entries.length + ' râvi (' + sc.entries[0].seq + '–' + sc.entries[sc.entries.length - 1].seq + ').');
     } catch (e) { toast('“' + f.name + '” okunamadı: ' + e.message, true); }
   }
-  if (added) { try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) { } rebuildPkgs(); renderSourcebar(); renderPackages(); if (!IDB_OK) toast('Tarayıcı deposu kullanılamıyor: cilt dosyaları yalnız bu oturumda tutulur.', true); }
+  if (added) { try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) { } rebuildPkgs(); renderSourcebar(); renderPackages(); if (!IDB_OK) toast('Tarayıcı deposu kullanılamıyor: cilt dosyaları yalnız bu oturumda tutulur.', true); if (ortakCfg()) ciltEsitle(); }
 }
 async function removeVolume(vol) {
   if (!need('volume-del')) return;
-  if (!confirm(vol + '. cildin dosyası bu tarayıcıdan silinsin mi? (İnceleme kayıtlarınız ve arşiv silinmez.)')) return;
+  if (!confirm(vol + '. cildin dosyası ' + (ortakCfg() ? 'ortak kayıttan ve bütün bilgisayarlardan kaldırılsın mı?' : 'bu tarayıcıdan silinsin mi?') + ' (İnceleme kayıtlarınız ve arşiv silinmez.)')) return;
   logAct('cilt-sil', vol + '. cilt: “' + ((VOLS[vol] || {}).name || '') + '”', { pkg: '' });
   delete VOLS[vol]; try { await IDB.del('ciltler', vol); } catch (e) { }
+  if (ortakCfg()) { store.set(CKEY, Object.assign({}, ciltListe(), { [vol]: Object.assign({ vol, silindi: true, at: new Date().toISOString() }, by()) })); ortakDirty(); }
   rebuildPkgs(); if (!PKGS.includes(PK)) activatePackage(SNAP_PKG.id); renderSourcebar(); renderPackages();
 }
 function archiveRecord() {
@@ -1581,7 +1705,7 @@ function renderPackages() {
   out += '<h3 class="panel-title">Cilt dosyaları <span class="muted">' + (IDB_OK ? 'tarayıcı deposunda (IndexedDB)' : 'depo kullanılamıyor — yalnız bu oturum') + '</span></h3>' +
     '<div class="row" style="margin-bottom:10px"><button class="btn primary req-edit" id="vol-add">＋ Cilt dosyası ekle…</button><input type="file" id="vol-file" accept=".htm,.html,.txt,text/html" multiple hidden><span class="hint">Şâmile tipi HTML (sayfaları &lt;div class=\'PageText\'&gt;). Birden çok dosya seçilebilir.</span></div>' +
     '<div class="wrap"><table class="tbl" data-tid="vols"><thead><tr><th data-sk="n">Cilt</th><th data-sk="t">Dosya</th><th data-sk="n" class="num">Boyut</th><th data-sk="n" class="num">Râvi</th><th data-sk="n">Sıra</th><th data-sk="n">Sayfa</th><th data-sk="n" class="num">Paket</th><th>Eklendi</th><th></th></tr></thead><tbody>' +
-    (vols.map(v => { const e = v.sc.entries; const pk = PKGS.filter(p => p.vol === v.vol && p.kind === 'volume').length; return '<tr style="cursor:default"><td class="num">' + v.vol + '</td><td class="mono">' + esc(v.name) + (v.sc.skipped && v.sc.skipped.length ? '<div class="small muted" style="font-family:var(--ui)">' + v.sc.skipped.length + ' mukaddime başlığı râvi sayılmadı</div>' : '') + '</td><td class="num">' + (v.size / 1048576).toFixed(1).replace('.', ',') + ' MB</td><td class="num">' + fmt(e.length) + '</td><td>' + e[0].seq + '–' + e[e.length - 1].seq + '</td><td>' + v.sc.pages[0].page_number + '–' + v.sc.pages[v.sc.pages.length - 1].page_number + '</td><td class="num">' + pk + '</td><td class="small">' + esc(new Date(v.added_at).toLocaleDateString('tr-TR')) + '</td><td><button class="btn ghost sm req-admin" data-delvol="' + v.vol + '">Sil</button></td></tr>'; }).join('') || '<tr><td colspan="9" class="empty-state">Cilt dosyası yok. Yalnız gömülü paket (' + esc(pkgLabel(SNAP_PKG)) + ') kullanılabilir.</td></tr>') + '</tbody></table></div>';
+    (vols.map(v => { const e = v.sc.entries; const pk = PKGS.filter(p => p.vol === v.vol && p.kind === 'volume').length; return '<tr style="cursor:default"><td class="num">' + v.vol + '</td><td class="mono">' + esc(v.name) + ciltEtiket(v) + (v.sc.skipped && v.sc.skipped.length ? '<div class="small muted" style="font-family:var(--ui)">' + v.sc.skipped.length + ' mukaddime başlığı râvi sayılmadı</div>' : '') + '</td><td class="num">' + (v.size / 1048576).toFixed(1).replace('.', ',') + ' MB</td><td class="num">' + fmt(e.length) + '</td><td>' + e[0].seq + '–' + e[e.length - 1].seq + '</td><td>' + v.sc.pages[0].page_number + '–' + v.sc.pages[v.sc.pages.length - 1].page_number + '</td><td class="num">' + pk + '</td><td class="small">' + esc(new Date(v.added_at).toLocaleDateString('tr-TR')) + '</td><td><button class="btn ghost sm req-admin" data-delvol="' + v.vol + '">Sil</button></td></tr>'; }).join('') || '<tr><td colspan="9" class="empty-state">Cilt dosyası yok. Yalnız gömülü paket (' + esc(pkgLabel(SNAP_PKG)) + ') kullanılabilir.</td></tr>') + '</tbody></table></div>';
   out += '<h3 class="panel-title">Paket listesi</h3><div class="wrap"><table class="tbl" data-tid="pkgs"><thead><tr><th data-sk="t">Paket</th><th data-sk="n">Râvi</th><th data-sk="t">Kaynak</th><th data-sk="t">Durum</th><th data-sk="n" class="num">İncelenen râvi</th><th></th></tr></thead><tbody>' +
     PKGS.map(p => {
       const d = PST.done[p.id]; const pr = pkgProgress(p); const cur = p === PK;
@@ -3250,6 +3374,7 @@ document.addEventListener('click', e => {
   const t = e.target;
   const sth = t.closest('table[data-tid] > thead th[data-sk]'); if (sth) { sortClick(sth); return; }
   const close = t.closest('[data-close]'); if (close) { $(close.dataset.close).close(); return; }
+  if (t.closest('[data-onl-retry]')) { ortakSync(true); return; }
   const vg = t.closest('[data-view-go]'); if (vg) { setView(vg.dataset.viewGo); return; }
   const op = t.closest('[data-openpkg]'); if (op && op.dataset.openpkg === PK.id && S.view === 'report') { setView('desk'); return; }
   if (op) { if (activatePackage(op.dataset.openpkg)) { setView('desk'); toast(pkgLabel(PK) + ' açıldı.'); } return; }
@@ -3465,9 +3590,9 @@ function startApp() {
   renderAll();
   writeHash();
   if (S.sel && S.sel.type === 'st') setTimeout(() => { const el = document.querySelector('.btext .sel'); if (el) el.scrollIntoView({ block: 'center' }); }, 50);
-  loadVolumes();   // yüklü ciltler (IndexedDB) → paket listesi; son açık paket geri yüklenir
-  $('ortak-chip').onclick = () => ortakSync(true); renderOrtakChip();
-  if (ortakCfg()) setTimeout(() => ortakSync(), 700);
+  VOLS_READY = loadVolumes();   // yüklü ciltler (IndexedDB) → paket listesi; son açık paket geri yüklenir
+  $('ortak-chip').onclick = () => ortakSync(true); renderOrtakChip(); renderOnline();
+  if (ortakCfg()) ortakSync();
   if (hesapHazir()) setTimeout(() => hesapYayinla(), 1500);
   if (UI.cevAll) setTimeout(cevAc, 300);
   harfDizinGetir().then(d => { if (d) renderCenter(); });
@@ -5480,14 +5605,15 @@ const RAPOR = (() => {
       commit: sha => call('GET', '/git/commits/' + sha),
       tree: sha => call('GET', '/git/trees/' + sha + '?recursive=1'),
       blob: sha => call('GET', '/git/blobs/' + sha, null, true),
-      mkTree: (files, baseTree) => call('POST', '/git/trees', Object.assign({ tree: files.map(x => ({ path: x.path, mode: '100644', type: 'blob', content: x.content })) }, baseTree ? { base_tree: baseTree } : {})),
+      mkTree: (files, baseTree) => call('POST', '/git/trees', Object.assign({ tree: files.map(x => Object.assign({ path: x.path, mode: '100644', type: 'blob' }, x.sha ? { sha: x.sha } : { content: x.content })) }, baseTree ? { base_tree: baseTree } : {})),
+      mkBlob: text => call('POST', '/git/blobs', { content: text, encoding: 'utf-8' }),
       mkCommit: (message, tree, parents, author) => call('POST', '/git/commits', Object.assign({ message, tree, parents }, author ? { author } : {})),
       mkRef: (br, sha) => call('POST', '/git/refs', { ref: 'refs/heads/' + br, sha }),
       moveRef: (br, sha) => call('PATCH', '/git/refs/heads/' + encodeURIComponent(br), { sha, force: false })
     };
   }
 
-  const README = '# Ortak kayıt\n\nBu dal, Cerh-Ta‘dîl · Kaynak Kontrolü sayfasının ortak inceleme kayıtlarını taşır; sayfa tarafından yazılır.\n\n- `kayitlar/` — paket başına inceleme kayıtları (hüküm kararları, düzeltmeler, eklemeler, kimlik ve künye düzeltmeleri, notlar, teâruz kararları) ve paket durumu\n- `hareket/` — kullanıcıların hareket kaydı\n\nElle düzenlemeyin; değişiklik geçmişi kimin neyi ne zaman değiştirdiğini gösterir.\n';
+  const README = '# Ortak kayıt\n\nBu dal, Cerh-Ta‘dîl · Kaynak Kontrolü sayfasının ortak inceleme kayıtlarını taşır; sayfa tarafından yazılır.\n\n- `kayitlar/` — paket başına inceleme kayıtları (hüküm kararları, düzeltmeler, eklemeler, kimlik ve künye düzeltmeleri, notlar, teâruz kararları) ve paket durumu\n- `hareket/` — kullanıcıların hareket kaydı\n- `ciltler/` — yüklenen cilt dosyaları (listesi `kayitlar/ciltler.json`)\n\nElle düzenlemeyin; değişiklik geçmişi kimin neyi ne zaman değiştirdiğini gösterir.\n';
 
   async function ensureBranch(gh, br) {
     const r = await gh.ref(br); if (r) return r.object.sha;
@@ -5598,6 +5724,23 @@ const RAPOR = (() => {
     throw new GHError('Yayın dosyası art arda değişti; biraz sonra yeniden denenecek.', 409);
   }
 
+  /* ---------- Büyük dosya (cilt) yazma ----------
+     İçerik önce ayrı blob olarak yüklenir (ağaç isteğine gömülmez), sonra dala tek dosyalık commit eklenir.
+     Dosya zaten aynıysa commit atılmaz. Dönen değer git blob özetidir; okuyan taraf gh.blob(özet) ile alır. */
+  async function putBlob(gh, branch, path, text, message, author, tries) {
+    const b = await gh.mkBlob(text);
+    for (let i = 0; i < (tries || 4); i++) {
+      const head = await ensureBranch(gh, branch), tr = (await gh.commit(head)).tree.sha;
+      const ent = ((await gh.tree(tr)).tree || []).find(x => x.path === path && x.type === 'blob');
+      if (ent && ent.sha === b.sha) return b.sha;
+      const nt = await gh.mkTree([{ path, sha: b.sha }], tr);
+      const c = await gh.mkCommit(message, nt.sha, [head], author);
+      try { await gh.moveRef(branch, c.sha); return b.sha; }
+      catch (e) { if (e.status !== 422 && e.status !== 409) throw e; }
+    }
+    throw new GHError('Ortak kayıt art arda değişti; dosya biraz sonra yeniden gönderilecek.', 409);
+  }
+
   /* ---------- Yayımlanan hesaplar (hesaplar.json) ----------
      { kasa, guncelleme, yuvalar: [anahtar yuvası], yuva_silinen: {uid: at}, kullanicilar: <mühürlü liste>,
        kullanici_silinen: {id: at}, kullanicilar_ozet }
@@ -5625,7 +5768,7 @@ const RAPOR = (() => {
   // Anahtar sırası sabit JSON (özet ve karşılaştırma için)
   function canon(v) { return Array.isArray(v) ? '[' + v.map(canon).join(',') + ']' : v && typeof v === 'object' ? '{' + Object.keys(v).sort().map(k => JSON.stringify(k) + ':' + canon(v[k])).join(',') + '}' : JSON.stringify(v); }
 
-  return { VERSION, flatten, unflatten, merge3, blobSha, fname, ridOf, fnv, client, ensureBranch, syncOnce, sync, GHError, fileText, putFile, mergeSlots, mergeUsers, canon };
+  return { VERSION, flatten, unflatten, merge3, blobSha, fname, ridOf, fnv, client, ensureBranch, syncOnce, sync, GHError, fileText, putFile, putBlob, mergeSlots, mergeUsers, canon };
 });
 
 </script>
@@ -5800,19 +5943,39 @@ const KASA = (() => {
     setSlots(r.slots); meta.set('yuva-silinen', r.tomb);
     let ch = before !== ORT.canon(r.slots);
     if (dek && o.kullanicilar) { try { ch = AUTH._sync(JSON.parse(TD.decode(await unseal(dek, o.kullanicilar, id + ':kullanicilar'))), o.kullanici_silinen) || ch; } catch (e) { } }
+    if (dek && o.ek) ch = (await applyEk(o.ek)) || ch;
     return ch;
   }
+  // Mühürlü ayarlar (yalnız ortak kayıt bağlantısı): yerelde yoksa ya da gelen daha yeniyse alınır
+  const EK_KEYS = ['ortak-ayar'];
+  async function applyEk(sealed) {
+    let ch = false;
+    try {
+      const ek = JSON.parse(TD.decode(await unseal(dek, sealed, id + ':ek')));
+      for (const [k, v] of Object.entries(ek || {})) {
+        if (!EK_KEYS.includes(k) || !v || typeof v !== 'object') continue;
+        const cur = store.get(k, null);
+        if (!cur || (v.at && (!cur.at || v.at > cur.at))) { store.set(k, v); ch = true; }
+      }
+    } catch (e) { }
+    return ch;
+  }
+  async function refreshAccounts() { const o = await fetchAccounts(); return o ? applyAccounts(o) : false; }
   async function digest(str) { return hex(new Uint8Array(await crypto.subtle.digest('SHA-256', TE.encode(str)))); }
   // Yayımlanacak hesap dosyası: yalnız etkin, varsayılan olmayan ve güçlü parolalı hesapların yuvaları
-  async function accounts() {
+  // ek: bütün hesaplara dağıtılacak ayarlar (yönetici verir; DEK ile mühürlenir); yoksa keep’teki (uzaktaki) mühür korunur
+  async function accounts(ek, keep) {
     if (!dek) throw Error('Kasa kilitli.');
     const us = AUTH._all().map(u => { const o = Object.assign({}, u); delete o.last_login; delete o.needs_key; return o; }).sort((a, b) => a.id < b.id ? -1 : 1);
     const ok = new Set(us.filter(u => u.active !== false && !u.default_pw).map(u => u.id));
     const ys = slots().filter(s => s.strong && ok.has(s.uid)).sort((a, b) => a.uid < b.uid ? -1 : 1);
     const plain = ORT.canon(us);
-    return { kasa: id, guncelleme: new Date().toISOString(), yuvalar: ys, yuva_silinen: meta.get('yuva-silinen', {}), kullanicilar: await seal(dek, plain, id + ':kullanicilar'), kullanici_silinen: AUTH._tombs(), kullanicilar_ozet: await digest(plain) };
+    const out = { kasa: id, guncelleme: new Date().toISOString(), yuvalar: ys, yuva_silinen: meta.get('yuva-silinen', {}), kullanicilar: await seal(dek, plain, id + ':kullanicilar'), kullanici_silinen: AUTH._tombs(), kullanicilar_ozet: await digest(plain) };
+    if (ek && Object.keys(ek).length) { const t = ORT.canon(ek); out.ek = await seal(dek, t, id + ':ek'); out.ek_ozet = await digest(id + ':ek:' + t); }
+    else if (keep && keep.kasa === id && keep.ek) { out.ek = keep.ek; out.ek_ozet = keep.ek_ozet || ''; }
+    return out;
   }
-  const sameAccounts = (a, b) => !!a && !!b && a.kasa === b.kasa && a.kullanicilar_ozet === b.kullanicilar_ozet && ORT.canon([a.yuvalar, a.yuva_silinen, a.kullanici_silinen]) === ORT.canon([b.yuvalar, b.yuva_silinen, b.kullanici_silinen]);
+  const sameAccounts = (a, b) => !!a && !!b && a.kasa === b.kasa && a.kullanicilar_ozet === b.kullanicilar_ozet && (a.ek_ozet || '') === (b.ek_ozet || '') && ORT.canon([a.yuvalar, a.yuva_silinen, a.kullanici_silinen]) === ORT.canon([b.yuvalar, b.yuva_silinen, b.kullanici_silinen]);
 
   /* ---------- Şifreli depo (localStorage): bellekte çözülmüş önbellek + arka planda şifreli yazma ---------- */
   const MEM = new Map(); let chain = Promise.resolve();
@@ -5949,7 +6112,7 @@ const KASA = (() => {
       if (header.kullanicilar) { try { AUTH._merge(JSON.parse(TD.decode(await unseal(dek, header.kullanicilar, id + ':kullanicilar')))); } catch (e) { } }
       snapText = TD.decode(await unseal(dek, encData, id + ':veri'));
       // Kopyayla gelen ayarlar (ör. ortak kayıt bağlantısı): yerelde yoksa ya da kopyadaki daha yeniyse alınır
-      if (header.ek) { try { const ek = JSON.parse(TD.decode(await unseal(dek, header.ek, id + ':ek'))); for (const [k, v] of Object.entries(ek)) { const cur = store.get(k, null); if (!cur || (v && v.at && (!cur.at || v.at > cur.at))) store.set(k, v); } } catch (e) { } }
+      if (header.ek) await applyEk(header.ek);
     }
     if (pubAcc) { const o = await withTimeout(pubAcc, 6000); if (o) await applyAccounts(o); }
     const u = AUTH._activate(uid);
@@ -6015,7 +6178,7 @@ const KASA = (() => {
   const status = () => ({ id, mode, iter: ITER, alg: 'AES-256-GCM · PBKDF2-SHA256', created: id ? meta.get('olusturma', null) : null, header: header ? { exported_at: header.exported_at, exported_by: header.exported_by } : null, slots: slots().length, minpw: MINPW });
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
   return {
-    store, db, makeSlot, putSlot, removeSlot, hasSlot, checkPw, exportEncrypted, logout, status, pubRepo, accounts, applyAccounts, sameAccounts,
+    store, db, makeSlot, putSlot, removeSlot, hasSlot, checkPw, exportEncrypted, logout, status, pubRepo, accounts, applyAccounts, sameAccounts, refreshAccounts,
     snapshotText: () => snapText, loginInfo: () => info, get id() { return id; }, MINPW,
     _raw: { lsGet, P }   // testler için
   };
