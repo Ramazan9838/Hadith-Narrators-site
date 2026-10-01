@@ -695,6 +695,8 @@ body.resizing { user-select: none; } body.resizing-x, body.resizing-x * { cursor
 .note.uyari { margin: 8px 0; display: grid; gap: 6px; }
 .note.uyari .ctxline { display: block; direction: rtl; font-size: 15px; margin: 4px 0; }
 .note.uyari .btn { margin-inline-start: 4px; }
+.tbl tr.gsep td { background: var(--paper-2); padding-top: 4px; padding-bottom: 4px; border-top: 2px solid var(--line); }
+.tbl td.lafiz { min-width: 170px; font-size: 16px; }
 
 </style>
 </head>
@@ -854,7 +856,8 @@ let RKEY = RKEY0;
 const UKEY = 'cerh-tadil-arayuz';
 let REV = null;
 function loadRev() { REV = store.get(RKEY, null) || { v: 1, st: {}, narr: {}, added: [] }; REV.st = REV.st || {}; REV.narr = REV.narr || {}; REV.added = REV.added || []; REV.notes = REV.notes || {}; REV.blk = REV.blk || {}; }
-const UI = Object.assign({ theme: '', arSize: 22, showOld: false, onlyHits: false, hidden: [], countedOnly: false, groupByCritic: false }, store.get(UKEY, {}));
+const UI = Object.assign({ theme: '', arSize: 22, showOld: false, onlyHits: false, hidden: [], countedOnly: false, groupByCritic: true }, store.get(UKEY, {}));
+if (UI.gbcV !== 2) { UI.groupByCritic = true; UI.gbcV = 2; }   // Hükümler varsayılan olarak münekkite göre (kullanıcı isteği, 01.10.2026)
 const saveRev = () => { if (!store.set(RKEY, REV)) toast('Tarayıcı deposuna yazılamadı; inceleme kaydını “Dışa aktar” ile indirin.', true); ortakDirty(); };
 const saveUI = () => store.set(UKEY, UI);
 
@@ -2074,10 +2077,10 @@ function renderRulingsTab(n) {
     '<button class="btn sm" data-act="counted" aria-pressed="' + UI.countedOnly + '">Yalnız sayılanlar</button>' +
     '<button class="btn sm" data-act="group" aria-pressed="' + UI.groupByCritic + '">Münekkite göre</button>' +
     '<button class="btn sm" data-act="old" aria-pressed="' + UI.showOld + '">Eski tespitler</button></div><div class="pane"><p class="hint" style="margin:0 0 8px">Satıra tıklayınca hüküm sağ panelde açılır; aynı satıra yeniden tıklayınca kaynak metindeki yerine gidilir.</p><div class="wrap">';
-  const row = s => '<tr data-st="' + esc(s.uid) + '" aria-current="' + (S.sel && S.sel.id === s.uid) + '" class="' + (eCounts(s) ? '' : 'dim') + '">' +
+  const row = (s, grouped) => '<tr data-st="' + esc(s.uid) + '" aria-current="' + (S.sel && S.sel.id === s.uid) + '" class="' + (eCounts(s) ? '' : 'dim') + '">' +
     '<td class="num">' + s.b.block_order + '</td><td><div class="ar" style="font-size:15px">' + esc(srcShort(s.b)) + '</div><div class="small muted">' + esc(s.b.effective.source_locator || '') + '</div></td>' +
-    '<td><div>' + esc(crLabel(s)) + '</div>' + (s.critic_written && s.critic_written !== 'قلت' ? '<div class="ar small muted" style="font-size:14px">' + esc(s.critic_written) + '</div>' : '') + gorusRozet(s) + '</td>' +
-    '<td class="ar">' + (s.phrase ? esc(s.phrase) : '<span class="muted small">(zımnî)</span>') + '</td>' +
+    (grouped ? '' : '<td><div>' + esc(crLabel(s)) + '</div>' + (s.critic_written && s.critic_written !== 'قلت' ? '<div class="ar small muted" style="font-size:14px">' + esc(s.critic_written) + '</div>' : '') + gorusRozet(s) + '</td>') +
+    '<td class="ar lafiz">' + (s.phrase ? esc(s.phrase) : '<span class="muted small">(zımnî)</span>') + '</td>' +
     '<td>' + kindTag(eKind(s), eType(s).replace(' / İnsan kontrolü gerekli', '')) + '</td><td data-v="' + (eKind(s) === 'K' ? eTMax(s) - eCMax(s) : eSev(s)) + '">' + sevScale(s) + '</td>' +
     '<td class="small">' + esc((s.sebebs || []).map(x => CTX.SEBEB[x]).join(', ')) + (s.mufassar ? '<div class="muted">' + esc(s.mufassar) + '</div>' : '') + '</td>' +
     '<td class="small">' + esc(s.transmission) + (s.transmitter ? '<div class="muted">aktaran: ' + esc(crName(s.transmitter, s.transmitter)) + '</div>' : '') + '</td>' +
@@ -2087,8 +2090,13 @@ function renderRulingsTab(n) {
     const groups = {};
     for (const s of sts) (groups[eCritic(s) || s.critic_written || '?'] = groups[eCritic(s) || s.critic_written || '?'] || []).push(s);
     const keys = Object.keys(groups).sort((a, b) => ((CTX.critic(a) || {}).death || 9999) - ((CTX.critic(b) || {}).death || 9999));
-    for (const k of keys) out += '<h3 class="panel-title">' + esc(crName(k, k)) + ' <span class="muted">' + ((CTX.critic(k) || {}).death ? 'ö. ' + CTX.critic(k).death + ' · ' : '') + groups[k].length + ' hüküm</span></h3><table class="tbl" data-tid="rulings-g">' + head + '<tbody>' + groups[k].map(row).join('') + '</tbody></table>';
-  } else out += '<table class="tbl" data-tid="rulings">' + head + '<tbody>' + (sts.map(row).join('') || '<tr><td colspan="9" class="empty-state">Hüküm yok.</td></tr>') + '</tbody></table>';
+    // Münekkitin bütün hükümleri bir arada; aynı görüşün nakilleri yan yana, başında “görüş · N nakil” satırı
+    for (const k of keys) {
+      const gs = gorusler(groups[k].slice().sort((a, b) => a.b.block_order - b.b.block_order || a.start - b.start));
+      out += '<h3 class="panel-title">' + esc(crName(k, k)) + ' <span class="muted">' + ((CTX.critic(k) || {}).death ? 'ö. ' + CTX.critic(k).death + ' · ' : '') + gs.length + ' görüş · ' + groups[k].length + ' nakil</span></h3><table class="tbl" data-tid="rulings-g">' + head.replace(/<th data-sk="t">Münekkit<\/th>/, '') + '<tbody>' +
+        gs.map(g => (g.sts.length > 1 ? '<tr class="gsep"><td colspan="8"><span class="ar" style="font-size:15px">' + esc(g.rep.phrase || '(zımnî)') + '</span> <span class="small muted">· aynı görüş, ' + g.sts.length + ' nakil</span> ' + gorusEtiket(g) + '</td></tr>' : '') + g.sts.map(x => row(x, true)).join('')).join('') + '</tbody></table>';
+    }
+  } else out += '<table class="tbl" data-tid="rulings">' + head + '<tbody>' + (sts.map(x => row(x)).join('') || '<tr><td colspan="9" class="empty-state">Hüküm yok.</td></tr>') + '</tbody></table>';
   out += '</div>';
   if (UI.showOld) {
     const olds = n.blocks.flatMap(b => b.evaluations.map(ev => ({ ev, b })));
