@@ -1560,6 +1560,7 @@ function ciltEsitle() {
     let sent = 0, got = [], gone = [];
     // 1) Bu tarayıcıdaki cilt: ortak listede yoksa ya da buradaki daha yeniyse depoya
     for (const v of Object.values(VOLS)) {
+      if (v.depo) continue;   // depodan gelen cilt: her bilgisayar depodan alır
       const e = ciltListe()[v.vol];
       if (e && !e.silindi && e.sha === v.sha) continue;
       if (e && String(e.at || '') >= String(v.added_at || '')) continue;   // ortak liste daha yeni: aşağıda uygulanır
@@ -1595,9 +1596,70 @@ function ciltEsitle() {
 }
 function ciltEtiket(v) {
   if (!ortakCfg()) return '';
+  if (v.depo) return ' <span class="tag ok" style="font-family:var(--ui)" title="Gizli depodan (kaynak/ciltler); öteki bilgisayarlar da oradan kendiliğinden alır">☁ depodan</span>';
   const e = ciltListe()[v.vol];
   return e && !e.silindi && e.sha === v.sha ? ' <span class="tag ok" style="font-family:var(--ui)" title="Ortak kayıtta; diğer bilgisayarlara kendiliğinden iner">☁ ortak</span>'
     : ' <span class="tag warn" style="font-family:var(--ui)" title="' + esc(CILT.err || 'Bağlantı kurulunca ortak kayda gönderilecek') + '">yalnız bu tarayıcıda</span>';
+}
+/* ---------- Depodaki ciltler ----------
+   Gizli depodaki kaynak/ciltler/dizin.json’da (tools/cilt-dizini.py) listelenen cilt dosyaları, ortak kayıt bağlıysa,
+   bu tarayıcıda bulunmayan ve ortak kayıt listesinde (kayitlar/ciltler.json) geçmeyen her cilt için kendiliğinden
+   indirilir; SHA-256 özeti denetlenir ve tarayıcıda şifreli saklanır. Dizinde özeti değişen cildin depodan gelmiş
+   eski kopyası yenisiyle değiştirilir. Ortak listedeki ya da silinmiş işaretli cilde dokunulmaz; depodan gelen cilt
+   ortak kayda yeniden gönderilmez (her bilgisayar depodan alır). Dizin, ortak kayıt eşitlemesinden sonra en çok
+   10 dakikada bir (bağlantı hatası olduysa dakikada bir) sorulur. Yeniden denemekle düzelmeyecek hata (özet
+   tutmuyor, dosya yok, râvi başlığı yok) o cilt için dizin değişene kadar bu oturumda yeniden denenmez. */
+const CILT_DIZIN = 'kaynak/ciltler/dizin.json';
+const CDEPO = { busy: null, at: 0, err: '', dsha: '', n: 0, k: 0, bsha: '', bad: {} };
+function ciltDepoGetir(force) {
+  const c = ortakCfg(); if (!c || !AUTH.me()) return Promise.resolve();
+  if (CDEPO.busy) return CDEPO.busy;
+  if (!force && Date.now() - CDEPO.at < (CDEPO.err ? 60000 : 600000)) return Promise.resolve();
+  CDEPO.at = Date.now();
+  let shown = false;
+  CDEPO.busy = (async () => {
+    if (VOLS_READY) await VOLS_READY;
+    const gh = ORT.client(c), m = await gh.meta(CILT_DIZIN);
+    if (!m || !m.sha) { CDEPO.err = ''; return; }   // depoda cilt dizini yok
+    if (m.sha === CDEPO.dsha && !CDEPO.err) return;   // dizin değişmedi; bu oturumda işlendi
+    if (m.sha !== CDEPO.bsha) { CDEPO.bsha = m.sha; CDEPO.bad = {}; }   // dizin değişti: alınamayanlar yeniden denenir
+    let d; try { d = JSON.parse(await gh.blob(m.sha)); } catch (x) { if (x && x.status) throw x; CDEPO.bad[0] = 'cilt dizini (dizin.json) okunamadı'; CDEPO.dsha = m.sha; CDEPO.err = ''; toast('Ciltler depodan alınamadı: ' + CDEPO.bad[0] + '.', true); return; }
+    const list = Object.values((d && d.ciltler) || {}).filter(e => e && Number.isInteger(e.cilt) && e.cilt > 0 && /^kaynak\/ciltler\/[\w.-]+$/.test(e.dosya || '') && /^[0-9a-f]{64}$/.test(e.sha256 || '')).sort((a, b) => a.cilt - b.cilt);
+    // Alınacak: bu tarayıcıda olmayan ya da depodan gelip dizinde özeti değişen cilt (ortak listedekine dokunulmaz)
+    const want = e => { const v = VOLS[e.cilt]; return !ciltListe()[e.cilt] && !CDEPO.bad[e.cilt] && (!v || (v.depo && v.sha !== e.sha256)); };
+    const need = list.filter(want);
+    // Dosyalar git nesne özetiyle indirilir (içerik API’si 1 MB üstünü vermez); dizinde yoksa klasör listesinden
+    let dir = null; if (need.some(e => !/^[0-9a-f]{40}$/.test(e.blob || ''))) { const l = await gh.meta('kaynak/ciltler'); dir = {}; if (Array.isArray(l)) for (const f of l) dir[f.path] = f.sha; }
+    CDEPO.n = need.length; CDEPO.k = 0; if (need.length && S.view === 'packages') renderPackages();
+    let yen = 0; const bad = [];
+    for (const e of need) {
+      if (!want(e)) continue;   // bu arada başka yoldan geldi ya da ortak listeye girdi
+      toast(e.cilt + '. cilt depodan alınıyor (' + (CDEPO.k + bad.length + 1) + '/' + need.length + ')…', false, 120000); shown = true;
+      try {
+        const bs = /^[0-9a-f]{40}$/.test(e.blob || '') ? e.blob : dir && dir[e.dosya]; if (!bs) throw Error(e.cilt + '. cilt dosyası depoda bulunamadı');
+        let txt; try { txt = await gh.blob(bs); } catch (x) { if (x && (x.status === 404 || x.status === 422)) throw Error(e.cilt + '. cilt dosyası depoda bulunamadı'); throw x; }
+        if (typeof txt !== 'string' || await sha256(txt) !== e.sha256) throw Error(e.cilt + '. cilt dosyası dizindeki özetle tutmuyor');
+        if (!want(e)) continue;
+        const old = VOLS[e.cilt];
+        const rec = { vol: e.cilt, name: String(e.ad || e.dosya.split('/').pop()), size: Number(e.boyut) || txt.length, added_at: d.guncelleme || new Date().toISOString(), sha: e.sha256, html: txt, depo: true };
+        registerVolume(rec);
+        if (!rec.sc.entries.length) { if (old) VOLS[rec.vol] = old; else delete VOLS[rec.vol]; throw Error(e.cilt + '. cilt dosyasında numaralı râvi başlığı yok'); }
+        try { await IDB.put('ciltler', { vol: rec.vol, name: rec.name, size: rec.size, added_at: rec.added_at, sha: rec.sha, html: rec.html, depo: true }); } catch (x) { IDB_OK = false; }
+        CDEPO.k++; if (old) yen++;
+        volumesChanged();
+      } catch (x) {
+        if (x && x.status) throw x;   // bağlantı/GitHub hatası: bir dakika sonra yeniden denenir
+        CDEPO.bad[e.cilt] = x.message || String(x); bad.push(CDEPO.bad[e.cilt]);   // yeniden denemekle düzelmez
+      }
+    }
+    CDEPO.dsha = m.sha; CDEPO.err = '';
+    if (CDEPO.k || bad.length) {
+      const ok = CDEPO.k ? CDEPO.k + ' cilt depodan alındı' + (yen ? ' (' + yen + ' cilt dizindeki yeni sürümle yenilendi)' : '') + ' ve râvi listesine eklendi' + (IDB_OK ? '' : '; tarayıcı deposu kullanılamadığından yalnız bu oturumda tutulur, sayfa her açılışta yeniden indirir') : '';
+      toast([ok, bad.length ? 'alınamadı: ' + bad.join(' · ') : ''].filter(Boolean).join('. ') + '.', !!bad.length || !IDB_OK, bad.length || !IDB_OK ? 9000 : 3600);
+    } else if (shown) $('toast').hidden = true;
+  })().catch(e => { const msg = e.message || String(e); if (msg !== CDEPO.err || shown) toast('Ciltler depodan alınamadı: ' + msg + '. Bir dakika sonra yeniden denenecek.', true); CDEPO.err = msg; })
+    .finally(() => { CDEPO.busy = null; CDEPO.n = 0; if (S.view === 'packages') renderPackages(); });
+  return CDEPO.busy;
 }
 function ortakLogRec(e) { const o = Object.assign({}, e); delete o.id; delete o._mem; delete o.ortak; o.rid = ORT.ridOf(e); return o; }
 function ortakIO(me) {
@@ -1657,7 +1719,7 @@ async function ortakSync(manual) {
       }
       ORTAK.err = ''; ORTAK.last = new Date().toISOString(); ORTAK.retry = 0; ONL.ok = true; if (!ORTAK.again) ORTAK.dirty = false;
       if (r.changed.length) ortakRefresh(r, manual);
-      ciltEsitle();
+      ciltEsitle(); ciltDepoGetir(manual);
       if (ORTAK.logNew) { ORTAK.logNew = false; if (S.view === 'settings') renderLog(); }
       if (manual) toast(r.pushed || r.changed.length ? 'Ortak kayıt eşitlendi: ' + r.pushed + ' dosya gönderildi, ' + r.changed.length + ' kayıt alındı' + (r.conflicts ? ' · ' + r.conflicts + ' çakışmada son değişiklik alındı' : '') + '.' : 'Ortak kayıt güncel.');
     } catch (e) {
@@ -2371,6 +2433,10 @@ function renderPackages() {
     actions: '<button class="btn primary sm req-edit" id="vol-add">＋ Cilt dosyası ekle…</button><button class="btn sm req-edit" data-harfload="1">＋ Harf / Tehzîb verisi (JSON)…</button>',
     help: 'Eser, yüklenen ciltlerin bütün râvileriyle tek sürekli liste hâlinde açılır (soldaki çentik: <b>Râviler</b>). Ham cilt dosyalarını (ör. <span class="mono">001.htm</span>, Şâmile tipi HTML: sayfaları &lt;div class=\'PageText\'&gt;) bir kez yüklemeniz yeterlidir; birden çok dosya birlikte seçilebilir. Râvi 1–50, sayfaya gömülü anlık görüntüden okunur. Yüklenen cildin râvileri listeye hemen eklenir; liste süzgeçleri ve sıralama için gereken hüküm özetleri arka planda bir kez hazırlanıp bu tarayıcıda saklanır. Dosyalar bu tarayıcıda şifreli saklanır; ortak kayıt bağlıysa öteki bilgisayarlara da dağıtılır.' }) +
     '<input type="file" id="vol-file" accept=".htm,.html,.txt,text/html" multiple hidden>';
+  if (CDEPO.busy && CDEPO.n) out += '<div class="note info" style="margin-bottom:12px">Ciltler gizli depodan alınıyor: <b>' + CDEPO.k + ' / ' + CDEPO.n + '</b>. Bu iş her bilgisayarda bir kez yapılır.</div>';
+  else if (CDEPO.err) out += '<div class="note" style="margin-bottom:12px">Ciltler depodan alınamadı: ' + esc(CDEPO.err) + '. Bir dakika sonra yeniden denenecek.</div>';
+  const cbad = Object.values(CDEPO.bad);
+  if (cbad.length) out += '<div class="note" style="margin-bottom:12px">Depodaki şu ciltler alınamadı: ' + esc(cbad.join(' · ')) + '. Depodaki dizin (<span class="mono">kaynak/ciltler/dizin.json</span>) düzeltilince ya da sayfa yeniden açılınca yeniden denenir.</div>';
   const ix = indexProgress();
   if (ix.total && ix.ready < ix.total) out += '<div class="note info" style="margin-bottom:12px">Hüküm özetleri hazırlanıyor: <b>%' + Math.floor(ix.ready / ix.total * 100) + '</b>. Bu iş her bilgisayarda bir kez yapılır; liste bu sırada da kullanılabilir.</div>';
   const snapRow = !VOLS[SNAP_VOL] ? '<tr style="cursor:default"><td class="num">' + SNAP_VOL + '</td><td>Gömülü anlık görüntü (SQLite) <div class="small muted">Râvi ' + SNAP_PKG.from + '–' + SNAP_PKG.to + '; cildin geri kalanı için dosyasını yükleyin</div></td><td class="num">—</td><td class="num">' + SNAP_PKG.count + '</td><td>' + SNAP_PKG.from + '–' + SNAP_PKG.to + '</td><td>—</td><td class="num">' + prog(VS[SNAP_VOL]) + '</td><td class="small">' + esc(new Date(SNAP0.exported_at).toLocaleDateString('tr-TR')) + '</td><td></td></tr>' : '';
