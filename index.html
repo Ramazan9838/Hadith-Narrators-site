@@ -484,7 +484,7 @@ bdi.ari { font-family: var(--ar); font-size: 1.2em; }
 .row label { display: grid; gap: 4px; font-size: calc(11.5px * var(--yb)); color: var(--ink-3); }
 
 /* Yöntem */
-.doc { max-width: 980px; line-height: 1.65; }
+.doc { max-width: calc(980px * var(--yb)); line-height: 1.65; }
 .doc h2 { font-size: calc(20px * var(--yb)); margin: 6px 0 4px; }
 .doc h3 { font-size: calc(15px * var(--yb)); margin: 24px 0 6px; }
 .doc p, .doc li { color: var(--ink-2); }
@@ -617,7 +617,7 @@ table[data-tid] th[data-sk]:focus-visible { outline: 2px solid var(--focus); out
 .kcounts .kt b { color: var(--k-t); } .kcounts .kc b { color: var(--k-c); }
 .tbl tr.sub > td { background: var(--paper-2); padding: 10px 12px 14px; }
 .tbl.sub-tbl { background: var(--paper); }
-.isnad { font-size: calc(15px * var(--yb)); line-height: 1.7; color: var(--ink-2); max-width: 520px; }
+.isnad { font-size: calc(15px * var(--yb)); line-height: 1.7; color: var(--ink-2); max-width: calc(520px * var(--yb)); }
 .links { display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; margin-top: 6px; font-size: calc(14px * var(--yb)); }
 .links span { background: var(--paper-2); border: 1px solid var(--line); border-radius: 12px; padding: 1px 8px; }
 .links span.crit-end { background: var(--accent-soft); border-color: var(--accent-2); font-family: var(--ui); font-size: calc(12px * var(--yb)); }
@@ -860,12 +860,13 @@ td.stact { white-space: nowrap; }
 td.stact .btn { padding: 2px 6px; }
 
 /* ---------- Sayfa düzeni: başlık, katlanır bölümler, sayı kutucukları ---------- */
-.view > .pane:not(#center-body) { width: 100%; max-width: 1320px; margin: 0 auto; padding: 20px 24px 48px; }
+/* Görünümler (veri): 1320 px’ten geniş ekranda kalan boşluğun yarısı içeriğe katılır (genişlik = 1320 + (ekran − 1320) / 2) */
+.view > .pane:not(#center-body) { width: 100%; max-width: calc(50vw + 660px); margin: 0 auto; padding: 20px 24px 48px; }
 .vhead { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px 16px; flex-wrap: wrap; margin: 0 0 12px; }
 .vh-t h2 { margin: 0; font-size: calc(20px * var(--yb)); font-weight: 650; letter-spacing: -.2px; }
 .vh-sub { font-size: calc(12.5px * var(--yb)); color: var(--ink-3); margin-top: 3px; }
 .vh-act { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.view .hint.tabhint { max-width: 980px; }
+.view .hint.tabhint { max-width: calc(980px * var(--yb)); }   /* okuma metinleri yazı boyuyla genişler */
 .fold { border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); margin: 14px 0; }
 .fold > summary { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; padding: 10px 14px; cursor: pointer; list-style: none; }
 .fold > summary::-webkit-details-marker { display: none; }
@@ -920,7 +921,7 @@ td.stact .btn { padding: 2px 6px; }
 .toc button { text-align: left; border: 0; background: transparent; padding: 5px 10px; border-radius: 6px; font-size: calc(12.5px * var(--yb)); color: var(--ink-2); border-left: 2px solid transparent; }
 .toc button:hover { background: var(--paper-2); color: var(--ink); }
 .toc button.on { color: var(--accent); border-left-color: var(--accent); background: var(--accent-soft); }
-.doc-main { max-width: 900px; }
+.doc-main { max-width: calc(900px * var(--yb)); }
 .doc .fold.doc-fold { margin: 22px 0 6px; }
 .doc .fold.doc-fold > summary h3 { margin: 0; font-size: calc(15px * var(--yb)); }
 .doc h3 { scroll-margin-top: 12px; }
@@ -971,7 +972,7 @@ td.stact .btn { padding: 2px 6px; }
 }
 
 /* ---------- Ana sayfa ---------- */
-#view-home > .pane.home { max-width: 1040px; margin: 0 auto; }
+#view-home > .pane.home { max-width: calc(1040px * var(--yb)); margin: 0 auto; }
 .hm-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 4px 0 18px; }
 .hm-top h2 { margin: 0; font-size: calc(22px * var(--yb)); outline: none; }
 .hm-work { color: var(--ink-3); font-size: calc(13px * var(--yb)); margin-top: 4px; overflow-wrap: anywhere; }
