@@ -1,0 +1,65 @@
+name: Ana dala otomatik birleştirme
+
+# claude/** dalına gönderim: dalın yalnız izin verilen dosyaları (index.html, README.md, .nojekyll) değiştirdiği ve
+# index.html'de şifresiz veri bulunmadığı denetlenir; tamamsa dal main'e birleştirilir ve GitHub Pages derlemesi
+# istenir. hesaplar.json sitenin kendisi tarafından main'e yazılır; dallarda değiştirilmez.
+# Çakışma ya da hata varsa ana dal değişmez ve Actions'ta hata görünür. Otomatik token .github/workflows/ altını
+# değiştiren bir dalı ana dala gönderemez; böyle bir değişiklik bir kez elle birleştirilir.
+on:
+  push:
+    branches: ['claude/**']
+
+permissions:
+  contents: write
+  pages: write
+
+concurrency:
+  group: ana-dala-birlestirme
+  cancel-in-progress: false
+
+env:
+  ANA_DAL: main
+
+jobs:
+  birlestir:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      - name: Dal yalnız şifreli kopyayı mı değiştiriyor
+        run: |
+          git fetch origin "$ANA_DAL"
+          disari=$(git diff --name-only "origin/$ANA_DAL...HEAD" | grep -Ev '^(index\.html|README\.md|\.nojekyll)$' || true)
+          [[ -z "$disari" ]] || { echo "::error::Bu dalda izin verilmeyen dosya değişikliği var (yalnız index.html, README.md, .nojekyll): $disari"; exit 1; }
+          if grep -q '"narrators":{' index.html; then echo "::error::index.html şifresiz râvi verisi içeriyor; gönderilmez."; exit 1; fi
+          grep -q '<script id="snapshot-data" type="application/json">{"kasa"' index.html || { echo "::error::index.html sayfanın içinden üretilmiş şifreli bir kopya değil."; exit 1; }
+      - name: Ana dala birleştir
+        id: birlestir
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git fetch origin "$ANA_DAL"
+          ESKI=$(git rev-parse "origin/$ANA_DAL")
+          echo "eski=$ESKI" >> "$GITHUB_OUTPUT"
+          if [[ "$GITHUB_REF_NAME" == "$ANA_DAL" ]] || git merge-base --is-ancestor HEAD "$ESKI"; then
+            echo "$ANA_DAL bu dalı zaten içeriyor; birleştirilecek yeni değişiklik yok." >> "$GITHUB_STEP_SUMMARY"
+            echo "degisti=hayir" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          if git merge-base --is-ancestor "$ESKI" HEAD; then
+            echo "$GITHUB_REF_NAME, $ANA_DAL dalına ileri sarılıyor." >> "$GITHUB_STEP_SUMMARY"
+          elif git merge --no-edit -m "$GITHUB_REF_NAME dalını $ANA_DAL dalına birleştir" "origin/$ANA_DAL"; then
+            echo "$GITHUB_REF_NAME ile $ANA_DAL birleştirildi (birleştirme commit'i)." >> "$GITHUB_STEP_SUMMARY"
+          else
+            git merge --abort || true
+            echo "::error::$GITHUB_REF_NAME ile $ANA_DAL çakışıyor; otomatik birleştirilemedi. Çakışma elle çözülmeli; $ANA_DAL değiştirilmedi."
+            exit 1
+          fi
+          git push origin "HEAD:refs/heads/$ANA_DAL" || { echo "::error::$ANA_DAL dalına gönderilemedi: bu arada ilerlemiş olabilir (Re-run jobs ile yeniden deneyin) ya da dal .github/workflows/ altını değiştiriyor (otomatik token bunu gönderemez; bir kez elle birleştirin)."; exit 1; }
+          echo "degisti=evet" >> "$GITHUB_OUTPUT"
+      - name: GitHub Pages derlemesini iste
+        if: steps.birlestir.outputs.degisti == 'evet'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X POST "repos/$GITHUB_REPOSITORY/pages/builds" >/dev/null && echo "Pages derlemesi istendi." >> "$GITHUB_STEP_SUMMARY" || echo "::warning::Pages derlemesi istenemedi; site birkaç dakika içinde kendiliğinden güncellenmezse Settings → Pages'ten bakın."
