@@ -61,8 +61,6 @@
   --insp-w: 380px;
   --notch-w: 24px;
   --gutter: 32px;
-  --read-w: 880px;
-  --wide-w: 1180px;
   --drawer-in: .24s cubic-bezier(.2, .8, .2, 1);
   --drawer-out: .18s cubic-bezier(.4, 0, 1, 1);
   --yb: 1;   /* yazı boyutu çarpanı (üst çubuktaki A− / A+) */
@@ -154,7 +152,7 @@ h1 span { font-weight: 400; color: var(--ink-3); margin-left: 5px; }
 .pkg-btn:hover, .pkg-btn[aria-expanded="true"] { border-color: var(--accent-2); background: var(--accent-soft); }
 .pk-l { font-weight: 600; } .pk-r { color: var(--ink-3); }
 .pk-n { font-variant-numeric: tabular-nums; color: var(--ink-2); background: var(--paper); border: 1px solid var(--line); border-radius: 999px; padding: 0 6px; font-size: calc(11.5px * var(--yb)); }
-.menu-pop.pk-pop { left: 0; right: auto; width: 360px; padding: 8px; }
+.menu-pop.pk-pop { left: 0; right: auto; width: 360px; padding: 8px; max-height: calc(100vh - 72px); max-height: calc(100dvh - 72px); overflow-y: auto; }
 .pk-pop > div { padding: 5px 8px; }
 .pk-work { display: flex; flex-direction: column; gap: 2px; align-items: stretch; }
 .pk-work .work { font-family: var(--ar); font-size: calc(18px * var(--yb)); direction: rtl; text-align: right; color: var(--ink); }
@@ -169,7 +167,14 @@ h1 span { font-weight: 400; color: var(--ink-3); margin-left: 5px; }
 .pk-pop .pk-jump button.btn { display: inline-flex; width: auto; border: 1px solid var(--line-2); background: var(--paper); padding: 3px 12px; }
 .pk-pop .pk-jump button.btn:hover { border-color: var(--accent-2); background: var(--accent-soft); }
 .pk-vols { max-height: 260px; overflow: auto; }
-.pk-vols button[aria-current="true"] { background: var(--accent-soft); }
+.pk-pop > .pk-vsel { padding: 0; }
+.pk-vsel button[aria-pressed="true"] { background: var(--accent-soft); font-weight: 600; }
+.pk-vsel button[aria-pressed="true"]::before { content: "✓ "; color: var(--accent); }
+.pk-vsel button[aria-pressed="true"] small { font-weight: 400; }
+.pk-vhint { margin: 4px 10px 6px; font-size: calc(11.5px * var(--yb)); }
+.pkg-btn.narrow .pk-l { color: var(--accent); }
+.chip.chip-vol { background: var(--accent-soft); border-color: var(--accent-2); color: var(--accent); font-weight: 600; }
+.chip.chip-vol:hover { border-color: var(--accent); }
 .pk-pop > .btn { margin: 4px 8px; }
 /* Görünümler */
 .views { display: flex; align-items: center; gap: 1px; min-width: 0; flex: 0 1 auto; overflow: hidden; }
@@ -533,7 +538,7 @@ button.pill:hover { border-color: var(--accent-2); }
   .nav-more { display: none !important; }
   .top-actions { margin-left: auto; gap: 4px; }
   .pk-r { display: none; }
-  .menu-pop.pk-pop { position: fixed; left: 8px; right: 8px; top: 56px; width: auto; }
+  .menu-pop.pk-pop { position: fixed; left: 8px; right: 8px; top: 56px; width: auto; max-height: calc(100vh - 64px); max-height: calc(100dvh - 64px); }
   .toast { left: 8px; right: 8px; bottom: 64px; max-width: none; }
   h1 span { display: none; }
   .only-narrow { display: inline-flex !important; }
@@ -663,10 +668,9 @@ body.resizing { user-select: none; } body.resizing-x, body.resizing-x * { cursor
 .notch-r[class*=" k-"] { box-shadow: inset 3px 0 0 var(--kc), var(--shadow); }
 .notch .glyph { font-size: calc(12px * var(--yb)); min-height: 12px; }
 .notch .glyph[data-v="ok"] { color: var(--ok); } .notch .glyph[data-v="no"] { color: var(--bad); } .notch .glyph[data-v="fix"] { color: var(--warn); }
-/* Metin sütunu: ortada, okunur genişlikte; kenar boşluğu çentiğe yer bırakır */
-.center { --col: var(--read-w); }
-.center:is([data-ctab="hukum"], [data-ctab="sentez"], [data-ctab="hoca"], [data-ctab="harf"], [data-ctab="kimlik"], [data-ctab="rihle"]) { --col: var(--wide-w); }
-#nhead, #center-body > .toolbar, #center-body > .pane { padding-left: max(var(--gutter), calc((100% - var(--col)) / 2)); padding-right: max(var(--gutter), calc((100% - var(--col)) / 2)); }
+/* Orta alan bütün genişliği kullanır; panel metnin yanında açılınca daralır, kapanınca yeniden genişler.
+   Kenar boşluğu yalnız çentiğe yer bırakır. */
+#nhead, #center-body > .toolbar, #center-body > .pane { padding-left: var(--gutter); padding-right: var(--gutter); }
 /* Telefon (≤ 880 px): liste soldan, ayrıntı alttan açılır; çentikler altta yüzen düğmeler olur */
 @media (max-width: 880px) {
   :root { --gutter: 16px; }
@@ -1360,9 +1364,10 @@ let AGG = {}; function recomputeAgg() { AGG = {}; CONFC = {}; for (const n of NA
 var CONFC = {};
 
 /* ---------- Durum ---------- */
-const S = { scope: 'all', view: 'desk', nid: null, tab: 'kaynak', sel: null, railFilter: 'all', q: '', sort: 'seq', critQ: '', critSel: '', lexSel: '', lexK: '', page: null };
+const S = { scope: 'all', railVol: 'all', view: 'desk', nid: null, tab: 'kimlik', sel: null, railFilter: 'all', q: '', sort: 'seq', critQ: '', critSel: '', lexSel: '', lexK: '', page: null };
 const VIEWS = ['home', 'desk', 'packages', 'critics', 'conflicts', 'lex', 'report', 'analyze', 'method', 'settings'];
-const TABS = [['kaynak', 'Kaynak metin'], ['hukum', 'Hükümler'], ['sentez', 'Sentez'], ['kimlik', 'Kimlik'], ['hoca', 'Hocaları · Talebeleri'], ['rihle', 'Rıhle'], ['sayfa', 'Sayfa'], ['harf', 'Harf']];
+// Sekme sırası: râvi açılınca önce kim olduğu (Kimlik), sonra hocaları ve talebeleri, hükümler, sentez (ekip isteği)
+const TABS = [['kimlik', 'Kimlik'], ['hoca', 'Hocaları · Talebeleri'], ['hukum', 'Hükümler'], ['sentez', 'Sentez'], ['kaynak', 'Kaynak metin'], ['rihle', 'Rıhle'], ['sayfa', 'Sayfa'], ['harf', 'Harf']];
 
 /* ---------- Eser, ciltler ve dilimler ----------
    Kullanıcı bütün eseri tek sürekli râvi listesi olarak görür (IDX). İç düzende veri cilt başına ardışık 50’şer
@@ -1396,7 +1401,8 @@ function rebuildPkgs() {
   rebuildIndex();
 }
 // Eser dizini: her râvi için { p (dilim), vol, seq, nid, name, w (tarama uyarısı), i (sıra) }
-let IDX = [], IDXSEQ = new Map(), IDXNID = new Map();
+// VRANGE: cilt → [ilk, son+1] dizin aralığı (dilimler cilt sırasıyla dizildiğinden her cilt bitişiktir)
+let IDX = [], IDXSEQ = new Map(), IDXNID = new Map(), VRANGE = new Map();
 function rebuildIndex() {
   const out = [];
   for (const p of PKGS) {
@@ -1405,7 +1411,13 @@ function rebuildIndex() {
   }
   out.forEach((r, i) => { r.i = i; });
   IDX = out; IDXSEQ = new Map(out.map(r => [r.seq, r])); IDXNID = new Map(out.map(r => [r.nid, r]));
+  VRANGE = new Map(); for (const r of out) { const g = VRANGE.get(r.vol); if (g) g[1] = r.i + 1; else VRANGE.set(r.vol, [r.i, r.i + 1]); }
 }
+/* Râvi listesinin cildi (üst çubuktaki eser düğmesi: “Tümü” ya da “Cilt N”). Seçilen cilt saklanmaz: daraltma açıkken
+   liste her zaman açık râvinin cildini gösterir (başka cilde götüren bağlantıda liste de o cilde geçer). Tek cilt
+   yüklüyken daraltma etkisizdir. Münekkitler, Teâruz, Lafız dizini ve raporun kapsamı (S.scope) bundan bağımsızdır. */
+function railVol() { return S.railVol === 'vol' && multiVol() ? (IDXNID.get(S.nid) || {}).vol || PK.vol : 0; }
+function volRows(v) { const g = VRANGE.get(v); return g ? IDX.slice(g[0], g[1]) : []; }
 // Gömülü dilimde blok → râvi (öteki dilimlerde blok kimliği = râvi kimliği × 100 + sıra)
 const SNAPB = {}; for (const n of Object.values(SNAP0.narrators)) for (const b of n.blocks) SNAPB[b.id] = n.id;
 const nidOfBlock = (p, bid) => p.kind === 'snapshot' ? SNAPB[bid] : Math.floor(bid / 100);
@@ -2405,11 +2417,26 @@ async function removeVolume(vol) {
   volumesChanged();
 }
 // Sıradaki incelenmemiş râvi: eser sırasıyla ileriye; sona gelince baştan (bütün eser, ciltler arasında da). r yoksa ilki.
-function nextUnreviewed(r) {
-  const N = IDX.length; if (!N) return null;
-  if (!r) return IDX.find(x => !REVIEWED(rowStatus(x))) || null;
-  for (let k = 1; k < N; k++) { const x = IDX[(r.i + k) % N]; if (!REVIEWED(rowStatus(x))) return x; }
+// vol verilirse yalnız o ciltte (cildin sonundan cildin başına döner; öteki ciltlerin kayıtlarına bakılmaz).
+function nextUnreviewed(r, vol) {
+  const g = vol ? VRANGE.get(vol) : [0, IDX.length]; if (!g) return null;
+  const a = g[0], N = g[1] - g[0]; if (!N) return null;
+  if (!r || r.i < a || r.i >= g[1]) { for (let i = a; i < g[1]; i++) if (!REVIEWED(rowStatus(IDX[i]))) return IDX[i]; return null; }
+  for (let k = 1; k < N; k++) { const x = IDX[a + (r.i - a + k) % N]; if (!REVIEWED(rowStatus(x))) return x; }
   return null;
+}
+// Eser düğmesindeki cilt seçimi: 'all' = Tümü; sayı = o cilt (açık râvi o cilde değilse cildin sıradaki incelenmemiş râvisi açılır)
+function setRailVol(k) {
+  const v = k === 'all' ? 0 : +k; if (k !== 'all' && !VRANGE.has(v)) return;
+  S.railVol = UI.railVol = v ? 'vol' : 'all'; saveUI(); closeMenus();
+  const cur = IDXNID.get(S.nid);
+  if (v && (!cur || cur.vol !== v)) {
+    const r = nextUnreviewed(null, v) || volRows(v)[0];
+    if (r) { setView('desk', false); selectNarrator(r.nid, true); setView('desk'); }
+  } else { renderSourcebar(); renderRail(); renderHead(); railReveal(S.nid, 'center'); }
+  const n = v ? volRows(v).length : IDX.length;
+  toast('Râvi listesi: ' + (v ? 'yalnız ' + v + '. cilt (' + fmt(n) + ' râvi)' : 'bütün eser (' + fmt(n) + ' râvi)') + '.');
+  if (S.view === 'home') renderHome();
 }
 function approveNarrator() {
   if (!need('review')) return;
@@ -2418,10 +2445,10 @@ function approveNarrator() {
   if (!REVIEWED(r.status)) r.status = 'Sorun yok';
   Object.assign(r, { at: new Date().toISOString() }, by()); saveRev();
   logAct('râvi-durum', 'Onaylandı: ' + r.status, { nid: S.nid, seq: NBYID[S.nid].source_sequence, before: old, after: r.status });
-  const nx = nextUnreviewed(IDXNID.get(S.nid));
+  const V = railVol(), nx = nextUnreviewed(IDXNID.get(S.nid), V);
   renderSourcebar();
   if (nx) { selectNarrator(nx.nid, true); toast('Onaylandı. Sıradaki: #' + nx.seq); }
-  else { renderRail(); renderHead(); renderInspector(); toast('Onaylandı. Eserde incelenmemiş râvi kalmadı.'); }
+  else { renderRail(); renderHead(); renderInspector(); toast('Onaylandı. ' + (V ? V + '. ciltte' : 'Eserde') + ' incelenmemiş râvi kalmadı.'); }
 }
 
 /* ---------- Ciltler görünümü ---------- */
@@ -2502,8 +2529,8 @@ function minibar(byK) {
 }
 
 /* ---------- Kaynak şeridi ve alt bilgi ---------- */
-// Üst çubuktaki eser düğmesi: “Cilt 1 · #37 · 312/1.048 ▾”; açılır menüde bütün eserin ilerlemesi ve sayıları,
-// râvi numarasına gitme ve ciltler arasında geçiş
+// Üst çubuktaki eser düğmesi: “Tümü · #37 · 312/14.950 ▾” ya da “Cilt 3 · #2410 · 12/1.048 ▾”; açılır menüde bütün eserin
+// ilerlemesi ve sayıları, râvi numarasına gitme ve listenin kapsamı (Tümü ya da bir cilt)
 function renderSourcebar() {
   const pop = $('pk-pop'), wasOpen = !!pop && !pop.hidden;
   if (wasOpen && pop.contains(document.activeElement) && document.activeElement.tagName === 'INPUT') return;   // numara yazılırken yeniden çizilmez
@@ -2512,9 +2539,15 @@ function renderSourcebar() {
   const snapPk = PK.kind === 'snapshot';
   const okInteg = snapPk ? integ.source_unchanged && integ.sqlite === 'ok' : true;
   const pct = W.n ? Math.round(W.done / W.n * 100) : 0;
-  $('sourcebar').innerHTML =
-    '<button class="pkg-btn" id="pkg-btn" type="button" aria-haspopup="true" aria-controls="pk-pop" aria-expanded="' + wasOpen + '" title="Bütün eser · ' + fmt(W.n) + ' râvi · incelenen ' + fmt(W.done) + '" style="--p:' + pct + '%">' +
-    '<span class="pk-l">Cilt ' + PK.vol + '</span><span class="pk-r">#' + (n ? n.source_sequence : '') + '</span><span class="pk-n">' + fmt(W.done) + '/' + fmt(W.n) + '</span><span aria-hidden="true">▾</span></button>' +
+  // Düğme: “Tümü” (bütün eser listesi) ya da “Cilt N” (liste yalnız açık râvinin cildi); sayılar seçime göre
+  const curVol = (IDXNID.get(S.nid) || {}).vol || PK.vol, seq = n ? n.source_sequence : '', narrow = S.railVol === 'vol';
+  const CV = narrow && multiVol() ? VS.find(v => v.vol === curVol) : null, bd = CV ? CV.done : W.done, bn = CV ? CV.n : W.n, bp = CV ? (CV.n ? Math.round(CV.done / CV.n * 100) : 0) : pct;
+  const btitle = narrow ? 'Râvi listesi: yalnız ' + curVol + '. cilt · açık râvi #' + seq + ' · bu ciltte incelenen ' + fmt(bd) + ' / ' + fmt(bn) + (CV ? ' (bütün eser ' + fmt(W.done) + ' / ' + fmt(W.n) + ')' : '')
+    : 'Râvi listesi: bütün eser · açık râvi: ' + curVol + '. cilt, #' + seq + ' · incelenen ' + fmt(W.done) + ' / ' + fmt(W.n);
+  const sb = $('sourcebar'), fk = focusKey(sb), ovs = sb.querySelector('.pk-vols'), vst = ovs ? ovs.scrollTop : 0, pst = wasOpen ? pop.scrollTop : 0;   // yeniden çizimde odak, menünün ve cilt listesinin kaydırması korunur
+  sb.innerHTML =
+    '<button class="pkg-btn' + (narrow ? ' narrow' : '') + '" id="pkg-btn" type="button" aria-haspopup="true" aria-controls="pk-pop" aria-expanded="' + wasOpen + '" title="' + esc(btitle) + '" aria-label="Eser · ' + esc(btitle) + '" style="--p:' + bp + '%">' +
+    '<span class="pk-l">' + (narrow ? 'Cilt ' + curVol : 'Tümü') + '</span><span class="pk-r">#' + seq + '</span><span class="pk-n">' + fmt(bd) + '/' + fmt(bn) + '</span><span aria-hidden="true">▾</span></button>' +
     '<div class="menu-pop pk-pop" id="pk-pop"' + (wasOpen ? '' : ' hidden') + '>' +
     '<div class="pk-work"><span class="work">الجامع لكتب الضعفاء والمتروكين والكذابين</span><span class="small muted">Bütün eser · ' + VS.length + ' cilt · ' + fmt(W.n) + ' râvi</span></div>' +
     '<div class="pk-prog"><span class="small">İncelenen râvi <b>' + fmt(W.done) + '/' + fmt(W.n) + '</b></span><span class="pkg-prog"><i style="width:' + pct + '%"></i></span></div>' +
@@ -2522,8 +2555,13 @@ function renderSourcebar() {
     (snapPk ? '<div class="pk-integ small ' + (okInteg ? 'ok' : 'warn') + '" title="SHA-256 ' + esc(integ.sha256 || '') + '">Açık râvi: gömülü anlık görüntü · ' + (okInteg ? 'kaynak değişmemiş · SQLite ok' : 'bütünlüğü kontrol edin') + '</div>'
       : '<div class="pk-integ small ok" title="SHA-256 ' + esc(integ.sha256 || '') + '">Açık râvi: ' + esc(integ.file || '') + ' · CTP ' + CTP.VERSION + '</div>') +
     '<form class="pk-jump" id="pk-jump"><label class="small" for="pk-seq">Râvi no</label><input class="field sm" id="pk-seq" inputmode="numeric" autocomplete="off" placeholder="' + (IDX.length ? IDX[0].seq + '–' + IDX[IDX.length - 1].seq : '') + '"><button class="btn sm" type="submit">Git</button></form>' +
-    (VS.length > 1 ? '<div class="menu-h">Ciltler</div><div class="pk-vols">' + VS.map(v => '<button type="button" data-govol="' + v.vol + '"' + (v.vol === PK.vol ? ' aria-current="true"' : '') + '>Cilt ' + v.vol + ' · #' + v.from + '–' + v.to + '<small>' + fmt(v.n) + ' râvi · ' + fmt(v.done) + ' incelendi</small></button>').join('') + '</div>' : '') +
+    (VS.length > 1 || narrow ? '<div class="menu-h" id="pk-vols-h">Ciltler</div><div class="pk-vsel" role="group" aria-labelledby="pk-vols-h">' +
+      '<button type="button" data-pkvol="all" aria-pressed="' + !narrow + '">Tümü<small>Bütün eser · ' + VS.length + ' cilt · ' + fmt(W.n) + ' râvi · ' + fmt(W.done) + ' incelendi</small></button>' +
+      '<div class="pk-vols">' + VS.map(v => '<button type="button" data-pkvol="' + v.vol + '" aria-pressed="' + (narrow && v.vol === curVol) + '">Cilt ' + v.vol + ' · #' + v.from + '–' + v.to + '<small>' + fmt(v.n) + ' râvi · ' + fmt(v.done) + ' incelendi' + (v.vol === curVol ? ' · açık râvi #' + seq : '') + '</small></button>').join('') + '</div></div>' +
+      '<p class="hint pk-vhint">Bir cilt seçilince râvi listesi o cilde daralır; J/K ve O da o ciltte kalır. Münekkitler, Teâruz, Lafız dizini ve Tespit raporu kendi “Bütün eser · Bu cilt” seçimini kullanır.</p>' : '') +
     '<hr><button type="button" data-view-go="packages">Ciltler sayfası →<small>Cilt dosyaları, dış kaynaklar</small></button></div>';
+  if (wasOpen) { const nv = sb.querySelector('.pk-vols'); if (nv) nv.scrollTop = vst; $('pk-pop').scrollTop = pst; }
+  if (fk) { const el = sb.querySelector(fk); if (el) el.focus({ preventScroll: true }); }
 }
 // Üst çubuk sığmıyorsa sırayla: yazılar kısalır (tb-lbl), ek görünümler “Diğer” menüsüne geçer (tb-nav), başlık gizlenir (tb-min)
 function fitTopbar() {
@@ -2569,7 +2607,7 @@ let HOME_DIRTY = false;
 // Odaktaki denetimin seçicisi (yeniden çizimden sonra aynı denetime dönmek için)
 function focusKey(box) {
   const ae = document.activeElement; if (!ae || ae === box || !box.contains(ae)) return null;
-  for (const a of ['data-gonarr', 'data-view-go', 'data-govol', 'data-home-go', 'data-home-log', 'data-act', 'data-goto', 'id']) if (ae.hasAttribute(a)) return '[' + a + '="' + CSS.escape(ae.getAttribute(a)) + '"]';
+  for (const a of ['data-gonarr', 'data-view-go', 'data-govol', 'data-pkvol', 'data-rf', 'data-home-go', 'data-home-log', 'data-act', 'data-goto', 'id']) if (ae.hasAttribute(a)) return '[' + a + '="' + CSS.escape(ae.getAttribute(a)) + '"]';
   return null;
 }
 function renderHome() {
@@ -2690,7 +2728,7 @@ function readHash(h) {
     const r = IDXSEQ.get(+m[1]); if (!r) return false;
     if (r.p !== PK && !activatePackage(r.p.id, { silent: true })) return false;
     if (!NBYID[r.nid]) return false;
-    S.nid = r.nid; S.tab = TABS.some(t => t[0] === m[2]) ? m[2] : 'kaynak'; S.sel = m[3] && STBY[decodeURIComponent(m[3])] ? { type: 'st', id: decodeURIComponent(m[3]) } : null; S.view = 'desk'; return true;
+    S.nid = r.nid; S.tab = TABS.some(t => t[0] === m[2]) ? m[2] : m[3] ? 'kaynak' : 'kimlik'; S.sel = m[3] && STBY[decodeURIComponent(m[3])] ? { type: 'st', id: decodeURIComponent(m[3]) } : null; S.view = 'desk'; return true;
   }
   const v = /^#\/(\w+)$/.exec(h); if (v && VIEWS.includes(v[1])) { S.view = v[1]; return true; }
   return false;
@@ -2700,7 +2738,7 @@ function readHash(h) {
    Liste eser dizininden (IDX) kurulur ve yalnız görünen satırlar çizilir (sanal kaydırma). Satır bilgisi açık
    dilimde canlı veriden; öteki dilimlerde depodaki inceleme kaydından (durum, not) ve hafif özetten (chunkSums)
    gelir. Özeti henüz hazırlanmamış râvi, hüküm süzgeçlerine ve hüküm sıralamasına katılmaz. */
-const RAIL_CHIPS = [['all', 'Tümü'], ['conflict', 'Teâruz'], ['kizb', 'Kizb / vaz‘'], ['majhul', 'Cehâlet'], ['tevsik', 'Tevsik var'], ['warn', 'Uyarılı'], ['todo', 'İncelenmedi'], ['notes', 'Notlu']];
+const RAIL_CHIPS = [['all', 'Hepsi'], ['conflict', 'Teâruz'], ['kizb', 'Kizb / vaz‘'], ['majhul', 'Cehâlet'], ['tevsik', 'Tevsik var'], ['warn', 'Uyarılı'], ['todo', 'İncelenmedi'], ['notes', 'Notlu']];
 const SUMF = new Set(['conflict', 'kizb', 'majhul', 'tevsik', 'warn']);   // özet isteyen süzgeçler
 function rowStatus(r) { return r.p === PK ? (REV.narr[r.nid] || {}).status : chunkState(r.p).st.get(r.nid); }
 function rowNotes(r) { if (r.p === PK) { const n = NBYID[r.nid]; return n ? narrNoteCount(n) : 0; } return chunkState(r.p).notes.get(r.nid) || 0; }
@@ -2735,8 +2773,8 @@ function railMatch(r, Q) {
   return !!x && (x.live ? x.live.sts.some(s => Q.crit(s.critic)) : x.crit.some(Q.crit));
 }
 function railList() {
-  const Q = railQuery();
-  const list = S.railFilter === 'all' && !Q ? IDX.slice() : IDX.filter(r => railMatch(r, Q));
+  const Q = railQuery(), V = railVol(), base = V ? volRows(V) : IDX;
+  const list = S.railFilter === 'all' && !Q ? base.slice() : base.filter(r => railMatch(r, Q));
   const key = { sev: x => x.maxC, tad: x => x.maxT, n: x => x.g, conf: x => +x.conflict }[S.sort];
   if (!key) return list;
   const kv = new Map(list.map(r => { const x = rowSum(r); return [r, x ? key(x) : -1]; }));
@@ -2746,18 +2784,27 @@ function railList() {
 const RV = { items: [], tops: null, rh: 0, hh: 0, measured: false, a: -1, b: -1, raf: 0, n: 0 };
 const VIRT_MIN = 300;
 function renderRail() {
-  $('rail-chips').innerHTML = RAIL_CHIPS.map(([k, l]) => '<button class="chip" data-rf="' + k + '" aria-pressed="' + (S.railFilter === k) + '">' + l + '</button>').join('');
+  const V = railVol();
+  // Süzgeç düğmeleri yalnız değişince yeniden yazılır (arka plandaki sık yeniden çizimde klavye odağı kaybolmasın)
+  const chips = (V ? '<button class="chip chip-vol" type="button" data-pkvol="all" aria-label="Cilt süzgecini kaldır: ' + V + '. cilt" title="Yalnız ' + V + '. cildin râvileri listeleniyor. Bütün eseri listelemek için basın.">Cilt ' + V + ' <span aria-hidden="true">✕</span></button>' : '') +
+    RAIL_CHIPS.map(([k, l]) => '<button class="chip" data-rf="' + k + '" aria-pressed="' + (S.railFilter === k) + '">' + l + '</button>').join('');
+  if (RV.chips !== chips) {
+    const ce = $('rail-chips'), fk = focusKey(ce); ce.innerHTML = chips; RV.chips = chips;
+    if (fk) { const el = ce.querySelector(fk); if (el) el.focus({ preventScroll: true }); }
+  }
   const list = railList();
   const heads = S.sort === 'seq' && IDX.length > 0 && IDX[0].vol !== IDX[IDX.length - 1].vol;
   const items = []; let pv = null;
   list.forEach((r, k) => { if (heads && r.vol !== pv) { items.push({ head: r.vol }); pv = r.vol; } r._pos = k + 1; items.push(r); });
   RV.items = items; RV.n = list.length; RV.tops = null;
-  const key = S.railFilter + '|' + S.q + '|' + S.sort;
+  const key = S.railFilter + '|' + S.q + '|' + S.sort + '|' + V;
+  const vchg = RV.key !== undefined && RV.key.split('|').pop() !== String(V);
   if (RV.key !== undefined && RV.key !== key) $('nlist').scrollTop = 0;   // eski konum yeni listede boş kalmasın
   RV.key = key;
   const ix = indexProgress(), wait = (SUMF.has(S.railFilter) || S.sort !== 'seq') && ix.ready < ix.total;
-  $('rail-count').textContent = fmt(list.length) + ' / ' + fmt(IDX.length) + ' râvi' + (wait ? ' · özetler hazırlanıyor (%' + Math.floor(ix.ready / ix.total * 100) + ')' : '');
+  $('rail-count').textContent = fmt(list.length) + ' / ' + fmt(V ? volRows(V).length : IDX.length) + ' râvi' + (V ? ' · Cilt ' + V : '') + (wait ? ' · özetler hazırlanıyor (%' + Math.floor(ix.ready / ix.total * 100) + ')' : '');
   paintRail(true);
+  if (vchg) railReveal(S.nid, 'center');   // liste başka cilde geçti (ya da daraltma kalktı): açık râvi görünsün
   const W = workProgress();
   $('rev-progress').textContent = fmt(W.done) + '/' + fmt(W.n) + ' râvi · ' + fmt(W.nst) + ' hüküm incelendi';
   renderNotches();
@@ -2794,7 +2841,8 @@ function paintRail(force, again, keepFocus) {
   const ae = document.activeElement, focus = keepFocus != null ? keepFocus : ul.contains(ae) && ae.dataset ? ae.dataset.idx : null;
   if (items.length <= VIRT_MIN) {
     if (!force) return;
-    setRailHTML(ul, items.map(railItemHTML).join('') || '<li class="empty-state">Bu süzgeçte râvi yok.</li>');
+    const V = railVol();
+    setRailHTML(ul, items.map(railItemHTML).join('') || (V ? '<li class="empty-state">' + V + '. ciltte bu süzgece uyan râvi yok. <button class="btn sm" type="button" data-pkvol="all">Bütün eserde göster</button></li>' : '<li class="empty-state">Bu süzgeçte râvi yok.</li>'));
     RV.a = 0; RV.b = items.length; measureRail();
   } else {
     if (!RV.measured) { setRailHTML(ul, items.slice(0, 30).map(railItemHTML).join('')); measureRail(); force = true; RV.tops = null; }
@@ -2863,9 +2911,9 @@ function renderHead() {
   const nn = narrNoteCount(n);
   $('nhead').innerHTML =
     '<div class="nh-top"><span class="nav-arrows"><button class="btn ghost sm icon" data-act="prev" aria-label="Önceki râvi" title="Önceki râvi (K)">↑</button><button class="btn ghost sm icon" data-act="next" aria-label="Sonraki râvi" title="Sonraki râvi (J)">↓</button></span>' +
-    '<span class="kicker"><span>Râvi #' + n.source_sequence + '</span><span>s. ' + n.page_start + (n.page_end !== n.page_start ? '–' + n.page_end : '') + '</span></span><span class="grow"></span>' +
+    '<span class="kicker"><span>Cilt ' + ((IDXNID.get(n.id) || {}).vol || PK.vol) + '</span><span>Râvi #' + n.source_sequence + '</span><span>s. ' + n.page_start + (n.page_end !== n.page_start ? '–' + n.page_end : '') + '</span></span><span class="grow"></span>' +
     '<label class="sr-only" for="head-status">Râvi durumu</label><select class="field sm nh-status" id="head-status" title="Râvi durumu"' + (AUTH.can('review') ? '' : ' disabled') + '>' + SNAP.summary.statuses.map(x => '<option' + (x === st ? ' selected' : '') + '>' + esc(x) + '</option>').join('') + '</select>' +
-    '<button class="btn primary sm req-edit" data-act="approve" title="“Sorun yok” olarak onayla ve sıradaki incelenmemiş râviye geç (O)">✓ Onayla · sıradaki <span class="kbd on-accent">O</span></button>' +
+    '<button class="btn primary sm req-edit" data-act="approve" title="“Sorun yok” olarak onayla ve ' + (railVol() ? 'bu ciltteki ' : '') + 'sıradaki incelenmemiş râviye geç (O)">✓ Onayla · sıradaki <span class="kbd on-accent">O</span></button>' +
     '<button class="btn ghost sm" data-act="narr-notes" title="Râvi hakkındaki araştırmacı notları">' + NOTE_SVG + ' Notlar' + (nn ? ' <b>' + nn + '</b>' : '') + '</button></div>' +
     '<h2>' + esc(fieldVal(n, 'isim')) + '</h2>' + idLine(n) +
     uyariNotu(n) +
@@ -3594,7 +3642,7 @@ function jumpToSeq(raw) {
 }
 function goNarrator(pkg, seq) {
   const r = IDXSEQ.get(+seq); if (!r) { toast('#' + seq + ' bulunamadı; cildinin dosyası bu tarayıcıda yüklü değil.', true); return false; }
-  if (!['kaynak', 'hukum', 'sentez'].includes(S.tab)) S.tab = 'kaynak';
+  if (pkg && !['kaynak', 'hukum', 'sentez'].includes(S.tab)) S.tab = 'kaynak';   // teâruz kaydından gelince hükümler görünsün
   setView('desk', false); return selectNarrator(r.nid, true);
 }
 // Râviyi açar; başka dilimdeyse o dilim sessizce kurulur (kullanıcı bunu görmez)
@@ -3623,7 +3671,7 @@ function selectStatement(uid, scroll, reveal) {
     if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
   }
 }
-// J/K: süzülmüş ve sıralanmış listede bir sonraki/önceki râvi (bütün eser; ciltler arasında da)
+// J/K: süzülmüş ve sıralanmış listede bir sonraki/önceki râvi (bütün eser, ciltler arasında da; liste bir cilde daraltıldıysa o ciltte)
 function stepNarrator(d) {
   const list = railList(), i = list.findIndex(r => r.nid === S.nid); let nx = i >= 0 ? list[i + d] : null;
   if (i < 0) {   // açık râvi süzgeçten düştü (ör. incelendi): eser sırasıyla en yakın sonraki/önceki
@@ -3632,12 +3680,15 @@ function stepNarrator(d) {
     else nx = list[0];
   }
   if (nx) selectNarrator(nx.nid, true);
+  else if (railVol() && list.length) toast(railVol() + '. ciltte ' + (S.railFilter !== 'all' || (S.q || '').trim() ? 'bu süzgece uyan ' : '') + (d > 0 ? 'son' : 'ilk') + ' râvi. Öteki ciltler için eser düğmesinden “Tümü” seçilebilir.');
 }
 function stepStatement(d) {
   const sts = stOf(NBYID[S.nid]).filter(s => s.phrase).sort((a, b) => a.b.block_order - b.b.block_order || a.start - b.start);
   if (!sts.length) return;
   const i = S.sel && S.sel.type === 'st' ? sts.findIndex(s => s.uid === S.sel.id) : -1;
-  const nx = sts[(i + d + sts.length) % sts.length]; selectStatement(nx.uid, undefined, false);
+  const nx = sts[(i + d + sts.length) % sts.length];
+  if (!['kaynak', 'hukum', 'sentez'].includes(S.tab)) S.tab = 'kaynak';   // Kimlik vb. sekmede hüküm görünmez
+  selectStatement(nx.uid, undefined, false);
 }
 function setReview(v) {
   if (!S.sel || S.sel.type !== 'st') return;
@@ -4622,7 +4673,7 @@ async function doExport(kind) {
   else if (kind === 'review') download('cerh-tadil-inceleme-' + stamp + '.json', JSON.stringify(reviewBundle(), null, 2));
   else if (kind === 'import') { if (need('import')) $('import-file').click(); }
   else if (kind === 'snapshot') download('cerh-tadil-html-veri-' + stamp + '.json', JSON.stringify(SNAP, null, 2));
-  else if (kind === 'print') { if (S.view !== 'desk') setView('desk'); S.tab = 'kaynak'; renderCenter(); setTimeout(() => window.print(), 60); }
+  else if (kind === 'print') { if (S.view !== 'desk') setView('desk'); S.tab = 'kaynak'; renderCenter(); writeHash(); setTimeout(() => window.print(), 60); }
 }
 $('import-file').onchange = async e => {
   const f = e.target.files[0]; if (!f) return;
@@ -4665,7 +4716,7 @@ function renderPalette() {
   let k = 0;
   for (const r of q ? IDX : IDX.slice(Math.max(0, at - 5), at + 25)) {
     if (q && String(r.seq) !== qd && !(r.p === PK && NBYID[r.nid] ? nz(NBYID[r.nid]._names.join(' ')) : (r._nz || (r._nz = nz(r.name)))).includes(qn)) continue;
-    items.push({ g: 'Râvi', l: '#' + r.seq, ar: rowName(r), go: () => { setView('desk'); selectNarrator(r.nid); closeDrawer('rail'); } });
+    items.push({ g: 'Râvi', l: '#' + r.seq, ar: rowName(r), go: () => { setView('desk'); selectNarrator(r.nid); if (DRW.mode.rail === 'overlay') closeDrawer('rail'); } });
     if (++k >= 40) break;
   }
   for (const c of Object.values(CTX.CRITICS)) if (q && !c.group && (nz(c.canon).includes(qn) || c.tr.toLocaleLowerCase('tr').includes(ql))) items.push({ g: 'Münekkit', l: c.tr, ar: c.canon, go: () => { S.critSel = c.canon; S.critQ = ''; setView('critics'); } });
@@ -4681,10 +4732,11 @@ $('palette-list').onclick = e => { const b = e.target.closest('[data-pal]'); if 
 
 /* ---------- Çekmeceler: râvi listesi (sol) ve ayrıntı paneli (sağ) ----------
    Kenardaki çentiğe basınca panel kayarak açılır, yeniden basınca kapanır; başlangıçta ikisi de kapalıdır.
-   Râvi listesi sabitlenmemişse metnin üstüne kayar: râvi seçilince, dışarı tıklanınca ya da Esc ile kapanır.
-   Ayrıntı paneli açılınca, yer varsa metni kaplamaz, onu yana iter (sağdan başlayan Arapça satırlar örtülmesin);
-   yer yoksa metnin üstüne kayar. Sabitlenen (📌) panel metnin yanına yerleşir; râvi değişince, Esc ile ve sayfa
-   yenilenince açık kalır. Sabit panelin çentiğine basmak onu kapatır ve sabitlemeyi kaldırır.
+   Açılan panel, yer varsa (metin sütunu en az MIN_CENTER kalacaksa) metni kaplamaz: orta alan daralır, panel
+   kapanınca yeniden bütün genişliği doldurur. Yer yoksa panel metnin üstüne kayar; bu durumda râvi listesi râvi
+   seçilince ve dışarı tıklanınca kapanır. Metnin yanındaki râvi listesi râvi seçilince açık kalır; ayrıntı paneli
+   sabitlenmemişse râvi değişince kapanır. İkisi de Esc ile kapanır. Sabitlenen (📌) panel önce yer alır; râvi
+   değişince, Esc ile ve sayfa yenilenince açık kalır. Sabit panelin çentiğine basmak onu kapatır ve sabitlemeyi kaldırır.
    Telefonda (≤ 880 px) sabitleme yoktur: liste soldan, ayrıntı alttan açılır, arkası karartılır.
    Durum #view-desk üzerinde data-rail / data-insp = closed | overlay | docked olarak yazılır; CSS yalnız bunu okur. */
 const DSIDE = ['rail', 'insp'];
@@ -4701,8 +4753,9 @@ const DMIN = { rail: 200, insp: 280 };
 function layoutDrawers() {
   const W = window.innerWidth, ph = isPhone(), desk = $('view-desk');
   const mode = { rail: 'closed', insp: 'closed' }, eff = {};
-  // Metnin yanına yerleşmek isteyenler: sabit paneller (önce liste), sonra açık ayrıntı paneli
-  const cand = ph ? [] : ['rail', 'insp'].filter(s => pinOn(s) || (s === 'insp' && DRW.open.insp)).sort((a, b) => pinOn(b) - pinOn(a));
+  // Metnin yanına yerleşmek isteyenler: sabit paneller önce (önce liste), sonra açık paneller (önce ayrıntı paneli:
+  // sağdan başlayan Arapça satırları örtmesin; yer kalmazsa liste metnin üstüne kayar)
+  const cand = ph ? [] : ['rail', 'insp'].filter(s => pinOn(s) || DRW.open[s]).sort((a, b) => (pinOn(b) - pinOn(a)) || (pinOn(a) ? 0 : (a === 'insp' ? -1 : 1)));
   let rem = W - 2 * NOTCH_W - MIN_CENTER;
   cand.forEach((s, i) => {
     const restMin = cand.slice(i + 1).reduce((a, o) => a + DMIN[o], 0);
@@ -4720,7 +4773,7 @@ function layoutDrawers() {
     if (eff[s]) desk.style.setProperty('--' + s + '-eff', eff[s] + 'px'); else desk.style.removeProperty('--' + s + '-eff');
     $(s + '-notch').setAttribute('aria-expanded', String(!closed));
     const pb = $(s + '-pin'); pb.setAttribute('aria-pressed', String(!!UI.pin[s]));
-    pb.title = (UI.pin[s] ? 'Sabitlemeyi kaldır' : 'Sabitle: açık kalsın, metni kaplamasın') + ' (Shift ' + (s === 'rail' ? 'R' : 'H') + ')';
+    pb.title = (UI.pin[s] ? 'Sabitlemeyi kaldır' : 'Sabitle: râvi değişince, Esc ile ve sayfa yenilenince açık kalsın') + ' (Shift ' + (s === 'rail' ? 'R' : 'H') + ')';
   }
   DRW.mode = mode;
   // Telefonda açık panel kiplidir: arkası karartılır, üst çubuk ve metin erişilemez
@@ -4774,7 +4827,7 @@ function setPin(s, on) {
   if (isPhone()) return;
   UI.pin[s] = !!on; DRW.open[s] = true; saveUI(); keepAnchor(layoutDrawers);
   const nm = s === 'rail' ? 'Râvi listesi' : 'Ayrıntı paneli';
-  toast(!on ? 'Sabitleme kaldırıldı: panel geçici olarak açılır.' : DRW.mode[s] === 'docked' ? nm + ' sabitlendi: açık kalır, metni kaplamaz.' : nm + ' sabitlendi; bu genişlikte metnin yanına sığmadığı için şimdilik metnin üstünde açılır.', false, 4500);
+  toast(!on ? 'Sabitleme kaldırıldı: panel Esc ile kapanır, sayfa yenilenince kapalı açılır.' : DRW.mode[s] === 'docked' ? nm + ' sabitlendi: açık kalır.' : nm + ' sabitlendi; bu genişlikte metnin yanına sığmadığı için şimdilik metnin üstünde açılır.', false, 4500);
 }
 // Seçim değişince ayrıntı panelini gösterir; odağı taşımaz
 function openInspector() { openDrawer('insp'); }
@@ -4783,10 +4836,10 @@ function closeDrawers() { for (const s of DSIDE) closeDrawer(s); }
 // Çentikler: kapalı paneldeki durumu da gösterir (liste süzgeci; seçili hüküm ve inceleme kararı)
 function renderNotches() {
   const rn = $('rail-notch'), inn = $('insp-notch'); if (!rn || !inn) return;
-  const filt = S.railFilter !== 'all' || !!(S.q && S.q.trim());
+  const V = railVol(), filt = !!V || S.railFilter !== 'all' || !!(S.q && S.q.trim());
   rn.querySelector('.fdot').hidden = !filt;
   const chip = (RAIL_CHIPS.find(c => c[0] === S.railFilter) || [])[1];
-  rn.title = 'Râvi listesi (R)' + (filt ? ' · süzgeç: ' + [S.railFilter !== 'all' ? chip : '', S.q ? '“' + S.q + '”' : ''].filter(Boolean).join(', ') + ' · ' + railList().length + ' râvi — J/K yalnız bunlarda gezer' : '');
+  rn.title = 'Râvi listesi (R)' + (filt ? ' · süzgeç: ' + [V ? 'Cilt ' + V : '', S.railFilter !== 'all' ? chip : '', S.q ? '“' + S.q + '”' : ''].filter(Boolean).join(', ') + ' · ' + railList().length + ' râvi — J/K yalnız bunlarda gezer' : '');
   rn.setAttribute('aria-label', 'Râviler — ' + rn.title);
   const sel = S.sel, s = sel && sel.type === 'st' ? STBY[sel.id] : null;
   inn.className = 'notch notch-r' + (s ? ' ' + kc(eKind(s)) : '');
@@ -4819,7 +4872,7 @@ function setYazi(d) {
 }
 function openHelp() {
   $('help-body').innerHTML = '<h3 class="dh">Klavye kısayolları</h3>' + shortcutsHTML() +
-    '<h3 class="dh">Kullanım</h3><ul class="reasons"><li>Kaynak metinde renkli lafızlar tespit edilen hükümlerdir; noktalı alt çizgili yeşil yazı söz sahibi işaretidir.</li><li>Bir lafza tıklayınca hükmün ayrıntısı sağdaki panelde açılır. Her hükmü <b>Doğru / Yanlış / Düzelt</b> ile işaretleyin; özet ve sentez bu kararlara göre yeniden hesaplanır.</li><li>Motorun kaçırdığı hükmü metinden seçip ekleyin; tespit raporunda isabet (precision) ve duyarlılık (recall) tahmini görünür.</li><li><b>Paneller:</b> râvi listesi solda, hüküm ayrıntısı sağda; kenardaki çentiğe basınca kayarak açılır, yeniden basınca kapanır. 📌 ile sabitlenen panel metnin yanına yerleşir ve açık kalır.</li></ul>' +
+    '<h3 class="dh">Kullanım</h3><ul class="reasons"><li>Kaynak metinde renkli lafızlar tespit edilen hükümlerdir; noktalı alt çizgili yeşil yazı söz sahibi işaretidir.</li><li>Bir lafza tıklayınca hükmün ayrıntısı sağdaki panelde açılır. Her hükmü <b>Doğru / Yanlış / Düzelt</b> ile işaretleyin; özet ve sentez bu kararlara göre yeniden hesaplanır.</li><li>Motorun kaçırdığı hükmü metinden seçip ekleyin; tespit raporunda isabet (precision) ve duyarlılık (recall) tahmini görünür.</li><li><b>Paneller:</b> râvi listesi solda, hüküm ayrıntısı sağda; kenardaki çentiğe basınca açılır, yeniden basınca kapanır. Yer varsa panel metni kaplamaz: orta alan daralır, panel kapanınca yeniden bütün genişliği doldurur. 📌 ile sabitlenen panel açık kalır.</li></ul>' +
     '<h3 class="dh">Hakkında</h3>' + aboutHTML();
   $('help-dialog').showModal();
 }
@@ -4884,7 +4937,7 @@ function setSize(k, v) {
   const o = k === 'rail' ? 'insp' : 'rail';
   // Metin sütunu en az MIN_CENTER px kalır; öbür panel yalnız metnin yanındaysa (docked) hesaba girer
   const hi = Math.min(hi0, window.innerWidth - MIN_CENTER - 2 * NOTCH_W - (DRW.mode[o] === 'docked' ? splitCur(o) : 0));
-  UI.sizes[k] = Math.round(Math.max(lo, Math.min(Math.max(lo, hi), v))); applySizes(); layoutDrawers();
+  UI.sizes[k] = Math.round(Math.max(lo, Math.min(Math.max(lo, hi), v))); applySizes(); keepAnchor(layoutDrawers);
 }
 document.addEventListener('pointerdown', e => {
   const sp = e.target.closest('.split[data-split]'); if (!sp || e.button !== 0) return;
@@ -4928,7 +4981,14 @@ function placeMenu(m) {
 document.addEventListener('click', e => {
   const t = e.target;
   const mb = t.closest('[aria-haspopup="true"][aria-controls]');
-  if (mb) { const m = $(mb.getAttribute('aria-controls')); const willOpen = m.hidden; closeMenus(); if (willOpen) { m.hidden = false; mb.setAttribute('aria-expanded', 'true'); placeMenu(m); } return; }
+  if (mb) {
+    const m = $(mb.getAttribute('aria-controls')); const willOpen = m.hidden; closeMenus();
+    if (willOpen) {
+      m.hidden = false; mb.setAttribute('aria-expanded', 'true'); placeMenu(m);
+      const pv = m.querySelector('.pk-vols [aria-pressed="true"]'); if (pv) { const box = pv.parentNode; box.scrollTop = Math.max(0, pv.offsetTop - box.offsetTop - (box.clientHeight - pv.offsetHeight) / 2); }   // seçili cilt görünsün
+    }
+    return;
+  }
   if (!t.closest('.menu-pop') || t.closest('.menu-pop button')) closeMenus();
   // Üst çubuktaki ad ve simge: ana sayfa
   if (t.closest('[data-home]')) { if (e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1) return; e.preventDefault(); goHome(); return; }
@@ -4952,6 +5012,13 @@ document.addEventListener('click', e => {
   const close = t.closest('[data-close]'); if (close) { $(close.dataset.close).close(); return; }
   if (t.closest('[data-onl-retry]')) { ortakSync(true); return; }
   const vg = t.closest('[data-view-go]'); if (vg) { setView(vg.dataset.viewGo); return; }
+  // Eser düğmesindeki cilt seçimi (Tümü / Cilt N); listedeki “Cilt N ✕” ve boş liste düğmesi de buraya gelir
+  const pkv = t.closest('[data-pkvol]'); if (pkv) {
+    const where = t.closest('#rail-chips') ? 'chips' : t.closest('#nlist') ? 'list' : '';
+    setRailVol(pkv.dataset.pkvol);
+    if (where === 'chips') { const c = document.querySelector('#rail-chips [data-rf="' + S.railFilter + '"]'); if (c) c.focus(); } else if (where === 'list') $('q').focus();
+    return;
+  }
   // Cilde git: o cildin sıradaki incelenmemiş râvisi (hepsi incelendiyse ilki)
   const gv = t.closest('[data-govol]'); if (gv) { const v = +gv.dataset.govol, rows = IDX.filter(r => r.vol === v), r = rows.find(x => !REVIEWED(rowStatus(x))) || rows[0]; closeMenus(); if (r) { setView('desk', false); selectNarrator(r.nid, true); setView('desk'); } return; }
   const dv = t.closest('[data-delvol]'); if (dv) { removeVolume(+dv.dataset.delvol); return; }
@@ -4962,7 +5029,7 @@ document.addEventListener('click', e => {
   const ni = t.closest('[data-nid]');
   if (ni) {
     const kb = $('rail').contains(document.activeElement);
-    selectNarrator(+ni.dataset.nid); closeDrawer('rail');
+    selectNarrator(+ni.dataset.nid); if (DRW.mode.rail === 'overlay') closeDrawer('rail');   // metnin yanındaki liste açık kalır
     // Klavyeyle seçildiyse odak kaybolmasın: liste açıksa yeni râvide, kapandıysa çentikte
     if (kb) { if (DRW.mode.rail !== 'closed') { const c = document.querySelector('.nitem[aria-current="true"]'); if (c) c.focus(); } else $('rail-notch').focus({ preventScroll: true }); }
     return;
@@ -4975,7 +5042,7 @@ document.addEventListener('click', e => {
     // arch:<dilim>:<sıra>:<hüküm> — başka dilimdeki kayıt; râvi sıra numarasıyla bulunur
     const parts = ga.dataset.goto.split(':'); const seq = +parts[2]; const uid = parts.length > 3 ? decodeURIComponent(parts.slice(3).join(':')) : '';
     const r = IDXSEQ.get(seq); if (!r) { toast('#' + seq + ' bulunamadı; cildinin dosyası bu tarayıcıda yüklü değil.', true); return; }
-    if (!['kaynak', 'hukum', 'sentez'].includes(S.tab)) S.tab = 'kaynak';
+    if (uid && !['kaynak', 'hukum', 'sentez'].includes(S.tab)) S.tab = 'kaynak';
     setView('desk', false);
     if (!selectNarrator(r.nid, true)) { toast('#' + seq + ' açılamadı.', true); return; }
     setView('desk');
@@ -5174,7 +5241,7 @@ for (const s of DSIDE) {
 $('rail-close').onclick = () => closeDrawer('rail', { force: true });
 $('insp-close').onclick = () => closeDrawer('insp', { force: true });
 $('scrim').onclick = () => { for (const s of DSIDE) closeDrawer(s, { force: true }); };
-// Sabit olmayan râvi listesi, dışarı tıklanınca kapanır (ayrıntı paneli açık kalır: başka hükme tıklamak onu günceller)
+// Metnin üstüne kayan râvi listesi dışarı tıklanınca kapanır (metnin yanındaki kalır; ayrıntı paneli açık kalır: başka hükme tıklamak onu günceller)
 let lastPtr = 0;
 document.addEventListener('pointerdown', e => { lastPtr = performance.now(); if (DRW.mode.rail === 'overlay' && !isPhone() && !e.target.closest('#rail, #rail-notch, dialog')) closeDrawer('rail'); }, true);
 // Klavyeyle metnin üstüne kayan panelin dışına çıkılınca panel kapanır (odak panelin altında kalmasın)
@@ -5200,8 +5267,8 @@ document.addEventListener('scroll', () => { $('tip').hidden = true; }, true);
 function escLayer() {
   const menus = [...document.querySelectorAll('.menu-pop:not([hidden])')];
   if (menus.length) { closeMenus(); return true; }
-  if (DRW.mode.rail !== 'closed' && !dockedPin('rail')) { closeDrawer('rail'); return true; }
-  if (DRW.mode.insp !== 'closed' && !dockedPin('insp')) { closeDrawer('insp'); return true; }
+  // Önce metnin üstündeki panel, sonra ayrıntı paneli, en son liste (sabit ve metnin yanındaki panel kalır)
+  for (const s of ['rail', 'insp'].filter(x => DRW.mode[x] === 'overlay').concat('insp', 'rail')) if (DRW.mode[s] !== 'closed' && !dockedPin(s)) { closeDrawer(s); return true; }
   if (S.sel) { S.sel = null; renderCenter(); renderInspector(); writeHash(); return true; }
   return false;
 }
@@ -5237,7 +5304,7 @@ document.addEventListener('keydown', e => {
 // Menülerde ↑/↓ ile öğeler arasında gezinme
 document.addEventListener('keydown', e => {
   if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
-  const m = e.target.closest && e.target.closest('.menu-pop[role="menu"]'); if (!m) return;
+  const m = e.target.closest && e.target.closest('.menu-pop[role="menu"], .pk-vsel'); if (!m) return;
   const items = [...m.querySelectorAll('button')].filter(b => b.offsetParent); const i = items.indexOf(document.activeElement);
   const nx = items[(i + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length]; if (nx) { e.preventDefault(); nx.focus(); }
 });
@@ -5258,6 +5325,9 @@ function renderAll() { renderSourcebar(); renderRail(); if (S.view === 'desk') {
 applyTheme(); applyHl(); applyYazi();
 prepare(SNAP0); S.nid = NARR[0].id; rebuildIndex();
 S.scope = UI.scope === 'vol' ? 'vol' : 'all';   // eski “bu paket / tamamlanan paketler” seçimleri bütün esere döner
+S.railVol = UI.railVol === 'vol' ? 'vol' : 'all';
+// Bir kez: eski varsayılan sekmede (Kaynak metin) kalmış son konum Kimlik ile açılır (ekip isteği: önce râvinin kim olduğu)
+if (UI.sekmeV !== 2) { const f = h => typeof h === 'string' ? h.replace(/^(#\/(?:c\d+-p\d+\/)?r\/\d+)\/kaynak$/, '$1/kimlik') : h; UI.last = f(UI.last); UI.lastR = f(UI.lastR); UI.sekmeV = 2; saveUI(); }
 const INIT_LAST = UI.last, INIT_LASTR = UI.lastR;   // son adres ve son masa adresi; cildi henüz yüklenmediyse loadVolumes açar
 if (!readHash(location.hash)) { if (UI.last && !NAV_RE.test(UI.last) && UI.lastR) readHash(UI.lastR); if (UI.last) readHash(UI.last); }
 else if (!NAV_RE.test(location.hash) && UI.lastR) { const v = S.view; if (readHash(UI.lastR)) S.view = v; }   // görünüm adresinde masa arkada son râvide
