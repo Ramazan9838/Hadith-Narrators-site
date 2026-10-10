@@ -668,9 +668,12 @@ body.resizing { user-select: none; } body.resizing-x, body.resizing-x * { cursor
 .notch-r[class*=" k-"] { box-shadow: inset 3px 0 0 var(--kc), var(--shadow); }
 .notch .glyph { font-size: calc(12px * var(--yb)); min-height: 12px; }
 .notch .glyph[data-v="ok"] { color: var(--ok); } .notch .glyph[data-v="no"] { color: var(--bad); } .notch .glyph[data-v="fix"] { color: var(--warn); }
-/* Orta alan bütün genişliği kullanır; panel metnin yanında açılınca daralır, kapanınca yeniden genişler.
-   Kenar boşluğu yalnız çentiğe yer bırakır. */
-#nhead, #center-body > .toolbar, #center-body > .pane { padding-left: var(--gutter); padding-right: var(--gutter); }
+/* Orta alan: eski okunur genişliğin (metin 880 px × yazı boyu, veri sekmeleri 1180 px) iki yanında kalan boşluğun yarısı
+   içeriğe katılır, yarısı kenar boşluğu olarak kalır. Panel metnin yanında açılınca orta alan daralır, boşluk da orantılı
+   küçülür; en az çentik payı (--gutter) kalır. */
+.center { --col: calc(880px * var(--yb)); }
+.center:is([data-ctab="hukum"], [data-ctab="sentez"], [data-ctab="hoca"], [data-ctab="harf"], [data-ctab="kimlik"], [data-ctab="rihle"]) { --col: 1180px; }
+#nhead, #center-body > .toolbar, #center-body > .pane { padding-left: max(var(--gutter), calc((100% - var(--col)) / 4)); padding-right: max(var(--gutter), calc((100% - var(--col)) / 4)); }
 /* Telefon (≤ 880 px): liste soldan, ayrıntı alttan açılır; çentikler altta yüzen düğmeler olur */
 @media (max-width: 880px) {
   :root { --gutter: 16px; }
