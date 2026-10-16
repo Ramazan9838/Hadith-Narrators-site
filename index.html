@@ -51,7 +51,7 @@
   --warn-bg: #fff4d6;
   --ok: #0f7a3a;
   --bad: #b3261e;
-  --ar: "Amiri", "Scheherazade New", "Noto Naskh Arabic", "Traditional Arabic", "Times New Roman", serif;
+  --ar: "Traditional Arabic", "Amiri", "Scheherazade New", "Noto Naskh Arabic", "Times New Roman", serif;   /* kullanıcı isteği: Traditional Arabic, kalın */
   --ui: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", Arial, sans-serif;
   --ar-size: 24px;
   --radius: 10px;
@@ -63,7 +63,7 @@
   --gutter: 32px;
   --drawer-in: .24s cubic-bezier(.2, .8, .2, 1);
   --drawer-out: .18s cubic-bezier(.4, 0, 1, 1);
-  --yb: 1;   /* yazı boyutu çarpanı (üst çubuktaki A− / A+) */
+  --yb: 1.1;   /* yazı boyutu çarpanı: üst çubuktaki A− / A+ değeri × 1,1 (normal yazı bir kademe büyük) */
   --yb-kok: 1;   /* aynı çarpanın üst çubuktaki değeri; çalışma masası bunu bir kademe büyük kullanır */
   font-family: var(--ui);
   font-size: calc(13.5px * var(--yb));
@@ -391,7 +391,8 @@ body[data-vurgu="sade"] .hs:not(.sel):not(:hover), body[data-vurgu="sade"] .sp:n
 .tbl tbody tr { cursor: pointer; }
 .tbl tbody tr:hover td { background: var(--paper-2); }
 .tbl tbody tr[aria-current="true"] td { background: var(--accent-soft); }
-.tbl .ar { font-size: calc(17px * var(--yb)); }
+.tbl .ar { font-size: calc(19px * var(--yb)); }
+.tbl .small.ar, .tbl .ar .small, .tbl .small .ar, .tbl .muted.ar { font-size: calc(16.5px * var(--yb)); }
 .tbl .num { text-align: right; font-variant-numeric: tabular-nums; }
 .tbl tr.dim td { opacity: .55; }
 .wrap { overflow-x: auto; }
@@ -679,8 +680,7 @@ body.resizing { user-select: none; } body.resizing-x, body.resizing-x * { cursor
 /* Orta alan: eski okunur genişliğin (metin 880 px × yazı boyu, veri sekmeleri 1180 px) iki yanında kalan boşluğun yarısı
    içeriğe katılır, yarısı kenar boşluğu olarak kalır. Panel metnin yanında açılınca orta alan daralır, boşluk da orantılı
    küçülür; en az çentik payı (--gutter) kalır. */
-/* Çalışma masasında “normal” (%100) yazı, öteki sayfalardan bir kademe (%10) büyüktür; A−/A+ bunun üzerine işler */
-#view-desk { --yb: calc(var(--yb-kok) * 1.1); }
+/* “Normal” (%100) yazı bütün sayfalarda bir kademe (%10) büyüktür (app.js: --yb = A−/A+ değeri × 1,1) */
 .center { --col: calc(880px * var(--yb)); }
 .center:is([data-ctab="hukum"], [data-ctab="sentez"], [data-ctab="hoca"], [data-ctab="talebe"], [data-ctab="uyari"], [data-ctab="kimlik"], [data-ctab="rihle"]) { --col: 1180px; }
 #nhead, #center-body > .toolbar, #center-body > .pane { padding-left: max(var(--gutter), calc((100% - var(--col)) / 4)); padding-right: max(var(--gutter), calc((100% - var(--col)) / 4)); }
@@ -712,7 +712,7 @@ body.resizing { user-select: none; } body.resizing-x, body.resizing-x * { cursor
 .cand .ar { font-size: calc(15px * var(--yb)); }
 .evchip { border: 1px solid var(--line); background: var(--paper-2); border-radius: 10px; padding: 0 7px; font-size: calc(12.5px * var(--yb)); color: var(--ink-2); cursor: pointer; line-height: 1.6; }
 .evchip:hover { border-color: var(--accent-2); color: var(--ink); }
-.evchip .ar { font-family: var(--ar); font-size: calc(13.5px * var(--yb)); }
+.evchip .ar { font-family: var(--ar); font-size: calc(15px * var(--yb)); }
 .btext .evhl { background: #ffe58a; box-shadow: 0 0 0 2px #ffe58a; border-radius: 3px; color: #1c2422; }
 .lcols { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px; }
 .lsec .ladd { margin-top: 8px; gap: 6px; }
@@ -770,6 +770,8 @@ body.resizing { user-select: none; } body.resizing-x, body.resizing-x * { cursor
 .exp-form .exp-critic { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .exp-form .exp-critic[hidden] { display: none; }
 #gen-dialog { width: min(640px, 94vw); }
+#gen-dialog.genis { width: min(1180px, 96vw); max-width: 96vw; }
+#gen-dialog.genis .dlg-body { max-height: 80vh; }
 #print-area { display: none; }
 @media print {
   body.printing > *:not(#print-area) { display: none !important; }
@@ -1056,6 +1058,13 @@ td.stact .btn { padding: 2px 6px; }
 .dis-etiket .tag.ar { font-size: calc(12.5px * var(--yb)); padding: 0 6px; }
 @media (max-width: 880px) { .dis-kv { grid-template-columns: 110px minmax(0, 1fr); } }
 @media print { .ksec, .dis-arac, .dis-src .btn { display: none; } }
+
+/* Arapça metin: Traditional Arabic, kalın (kullanıcı isteği) */
+.ar, .nname, .nhead h2, .variants .vlist, .bwork, .btext, .stchip .ph, .insp .phrase, .critic-card .cn, .ctx, bdi.ari, .chart .ar-t, .pk-work .work, .idline span.ar, .evchip .ar, .fixform input.ar, .fixform textarea.ar, .mark { font-weight: 700; }
+/* Talebeler sekmesi açık mavi (hocalar yeşil kalır) */
+.center[data-ctab="talebe"] .pane { --accent: #3a86c8; --accent-2: #5aa0da; --accent-soft: #e6f1fb; }
+:root[data-theme="dark"] .center[data-ctab="talebe"] .pane { --accent: #7cb8ec; --accent-2: #9ccaf2; --accent-soft: #1d2c3a; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .center[data-ctab="talebe"] .pane { --accent: #7cb8ec; --accent-2: #9ccaf2; --accent-soft: #1d2c3a; } }
 
 </style>
 </head>
@@ -2011,7 +2020,7 @@ function yzHukumHTML(b, h) {
   const rows = h.list.map((x, i) => {
     const { yer, es } = yzEslesme(b, x);
     const d = Number(x.derece) || 0;
-    return '<tr style="cursor:default"><td class="ar" style="font-size:calc(16px * var(--yb))">' + esc(x.lafiz || '') + (yer ? '' : ' <span class="tag warn" title="İfade metinde bulunamadı">metinde yok</span>') + '</td><td class="ar small">' + esc(x.munekkit || '') + (x.hedef ? '<div class="small muted">hedef: ' + esc(x.hedef) + '</div>' : '') + '</td>' +
+    return '<tr style="cursor:default"><td class="ar" style="font-size:calc(19px * var(--yb))">' + esc(x.lafiz || '') + (yer ? '' : ' <span class="tag warn" title="İfade metinde bulunamadı">metinde yok</span>') + '</td><td class="ar small">' + esc(x.munekkit || '') + (x.hedef ? '<div class="small muted">hedef: ' + esc(x.hedef) + '</div>' : '') + '</td>' +
       '<td class="small">' + esc(x.tur || '') + ' · ' + (d > 0 ? '+' : '') + d + '</td><td class="small">' + (es.length ? '<span class="tag" style="color:var(--ok)">motor da buldu</span> ' + es.map(s => '<button class="btn ghost sm" data-st="' + esc(s.uid) + '">' + esc(eType(s)) + ' ' + (eSev(s) > 0 ? '+' : '') + Math.round(eSev(s)) + '</button>').join('') : yer ? '<span class="tag warn">motor bulmadı</span>' : '—') + '</td>' +
       '<td class="small">' + esc(x.gerekce || '') + '</td><td>' + (yer && !es.length ? '<button class="btn sm req-edit" data-yzadd="' + b.id + ':' + i + '">＋ Eksik hüküm olarak ekle</button>' : '') + '</td></tr>';
   }).join('');
@@ -2257,7 +2266,7 @@ function ckBolum(n, key) {
     if (!id) return '<tr style="cursor:default"><td><i>Eserin müellifi</i> <span class="small muted">(râvi senedin ilk halkası: musannif ondan bizzat rivayet ediyor)</span></td><td class="num" data-v="' + nn + '">' + sayiTr(nn) + '</td><td class="num" data-v="' + tt + '">' + sayiTr(tt) + '</td><td></td><td></td><td>' + kodlar(['CK']) + '</td></tr>';
     if (CK_OZEL[id]) return '<tr style="cursor:default" class="rej"><td><i>' + CK_OZEL[id] + '</i></td><td class="num" data-v="' + nn + '">' + sayiTr(nn) + '</td><td class="num" data-v="' + tt + '">' + sayiTr(tt) + '</td><td></td><td></td><td>' + kodlar(['CK']) + '</td></tr>';
     const p = ckKisi(C, id), ad = [p.ad, p.sohret].filter(Boolean), h = hhOf(ad), sk = sc(ad);
-    return '<tr style="cursor:default"><td data-v="' + esc(p.ad) + '"><span class="ar" style="font-size:calc(16px * var(--yb))">' + esc(p.sohret || p.ad) + '</span>' + (p.sohret && p.ad !== p.sohret ? '<div class="small muted ar">' + esc(p.ad) + '</div>' : '') + '</td>' +
+    return '<tr style="cursor:default"><td data-v="' + esc(p.ad) + '"><span class="ar" style="font-size:calc(19px * var(--yb))">' + esc(p.sohret || p.ad) + '</span>' + (p.sohret && p.ad !== p.sohret ? '<div class="small muted ar">' + esc(p.ad) + '</div>' : '') + '</td>' +
       '<td class="num" data-v="' + nn + '">' + sayiTr(nn) + (top ? '<div class="small muted">%' + (Math.round(nn / top * 1000) / 10).toLocaleString('tr-TR') + '</div>' : '') + '</td><td class="num" data-v="' + tt + '">' + sayiTr(tt) + '</td>' +
       '<td class="num" data-v="' + (yearOfStr(p.vefat) || 0) + '">' + (p.vefat ? 'h. ' + esc(p.vefat) : '<span class="muted">—</span>') + '</td><td class="small ar">' + esc(p.rutbe) + '</td>' +
       '<td style="white-space:nowrap">' + kodlar(['CK'].concat(h ? ['HH'] : [], sk ? ['SC'] : [])) + (h ? ' <span class="small muted" title="HH’de bu kişiden/kişinin aldığı rivayet">HH ' + sayiTr(h.r) + '</span>' : '') + '</td></tr>';
@@ -2315,7 +2324,7 @@ function metinIsaret(text, core) {
 // “Kaynağı göster”: HH’deki paragrafın metni sitede açılır (Şamile’ye gidilmez); söz verilmişse geçtiği yer işaretlenir
 async function disMetinGoster(n, pid, soz) {
   const V = disVeri(n); if (!V) return;
-  openDialog('Kaynak metin · HH', '<div class="hint">Metin yükleniyor…</div>');
+  openDialog('Kaynak metin · HH', '<div class="hint">Metin yükleniyor…</div>', true);
   const M = await disGetir('m', V.rec[6]);
   const p = M && M.p && M.p[pid];
   if (!p) { $('gen-body').innerHTML = '<div class="note">Kaynak metin alınamadı' + (DIS.err['dis:m:' + V.rec[6]] ? ': ' + esc(DIS.err['dis:m:' + V.rec[6]]) : '') + '.</div>'; return; }
@@ -2430,7 +2439,7 @@ function adBicimleriHTML(n, V) {
   if (!L.length) return '';
   return '<h3 class="panel-title">Adın geçtiği biçimler <span class="muted">' + L.length + ' · kaynak metinlerde (el-Câmi‘in naklettiği eserlerde, kronolojik) · isnadlarda (صور الورود)</span></h3>' +
     '<div class="wrap"><table class="tbl" data-tid="ad-bicim"><thead><tr><th data-sk="t">Biçim</th><th>Geçtiği kaynaklar (el-Câmi‘)</th><th data-sk="n" class="num">İsnadlarda</th><th>Kaynak</th></tr></thead><tbody>' +
-    L.map(r => '<tr style="cursor:default"><td data-v="' + esc(r.ad) + '"><span class="ar" style="font-size:calc(16px * var(--yb))">' + esc(r.ad) + '</span>' + (r.yazi.length ? '<div class="small muted ar" title="Metinde geçtiği hâller">' + esc(r.yazi.slice(0, 4).join('، ')) + '</div>' : '') + '</td><td class="small dis-etiket">' + (r.ck.length ? r.ck.map(s => '<span class="tag ar">' + esc(s.split('،')[0]) + '</span>').join(' ') : '<span class="muted">—</span>') + '</td>' +
+    L.map(r => '<tr style="cursor:default"><td data-v="' + esc(r.ad) + '"><span class="ar" style="font-size:calc(19px * var(--yb))">' + esc(r.ad) + '</span>' + (r.yazi.length ? '<div class="small muted ar" title="Metinde geçtiği hâller">' + esc(r.yazi.slice(0, 4).join('، ')) + '</div>' : '') + '</td><td class="small dis-etiket">' + (r.ck.length ? r.ck.map(s => '<span class="tag ar">' + esc(s.split('،')[0]) + '</span>').join(' ') : '<span class="muted">—</span>') + '</td>' +
       '<td class="num" data-v="' + r.hh + '">' + (r.hh ? sayiTr(r.hh) : '<span class="muted">—</span>') + '</td><td>' + kodlar([].concat(r.ck.length ? ['SC'] : [], r.hh ? ['HH'] : [], r.ud ? ['UD'] : [])) + '</td></tr>').join('') + '</tbody></table></div>' +
     '<p class="hint">“İsnadlarda” sütunu, adın HH’deki 33 metin kitabının isnadlarında bu biçimde kaç kez geçtiğidir (صور الورود); altındaki küçük yazı, bağlaç ya da ekle birlikte geçtiği hâllerdir.</p>';
 }
@@ -2690,7 +2699,7 @@ function dzListe(lk, rows) {
 }
 function dzAdHucre(x, inner) {
   const e = x.ed;
-  return (inner || '<span class="ar" style="font-size:calc(16px * var(--yb))">' + esc(x.ad || '') + '</span>') +
+  return (inner || '<span class="ar" style="font-size:calc(19px * var(--yb))">' + esc(x.ad || '') + '</span>') +
     (x.manual ? '<div class="small muted">elle eklendi · ' + whoWhen(e) + '</div>' : e && !x.sil ? '<div class="small muted">✎ düzeltildi · ' + whoWhen(e) + (x.orig.ad && x.orig.ad !== x.ad ? ' · kaynakta: <span class="ar">' + esc(x.orig.ad) + '</span>' : '') + '</div>' : '') +
     (x.not ? '<div class="small muted" dir="auto">' + esc(x.not) + '</div>' : '');
 }
@@ -3282,7 +3291,7 @@ function renderHead() {
   const nn = narrNoteCount(n);
   $('nhead').innerHTML =
     '<div class="nh-top"><span class="nav-arrows"><button class="btn ghost sm icon" data-act="prev" aria-label="Önceki râvi" title="Önceki râvi (K)">↑</button><button class="btn ghost sm icon" data-act="next" aria-label="Sonraki râvi" title="Sonraki râvi (J)">↓</button></span>' +
-    '<span class="kicker"><span>Cilt ' + ((IDXNID.get(n.id) || {}).vol || PK.vol) + '</span><span>Râvi #' + n.source_sequence + '</span><span>s. ' + n.page_start + (n.page_end !== n.page_start ? '–' + n.page_end : '') + '</span></span><span class="grow"></span>' +
+    '<span class="kicker"><span>Râvi #' + n.source_sequence + '</span></span><span class="grow"></span>' +   // cilt ve sayfa “Şâdî · el-Câmi‘” sekmesinde
     '<label class="sr-only" for="head-status">Râvi durumu</label><select class="field sm nh-status" id="head-status" title="Râvi durumu"' + (AUTH.can('review') ? '' : ' disabled') + '>' + SNAP.summary.statuses.map(x => '<option' + (x === st ? ' selected' : '') + '>' + esc(x) + '</option>').join('') + '</select>' +
     '<button class="btn primary sm req-edit" data-act="approve" title="“Sorun yok” olarak onayla ve ' + (railVol() ? 'bu ciltteki ' : '') + 'sıradaki incelenmemiş râviye geç (O)">✓ Onayla · sıradaki <span class="kbd on-accent">O</span></button>' +
     '<button class="btn ghost sm" data-act="narr-notes" title="Râvi hakkındaki araştırmacı notları">' + NOTE_SVG + ' Notlar' + (nn ? ' <b>' + nn + '</b>' : '') + '</button></div>' +
@@ -3331,7 +3340,7 @@ function uyariListesi(n) {
   }
   [...(n.unclassified || []), ...(n.orphan_sections || [])].forEach((u, i) => {
     const ttl = String(u.title || '').replace(/[\u200c◆]/g, '').trim();
-    out.push({ html: '<b>Ayrı tutulan bölüm' + (u.page ? ' (s. ' + u.page + ')' : '') + ':</b> ' + (ttl ? '<span class="ar" style="font-size:calc(16px * var(--yb))">◆ ' + esc(ttl) + '</span> — ' : '') + 'numarasız bir madde; ayrıştırıcı onu bu râviye bağlamadı, olduğu gibi korudu. Ayrı bir râvi olabilir. <button class="btn ghost sm" data-orphan="' + i + '">Metni göster</button>', title: 'Ayrı tutulan bölüm: ' + (ttl || 's. ' + u.page) });
+    out.push({ html: '<b>Ayrı tutulan bölüm' + (u.page ? ' (s. ' + u.page + ')' : '') + ':</b> ' + (ttl ? '<span class="ar" style="font-size:calc(19px * var(--yb))">◆ ' + esc(ttl) + '</span> — ' : '') + 'numarasız bir madde; ayrıştırıcı onu bu râviye bağlamadı, olduğu gibi korudu. Ayrı bir râvi olabilir. <button class="btn ghost sm" data-orphan="' + i + '">Metni göster</button>', title: 'Ayrı tutulan bölüm: ' + (ttl || 's. ' + u.page) });
   });
   return out;
 }
@@ -3671,7 +3680,7 @@ function renderIdentityTab(n) {
     const editing = S.kedit === k;
     const D = disKimlikHucre(V, k, val, !!o);
     const valHTML = editing ? '<textarea class="field" id="kf-input" rows="' + (k === 'not' ? 4 : 2) + '" dir="auto">' + esc(val) + '</textarea><div class="review-row" style="margin-top:6px"><button class="btn primary sm" data-ksave="' + k + '">Kaydet</button><button class="btn ghost sm" data-kcancel>Vazgeç</button>' + (o ? '<button class="btn ghost sm" data-kreset="' + k + '">Otomatik değere dön</button>' : '') + '</div>'
-      : (val ? '<span class="' + (/[؀-ۿ]/.test(val) ? 'ar' : '') + '" style="font-size:calc(16px * var(--yb))">' + esc(val) + '</span>' + (V && !o ? ' ' + kodlar(['SC'].concat(D.ck)) : '') : '<span class="muted">—</span>') + (o ? '<div class="small muted">✎ ' + whoWhen(o) + (auto && auto !== o.v ? ' · otomatik: <span class="ar">' + esc(auto) + '</span>' : '') + '</div>' : '') + D.html;
+      : (val ? '<span class="' + (/[؀-ۿ]/.test(val) ? 'ar' : '') + '" style="font-size:calc(19px * var(--yb))">' + esc(val) + '</span>' + (V && !o ? ' ' + kodlar(['SC'].concat(D.ck)) : '') : '<span class="muted">—</span>') + (o ? '<div class="small muted">✎ ' + whoWhen(o) + (auto && auto !== o.v ? ' · otomatik: <span class="ar">' + esc(auto) + '</span>' : '') + '</div>' : '') + D.html;
     let extra = '';
     if (k === 'tabaka' && K.tabakaTahmin) extra = '<div class="small" style="margin-top:4px">Tahmin: <b>' + esc(K.tabakaTahmin.text) + '</b> — ' + esc(K.tabakaTahmin.rule) + ' (İbn Hacer, <i>Takrîbü’t-Tehzîb</i> mukaddimesi: 1.–2. tabakanın vefatı 100’den önce, 3.–8. tabakanınki 100’den, 9.–12. tabakanınki 200’den sonra)</div>' + (K.tabakaTahmin.conflict ? '<div class="note" style="margin-top:6px">' + esc(K.tabakaTahmin.conflict) + '</div>' : '');
     if (k === 'vefat' && K.vefat.some(x => x.noCentury)) extra = '<div class="small muted" style="margin-top:4px">Yüzler hanesi yazılmamış tarih, tabaka tahmininde kullanılmadı.</div>';
@@ -3726,7 +3735,7 @@ function listTable(n, key, title) {
   const row = x => {
     if (S.ledit === key + LSEP + x.key) return editForm(x);
     const I = kisi ? kisiBilgi(n, key, x) : null;
-    return '<tr style="cursor:default" class="' + (x.st === 'no' ? 'rej' : '') + '"><td data-v="' + esc(x.v) + '"><span class="' + (/[؀-ۿ]/.test(x.v) ? 'ar' : '') + '" style="font-size:calc(16px * var(--yb))">' + esc(x.v) + '</span>' + (x.kind ? ' <span class="tag">' + esc(HOW_TR[x.kind] || x.kind) + '</span>' : '') +
+    return '<tr style="cursor:default" class="' + (x.st === 'no' ? 'rej' : '') + '"><td data-v="' + esc(x.v) + '"><span class="' + (/[؀-ۿ]/.test(x.v) ? 'ar' : '') + '" style="font-size:calc(19px * var(--yb))">' + esc(x.v) + '</span>' + (x.kind ? ' <span class="tag">' + esc(HOW_TR[x.kind] || x.kind) + '</span>' : '') +
       (x.ed ? '<div class="small muted">✎ düzeltildi · ' + whoWhen(x.ed) + (x.orig && x.orig !== x.v ? ' · metinde: <span class="ar">' + esc(x.orig) + '</span>' : '') + '</div>' : '') + (x.note ? '<div class="small muted">' + esc(x.note) + '</div>' : '') + '</td>' +
       (kisi ? '<td class="num" data-v="' + (I.year || '') + '">' + (I.year ? 'h. ' + I.year + (I.yearHH ? ' ' + kodlar(['HH']) : '') : (x.vefat ? esc(x.vefat) : '<span class="muted">—</span>')) + '</td><td data-v="' + esc(I.place ? I.place.tr : '') + '">' + (I.place ? esc(I.place.tr) + (I.placeAuto ? ' <span class="small muted" title="Addaki nisbeden">(nisbe)</span>' : '') : '<span class="muted">—</span>') + '</td>' : '') +
       '<td class="num">' + new Set(x.ev.map(e => e.source)).size + '</td><td>' + (x.manual ? '<span class="small muted">elle · ' + whoWhen(x) + '</span>' : evChips(x.ev, 4)) + '</td><td style="white-space:nowrap">' +
@@ -3812,7 +3821,7 @@ function mervBolum(n, V, key) {
   const CKv = ckVeri(n), ckOf = CKv ? adEsleyici((hoca ? CKv.ck.hocalar : CKv.ck.talebeler).filter(x => x[0] && !CK_OZEL[x[0]]).map(x => ckKisi(CKv, x[0])), p => [p.ad, p.sohret].filter(Boolean)) : null;
   const satir = x => {
     const h = hhOf(x), diger = x.adlar.filter(a => a !== x.ad);
-    return '<tr style="cursor:default"><td data-v="' + esc(x.ad) + '"><span class="ar" style="font-size:calc(16px * var(--yb))">' + esc(x.ad) + '</span>' +
+    return '<tr style="cursor:default"><td data-v="' + esc(x.ad) + '"><span class="ar" style="font-size:calc(19px * var(--yb))">' + esc(x.ad) + '</span>' +
       (!hoca && x.rv.every(r => r.talebeMusannif) ? ' <span class="tag" title="Râvi senedin ilk halkası: eserin müellifi ondan bizzat rivayet ediyor">müellif</span>' : '') +
       (diger.length ? '<div class="small muted ar">' + diger.slice(0, 3).map(esc).join(' · ') + '</div>' : '') + '</td>' +
       '<td class="num" data-v="' + x.n + '">' + sayiTr(x.n) + '</td><td class="num" data-v="' + x.t + '">' + sayiTr(x.t) + '</td>' +
@@ -3893,16 +3902,16 @@ function inspStatement(s) {
   out += '<div class="sec"><h4>Söz sahibi (münekkit)</h4>' + (eCritic(s) || s.critic_written ?
     '<div class="critic-card"><div style="flex:1"><div class="cn">' + esc(eCritic(s) || s.critic_written) + '</div><div class="ct">' + esc(C ? C.tr : 'Kayıtlı münekkit listesinde yok') + (C && C.death ? ' · ö. ' + C.death : '') + '</div>' +
     (C && C.approach ? '<div style="margin-top:4px"><span class="approach" title="ez-Zehebî’nin üçlü taksimi ve sonraki değerlendirmeler">' + esc(C.approach) + '</span></div>' : '') + '</div></div>' + (C && C.note ? '<div class="note info">' + esc(C.note) + '</div>' : '') +
-    (s.critic_written && s.critic_written !== eCritic(s) ? '<div class="hint">Metindeki yazım: <span class="ar" style="font-size:calc(16px * var(--yb))">' + esc(s.critic_written) + '</span></div>' : '') +
+    (s.critic_written && s.critic_written !== eCritic(s) ? '<div class="hint">Metindeki yazım: <span class="ar" style="font-size:calc(19px * var(--yb))">' + esc(s.critic_written) + '</span></div>' : '') +
     (s.critic_ambiguous ? '<div class="note">Ad bağlamdan çözüldü; aynı adlı başka münekkit olabilir.</div>' : '')
     : '<div class="note">Söz sahibi belirlenemedi.</div>') +
     (same.length ? '<div class="hint">Aynı lafız: ' + same.map(x => '<button class="btn ghost sm" data-st="' + esc(x.uid) + '">' + esc(crName(eCritic(x), x.critic_written)) + '</button>').join(' ') + '</div>' : '') + '</div>';
   const g = (AGG[s.n.id] || {}).gOf && AGG[s.n.id].gOf[s.uid];
   if (g && g.sts.length > 1) out += '<div class="sec"><h4>Bu görüşün nakilleri <span class="muted">' + g.sts.length + ' nakil · tek görüş sayılır</span> ' + gorusEtiket(g) + '</h4>' +
-    g.sts.map(x => '<div class="gnakil' + (x === s ? ' cur' : '') + '"><button class="linkbtn" data-st="' + esc(x.uid) + '">' + esc(srcShort(x.b)) + '</button> <span class="small muted">blok ' + x.b.block_order + (termSet(x).size < g.T.size ? ' · kısaltılmış' : '') + '</span><div class="ar" style="font-size:calc(16px * var(--yb))">' + esc(x.phrase || '(zımnî)') + '</div></div>').join('') + '</div>';
+    g.sts.map(x => '<div class="gnakil' + (x === s ? ' cur' : '') + '"><button class="linkbtn" data-st="' + esc(x.uid) + '">' + esc(srcShort(x.b)) + '</button> <span class="small muted">blok ' + x.b.block_order + (termSet(x).size < g.T.size ? ' · kısaltılmış' : '') + '</span><div class="ar" style="font-size:calc(19px * var(--yb))">' + esc(x.phrase || '(zımnî)') + '</div></div>').join('') + '</div>';
   out += '<div class="sec"><h4>Nakil</h4><dl class="kv"><dt>Tür</dt><dd>' + esc(s.transmission || '—') + '</dd>' + (s.transmitter ? '<dt>Aktaran</dt><dd>' + esc(crName(s.transmitter, s.transmitter)) + '</dd>' : '') +
-    '<dt>Kaynak eser</dt><dd><span class="ar" style="font-size:calc(16px * var(--yb))">' + esc(srcShort(s.b)) + '</span> ' + esc(s.b.effective.source_locator || '') + '</dd><dt>Atıf dayanağı</dt><dd>' + esc(BASIS[s.basis] || s.basis) + '</dd>' + (s.formula ? '<dt>Nakil kalıbı</dt><dd class="ar">' + esc(s.formula) + '</dd>' : '') + '</dl>' +
-    '<div class="hint" style="margin-top:6px">Sened / nakil yolu</div>' + (s.chain ? '<div class="ctx" style="font-size:calc(16px * var(--yb))">' + esc(s.chain) + '</div>' + (isnadLinks(s.chain).length > 1 ? '<div class="links ar" dir="rtl" title="Senedin halkaları (yaklaşık)">' + isnadLinks(s.chain).map(x => '<span>' + esc(x) + '</span>').join('<i>←</i>') + '<i>←</i><span class="crit-end">' + esc(eCritic(s) ? crName(eCritic(s), s.critic_written) : s.critic_written || '?') + '</span></div>' : '') : '<div>' + senedHTML(s) + '</div>') + '</div>';
+    '<dt>Kaynak eser</dt><dd><span class="ar" style="font-size:calc(19px * var(--yb))">' + esc(srcShort(s.b)) + '</span> ' + esc(s.b.effective.source_locator || '') + '</dd><dt>Atıf dayanağı</dt><dd>' + esc(BASIS[s.basis] || s.basis) + '</dd>' + (s.formula ? '<dt>Nakil kalıbı</dt><dd class="ar">' + esc(s.formula) + '</dd>' : '') + '</dl>' +
+    '<div class="hint" style="margin-top:6px">Sened / nakil yolu</div>' + (s.chain ? '<div class="ctx" style="font-size:calc(19px * var(--yb))">' + esc(s.chain) + '</div>' + (isnadLinks(s.chain).length > 1 ? '<div class="links ar" dir="rtl" title="Senedin halkaları (yaklaşık)">' + isnadLinks(s.chain).map(x => '<span>' + esc(x) + '</span>').join('<i>←</i>') + '<i>←</i><span class="crit-end">' + esc(eCritic(s) ? crName(eCritic(s), s.critic_written) : s.critic_written || '?') + '</span></div>' : '') : '<div>' + senedHTML(s) + '</div>') + '</div>';
   if (s.sebebs && s.sebebs.length) out += '<div class="sec"><h4>Ta‘n / ta‘dîl sebebi</h4><div class="termchips">' + s.sebebs.map(x => '<span class="tag">' + esc(CTX.SEBEB[x] || x) + '</span>').join('') + '</div></div>';
   const nk = s.origin !== 'user' && nakilOf(s);
   if (nk) out += '<div class="sec"><h4>Nakil karşılaştırması</h4><div class="small"><b>' + esc(nk.title) + '</b></div>' + diffHTML(nk.nakil) + '<ul class="reasons">' + nk.gerekce.slice(1).map(g => '<li>' + rich(g) + '</li>').join('') + '</ul></div>';
@@ -3945,11 +3954,11 @@ function inspBlock(b) {
   const tbox = S.tedit === b.id ? '<form class="fixform" data-tsave="' + b.id + '"><label>Blok metni<textarea name="text" rows="12" dir="rtl" class="ar" style="font-size:calc(18px * var(--yb));line-height:1.9">' + esc(b._text) + '</textarea></label><label>Düzeltme gerekçesi<input name="note" dir="auto" placeholder="ör. dizgi hatası, nüsha farkı"></label><div class="hint">Özgün metin korunur; düzeltme ayrıca kaydedilir ve geri alınabilir. Blok yeniden çözümlenir; kararlar ve notlar, lafız aynı kaldıkça yeni yerlerine taşınır.</div><div class="review-row"><button class="btn primary">Kaydet</button><button class="btn ghost" type="button" data-tcancel="1">Vazgeç</button></div></form>'
     : '<div class="review-row" style="margin:6px 0">' + (AUTH.can('text') ? '<button class="btn sm" data-tedit="' + b.id + '">✎ Metni düzelt</button>' : '') + (tx ? '<button class="btn ghost sm" data-torig="' + b.id + '">Özgün metin</button>' + (AUTH.can('text') ? '<button class="btn ghost sm" data-treset="' + b.id + '">Özgüne dön</button>' : '') : '') + '</div>';
   const tinfo = tx ? '<div class="note info">Metin düzeltildi · ' + whoWhen(tx) + (tx.note ? ' · ' + esc(tx.note) : '') + '</div>' : '';
-  const dels = (b._del || []).length ? '<div class="sec"><h4>Kaldırılan hükümler <span class="muted">(' + b._del.length + ')</span></h4>' + b._del.map(x => '<div class="delst"><span class="ar" style="font-size:calc(16px * var(--yb))">' + esc(x.phrase || '(zımnî)') + '</span> <span class="small muted">' + esc(crName(eCritic(x), x.critic_written)) + ' · kaldıran ' + whoWhen(REV.st[x.uid]) + '</span>' + (AUTH.can('st-del') ? ' <button class="btn ghost sm" data-strestore="' + esc(x.uid) + '">Geri al</button>' : '') + '</div>').join('') + '</div>' : '';
+  const dels = (b._del || []).length ? '<div class="sec"><h4>Kaldırılan hükümler <span class="muted">(' + b._del.length + ')</span></h4>' + b._del.map(x => '<div class="delst"><span class="ar" style="font-size:calc(19px * var(--yb))">' + esc(x.phrase || '(zımnî)') + '</span> <span class="small muted">' + esc(crName(eCritic(x), x.critic_written)) + ' · kaldıran ' + whoWhen(REV.st[x.uid]) + '</span>' + (AUTH.can('st-del') ? ' <button class="btn ghost sm" data-strestore="' + esc(x.uid) + '">Geri al</button>' : '') + '</div>').join('') + '</div>' : '';
   return '<div class="kicker">Blok ' + b.block_order + ' · #' + b.id + '</div><div class="phrase k-d" style="font-size:calc(20px * var(--yb))">' + esc(srcShort(b)) + '</div>' + edit + tinfo + tbox + dels + '<dl class="kv">' +
-    '<dt>Müellif</dt><dd><span class="ar" style="font-size:calc(16px * var(--yb))">' + esc(b.effective.source_author) + '</span><div class="small muted">' + esc(authorTr(b)) + '</div></dd><dt>Yer</dt><dd>' + esc(b.effective.source_locator) + ' · el-Câmi‘ s. ' + b.effective.page + '</dd>' +
-    '<dt>Râvinin kaynaktaki adı</dt><dd class="ar" style="font-size:calc(16px * var(--yb))">' + esc(b.effective.source_narrator_name) + '</dd>' + (b.effective.locality ? '<dt>Belde</dt><dd class="ar">' + esc(b.effective.locality) + '</dd>' : '') + '<dt>Künye metni</dt><dd class="ar" style="font-size:calc(15px * var(--yb))">' + esc(b.effective.reference_text) + '</dd></dl>' +
-    (ae ? '<div class="sec"><h4>Eser–müellif doğrulaması</h4><div class="hint">' + esc(ae.note) + '</div>' + (ae.evidence && ae.evidence.local_text ? '<div class="ctx" style="font-size:calc(16px * var(--yb))">' + esc(ae.evidence.local_text.replace(/‌/g, '')) + '</div><div class="hint">' + esc(ae.evidence.local_file || '') + ' · s. ' + esc(ae.evidence.local_page || '') + '</div>' : '') + '</div>' : '') +
+    '<dt>Müellif</dt><dd><span class="ar" style="font-size:calc(19px * var(--yb))">' + esc(b.effective.source_author) + '</span><div class="small muted">' + esc(authorTr(b)) + '</div></dd><dt>Yer</dt><dd>' + esc(b.effective.source_locator) + ' · el-Câmi‘ s. ' + b.effective.page + '</dd>' +
+    '<dt>Râvinin kaynaktaki adı</dt><dd class="ar" style="font-size:calc(19px * var(--yb))">' + esc(b.effective.source_narrator_name) + '</dd>' + (b.effective.locality ? '<dt>Belde</dt><dd class="ar">' + esc(b.effective.locality) + '</dd>' : '') + '<dt>Künye metni</dt><dd class="ar" style="font-size:calc(15px * var(--yb))">' + esc(b.effective.reference_text) + '</dd></dl>' +
+    (ae ? '<div class="sec"><h4>Eser–müellif doğrulaması</h4><div class="hint">' + esc(ae.note) + '</div>' + (ae.evidence && ae.evidence.local_text ? '<div class="ctx" style="font-size:calc(19px * var(--yb))">' + esc(ae.evidence.local_text.replace(/‌/g, '')) + '</div><div class="hint">' + esc(ae.evidence.local_file || '') + ' · s. ' + esc(ae.evidence.local_page || '') + '</div>' : '') + '</div>' : '') +
     (b.parser_note ? '<div class="note">' + esc(b.parser_note) + '</div>' : '') +
     '<div class="sec"><h4>Değişiklik geçmişi</h4>' + (hist.length ? hist.map(h => '<div class="hint"><b>' + esc(h.field_name) + '</b> · ' + esc(h.display_name) + '<br>' + esc(JSON.parse(h.old_value || '""')) + ' → ' + esc(JSON.parse(h.new_value || '""')) + '<br><span class="muted">' + esc(new Date(h.changed_at).toLocaleString('tr-TR')) + '</span></div>').join('') : '<div class="hint">Kayıt yok.</div>') + '</div>' +
     '<p><button class="btn sm" data-raw="block:' + b.id + '">Ham HTML</button></p>';
@@ -4416,6 +4425,22 @@ function scopeStatements(scope) {
 }
 function stPkg(s) { return s.archPkg || PK.id; }
 const volOfPkg = id => +((/^c(\d+)-p/.exec(id || '') || [])[1] || 0);
+// Münekkitler: hüküm satırına basınca önce açılır pencerede ayrıntı ve metin; “Detaya git” râvinin sayfasına götürür
+const CPOP = new Map();
+function critPopHTML(s) {
+  const k = eKind(s), C = CTX.critic(eCritic(s)); let ctx = ''; try { ctx = ctxHTML(s); } catch (e) { ctx = esc(s.phrase || ''); }
+  return '<div class="kicker">Râvi #' + s.n.source_sequence + ' · blok ' + s.b.block_order + ' · ' + esc(authorTr(s.b)) + '</div>' +
+    '<h3 class="ar" style="margin:4px 0 8px;font-size:calc(24px * var(--yb))">' + esc(s.n.effective.canonical_name) + '</h3>' +
+    '<div class="insp"><div class="phrase ' + kc(k) + '">' + (s.phrase ? esc(s.phrase) : '(Zımnî: du‘afâ kitabında zikir)') + '</div></div>' +
+    '<div class="badges">' + kindTag(k, eType(s).replace(' / İnsan kontrolü gerekli', ' (insan kontrolü)')) + '<span class="tag">' + sevText(s) + '</span>' + (s.mufassar ? '<span class="tag">' + esc(s.mufassar) + '</span>' : '') + (eCounts(s) ? '' : '<span class="tag warn">sayılmıyor</span>') + '</div>' +
+    '<dl class="kv" style="margin-top:10px"><dt>Münekkit</dt><dd>' + esc(C ? C.tr : (eCritic(s) || s.critic_written || '—')) + (C && C.death ? ' · ö. ' + C.death : '') + (eCritic(s) || s.critic_written ? ' <span class="ar">' + esc(eCritic(s) || s.critic_written) + '</span>' : '') + '</dd>' +
+    '<dt>Kaynak eser</dt><dd><span class="ar">' + esc(srcShort(s.b)) + '</span> ' + esc(s.b.effective.source_locator || '') + '</dd>' +
+    '<dt>Nakil</dt><dd>' + esc(s.transmission || '—') + (s.transmitter ? ' · aktaran: ' + esc(crName(s.transmitter, s.transmitter)) : '') + '</dd>' +
+    '<dt>Mertebe</dt><dd>' + esc(s.grade || '—') + '</dd></dl>' +
+    (s.chain ? '<div class="hint" style="margin-top:6px">Sened / nakil yolu</div><div class="ctx">' + esc(s.chain) + '</div>' : '') +
+    '<div class="hint" style="margin-top:10px">Metindeki yeri</div><div class="ctx" style="max-height:none">' + ctx + '</div>' +
+    '<div class="row" style="margin-top:12px;justify-content:flex-end"><button class="btn primary" data-goto="' + esc(gotoAttr(s)) + '">Detaya git → râvinin sayfasında aç</button></div>';
+}
 function gotoAttr(s) { return s.archPkg && s.archPkg !== PK.id ? 'arch:' + s.archPkg + ':' + s.n.source_sequence + ':' + encodeURIComponent(s.uid) : s.uid; }
 function scopeBar() {
   const b = (k, l, t) => '<button type="button" data-scope="' + k + '" aria-pressed="' + (S.scope === k || (k === 'all' && !multiVol())) + '" title="' + esc(t) + '">' + l + '</button>';
@@ -4516,7 +4541,7 @@ function critDetail(m) {
     '<div class="row" style="margin:0 0 6px"><button class="btn sm" data-critexport="' + esc(m.c) + '">⤓ Bu münekkidin raporu (HTML · Markdown · Word · PDF)</button></div>' +
     '<div class="hint" style="margin:0 0 6px">' + sts.length + ' kayıt · ' + direct + ' müellifin kendi hükmü · ' + chained + ' senedli nakil · ' + (sts.length - direct - chained) + ' senedsiz nakil · satıra tıklayınca metindeki yeri açılır</div>' +
     '<div class="wrap"><table class="tbl sub-tbl" data-tid="crit-st"><thead><tr><th data-sk="n">Râvi</th><th data-sk="t">Lafız</th><th data-sk="t">Tür</th><th data-sk="n" class="num">Şiddet</th><th data-sk="t">Kaynak</th><th data-sk="t">Sened / nakil yolu</th></tr></thead><tbody>' +
-    sts.map(s => '<tr data-goto="' + esc(gotoAttr(s)) + '" class="' + (eCounts(s) ? '' : 'dim') + '"><td data-v="' + seqKey(s) + '"><b>' + '#' + s.n.source_sequence + '</b><div class="ar small" style="font-size:calc(14px * var(--yb))">' + esc(s.n.effective.canonical_name) + '</div></td><td class="ar">' + esc(s.phrase || '(zımnî)') + '</td><td>' + kindTag(eKind(s), eType(s).split(' /')[0]) + '</td><td class="num" data-v="' + (eKind(s) === 'K' ? eTMax(s) - eCMax(s) : eSev(s)) + '">' + sevText(s) + '</td><td class="ar small" style="font-size:calc(14px * var(--yb))">' + esc(srcShort(s.b)) + '</td><td>' + senedHTML(s) + '</td></tr>').join('') + '</tbody></table></div>';
+    sts.map(s => (CPOP.set(gotoAttr(s), s), '<tr data-cpop="' + esc(gotoAttr(s)) + '" title="Hükmün ayrıntısı ve metni" class="' + (eCounts(s) ? '' : 'dim') + '"><td data-v="' + seqKey(s) + '"><b>' + '#' + s.n.source_sequence + '</b><div class="ar small" style="font-size:calc(14px * var(--yb))">' + esc(s.n.effective.canonical_name) + '</div></td><td class="ar">' + esc(s.phrase || '(zımnî)') + '</td><td>' + kindTag(eKind(s), eType(s).split(' /')[0]) + '</td><td class="num" data-v="' + (eKind(s) === 'K' ? eTMax(s) - eCMax(s) : eSev(s)) + '">' + sevText(s) + '</td><td class="ar small" style="font-size:calc(14px * var(--yb))">' + esc(srcShort(s.b)) + '</td><td>' + senedHTML(s) + '</td></tr>')).join('') + '</tbody></table></div>';
 }
 
 /* ---------- Teâruz ve nakil karşılaştırması (CTN) ----------
@@ -4659,7 +4684,7 @@ function renderLex() {
     '<div class="chips lex-kinds"><button class="chip" data-lexk="" aria-pressed="' + !S.lexK + '">Tümü</button>' + kinds.filter(k => LX.some(m => m.e.k === k)).map(k => '<button class="chip" data-lexk="' + k + '" aria-pressed="' + (S.lexK === k) + '"><span class="sw" style="background:var(--k-' + k.toLowerCase() + ')"></span>' + KNAME[k] + '</button>').join('') + '</div>';
   out += '<div class="twocol"><div class="lexcol"><div class="search lexf"><label class="sr-only" for="lex-f">Kalıp süz</label><input id="lex-f" type="search" placeholder="Kalıp süz (Arapça veya Türkçe)…" autocomplete="off"></div><div class="lexlist">' + list.map(m => '<button data-lex="' + esc(m.e.id) + '" aria-current="' + (m.e.id === S.lexSel) + '"><span class="tag k ' + kc(m.e.k) + '" title="' + esc(KNAME[m.e.k]) + '">' + (m.e.lv || '·') + '</span><span class="lxw"><span class="lx">' + esc(stripH(sampleText(m))) + '</span><span class="small muted">' + esc(m.e.tr) + '</span></span><span class="cnt">' + m.occ.length + '</span></button>').join('') + '</div></div><div>';
   if (sel) {
-    out += '<div class="card" style="margin-bottom:10px"><h3>' + kindTag(sel.e.k) + ' ' + esc(sel.e.tr) + '</h3><div class="termchips" style="margin:4px 0 6px">' + entryExamples(sel.e, 10).list.map(x => '<span class="tag k ' + kc(sel.e.k) + '"><span class="ar" style="font-size:calc(16px * var(--yb))">' + esc(x) + '</span></span>').join('') + '</div><details class="hint"><summary>Düzenli ifade (normalize imlâ)</summary><code dir="ltr" style="unicode-bidi:plaintext">' + esc(sel.e.p.replace(/\(\?<\w+>/g, '(')) + '</code></details><div class="hint">Mertebe: ' + esc(sel.e.k === 'T' ? CTX.TLEVEL[sel.e.lv] || '' : CTX.CLEVEL[sel.e.lv] || '—') + ' · Sebep: ' + esc(CTX.SEBEB[sel.e.sb] || '—') + ' · ' + sel.occ.length + ' geçiş</div>' + (sel.e.nt ? '<div class="note info">' + esc(sel.e.nt) + '</div>' : '') + '</div>';
+    out += '<div class="card" style="margin-bottom:10px"><h3>' + kindTag(sel.e.k) + ' ' + esc(sel.e.tr) + '</h3><div class="termchips" style="margin:4px 0 6px">' + entryExamples(sel.e, 10).list.map(x => '<span class="tag k ' + kc(sel.e.k) + '"><span class="ar" style="font-size:calc(19px * var(--yb))">' + esc(x) + '</span></span>').join('') + '</div><details class="hint"><summary>Düzenli ifade (normalize imlâ)</summary><code dir="ltr" style="unicode-bidi:plaintext">' + esc(sel.e.p.replace(/\(\?<\w+>/g, '(')) + '</code></details><div class="hint">Mertebe: ' + esc(sel.e.k === 'T' ? CTX.TLEVEL[sel.e.lv] || '' : CTX.CLEVEL[sel.e.lv] || '—') + ' · Sebep: ' + esc(CTX.SEBEB[sel.e.sb] || '—') + ' · ' + sel.occ.length + ' geçiş</div>' + (sel.e.nt ? '<div class="note info">' + esc(sel.e.nt) + '</div>' : '') + '</div>';
     const occ = sel.occ.length > 1500 ? sel.occ.slice(0, 1500) : sel.occ;
     out += (sel.occ.length > occ.length ? '<p class="hint">İlk ' + fmt(occ.length) + ' geçiş gösteriliyor (toplam ' + fmt(sel.occ.length) + ').</p>' : '') + '<div class="wrap" style="background:var(--paper);border:1px solid var(--line);border-radius:10px"><table class="kwic"><tbody>' + occ.map(({ s, t }) => {
       let pre, post;
@@ -4934,7 +4959,8 @@ function docToc(root, pre, folds) {
 
 /* ---------- Ayarlar: hesabım · kullanıcılar · rol yetkileri · hareket kaydı ---------- */
 const LOGF = { user: '', act: '', q: '', from: '', to: '', limit: 300 };
-function openDialog(title, html) { $('gen-title').textContent = title; $('gen-body').innerHTML = html; $('gen-dialog').showModal(); }
+// genis: kaynak metin ve hüküm ayrıntısı gibi uzun metinler için geniş pencere
+function openDialog(title, html, genis) { $('gen-title').textContent = title; $('gen-body').innerHTML = html; $('gen-dialog').classList.toggle('genis', !!genis); $('gen-dialog').showModal(); }
 function applyUser() {
   const u = AUTH.me(); if (!u) return;
   document.body.dataset.role = u.role;
@@ -5305,7 +5331,8 @@ function toggleTheme() { const dark = UI.theme ? UI.theme === 'dark' : window.ma
 const YB = [80, 90, 100, 110, 120, 130, 140, 150];
 function applyYazi() {
   const v = YB.includes(UI.yb) ? UI.yb : 100;
-  document.documentElement.style.setProperty('--yb', v / 100); document.documentElement.style.setProperty('--yb-kok', v / 100);
+  // %100 (normal) yazı bütün sayfalarda bir kademe (%10) büyüktür; A−/A+ bunun üzerine işler
+  document.documentElement.style.setProperty('--yb', v / 100 * 1.1); document.documentElement.style.setProperty('--yb-kok', v / 100);
   $('yazi-sifirla').textContent = '%' + v; $('yazi-sifirla').hidden = v === 100;   // %100’de sıfırlanacak bir şey yok
   $('yazi-kucult').disabled = v === YB[0]; $('yazi-buyut').disabled = v === YB[YB.length - 1];
   $('yazi-kucult').title = 'Bütün yazıları küçült · şimdi %' + v; $('yazi-buyut').title = 'Bütün yazıları büyüt · şimdi %' + v;
@@ -5486,6 +5513,7 @@ document.addEventListener('click', e => {
   if (ga) {
     // arch:<dilim>:<sıra>:<hüküm> — başka dilimdeki kayıt; râvi sıra numarasıyla bulunur
     const parts = ga.dataset.goto.split(':'); const seq = +parts[2]; const uid = parts.length > 3 ? decodeURIComponent(parts.slice(3).join(':')) : '';
+    if ($('gen-dialog').open) $('gen-dialog').close();   // hüküm penceresindeki “Detaya git”
     const r = IDXSEQ.get(seq); if (!r) { toast('#' + seq + ' bulunamadı; cildinin dosyası bu tarayıcıda yüklü değil.', true); return; }
     if (uid && !['kaynak', 'hukum', 'sentez'].includes(S.tab)) S.tab = 'kaynak';
     setView('desk', false);
@@ -5495,7 +5523,8 @@ document.addEventListener('click', e => {
     return;
   }
   const gn = t.closest('[data-gonarr]'); if (gn) { const [pkg, seq] = gn.dataset.gonarr.split('|'); goNarrator(pkg, +seq); return; }
-  const go = t.closest('[data-goto]'); if (go) { setView('desk', false); S.tab = ['kaynak', 'hukum', 'sentez'].includes(S.tab) ? S.tab : 'kaynak'; selectStatement(go.dataset.goto); return; }
+  const cpo = t.closest('[data-cpop]'); if (cpo) { const s0 = CPOP.get(cpo.dataset.cpop); if (s0) { openDialog('Hüküm · Râvi #' + s0.n.source_sequence, critPopHTML(s0), true); return; } }
+  const go = t.closest('[data-goto]'); if (go) { if ($('gen-dialog').open) $('gen-dialog').close(); setView('desk', false); S.tab = ['kaynak', 'hukum', 'sentez'].includes(S.tab) ? S.tab : 'kaynak'; selectStatement(go.dataset.goto); return; }
   const st = t.closest('[data-st]');
   if (st) {
     const ids = st.dataset.st.split('|'); const cur = S.sel && S.sel.type === 'st' ? ids.indexOf(S.sel.id) : -1;
@@ -6188,14 +6217,14 @@ const RAPOR = (() => {
     ['يعقوب بن سفيان الفسوي', 'Ya‘kūb b. Süfyân el-Fesevî', 277, '', ['يعقوب بن سفيان', 'الفسوي'], ''],
     ['يعقوب بن شيبة', 'Ya‘kūb b. Şeybe', 262, '', ['يعقوب بن شيبه'], ''],
     ['الترمذي', 'et-Tirmizî', 279, 'mütesâhil', ['الترمذي'], ''],
-    ['ابن خراش', 'İbn Hırâş', 283, 'müteşeddid', ['ابن خراش'], ''],
+    ['ابن خراش', 'İbn Hırâş', 283, 'müteşeddid', ['ابن خراش', 'عبد الرحمن بن خراش', 'عبد الرحمن بن يوسف بن خراش'], ''],
     ['صالح جزرة', 'Sâlih b. Muhammed Cezere', 293, '', ['صالح جزره', 'صالح بن محمد جزره'], ''],
     ['النسائي', 'en-Nesâî', 303, 'müteşeddid', ['النسائي'], ''],
     ['زكريا الساجي', 'Zekeriyyâ es-Sâcî', 307, '', ['زكريا الساجي', 'الساجي'], ''],
     ['ابن خزيمة', 'İbn Huzeyme', 311, 'mütesâhil', ['ابن خزيمه'], ''],
     ['أبو عروبة الحراني', 'Ebû Arûbe el-Harrânî', 318, '', ['ابو عروبه الحراني', 'ابو عروبه'], ''],
     ['العقيلي', 'el-Ukaylî', 322, 'müteşeddid', ['العقيلي'], ''],
-    ['ابن أبي حاتم', 'İbn Ebî Hâtim', 327, '', ['ابن ابي حاتم', 'بن ابي حاتم'], 'Çoğu zaman babası Ebû Hâtim’in veya Ebû Zür‘a’nın sözünü nakleder; el-Cerh ve’t-ta‘dîl’de kontrol edin.'],
+    ['ابن أبي حاتم', 'İbn Ebî Hâtim', 327, '', ['ابن ابي حاتم', 'بن ابي حاتم', 'عبد الرحمن بن ابي حاتم'], 'Çoğu zaman babası Ebû Hâtim’in veya Ebû Zür‘a’nın sözünü nakleder; el-Cerh ve’t-ta‘dîl’de kontrol edin.'],
     ['أبو العرب', 'Ebü’l-Arab et-Temîmî', 333, '', ['ابو العرب'], ''],
     ['ابن حبان', 'İbn Hibbân', 354, 'iki yönlü', ['ابو حاتم محمد بن حبان البستي', 'ابو حاتم ابن حبان البستي', 'ابو حاتم بن حبان البستي', 'ابو حاتم ابن حبان', 'ابو حاتم بن حبان', 'ابو حاتم البستي', 'ابن حبان', 'بن حبان', 'البستي'], 'el-Mecrûhîn’de cerhte şiddetli, es-Sikât’ta (mechûlleri tevsikte) mütesâhil kabul edilir.'],
     ['ابن عدي', 'İbn Adî', 365, 'mu‘tedil', ['الحافظ ابو احمد بن عدي الجرجاني', 'ابو احمد عبد الله بن عدي الجرجاني', 'ابو احمد بن عدي', 'ابن عدي', 'بن عدي'], '“Ercû ennehû lâ be’se bih” İbn Adî’nin ihtiyatlı ta‘dîl formülüdür; hükmü tetebbu‘ (istikrâ) sonucudur.'],
@@ -6457,6 +6486,19 @@ const RAPOR = (() => {
   add('C', 4, 'terk', 'Rivayetini bıraktım', 0.7, ['انما تركت', 'تركت حديثه', 'ما استحل ان اروي عنه ' + SHAYA, 'ما استحل ان اروي عنه']);
   add('C', 3, 'terk', 'Ondan rivayet etmem', 0.8, ['لا اروي عن(?:ه)?', 'لا احدث عنه', 'كان لا يحدث عنه', 'لا يحدثان عن', 'كانا لا يحدثان عن']);
   add('C', 3, 'terk', 'Rivayetini terk (zımnî)', 0.7, ['(?:ما|لم) (?:سمعت|رايت) (?<cr>\\S+(?: \\S+){0,3}?) (?:يحدث|بحدث|حدث|يحدثان|حدثا) عن(?:ه)?']);
+  // Uygulama bildiren zımnî hükümler: “kâne X lâ yuhaddisu anhu / lâ yerdâhu / yuda‘‘ifuhû / yusnî aleyh …”. Münekkit adı “kâne” ile
+  // fiil arasındadır (“kâne Yahyâ ve Abdurrahmân lâ yuhaddisâni anh”); hükmü nakledenin (ör. “qâle Amr b. Alî:”) değil, adı geçenin
+  // sayılır. Ad bilinen bir münekkite çözülemezse (crReq) hüküm olağan söz işaretiyle atfedilir.
+  // Adın bütün aralığı (“kâne” ile fiil arası) bilinen münekkit(ler)e çözülmelidir; yoksa kalıp alınmaz.
+  const KW = '[^\\s:.،,«»"]+';
+  const KANA = (p, ad) => ad ? '(?:كان|وكان) (?<cr>' + KW + '(?: ' + KW + '){0,3}?(?:[،,]? و' + KW + '(?: ' + KW + '){0,3}?)?) ' + p : 'كان ' + p;
+  const kana = (k, lv, sb, tr, w, pats, o) => { for (const p of pats) { add(k, lv, sb, tr, w, KANA(p, true), Object.assign({ crReq: true }, o)); add(k, lv, sb, tr, w - 0.05, KANA(p, false), Object.assign({ kanaPlain: true }, o)); } };
+  kana('C', 3, 'terk', 'Ondan rivayet etmezdi (zımnî)', 0.8, ['لا (?:يحدث|يروي|يحدثنا|يكتب)(?:ان)? عن(?:ه|هما)?', 'لا يستحل ان يروي عنه', 'ينهي عن(?:ه| حديثه)', 'لا يراه ' + SHAYA]);
+  kana('C', 2, 'mubhem', 'Ondan razı değildi / za‘îf sayardı (zımnî)', 0.75, ['لا (?:يرضاه|يرضيه)(?: في الحديث)?', 'لا يستمر(?:ئ|ي)ه', 'لا يعبا (?:به|بحديثه)', 'لا يحفل به', '(?:شديد )?الحمل عليه', 'يحمل عليه', 'يضعفه(?: جدا)?', 'يضعف حديثه', 'يستضعفه', 'يوهنه']);
+  kana('C', 1, 'mubhem', 'Hakkında konuşurdu / çekinirdi (zımnî)', 0.7, ['يتكلم فيه', 'يطعن فيه', 'قليل الميل اليه', 'يتقيه', 'يتقي حديثه']);
+  kana('C', 1, 'suhifz', 'Hıfzından razı değildi (zımnî)', 0.7, ['لا يرضي حفظه']);
+  kana('C', 4, 'tuhmet', 'Onu yalanla itham ederdi', 0.75, ['يرميه بالكذب']);
+  kana('T', 2, 'sidk', 'Onu över, hakkında iyi düşünürdü (zımnî)', 0.7, ['يثني عليه', 'حسن الراي فيه', 'يحسن القول فيه', 'يحسن الثناء عليه'], { nt: 'Genel övgüdür; tevsîk lafzı değildir, mertebesi bağlama göre değerlendirilmelidir.' });
   add('C', 4, 'tuhmet', 'Sikalardan onların olmayanı rivayet eder', 0.85, ['(?:يروي|ياتي) عن (?:\\S+ ){0,5}?(?:الثقات )?ب?ما ليس من (?:احاديثهم|حديثهم)', 'ما ليس من (?:احاديثهم|حديثهم)']);
   add('C', 5, 'kizb', 'Onları uyduruyordu (ya‘meluhâ)', 0.75, ['(?:انه )?كان يعملها']);
   add('C', 4, 'terk', 'Susmak helal değil (Şu‘be)', 0.6, ['لا يحل (?:الكف|السكوت) عنه', 'لولا الحياء من الناس (?:ما|لما) صليت علي', 'لان يزني الرجل خير له من ان يروي عن']);
@@ -6614,7 +6656,7 @@ const RAPOR = (() => {
   const YAHYA = nz('يحيي');
   function resolveYahya(n, pos) {
     const back = n.slice(Math.max(0, pos - 160), pos);
-    if (/(?:المديني|علي|عمرو بن علي|الفلاس|المثني|عبد الرحمن)[^.]{0,80}$/.test(back) || /^\s*(?:و|ولا )عبد الرحمن/.test(n.slice(pos + 4, pos + 20))) return 'يحيى بن سعيد القطان';
+    if (/(?:المديني|علي|عمرو بن علي|الفلاس|المثني|عبد الرحمن)[^.]{0,80}$/.test(back) || /^\s*[،,]?\s*(?:و|ولا )(?:عبد الرحمن|ابن مهدي)/.test(n.slice(pos + 4, pos + 22))) return 'يحيى بن سعيد القطان';
     if (/(?:عباس|الدوري|ابي مريم|ابن الجنيد|الدارمي|ابن محرز|معين)[^.]{0,80}$/.test(back)) return 'يحيى بن معين';
     return 'يحيى بن معين?';
   }
@@ -6628,7 +6670,7 @@ const RAPOR = (() => {
       if (!m && n.startsWith(YAHYA, q) && !isAL(n[q + YAHYA.length]) && !/^\s+(?:بن|ابن)\s/.test(n.slice(q + YAHYA.length, q + YAHYA.length + 6))) {
         const c = resolveYahya(n, q); m = { canon: c.replace('?', ''), amb: c.endsWith('?'), len: YAHYA.length, written: 'يحيى' };
       }
-      if (!m && /^عبد الرحمن(?![\u0621-\u064A])/.test(n.slice(q, q + 12)) && !/^\s+(?:بن|ابن)\s/.test(n.slice(q + 9, q + 15))) m = { canon: 'عبد الرحمن بن مهدي', amb: true, len: 9, written: 'عبد الرحمن' };
+      if (!m && /^عبد الرحمن(?![\u0621-\u064A])/.test(n.slice(q, q + 12)) && !/^\s+(?:بن|ابن)\s/.test(n.slice(q + 10, q + 16))) m = { canon: 'عبد الرحمن بن مهدي', amb: true, len: 10, written: 'عبد الرحمن' };
       if (!m) break;
       names.push({ canon: m.canon, written: m.written, amb: !!m.amb, start: q, end: q + m.len });
       p = q + m.len;
@@ -6649,13 +6691,14 @@ const RAPOR = (() => {
   }
   // Bilinmeyen isim: “قال X:” / “سمعت X يقول” arasındaki 1–7 kelime
   function unknownName(n, p, verb) {
-    const rest = n.slice(p, p + 70);
+    const rest = n.slice(p, p + 70).replace(/[،,](?=\s*عن\s)/g, ' ');   // “قال إسحاق بن منصور، عن يحيى بن معين:” (uzunluk korunur)
     const m = verb === 'سمعت' ? /^\s*((?:[\u0621-\u064A]+\s+){0,6}?[\u0621-\u064A]+)\s*[،,]?\s*(?:يقول|قال|يذكر)(?![\u0621-\u064A])\s*:?/.exec(rest)
       : /^\s*((?:[\u0621-\u064A]+\s+){0,8}?[\u0621-\u064A]+)\s*:/.exec(rest);
     if (!m || NOT_PERSON.test(m[1])) return null;
     const w = m[1].replace(/\s+في\s+[\s\S]*$/, '');
     const parts = w.split(/\s+عن\s+/);          // “حمزة عن الحسن بن علي” → söz sahibi ikinci kişi
-    return { written: parts[parts.length - 1], via: parts.length > 1 ? parts[0] : '', end: p + m[0].length, start: p + m[0].indexOf(w) };
+    const start = p + m[0].indexOf(w), last = parts[parts.length - 1];
+    return { written: last, via: parts.length > 1 ? parts[0] : '', end: p + m[0].length, start, lastStart: start + w.lastIndexOf(last) };
   }
   // İsmin fiilden önce geldiği senedli kullanım: “حدثنا البخاري قال:”
   function nameBefore(n, pos, conv) {
@@ -6696,7 +6739,7 @@ const RAPOR = (() => {
         // “أنّ X قال” · “عن X (أنه) قال”
         const r = parseNames(n, p, conv, 1);
         if (r.names.length) {
-          const t = /^[\s،,]*(?:انه\s+)?(?:(?:ذكره|سيل عنه|ساله)\s+)?(?:ف)?(?:قال|يقول)(?![\u0621-\u064A])\s*:?/.exec(n.slice(r.end, r.end + 24));
+          const t = /^[\s،,]*(?:انه\s+)?(?:(?:ذكره|سيل عنه|ساله)\s+)?(?:ف)?(?:قال|يقول)(?![\u0621-\u064A])\s*:?/.exec(n.slice(r.end, r.end + 24)) || /^[\s،,]*انه(?=\s+كان\s)/.exec(n.slice(r.end, r.end + 12));   // “عن يحيى أنه كان لا يراه شيئا”
           if (t) out.push(Object.assign(base, { type: 'named', names: r.names, end: r.end + t[0].length, via: verb === 'ان' ? 'أنّ … قال' : 'عن … قال' }));
         }
         continue;
@@ -6724,6 +6767,14 @@ const RAPOR = (() => {
           const fc = r.names[0].canon === 'ابن أبي حاتم' ? 'أبو حاتم الرازي' : 'أحمد بن حنبل';
           via = r.names[0].canon; r.names = [{ canon: fc, written: r.names[0].written + ' عن أبيه', start: r.names[0].start, end: end + fa[0].length }]; end += fa[0].length;
         }
+        // “قال علي بن المديني عن يحيى بن سعيد:” → söz, nakledenin değil adı “عن”dan sonra gelenindir (nakleden aktaran olur)
+        if (verb !== 'سالت' && verb !== 'سالته') {
+          let an;
+          while ((an = /^[\s،,]*عن\s+/.exec(n.slice(end, end + 12))) && !/^[\s،,]*عن\s+ابيه/.test(n.slice(end, end + 14))) {
+            const r2 = parseNames(n, end + an[0].length, conv, 1); if (!r2.names.length) break;
+            via = r.names.map(x => x.canon).filter(Boolean).join('، ') || via; r.names = r2.names; end = r2.end;
+          }
+        }
         const rest = n.slice(end, end + 50);
         const cm = /^[^:.\n]{0,45}?:/.exec(rest);
         if (cm && !/(?:حدثنا|قال|سمعت)/.test(cm[0])) end += cm[0].length;
@@ -6742,6 +6793,8 @@ const RAPOR = (() => {
         if (/^\s*(?:مره|ايضا)\s*:/.test(n.slice(p, p + 10))) { out.push(Object.assign(base, { type: 'again', end: n.indexOf(':', p) + 1 })); continue; }
         const u = unknownName(n, p, verb);
         if (u && u.written === 'ابي') { const c = fatherOf(n, m.index); if (c) { out.push(Object.assign(base, { type: 'named', names: [{ canon: c, written: 'أبي' }], end: u.end, via: 'قال أبي' })); continue; } }
+        const ua = u && u.via ? parseNames(n, u.lastStart, conv, 1) : null;   // “قال عباس الدوري عن ابن معين:” → söz sahibi İbn Maîn
+        if (ua && ua.names.length) { out.push(Object.assign(base, { type: 'named', names: ua.names, end: u.end, via: u.via })); continue; }
         if (u) {
           // Aynı blokta daha önce tam adıyla geçen kişiyle eşleştir (“منصور” → “منصور بن المعتمر”)
           const tok = u.written.split(/\s+/)[0];
@@ -6867,6 +6920,10 @@ const RAPOR = (() => {
       while ((m = e.re.exec(n))) {
         const core = m[1]; const start = m.index + m[0].length - core.length, end = m.index + m[0].length;
         if (start >= limit) break;
+        if (e.crReq) {   // “kâne” ile fiil arasındaki aralığın tamamı münekkit adı olmalı (“kâne Abdurrahmân yuhaddisu anh, ve kâne …” değil)
+          const cp = n.indexOf(m.groups.cr, m.index), r = parseNames(n, cp, conv);
+          if (!r.names.length || r.end < cp + m.groups.cr.replace(/[\s،,]+$/, '').length) { e.re.lastIndex = m.index + 1; continue; }
+        }
         cand.push({ e, start, end, len: end - start, groups: m.groups || {} });
         if (m[0].length === 0) e.re.lastIndex++;
       }
@@ -6935,12 +6992,16 @@ const RAPOR = (() => {
         if (c.groups.cr || c.groups.cr2 || c.groups.cr3) {
           const w = c.groups.cr || c.groups.cr2 || c.groups.cr3; const i = n.indexOf(w, c.start);
           const r = parseNames(n, i, conv); names = r.names;
-          if (!names.length) { const a = resolveAliasText(w); names = [{ canon: a || '', written: w }]; }
+          if (!names.length && !e.crReq) { const a = resolveAliasText(w); names = [{ canon: a || '', written: w }]; }
         } else {
           const r = parseNames(n, c.end, conv);
           names = r.names; if (names.length) c.end = r.end;
         }
         if (names.length) { res.critics = names; res.basis = 'fiil'; t.reasons.push('Söz sahibi fiilin öznesinden alındı (' + names.map(x => x.written).join('، ') + ').'); }
+      }
+      if (e.kanaPlain && !res.critics.length) {   // “… أحمد بن حنبل كان يتكلم فيه”: ad “kâne”den hemen önce
+        const nb = nameBefore(n, c.start, conv);
+        if (nb && /[\u0621-\u064A]\s*$/.test(n.slice(Math.max(0, c.start - 2), c.start))) { res.critics = [nb]; res.basis = 'fiil'; t.reasons.push('Söz sahibi “kâne”den önce gelen addan alındı (' + nb.written + ').'); }
       }
       if (!res.critics.length && /^في "?الثقات"? لابن حبان/.test(n.slice(c.start, c.end))) { res.critics = [{ canon: 'ابن حبان', written: 'ابن حبان' }]; res.basis = 'fiil'; }
       if (!res.critics.length && e.plural) t.reasons.push('Çoğul fiil (âlimlere nispet); nakleden münekkit söz sahibi sayıldı.');
