@@ -2273,13 +2273,14 @@ function disKisiKart(n, id) {
     '</dl><p class="hint">' + kodlar(['HH']) + ' Kart, HH’deki temel kayıttır; sayılar programdaki 33 metin kitabının isnadlarına göredir.</p>');
 }
 // ----- Eşleşme notu (Kimlik sekmesinin başında) -----
-const YOL_TR = { metin: 'Lisân/Kâmil metni örtüşüyor', 'kanıt': 'ad + söz/hoca kanıtı', 'ad+metin': 'ad + seyrek ortak ifade', metin2: 'el-Câmi‘in öteki bir bloğu Lisân/Kâmil metniyle örtüşüyor', 'mîzân': 'Mîzân’daki yeri + ad (İbn Hacer’in Lisân sonundaki Tehzîb ricâli listesi)' };
+const YOL_TR = { metin: 'Lisân/Kâmil metni örtüşüyor', 'kanıt': 'ad + söz/hoca kanıtı', 'ad+metin': 'ad + seyrek ortak ifade', metin2: 'el-Câmi‘in öteki bir bloğu Lisân/Kâmil metniyle örtüşüyor', 'mîzân': 'Mîzân’daki yeri + ad (İbn Hacer’in Lisân sonundaki Tehzîb ricâli listesi)', 'kanıt6': 'ad + kanıt puanı (münekkit sözleri, hadis metni, senet halkaları, dede adı, hüküm uyumu)' };
 const MIZAN_KURAL = { A: 'ad + seyrek ortak ifade', B: 'sayfa aralığındaki tek adaş', C: 'ism + liste satırındaki sıfat' };
 const yollar = y => String(y || '').replace('ad+metin', '\u0001').split('+').map(x => x === '\u0001' ? 'ad+metin' : x).filter(Boolean);
 function kanitTr(k) {
   if (!k) return '';
   return [k.eser ? (/لسان/.test(k.eser) ? 'Lisânü’l-Mîzân' : 'el-Kâmil') + ' metni %' + Math.round(k.oran * 100) + ' örtüşüyor' : '',
     k.eser2 ? k.eser2 + ' bloğu HH’deki Lisân/Kâmil paragrafıyla %' + Math.round(k.oran * 100) + ' örtüşüyor' : '',
+    k.puan != null ? 'puan ' + k.puan + ': ' + [k.munekkit ? k.munekkit + ' münekkit sözü' : '', k.metin ? k.metin + ' hadis metni HH rivayetlerinde' : '', k.halka ? k.halka + ' senet halkası HH hoca/talebesi' : '', k.kalip ? k.kalip + ' hoca/talebe (kalıptan)' : '', k.dede ? 'dede adı tutuyor' : '', k.hukum === 1 ? 'hüküm uyumlu' : '', k.baba ? '“an ebîhi” ve babası HH hocaları arasında' : ''].filter(Boolean).join(', ') : '',
     k.mizan ? 'İbn Hacer’in listesinde Mîzân ' + k.mizan[0] + ':' + k.mizan[1] + ' (madde ' + k.mizan[2] + '), el-Câmi‘in Mîzân nakli ' + (k.cami_mizan || []).join('/') + ' · ' + (MIZAN_KURAL[k.kural] || k.kural) + (k.hh_bagsiz ? ' · HH kaydı ad, Tehzîb tercemesi ve rumuzla seçildi' : '') : '', k.soz ? k.soz + ' söz' : '', k.kisi ? k.kisi + ' seyrek hoca/talebe adı' : '', k.parca ? k.parca + ' seyrek ortak ifade' : '', k.nisbe ? 'nisbe tutuyor' : ''].filter(Boolean).join(', ');
 }
 function disEslesmeNotu(n, V) {
