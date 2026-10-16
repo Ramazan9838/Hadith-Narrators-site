@@ -1273,7 +1273,7 @@ function blockOpts(b, n) { return { sourceName: b.effective.source_name, sourceA
 function analyzeNarrator(n, R) {
   R = R || REV || {};
   n._names = [n.effective.canonical_name, ...(n.effective.name_variants || [])];
-  n._st = []; n._kim = null;
+  n._st = []; n._kim = null; n._merv = null;
   for (const b of n.blocks) {
     applyBlockFix(b, R);
     b._n = n;
@@ -1403,8 +1403,8 @@ var CONFC = {};
 const S = { scope: 'all', railVol: 'all', view: 'desk', nid: null, tab: 'kimlik', sel: null, railFilter: 'all', q: '', sort: 'seq', critQ: '', critSel: '', lexSel: '', lexK: '', page: null };
 const VIEWS = ['home', 'desk', 'packages', 'critics', 'conflicts', 'lex', 'report', 'analyze', 'method', 'settings'];
 // Sekme sırası: râvi açılınca önce kim olduğu (Kimlik), sonra hocaları ve talebeleri, hükümler, sentez (ekip isteği)
-// “sayfa”: el-Câmi‘in basılı sayfası (Şâdî b. Muhammed Âl-i Nu‘mân, el-Câmi‘ li-kütübi’d-du‘afâ); “uyari”: ayrıştırma uyarıları
-const TABS = [['kimlik', 'Kimlik'], ['hoca', 'Hocaları'], ['talebe', 'Talebeleri'], ['hukum', 'Hükümler'], ['sentez', 'Sentez'], ['kaynak', 'Kaynak metin'], ['rihle', 'Rıhle'], ['sayfa', 'Şâdî · el-Câmi‘'], ['uyari', 'Uyarılar']];
+// “rihle” anahtarı eski adresler için korunur, sekmenin adı Mekân’dır (yer ve rıhle bilgileri birlikte); “sayfa”: el-Câmi‘in basılı sayfası (Şâdî b. Muhammed Âl-i Nu‘mân, el-Câmi‘ li-kütübi’d-du‘afâ); “uyari”: ayrıştırma uyarıları
+const TABS = [['kimlik', 'Kimlik'], ['hoca', 'Hocaları'], ['talebe', 'Talebeleri'], ['hukum', 'Hükümler'], ['sentez', 'Sentez'], ['kaynak', 'Kaynak metin'], ['rihle', 'Mekân'], ['sayfa', 'Şâdî · el-Câmi‘'], ['uyari', 'Uyarılar']];
 
 /* ---------- Eser, ciltler ve dilimler ----------
    Kullanıcı bütün eseri tek sürekli râvi listesi olarak görür (IDX). İç düzende veri cilt başına ardışık 50’şer
@@ -2273,11 +2273,14 @@ function disKisiKart(n, id) {
     '</dl><p class="hint">' + kodlar(['HH']) + ' Kart, HH’deki temel kayıttır; sayılar programdaki 33 metin kitabının isnadlarına göredir.</p>');
 }
 // ----- Eşleşme notu (Kimlik sekmesinin başında) -----
-const YOL_TR = { metin: 'Lisân/Kâmil metni örtüşüyor', 'kanıt': 'ad + söz/hoca kanıtı', 'ad+metin': 'ad + seyrek ortak ifade' };
+const YOL_TR = { metin: 'Lisân/Kâmil metni örtüşüyor', 'kanıt': 'ad + söz/hoca kanıtı', 'ad+metin': 'ad + seyrek ortak ifade', metin2: 'el-Câmi‘in öteki bir bloğu Lisân/Kâmil metniyle örtüşüyor', 'mîzân': 'Mîzân’daki yeri + ad (İbn Hacer’in Lisân sonundaki Tehzîb ricâli listesi)' };
+const MIZAN_KURAL = { A: 'ad + seyrek ortak ifade', B: 'sayfa aralığındaki tek adaş', C: 'ism + liste satırındaki sıfat' };
 const yollar = y => String(y || '').replace('ad+metin', '\u0001').split('+').map(x => x === '\u0001' ? 'ad+metin' : x).filter(Boolean);
 function kanitTr(k) {
   if (!k) return '';
-  return [k.eser ? (/لسان/.test(k.eser) ? 'Lisânü’l-Mîzân' : 'el-Kâmil') + ' metni %' + Math.round(k.oran * 100) + ' örtüşüyor' : '', k.soz ? k.soz + ' söz' : '', k.kisi ? k.kisi + ' seyrek hoca/talebe adı' : '', k.parca ? k.parca + ' seyrek ortak ifade' : '', k.nisbe ? 'nisbe tutuyor' : ''].filter(Boolean).join(', ');
+  return [k.eser ? (/لسان/.test(k.eser) ? 'Lisânü’l-Mîzân' : 'el-Kâmil') + ' metni %' + Math.round(k.oran * 100) + ' örtüşüyor' : '',
+    k.eser2 ? k.eser2 + ' bloğu HH’deki Lisân/Kâmil paragrafıyla %' + Math.round(k.oran * 100) + ' örtüşüyor' : '',
+    k.mizan ? 'İbn Hacer’in listesinde Mîzân ' + k.mizan[0] + ':' + k.mizan[1] + ' (madde ' + k.mizan[2] + '), el-Câmi‘in Mîzân nakli ' + (k.cami_mizan || []).join('/') + ' · ' + (MIZAN_KURAL[k.kural] || k.kural) + (k.hh_bagsiz ? ' · HH kaydı ad, Tehzîb tercemesi ve rumuzla seçildi' : '') : '', k.soz ? k.soz + ' söz' : '', k.kisi ? k.kisi + ' seyrek hoca/talebe adı' : '', k.parca ? k.parca + ' seyrek ortak ifade' : '', k.nisbe ? 'nisbe tutuyor' : ''].filter(Boolean).join(', ');
 }
 function disEslesmeNotu(n, V) {
   const rec = disKayit(n);
@@ -2366,7 +2369,7 @@ function hhSatirlar(n, V, key) {
 function hhIliskiHaritasi(V) { const m = new Map(); for (const r of V.hh.iliskiler || []) if (r.kisi != null) m.set(r.kisi, (m.get(r.kisi) || []).concat(r)); return m; }
 function hhTablo(n, V, key, title) {
   const L = hhSatirlar(n, V, key), canli = L.filter(x => !x.sil), il = hhIliskiHaritasi(V);
-  const ck = new Set(listItems(n, key === 'hoca' ? 'hocalar' : 'talebeler').filter(x => x.st !== 'no').map(x => adKok(x.v)).filter(Boolean));
+  const ck = new Set(listItems(n, key === 'hoca' ? 'hocalar' : 'talebeler').filter(x => x.st !== 'no').map(x => adKok(x.v)).concat(mervKisiler(n, key).flatMap(x => x.adlar.map(adKok))).filter(Boolean));
   const td = tkzVeri(n), tk = new Set(td ? (td[key === 'hoca' ? 'hocalar' : 'talebeler'] || []).map(x => adKok(x.ad)) : []);
   const top = canli.reduce((a, x) => a + (x.r || 0), 0);
   const row = x => {
@@ -2499,7 +2502,7 @@ function hhMetinBlok(n, V, pid) {
     '<footer class="blk-foot"><span class="empty">HH’deki terceme metni (el-Câmi‘ dışı kaynak); hüküm tespiti yapılmaz, sayıma girmez.</span></footer></article>';
 }
 
-// ----- Rıhle: HH yer bilgileri ve UD rıhle olayları -----
+// ----- Mekân sekmesi: HH’nin yer ve rıhle bilgileri (UD’nin rıhle kayıtları alınmaz) -----
 function disRihleHTML(n) {
   const V = disVeri(n); if (!V) return disDurum(n);
   const K = V.hh.kart, kv = [['İkamet (بلد الإقامة)', K.residence], ['Rıhle yerleri (بلد الرحلة)', K.travel_places], ['Rıhle tarihi', K.travel_date], ['Doğum yeri', K.birth_place], ['Vefat yeri', K.death_place]].filter(x => x[1]);
@@ -2778,7 +2781,7 @@ function renderPackages() {
   if (!vols.length) out += '<div class="note info" style="margin-top:12px">Şu an yalnız gömülü Râvi ' + SNAP_PKG.from + '–' + SNAP_PKG.to + ' açık. Ham cilt dosyalarınızı (“＋ Cilt dosyası ekle”) yükleyince bütün râvileri listeye eklenir.</div>';
   if (VOLS[8] || VOLS[9]) out += '<p class="hint" style="margin-top:8px">Sıra numaraları eserin kendi numaralandırmasıdır (ciltler boyunca kesintisiz sürer). 8. cilt #6710’da biter, 9. cilt #7711’den başlar: aradaki 1000 numara Şâmile metninde yoktur (alfabe sırası kesintisizdir); basılı nüshayla karşılaştırılarak doğrulanamadı.</p>';
   const tk = (TKZ.dizin && TKZ.dizin.kayitlar) || [];
-  out += fold('pk:dis', 'Dış kaynaklar', '<p class="hint" style="margin:0 0 8px">HH (Câmiu Hâdimi’l-Haremeyn veritabanı) ve UD (râvi kimlik alanları) bilgileri eşleşen râvide ilgili sekmelerde (Kimlik, Hocaları, Talebeleri, Hükümler, Kaynak metin, Rıhle) kaynak koduyla görünür; Tehzîb Hocaları ve Talebeleri sekmelerindedir. Ortak kayıt bağlıysa veriler gizli depodan (<span class="mono">kaynak/dis/</span>) kendiliğinden gelir; Tehzîb verisi bağlantı yokken üstteki “＋ Tehzîb verisi” ile <span class="mono">tools/tehzib-hazirla.py</span> çıktısından yüklenir. Bu kayıtlar hüküm sayılarına eklenmez.</p>' +
+  out += fold('pk:dis', 'Dış kaynaklar', '<p class="hint" style="margin:0 0 8px">HH (Câmiu Hâdimi’l-Haremeyn veritabanı) ve UD (râvi kimlik alanları) bilgileri eşleşen râvide ilgili sekmelerde (Kimlik, Hocaları, Talebeleri, Hükümler, Kaynak metin, Mekân) kaynak koduyla görünür; Tehzîb Hocaları ve Talebeleri sekmelerindedir. Ortak kayıt bağlıysa veriler gizli depodan (<span class="mono">kaynak/dis/</span>) kendiliğinden gelir; Tehzîb verisi bağlantı yokken üstteki “＋ Tehzîb verisi” ile <span class="mono">tools/tehzib-hazirla.py</span> çıktısından yüklenir. Bu kayıtlar hüküm sayılarına eklenmez.</p>' +
     (DIS.dizin ? disPaketOzeti() : '<div class="small muted">HH/UD dizini henüz alınmadı' + (DIS.err.dizin ? ': ' + esc(DIS.err.dizin) : ortakCfg() ? '' : ' (ortak kayıt bağlı değil)') + '.</div>') + (tk.length ? '<div class="small" style="margin-top:4px"><b>Tehzîb:</b> ' + tk.map(r => esc('#' + r.sira)).join(' · ') + '</div>' : ''), false, (DIS.dizin ? 'HH/UD ' + sayiTr((DIS.dizin.sayilar || {}).eslesen) + ' râvi · ' : '') + 'Tehzîbü’l-Kemâl ' + tk.length + ' râvi');
   el.innerHTML = out;
   $('vol-add').onclick = () => { if (need('volume')) $('vol-file').click(); };
@@ -3547,6 +3550,8 @@ const KFIELDS = [['isim', 'Ana / standart isim'], ['kunye', 'Künye'], ['nisbe',
 const NISBE_TR = { yer: 'yer', kabile: 'kabile', meslek: 'meslek / sıfat', 'diğer': 'türü belirsiz' };
 const HOW_TR = { nisbe: 'nisbe', memleket: 'min ehli', 'asıl': 'aslen', ikamet: 'sakin', 'nüzûl': 'nüzûl', 'görev': 'görev', 'kudûm': 'kudûm', 'rıhle': 'rıhle', 'tahdîs': 'tahdîs', 'semâ‘': 'semâ‘', 'mücâveret': 'mücâveret', hac: 'hac' };
 function kimOf(n) { if (!n._kim) n._kim = CTK.extract({ names: n._names, blocks: n.blocks.map(b => ({ id: b.id, text: b._text, source: srcShort(b) })) }); return n._kim; }
+// Merviyyât: el-Câmi‘ metnindeki senetlerde râvinin halka olarak geçtiği rivayetler (CTK.merviyyat; otomatik çıkarım)
+function mervOf(n) { if (!n._merv) n._merv = CTK.merviyyat({ names: n._names, blocks: n.blocks.map(b => ({ id: b.id, text: b._text, source: srcShort(b), author: b.effective.source_author || '' })) }); return n._merv; }
 function idnOf(nid, create) { if (create) { REV.idn = REV.idn || {}; return REV.idn[nid] = REV.idn[nid] || { f: {}, l: {} }; } return (REV.idn && REV.idn[nid]) || { f: {}, l: {} }; }
 function yearText(x) { if (!x || !x.year) return ''; if (x.noCentury) return 'yüzler hanesi yazılmamış (…' + String(x.from || x.year).slice(-2) + (x.to && x.to !== x.from ? '–' + String(x.to).slice(-2) : '') + ')'; return 'h. ' + (x.approx ? x.from + '–' + x.to : x.year); }
 function uniq(a) { return [...new Set(a.filter(Boolean))]; }
@@ -3606,7 +3611,7 @@ function renderIdentityTab(n) {
 }
 // Liste alanları (hocalar, talebeler, rıhle): otomatik adaylar + onay/ret + elle ekleme + düzeltme
 // (ad, vefat, memleket, not). Otomatik adayın düzeltmesi L.ed[aday] olarak, kim/ne zaman imzasıyla saklanır.
-const LIST_TR = { hocalar: 'Hoca', talebeler: 'Talebe', rihle: 'Rıhle' };
+const LIST_TR = { hocalar: 'Hoca', talebeler: 'Talebe', rihle: 'Mekân' };
 const LSEP = '::';
 function listItems(n, key) {
   const K = kimOf(n); const L = (idnOf(n.id).l || {})[key] || { st: {}, add: [] }; const ED = L.ed || {};
@@ -3711,11 +3716,50 @@ function listeSentez(n) {
 }
 function renderTeachersTab(n) { return hocaTalebeTab(n, 'hoca'); }
 function renderStudentsTab(n) { return hocaTalebeTab(n, 'talebe'); }
+const mervKisiler = (n, key) => { const M = mervOf(n); return key === 'hoca' ? M.hocalar : M.talebeler; };
+// el-Câmi‘ metnindeki senetli rivayetlerden hocalar ya da talebeler (CK); HH’de de bulunan kişiye HH kodu ve oradaki sayısı
+function mervBolum(n, V, key) {
+  const M = mervOf(n), L = mervKisiler(n, key), hoca = key === 'hoca';
+  const bas = '<h3 class="panel-title">el-Câmi‘ metnindeki senetli rivayetlerinden ' + (hoca ? 'hocaları' : 'talebeleri') + ' (merviyyât) ' + kodlar(['CK']) +
+    ' <span class="muted">' + (M.rivayetler.length ? sayiTr(M.rivayetler.length) + ' rivayet · ' + sayiTr(M.tekrarsiz) + ' tekrarsız · ' + L.length + ' ' + (hoca ? 'hoca' : 'talebe') + ' · ' : '') + 'otomatik çıkarım</span></h3>';
+  if (!M.rivayetler.length) return bas + '<p class="small muted">el-Câmi‘in naklettiği eserlerde bu râvinin bir halka olarak geçtiği senet bulunamadı.</p>';
+  const H = V ? hhSatirlar(n, V, key).filter(x => !x.sil) : [], hk = new Map(), hi = new Map();
+  for (const x of H) { const k = adKok(x.ad); if (!k) continue; hk.set(k, hk.has(k) ? null : x); const i = k.split(' بن ')[0]; hi.set(i, hi.has(i) ? null : x); }   // aynı adla iki HH kişisi: eşleştirilmez
+  // Baba adı yazılmışsa yalnız ism + baba ile; yalnız ism yazılmışsa HH listesinde o isimde tek kişi varsa
+  const hhOf = x => {
+    const K = x.adlar.map(adKok).filter(Boolean), tam = K.filter(k => k.includes(' بن '));
+    if (tam.length) { for (const k of tam) { const r = hk.get(k); if (r) return r; } return null; }
+    for (const k of K) { const r = hi.get(k); if (r) return r; }
+    return null;
+  };
+  const evOf = r => ({ block: r.block, start: r.start, end: r.end, source: r.source, text: r.zincir.join(' ، ') });
+  const satir = x => {
+    const h = hhOf(x), diger = x.adlar.filter(a => a !== x.ad);
+    return '<tr style="cursor:default"><td data-v="' + esc(x.ad) + '"><span class="ar" style="font-size:calc(16px * var(--yb))">' + esc(x.ad) + '</span>' +
+      (!hoca && x.rv.every(r => r.talebeMusannif) ? ' <span class="tag" title="Râvi senedin ilk halkası: eserin müellifi ondan bizzat rivayet ediyor">müellif</span>' : '') +
+      (diger.length ? '<div class="small muted ar">' + diger.slice(0, 3).map(esc).join(' · ') + '</div>' : '') + '</td>' +
+      '<td class="num" data-v="' + x.n + '">' + sayiTr(x.n) + '</td><td class="num" data-v="' + x.t + '">' + sayiTr(x.t) + '</td>' +
+      '<td class="small ar">' + x.kaynaklar.slice(0, 3).map(esc).join('، ') + (x.kaynaklar.length > 3 ? ' +' + (x.kaynaklar.length - 3) : '') + '</td>' +
+      '<td class="num" style="white-space:nowrap" data-v="' + (h ? h.r || 0 : -1) + '">' + (h ? sayiTr(h.r) + (h.rt != null ? ' <span class="small muted">/ ' + sayiTr(h.rt) + '</span>' : '') : '<span class="muted">—</span>') + '</td>' +
+      '<td>' + kodlar(['CK'].concat(h ? ['HH'] : [])) + '</td><td>' + evChips(x.rv.map(evOf), 3) + '</td></tr>';
+  };
+  const liste = M.rivayetler.map(r => '<tr style="cursor:default"><td class="small ar">' + esc(r.source) + '</td><td class="ar" dir="rtl">' +
+    r.zincir.map((z, i) => i === r.i ? '<b>' + esc(z) + '</b>' : esc(z)).join(' <span class="muted">←</span> ') + (r.nebi ? ' <span class="muted">←</span> النبي ﷺ' : '') +
+    (r.talebeMusannif ? ' <span class="tag" title="Râvi senedin ilk halkası">müellifin şeyhi</span>' : '') + '</td><td class="ar small">' + esc(r.matn.slice(0, 90)) + '…</td><td>' + evChips([evOf(r)], 1) + '</td></tr>').join('');
+  return bas + '<div class="wrap"><table class="tbl" data-tid="merv-' + key + '"><thead><tr><th data-sk="t">' + (hoca ? 'Hoca (senette râviden sonraki halka)' : 'Talebe (senette râviden önceki halka)') + '</th><th data-sk="n" class="num">Rivayet</th><th data-sk="n" class="num">Tekrarsız</th><th data-sk="t">Eserler</th><th data-sk="n" class="num" title="HH’de bu kişiden/kişinin aldığı rivayet (tekrarlı / tekrarsız)">HH’de</th><th>Kaynak</th><th>Metinde</th></tr></thead><tbody>' +
+    L.map(satir).join('') + '</tbody></table></div>' +
+    fold('merv-liste-' + key, 'Rivayetlerin listesi (senet ve metnin başı)', '<div class="wrap"><table class="tbl" data-tid="merv-l-' + key + '"><thead><tr><th>Eser</th><th>Senet (râvi koyu)</th><th>Metnin başı</th><th>Metinde</th></tr></thead><tbody>' + liste + '</tbody></table></div>', false, sayiTr(M.rivayetler.length) + ' rivayet') +
+    '<p class="hint">' + kodlar(['CK']) + ' Senetler el-Câmi‘in naklettiği eserlerden (el-Kâmil, el-Mecrûhîn, Ukaylî, Mîzân …) otomatik ayrılır: “حدثنا / أخبرنا / عن / سمعت” halkaları; ' +
+    'râvinin halkası adı (ism ve yazılıysa baba adı, künye ya da “İbn X”) tutan halkadır. ' + (hoca ? 'Hoca, ondan sonraki halkadır (“عن النبي” ise Hz. Peygamber).' : 'Talebe, ondan önceki halkadır; râvi ilk halkaysa eserin müellifidir.') +
+    ' “Tekrarsız”: aynı hocadan gelen ve metninin başı aynı olan rivayetler bir sayılır (ör. el-Kâmil ile Mîzân’ın aynı hadisi nakletmesi). Aynı kişinin farklı yazımları her zaman birleşmeyebilir; sayılar el-Câmi‘ metnindekilerdir, râvinin bütün rivayetini göstermez. ' +
+    (V ? '“HH’de” sütunu, aynı kişi HH listesinde de varsa oradaki sayıdır.' : '') + '</p>';
+}
 function hocaTalebeTab(n, key) {
   const V = disVeri(n), lk = key === 'hoca' ? 'hocalar' : 'talebeler', hoca = key === 'hoca';
   return '<div class="pane">' + (V ? hhSayilar(V, key) : disDurum(n)) + '<div class="toolbar-inline"><label class="small"><input type="checkbox" data-act="show-rej"' + (UI.showRejected ? ' checked' : '') + '> Reddedilenleri göster</label><span class="grow"></span>' + hintBtn(key) + '</div>' +
-    (hoca ? hintP('hoca', 'Hocalar (şüyûh) “rivâ/haddese/semi‘a an …” ve Mîzân usulü “an … ve anhü …” kalıplarından çıkarılır. Olumsuz ve şartlı cümleler (“mâ haddese anhü”, “izâ revâ anhü sika”) ile senet içi adlar alınmaz. Adaylar doğrulanmamıştır. Talebeler ayrı sekmededir; ikisinden çıkan tahmini tabaka Sentez sekmesindedir.') : hintP('talebe', 'Talebeler (telâmîz) “ve anhü, revâ anhü, haddese anhü …” kalıplarından çıkarılır. Olumsuz ve şartlı cümleler ile senet içi adlar alınmaz. Adaylar doğrulanmamıştır. Hocalar ayrı sekmededir; ikisinden çıkan tahmini tabaka Sentez sekmesindedir.')) +
+    (hoca ? hintP('hoca', 'Hocalar (şüyûh) “rivâ/haddese/semi‘a an …” ve Mîzân usulü “an … ve anhü …” kalıplarından çıkarılır. Olumsuz ve şartlı cümleler (“mâ haddese anhü”, “izâ revâ anhü sika”) ile senet içi adlar bu listeye alınmaz; senetlerdeki halkalar “el-Câmi‘ metnindeki senetli rivayetlerinden” bölümündedir. Adaylar doğrulanmamıştır. Talebeler ayrı sekmededir; ikisinden çıkan tahmini tabaka Sentez sekmesindedir.') : hintP('talebe', 'Talebeler (telâmîz) “ve anhü, revâ anhü, haddese anhü …” kalıplarından çıkarılır. Olumsuz ve şartlı cümleler ile senet içi adlar bu listeye alınmaz; senetlerdeki halkalar “el-Câmi‘ metnindeki senetli rivayetlerinden” bölümündedir. Adaylar doğrulanmamıştır. Hocalar ayrı sekmededir; ikisinden çıkan tahmini tabaka Sentez sekmesindedir.')) +
     (V ? tahsilSentez(n, V, key) : '') + '<div class="set-grid">' + sentezKart(sentezKisiler(n, lk), hoca ? 'Hocalarının vefatı, yeri ve tabakası' : 'Talebelerinin vefatı, yeri ve tabakası') + '</div>' +
+    mervBolum(n, V, key) +
     (V ? '<h3 class="panel-title">Dış kaynakta ' + (hoca ? 'hocaları (روى عن)' : 'talebeleri (روى عنه)') + ' ' + kodlar(['HH']) + ' <span class="muted">33 metin kitabının isnadlarından · rivayet sayısıyla · düzeltilebilir</span></h3>' + hhTablo(n, V, key, hoca ? 'Hocaları (روى عن)' : 'Talebeleri (روى عنه)') + (hoca ? hhKitaplar(V) : '') : '') +
     tkzBolum(n, lk) + '<h3 class="panel-title">Kaynak metinden çıkarılanlar ' + kodlar(['CK']) + ' <span class="muted">el-Câmi‘ blokları · düzeltilebilir</span></h3>' + listTable(n, lk, hoca ? 'Hocaları (şüyûh)' : 'Talebeleri (telâmîz)') + '</div>';
 }
@@ -3725,7 +3769,7 @@ function renderRihleTab(n) {
   for (const b of K.belde) (places[b.v] = places[b.v] || { v: b.v, region: b.region, hows: new Set(), ev: [] }).hows.add(HOW_TR[b.how] || b.how), places[b.v].ev.push(...b.ev);
   for (const r of items) if (r.region || /^[A-ZÇĞİÖŞÜÂÎÛ]/.test(r.v)) (places[r.v] = places[r.v] || { v: r.v, region: r.region || '', hows: new Set(), ev: [] }).hows.add(HOW_TR[r.kind] || r.kind || 'elle'), places[r.v].ev.push(...r.ev);
   const pl = Object.values(places);
-  let out = '<div class="pane"><div class="tabtools"><span class="grow"></span>' + hintBtn('rihle') + '</div>' + hintP('rihle', 'Râvinin geçtiği yerler: nisbeden memleket, “min ehli, sekene, nezele, kadime, rahale ilâ, haddese bi-” gibi kalıplardan ikamet, nüzûl ve rıhle. Yer adları ve olaylar araştırmacı tarafından eklenebilir; her kayıt kaynağıyla gösterilir.');
+  let out = '<div class="pane"><div class="tabtools"><span class="grow"></span>' + hintBtn('rihle') + '</div>' + hintP('rihle', 'Mekân: râvinin bulunduğu ve geçtiği yerler ile rıhleleri. Nisbeden memleket, “min ehli, sekene, nezele, kadime, rahale ilâ, haddese bi-” gibi kalıplardan ikamet, nüzûl ve rıhle. Yer adları ve olaylar araştırmacı tarafından eklenebilir; her kayıt kaynağıyla gösterilir.');
   out += '<h3 class="panel-title">Yerler <span class="muted">' + pl.length + '</span></h3>' + (pl.length ? '<div class="places">' + pl.map(p => '<div class="place"><b>' + esc(p.v) + '</b>' + (p.region ? ' <span class="small muted">' + esc(p.region) + '</span>' : '') + '<div class="small">' + [...p.hows].map(h => '<span class="tag">' + esc(h) + '</span>').join(' ') + '</div><div>' + evChips(p.ev, 3) + '</div></div>').join('') + '</div>' : '<div class="empty-state">Metinde yer bilgisi bulunamadı.</div>');
   out += disRihleHTML(n) + listTable(n, 'rihle', 'Rıhle ve kudûm kayıtları') + '</div>';
   return out;
@@ -5445,9 +5489,9 @@ document.addEventListener('click', e => {
   const ls = t.closest('[data-lst]'); if (ls) { if (!need('edit')) return; const ds = ls.dataset.lst, key = ds.slice(0, ds.indexOf('|')), v = ds.slice(ds.lastIndexOf('|') + 1), k2 = ds.slice(ds.indexOf('|') + 1, ds.lastIndexOf('|')); const n = NBYID[S.nid]; const I = idnOf(n.id, true); const L = I.l[key] = I.l[key] || { st: {}, add: [] }; const before = L.st[k2] || 'aday';
     if (v) L.st[k2] = v; else delete L.st[k2];
     const it = listItems(n, key).find(x => x.key === k2);
-    logAct('kimlik', ({ hocalar: 'Hoca', talebeler: 'Talebe', rihle: 'Rıhle' })[key] + ' ' + (v === 'ok' ? 'onaylandı' : v === 'no' ? 'reddedildi' : 'adaya döndü') + ': ' + (it ? it.v : k2), { nid: n.id, seq: n.source_sequence, before, after: v || 'aday' });
+    logAct('kimlik', ({ hocalar: 'Hoca', talebeler: 'Talebe', rihle: 'Mekân' })[key] + ' ' + (v === 'ok' ? 'onaylandı' : v === 'no' ? 'reddedildi' : 'adaya döndü') + ': ' + (it ? it.v : k2), { nid: n.id, seq: n.source_sequence, before, after: v || 'aday' });
     saveRev(); renderCenter(); return; }
-  const ld = t.closest('[data-ldel]'); if (ld) { if (!need('edit')) return; const [key, i] = ld.dataset.ldel.split('|'); const n = NBYID[S.nid]; const L = idnOf(n.id, true).l[key]; const x = L.add.splice(+i, 1)[0]; logAct('kimlik', ({ hocalar: 'Hoca', talebeler: 'Talebe', rihle: 'Rıhle' })[key] + ' silindi: ' + x.v, { nid: n.id, seq: n.source_sequence, before: x }); saveRev(); renderCenter(); return; }
+  const ld = t.closest('[data-ldel]'); if (ld) { if (!need('edit')) return; const [key, i] = ld.dataset.ldel.split('|'); const n = NBYID[S.nid]; const L = idnOf(n.id, true).l[key]; const x = L.add.splice(+i, 1)[0]; logAct('kimlik', ({ hocalar: 'Hoca', talebeler: 'Talebe', rihle: 'Mekân' })[key] + ' silindi: ' + x.v, { nid: n.id, seq: n.source_sequence, before: x }); saveRev(); renderCenter(); return; }
   const cr = t.closest('[data-crit]'); if (cr) { S.critSel = S.critSel === cr.dataset.crit ? '' : cr.dataset.crit; renderCritics(); return; }
   const lx = t.closest('[data-lex]'); if (lx) { S.lexSel = lx.dataset.lex; renderLex(); return; }
   const lk = t.closest('[data-lexk]'); if (lk) { S.lexK = lk.dataset.lexk; S.lexSel = ''; renderLex(); return; }
@@ -5541,7 +5585,7 @@ document.addEventListener('submit', e => {
   const key = f.dataset.ladd, n = NBYID[S.nid], I = idnOf(n.id, true), L = I.l[key] = I.l[key] || { st: {}, add: [] };
   const x = Object.assign({ id: 'e' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), v: f.v.value.trim(), note: f.note.value.trim(), at: new Date().toISOString() }, f.kind ? { kind: f.kind.value } : {}, f.vefat && f.vefat.value.trim() ? { vefat: f.vefat.value.trim() } : {}, f.memleket && f.memleket.value.trim() ? { memleket: f.memleket.value.trim() } : {}, by());
   if (!x.v) return;
-  L.add.push(x); logAct('kimlik', ({ hocalar: 'Hoca', talebeler: 'Talebe', rihle: 'Rıhle' })[key] + ' eklendi: ' + x.v, { nid: n.id, seq: n.source_sequence, after: x });
+  L.add.push(x); logAct('kimlik', ({ hocalar: 'Hoca', talebeler: 'Talebe', rihle: 'Mekân' })[key] + ' eklendi: ' + x.v, { nid: n.id, seq: n.source_sequence, after: x });
   saveRev(); renderCenter(); toast('Eklendi.');
 });
 document.addEventListener('change', e => {
@@ -7559,7 +7603,152 @@ const RAPOR = (() => {
     const m = /([0-9٠-٩]{2,3})/.exec(String(t || '')); if (m) return +m[1].replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
     const h = hijri(nz(t || '')); return h && h.year && !h.noCentury ? h.year : null;
   }
-  return { VERSION, extract, hijri, tabakaFromDeath, placeOf, tabakaOf, yearOf, PLACES, TABAKA_TR };
+  /* ---------- Merviyyât: metindeki senetli rivayetler ----------
+     el-Câmi‘in naklettiği eserlerde (el-Kâmil, el-Mecrûhîn, Ukaylî, Mîzân …) râvinin adının bir senet halkası olarak geçtiği
+     rivayetler. Senet “حدثنا / أخبرنا / أنبأنا / ثنا” ile başlar; halkalar “حدثنا، أخبرنا، عن، سمعت، (قال) حدثنا” ile ayrılır;
+     “أن رسول الله / عن النبي / قال:” ile metin başlar. Râvinin halkasının önündeki halka talebesi (ilk halkaysa eserin müellifi),
+     arkasındaki halka hocasıdır. Râvi halkası: ism (ve yazılıysa baba adı) tutar, nisbe çelişmez; ya da künyesi ya da “İbn X”
+     adı tutar. Tekrarsız: aynı hocadan (ya da hocası yazılmamış) ve metninin ilk kelimeleri büyük ölçüde aynı rivayetler bir
+     sayılır (aynı hadisi el-Kâmil ve Mîzân birlikte naklettiğinde). Otomatik çıkarımdır; halkalar doğrulanmamıştır. */
+  const M_FIIL = new Set(['حدثنا', 'حدثني', 'حدثنى', 'ثنا', 'نا', 'اخبرنا', 'اخبرني', 'انبانا', 'انباني', 'انا', 'سمعت', 'سمع', 'عن', 'وحدثنا', 'واخبرنا', 'وعن', 'فحدثنا']);
+  const M_BAS = /(?:^|[\s.:؛،,(\[])(حدثنا|حدثني|حدثنى|اخبرنا|اخبرني|انبانا|انباني|ثنا)(?=[\s:،,])/g;
+  const M_NEBI = /^(?:رسول الله|النبي|نبي الله)/;
+  const M_DUR = new Set(['قال', 'قالا', 'يقول', 'ان', 'انه', 'انها', 'ح', 'وقال', 'فقال', 'قالت']);
+  const M_ANLATI = new Set(['يصيح', 'كان', 'وكان', 'فاذا', 'اذا', 'ثم', 'فلما', 'لما', 'فقال', 'وقال', 'روي', 'يروي', 'حدث', 'ذكر', 'فذكر', 'في', 'الي', 'من', 'لم', 'لا', 'ما', 'قد', 'وقد', 'هذا', 'هذه', 'الحديث', 'حديث', 'حديثا', 'به', 'بهذا', 'مثله', 'نحوه', 'مرفوعا', 'موقوفا', 'باسناده', 'قال', 'فيه', 'يحدث', 'وذكر', 'وروي', 'فقلت', 'قلت']);
+  const M_ORTAK = new Set(['رسول', 'الله', 'النبي', 'قال', 'قالت', 'ان', 'انه', 'عن', 'من', 'في', 'علي', 'الي', 'ما', 'لا', 'يقول', 'كان', 'سمعت', 'مرفوعا', 'وسلم', 'ثم', 'او', 'هو', 'هذا']);
+  const M_YALIN = w => w.replace(/[،,:؛.()\[\]"«»“”]/g, '');
+  function mKelimeler(n, p) { const re = /\S+/g; re.lastIndex = p; const out = []; let m; while ((m = re.exec(n)) && out.length < 300) out.push({ w: m[0], s: m.index, e: m.index + m[0].length }); return out; }
+  function mSenet(n, pos) {
+    const W = mKelimeler(n, pos), links = []; let i = 0, nebi = false, dur = false;
+    while (i < W.length) {
+      let v = M_YALIN(W[i].w);
+      if (v === 'قال' || v === 'قالا') { i++; v = M_YALIN((W[i] || {}).w || ''); }
+      if (!M_FIIL.has(v)) break;
+      i++;
+      const s0 = W[i] ? W[i].s : n.length, ad = []; let e0 = s0;
+      while (i < W.length) {
+        const w = W[i].w, b = M_YALIN(w);
+        if (M_FIIL.has(b) || M_DUR.has(b)) break;
+        ad.push(b); e0 = W[i].e; i++;
+        if (/[،,]$/.test(w) || /[.:؛]$/.test(w)) { if (/[.:؛]$/.test(w)) dur = true; break; }
+        if (ad.length > 9) break;
+      }
+      const a = ad.join(' ').replace(/\s*(?:رضي الله عنه(?:ما)?|رحمه الله|عليه السلام|صلي الله عليه وسلم)\s*/g, ' ').trim();
+      if (!a) break;
+      if (M_NEBI.test(a)) { nebi = true; break; }
+      if (a.split(' ').slice(1).some(x => M_ANLATI.has(x)) || a.split(' ').length > 9) break;
+      links.push({ ad: a, s: s0, e: e0 });
+      if (dur) break;
+      const nx = M_YALIN((W[i] || {}).w || '');
+      if ((nx === 'ان' || nx === 'انه') && M_NEBI.test(n.slice(W[i].e).trim())) { nebi = true; break; }
+      if (nx === 'يقول' && /^\s*:?\s*سمعت/.test(n.slice(W[i].e))) { i++; continue; }
+    }
+    return { links, end: i < W.length ? W[i].s : n.length, nebi };
+  }
+  // Ad zinciri: ism, baba …; nisbeler; künye
+  function mAd(ad) {
+    const w = nz(ad).replace(/[^ء-ي\s]/g, ' ').replace(/وو/g, 'و').split(/\s+/).filter(Boolean);
+    const ch = [], nis = new Set(); let cur = [], kunye = '';
+    for (let i = 0; i < w.length; i++) {
+      const x = w[i];
+      if ((x === 'ابو' || x === 'ابي' || x === 'ابا') && w[i + 1] && !(i > 0 && (w[i - 1] === 'بن' || w[i - 1] === 'ابن'))) {
+        if (!kunye) kunye = 'ابو ' + w[i + 1];
+        if (!ch.length && !cur.length) { cur = ['ابو', w[i + 1]]; i++; continue; }
+      }
+      if (x === 'بن' || x === 'ابن' || x === 'بنت') { if (cur.length) { ch.push(cur.join(' ')); cur = []; } continue; }
+      if (/^ال.+ي$/.test(x) && x.length > 4) { if (cur.length) { ch.push(cur.join(' ')); cur = []; } break; }
+      if (cur.length && !['عبد', 'ابو', 'ابي', 'ام'].includes(cur[cur.length - 1])) { ch.push(cur.join(' ')); cur = []; if (w[i - 1] !== 'بن') break; }
+      cur.push(x);
+    }
+    if (cur.length) ch.push(cur.join(' '));
+    for (const x of w) if (/^ال.+ي$/.test(x) && x.length > 4) nis.add(x);
+    return { ch: ch.map(x => x.replace(/^ال(?=...)/, '').replace(/^(ابي|ابا) /, 'ابو ')), nis, kunye, w };
+  }
+  function mRavi(names) {
+    const R = { isim: new Set(), baba: {}, nis: new Set(), kun: new Set(), ibn: new Set() };
+    for (const a of names.filter(Boolean).flatMap(a => [a, ...String(a).split(/[،,]|ويقال|وقيل|يقال/)])) {
+      const p = mAd(a); if (!p.ch.length) continue;
+      R.isim.add(p.ch[0]); if (p.ch[1]) (R.baba[p.ch[0]] = R.baba[p.ch[0]] || new Set()).add(p.ch[1]);
+      p.nis.forEach(x => R.nis.add(x)); if (p.kunye) R.kun.add(p.kunye);
+      if (p.w[0] === 'ابن' && p.w[1]) R.ibn.add('ابن ' + p.w[1]);
+    }
+    return R;
+  }
+  function mUyar(R, ad) {
+    const p = mAd(ad); if (!p.ch.length) return false;
+    const nisCel = p.nis.size && R.nis.size && ![...p.nis].some(x => R.nis.has(x));
+    if (p.w[0] === 'ابن' && R.ibn.has('ابن ' + p.w[1])) return !nisCel;
+    const i = p.ch[0];
+    if (R.isim.has(i)) return !(p.ch[1] && !(R.baba[i] && R.baba[i].has(p.ch[1]))) && !nisCel;
+    if (p.kunye && i.startsWith('ابو') && R.kun.has(p.kunye)) return !nisCel;
+    return false;
+  }
+  const mTemiz = a => { const w = String(a).split(/\s+/); const k = w.findIndex((x, i) => i > 0 && /^(?:يعني|وهو|هو)$/.test(strip(x))); return (k > 0 ? w.slice(0, k) : w).join(' ').replace(/\s+(?:قال|قالا|قَالَ)$/, '').trim(); };
+  // Kişi anahtarı: “ism b. baba” (baba yoksa ism); aynı ismin tek tam adı varsa yalın ism ona katılır
+  function mKisiler(L, alan) {
+    const g = new Map();
+    for (const r of L) {
+      const ad = r[alan]; if (!ad) continue;
+      const p = mAd(ad), ibn = p.w[0] === 'ابن' && p.w[1];
+      const k = ibn ? 'ابن ' + p.w[1] : p.ch.length ? p.ch.slice(0, 2).join(' بن ') + (p.ch.length < 2 && p.nis.size ? ' ' + [...p.nis][0] : '') : nz(ad);
+      if (!g.has(k)) g.set(k, { k, ism: ibn ? '' : p.ch[0] || '', tam: !ibn && p.ch.length >= 2, adlar: new Map(), rv: [] });
+      const x = g.get(k); x.adlar.set(ad, (x.adlar.get(ad) || 0) + 1); x.rv.push(r);
+    }
+    const katil = (x, y) => { for (const [a, c] of x.adlar) y.adlar.set(a, (y.adlar.get(a) || 0) + c); y.rv.push(...x.rv); g.delete(x.k); };
+    // “İbn X” → babası X olan tek kişi; yalnız nisbe (“الثوري”) → o nisbeyi taşıyan tek kişi
+    for (const x of [...g.values()]) {
+      const w = x.k.split(' ');
+      if (!x.ism && w[0] === 'ابن' && w[1]) { const y = [...g.values()].filter(z => z !== x && z.tam && z.k.split(' بن ')[1] === w[1]); if (y.length === 1) katil(x, y[0]); }
+      else if (!x.ism && w.length === 1 && /^ال.+ي$/.test(w[0])) { const y = [...g.values()].filter(z => z !== x && z.ism && [...z.adlar.keys()].some(a => nz(a).split(' ').includes(w[0]))); if (y.length === 1) katil(x, y[0]); }
+    }
+    const byIsm = {};
+    for (const x of g.values()) (byIsm[x.ism] = byIsm[x.ism] || []).push(x);
+    for (const L2 of Object.values(byIsm)) {
+      const tam = L2.filter(x => x.tam);
+      if (tam.length === 1) for (const x of L2) if (!x.tam && x !== tam[0] && !x.k.includes(' ال')) { for (const [a, c] of x.adlar) tam[0].adlar.set(a, (tam[0].adlar.get(a) || 0) + c); tam[0].rv.push(...x.rv); g.delete(x.k); }
+    }
+    return [...g.values()].map(x => {
+      const adlar = [...x.adlar.entries()].sort((a, b) => b[1] - a[1] || b[0].length - a[0].length);
+      return { ad: adlar.slice().sort((a, b) => b[0].length - a[0].length)[0][0], adlar: adlar.map(a => a[0]), n: x.rv.length, t: new Set(x.rv.map(r => r.grup)).size, kaynaklar: [...new Set(x.rv.map(r => r.source))], rv: x.rv };
+    }).sort((a, b) => b.n - a.n || b.t - a.t || a.ad.localeCompare(b.ad));
+  }
+  function merviyyat(input) {
+    const R = mRavi(input.names || []), out = [];
+    for (const b of input.blocks || []) {
+      const M = CTX.norm(b.text || ''), n = M.n; M_BAS.lastIndex = 0; let m, son = -1;
+      while ((m = M_BAS.exec(n))) {
+        const pos = m.index + m[0].indexOf(m[1]);
+        if (pos < son) continue;
+        const c = mSenet(n, pos); son = Math.max(c.end, pos + 1);
+        const L = c.links;
+        const ozgun = x => mTemiz(String(b.text).slice(M.map[x.s], M.map[Math.min(x.e, M.map.length - 1)]).replace(/[،,:؛.\s]+$/, '').replace(/\s*(?:رضي الله عنه(?:ما)?|رحمه الله|عليه السلام)\s*/g, ' ').trim(), true);
+        for (let i = 0; i < L.length; i++) {
+          if (!mUyar(R, L[i].ad)) continue;
+          let j = i; while (L[j + 1] && mUyar(R, L[j + 1].ad)) j++;   // “خالد بن عبد الرحمن، أبو الهيثم الخراساني”: aynı kişinin iki adı
+          const hoca = L[j + 1] ? ozgun(L[j + 1]) : (c.nebi ? 'النبي ﷺ' : null);
+          const talebe = i > 0 ? ozgun(L[i - 1]) : (b.author || null);
+          const matn = n.slice(c.end, c.end + 220).replace(/^[\s:،,]*(?:قال|قالت|انه|ان)?\s*:?\s*/, '');
+          const me = M.map[Math.min(c.end, M.map.length - 1)];
+          out.push({ block: b.id, source: b.source || '', i, talebe, talebeMusannif: i === 0, hoca, nebi: c.nebi, zincir: L.map(ozgun),
+            start: M.map[pos], end: me, matn: String(b.text).slice(me, me + 400).replace(/^[\s:،,]*/, '').slice(0, 160) });
+          break;
+        }
+      }
+    }
+    // Tekrarsız: aynı hoca (ya da hoca yazılmamış) ve metnin (salavat ve bağlaçlar dışında) ilk 10 kelimesinin en az yarısı ortak
+    const tok = r => new Set(nz(r.matn).replace(/[^ء-ي\s]/g, ' ').replace(/(?:صلي|صلى) الله عليه وسلم|رضي الله عنه(?:ما)?/g, ' ').split(/\s+/).filter(x => x.length > 1 && !M_ORTAK.has(x)).slice(0, 10));
+    const T = out.map(tok), ust = out.map((_, i) => i), bul = i => (ust[i] === i ? i : (ust[i] = bul(ust[i])));
+    const hk = r => r.hoca ? (mAd(r.hoca).ch[0] || nz(r.hoca)) : '';
+    for (let i = 0; i < out.length; i++) for (let j = 0; j < i; j++) {
+      if (hk(out[i]) && hk(out[j]) && hk(out[i]) !== hk(out[j])) continue;
+      const A = T[i], B = T[j]; if (!A.size || !B.size) continue;
+      let k = 0; for (const x of A) if (B.has(x)) k++;
+      if (Math.min(A.size, B.size) >= 3 && k / Math.min(A.size, B.size) >= 0.5) { ust[bul(i)] = bul(j); }
+    }
+    out.forEach((r, i) => { r.grup = bul(i); });
+    return { rivayetler: out, tekrarsiz: new Set(out.map(r => r.grup)).size, hocalar: mKisiler(out, 'hoca'), talebeler: mKisiler(out, 'talebe') };
+  }
+  return { VERSION, extract, hijri, tabakaFromDeath, placeOf, tabakaOf, yearOf, merviyyat, PLACES, TABAKA_TR };
 });
 
 </script>
