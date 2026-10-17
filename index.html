@@ -2602,7 +2602,21 @@ function hhSts(vol, seq, n, pkg) {
   });
   HHST.set(key, out); return out;
 }
-const hhStsOf = n => n ? hhSts(disCilt(n), n.source_sequence, n) : [];
+// Çiftlemeyi önle: aynı münekkitin aynı hükmü (aynı tür; lafız takımı aynı ya da biri ötekini kapsıyor — “görüş” ölçütü) el-Câmi‘de
+// zaten varsa HH sözü ayrı hüküm sayılmaz; el-Câmi‘ hükmüne “HH’de de” olarak işlenir (s.hhAyni), ekranda o satırda SC HH kodu çıkar.
+function hhAyikla(sc, hh) {
+  if (!hh.length) return hh;
+  const out = [];
+  for (const h of hh) {
+    const c = h.critic, T = termSet(h), pk = phKey(h);
+    const ayni = x => eCritic(x) === c && eKind(x) === h.kind && ((T.size && termSet(x).size && (subOf(T, termSet(x)) || subOf(termSet(x), T))) || (pk && phKey(x) === pk));
+    const m = c ? sc.find(x => x.origin !== 'HH' && ayni(x)) || out.find(ayni) : null;   // önce el-Câmi‘, sonra HH’nin kendi tekrarları
+    if (m) { m.hhAyni = m.hhAyni || []; if (!m.hhAyni.includes(h.hhSoz)) m.hhAyni.push(h.hhSoz); h.ayni = m.uid; h.ayniHH = m.origin === 'HH'; } else { h.ayni = null; h.ayniHH = false; h.hhAyni = null; out.push(h); }
+  }
+  return out;
+}
+const hhAyniRozet = s => s.hhAyni && s.hhAyni.length ? '<div class="small" title="Aynı münekkitin aynı hükmü HH’de de var (söz #' + s.hhAyni.join(', #') + '); ayrıca sayılmaz">' + kodlar(['SC', 'HH']) + (s.hhAyni.length > 1 ? ' <span class="muted">×' + s.hhAyni.length + '</span>' : '') + '</div>' : '';
+const hhStsOf = n => n ? hhAyikla(stOf(n), hhSts(disCilt(n), n.source_sequence, n)) : [];
 function hhPopHTML(s) {
   const C = CTX.critic(eCritic(s)), k = eKind(s);
   return '<div class="kicker">Râvi #' + s.n.source_sequence + ' · ' + kod('HH') + ' Câmiu Hâdimi’l-Haremeyn</div>' +
@@ -2631,8 +2645,9 @@ function hhHukumler(n) {
   const Hg = hhHukumGecerli();
   if (dosya.length || (Hg && DIS.huk[Hg.bloblar[disCilt(n)]])) {   // sayıma giren hükümlerle birebir aynı
     const byId = new Map((V.hh.sozler || []).map(s => [s.id, s]));
-    for (const x of dosya) { const s = byId.get(x.hhSoz); if (!s) continue; const c = x.critic || x.critic_written; const c0 = (() => { const k = sozCekirdek(s.t); return k.length >= 6 && camiMetni(n).includes(k); })(); L.push({ soz: s, st: x, critic: c, ck: c0 || scK.has(c + '|' + lz(x.phrase)) }); }
-    for (const s of V.hh.sozler || []) if (s.s >= 1 && s.s <= 3 && !dosya.some(x => x.hhSoz === s.id)) L.push({ soz: s, st: null, critic: s.m.map(m => hhMunekkit(m[0])).find(Boolean) || (s.m[0] || [])[0] || '', ck: false, kind: s.s === 1 ? 'T' : s.s === 2 ? 'C' : 'K' });
+    const tum = hhSts(disCilt(n), n.source_sequence, n);   // hhStsOf çağrısı çiftleri işaretledi (x.ayni)
+    for (const x of tum) { const s = byId.get(x.hhSoz); if (!s) continue; if (x.ayni) { L.push({ soz: s, st: x, ayni: x.ayni, critic: x.critic }); continue; } const c = x.critic || x.critic_written; const c0 = (() => { const k = sozCekirdek(s.t); return k.length >= 6 && camiMetni(n).includes(k); })(); L.push({ soz: s, st: x, critic: c, ck: c0 || scK.has(c + '|' + lz(x.phrase)) }); }
+    for (const s of V.hh.sozler || []) if (s.s >= 1 && s.s <= 3 && !tum.some(x => x.hhSoz === s.id)) L.push({ soz: s, st: null, critic: s.m.map(m => hhMunekkit(m[0])).find(Boolean) || (s.m[0] || [])[0] || '', ck: false, kind: s.s === 1 ? 'T' : s.s === 2 ? 'C' : 'K' });
     V.d._hk = { n, L }; return L;
   }
   for (const s of V.hh.sozler || []) {
@@ -2648,7 +2663,7 @@ function hhHukumler(n) {
 }
 function hhHukumSatiri(h) {
   const s = h.soz, k = s.k ? disKitap(s.k[0]) : null, x = h.st, rel = s.m.map(m => m[2]).filter(Boolean);
-  return '<tr class="hh-row" style="cursor:default"><td class="num">' + kod('HH') + '</td><td><div class="ar" style="font-size:calc(15px * var(--yb))">' + esc(k ? k.ad : '—') + '</div>' + (s.k ? '<div class="small muted">c. ' + esc(s.k[1] ?? '—') + ' s. ' + esc(s.k[2] ?? '—') + '</div>' : '') + '</td>' +
+  return '<tr class="hh-row" style="cursor:default"><td class="num">' + kod('HH') + (x && x.hhAyni && x.hhAyni.length ? '<div class="small muted" title="Aynı hüküm HH’de başka eserden de aktarılmış (söz #' + x.hhAyni.join(', #') + '); bir kez sayılır">×' + (x.hhAyni.length + 1) + '</div>' : '') + '</td><td><div class="ar" style="font-size:calc(15px * var(--yb))">' + esc(k ? k.ad : '—') + '</div>' + (s.k ? '<div class="small muted">c. ' + esc(s.k[1] ?? '—') + ' s. ' + esc(s.k[2] ?? '—') + '</div>' : '') + '</td>' +
     '<td class="ar lafiz">' + esc(x ? x.phrase : sozCekirdekYazi(s.t)) + (x && x.phrase !== s.t.trim() ? '<div class="small muted ar">' + esc(s.t.slice(0, 160)) + (s.t.length > 160 ? '…' : '') + '</div>' : '') + '</td>' +
     '<td>' + kindTag(x ? x.kind : h.kind, x ? x.type.split(' /')[0] : 'HH: ' + (SINIF_TR[s.s] || ['?'])[0]) + '</td><td>' + (x ? sevScale(x) : '<span class="small muted">lafız tanınmadı</span>') + '</td>' +
     '<td class="small">' + esc(x ? (x.sebebs || []).map(c => CTX.SEBEB[c]).join(', ') : '') + '</td><td class="small">' + (rel.length ? 'nakleden: <span class="ar">' + esc(rel.join('، ')) + '</span>' : '') + '</td>' +
@@ -3563,6 +3578,7 @@ function stChip(s) {
     '<span class="sw"></span>' + (s.phrase ? '<span class="ph">' + esc(s.phrase) + '</span>' : '<span class="who muted">zımnî</span>') + '<span class="who">' + esc(who) + '</span>' + revMark(s) + noteBadge('s:' + s.uid) + '</button>';
 }
 function renderRulingsTab(n) {
+  hhStsOf(n);   // el-Câmi‘ hükümlerine “HH’de de” işareti (çiftler ayrı satır olmaz)
   let sts = stOf(n);
   const kindsHere = ['T', 'N', 'K', 'B', 'J', 'C', 'R', 'D', 'S', 'M'].filter(k => sts.some(s => eKind(s) === k));
   sts = sts.filter(s => !UI.hidden.includes(eKind(s)) && (!UI.countedOnly || eCounts(s)));
@@ -3571,7 +3587,7 @@ function renderRulingsTab(n) {
     viewMenu([['data-act="counted"', 'Yalnız sayılanlar', UI.countedOnly, 'Sayıma girmeyen kayıtları gizle'], ['data-act="old"', 'Eski tespitler', UI.showOld, 'SQLite ayrıştırıcısıyla karşılaştırma']]) + hintBtn('hukum') + '</div><div class="pane">' +
     hintP('hukum', 'Satıra tıklayınca hüküm sağdaki panelde açılır; aynı satıra yeniden tıklayınca kaynak metindeki yerine gidilir. Sağdaki düğmeler: ✓ doğru, ✗ yanlış, ✎ düzelt (tür, münekkit, şiddet, lafız/pasaj, sened, aktaran, sebep — sağdaki panelde açılır), 🗑 kaldır.') + '<div class="wrap">';
   const row = (s, grouped) => '<tr data-st="' + esc(s.uid) + '" aria-current="' + (S.sel && S.sel.id === s.uid) + '" class="' + (eCounts(s) ? '' : 'dim') + '">' +
-    '<td class="num">' + s.b.block_order + '</td><td><div class="ar" style="font-size:calc(15px * var(--yb))">' + esc(srcShort(s.b)) + '</div><div class="small muted">' + esc(s.b.effective.source_locator || '') + '</div></td>' +
+    '<td class="num">' + s.b.block_order + '</td><td><div class="ar" style="font-size:calc(15px * var(--yb))">' + esc(srcShort(s.b)) + '</div><div class="small muted">' + esc(s.b.effective.source_locator || '') + '</div>' + hhAyniRozet(s) + '</td>' +
     (grouped ? '' : '<td><div>' + esc(crLabel(s)) + '</div>' + (s.critic_written && s.critic_written !== 'قلت' ? '<div class="ar small muted" style="font-size:calc(14px * var(--yb))">' + esc(s.critic_written) + '</div>' : '') + gorusRozet(s) + '</td>') +
     '<td class="ar lafiz">' + (s.phrase ? esc(s.phrase) : '<span class="muted small">(zımnî)</span>') + '</td>' +
     '<td>' + kindTag(eKind(s), eType(s).replace(' / İnsan kontrolü gerekli', '')) + '</td><td data-v="' + (eKind(s) === 'K' ? eTMax(s) - eCMax(s) : eSev(s)) + '">' + sevScale(s) + '</td>' +
@@ -3584,14 +3600,15 @@ function renderRulingsTab(n) {
     const groups = {}, hhG = {};
     for (const s of sts) (groups[eCritic(s) || s.critic_written || '?'] = groups[eCritic(s) || s.critic_written || '?'] || []).push(s);
     // HH’deki sözler aynı münekkitin başlığı altında (HH kodlu, sayıma girer); el-Câmi‘de hükmü olmayan münekkit kendi başlığıyla
-    for (const h of hhHukumler(n)) { if (UI.hidden.includes(h.st ? h.st.kind : h.kind)) continue; (hhG[h.critic || '?'] = hhG[h.critic || '?'] || []).push(h); }
+    const hhAyniSay = {};
+    for (const h of hhHukumler(n)) { if (h.ayni) { if (!h.st.ayniHH) hhAyniSay[h.critic] = (hhAyniSay[h.critic] || 0) + 1; continue; } if (UI.hidden.includes(h.st ? h.st.kind : h.kind)) continue; (hhG[h.critic || '?'] = hhG[h.critic || '?'] || []).push(h); }
     const olum = k => (CTX.critic(k) || {}).death || ((hhG[k] || [])[0] ? Math.min(9999, ...hhG[k][0].soz.m.map(m => ((disVeri(n) && disKisi(disVeri(n), m[1])) || {}).vefat || 9999)) : 9999);
     const keys = [...new Set(Object.keys(groups).concat(Object.keys(hhG)))].sort((a, b) => olum(a) - olum(b));
     const hb = head.replace(/<th data-sk="t">Münekkit<\/th>/, '');
     // Münekkitin bütün hükümleri bir arada; aynı görüşün nakilleri yan yana, başında “görüş · N nakil” satırı
     for (const k of keys) {
       const gs = groups[k] ? gorusler(groups[k].slice().sort((a, b) => a.b.block_order - b.b.block_order || a.start - b.start)) : [], H = hhG[k] || [];
-      out += '<h3 class="panel-title">' + esc(crName(k, k)) + ' <span class="muted">' + (olum(k) < 9999 ? 'ö. ' + olum(k) + ' · ' : '') + (gs.length ? gs.length + ' görüş · ' + groups[k].length + ' nakil' : 'el-Câmi‘de hükmü yok') + (H.length ? ' · ' + kod('HH') + ' ' + H.length + ' söz' : '') + '</span></h3><table class="tbl" data-tid="rulings-g">' + hb + '<tbody>' +
+      out += '<h3 class="panel-title">' + esc(crName(k, k)) + ' <span class="muted">' + (olum(k) < 9999 ? 'ö. ' + olum(k) + ' · ' : '') + (gs.length ? gs.length + ' görüş · ' + groups[k].length + ' nakil' : 'el-Câmi‘de hükmü yok') + (H.length ? ' · ' + kod('HH') + ' ' + H.length + ' ayrı söz' : '') + (hhAyniSay[k] ? ' · ' + hhAyniSay[k] + ' HH sözü el-Câmi‘deki hükümle aynı (o satırda ' + kodlar(['SC', 'HH']) + ')' : '') + '</span></h3><table class="tbl" data-tid="rulings-g">' + hb + '<tbody>' +
         gs.map(g => (g.sts.length > 1 ? '<tr class="gsep"><td colspan="9"><span class="ar" style="font-size:calc(15px * var(--yb))">' + esc(g.rep.phrase || '(zımnî)') + '</span> <span class="small muted">· aynı görüş, ' + g.sts.length + ' nakil</span> ' + gorusEtiket(g) + '</td></tr>' : '') + g.sts.map(x => row(x, true)).join('')).join('') +
         (H.length ? '<tr class="gsep hh-sep"><td colspan="9">' + kod('HH') + ' <span class="small">Câmiu Hâdimi’l-Haremeyn’deki sözleri</span> <span class="small muted">· ' + H.length + ' · hüküm sayılarına girer</span></td></tr>' + H.map(hhHukumSatiri).join('') : '') + '</tbody></table>';
     }
@@ -4553,7 +4570,7 @@ function chunkSums(p) {
   const R = revOf(p), by = new Map();
   const push = s => { let l = by.get(s.seq); if (!l) by.set(s.seq, l = []); l.push(s); };
   for (const a of L.sts) { const s = { uid: a[0], seq: a[1], critic: a[2], kind: a[3], severity: a[4], tMax: a[5], cMax: a[6], counts: !!a[7], flags: a[8], mufassar: a[9], sebebs: a[10], phrase: a[11], terms: a[12].map(id => ({ id })), _R: R }; applyFix(s); push(s); }
-  for (const row of L.rows) for (const h of hhSts(p.vol, row[0], { id: nidOf(p, row[0]), source_sequence: row[0], effective: { canonical_name: row[2] } }, p.id)) push(Object.assign(h, { seq: row[0] }));   // HH hükümleri
+  for (const row of L.rows) for (const h of hhAyikla(by.get(row[0]) || [], hhSts(p.vol, row[0], { id: nidOf(p, row[0]), source_sequence: row[0], effective: { canonical_name: row[2] } }, p.id))) push(Object.assign({}, h, { seq: row[0] }));   // HH hükümleri (ayıklanmış)
   for (const a of R.added) {
     const r = IDXNID.get(nidOfBlock(p, a.block_id)); if (!r || r.p.id !== p.id) continue;
     const sev = Number(a.sev || 0);
@@ -4641,7 +4658,10 @@ function hydrateRaw(p, rec) {
   const R = revOf(p);
   const mk = x => Object.assign({}, x, { _R: R, archPkg: p.id, n: { id: nidOf(p, x.seq), source_sequence: x.seq, effective: { canonical_name: x.name } }, b: { id: x.bid, block_order: 0, effective: { source_name: x.source, source_locator: x.locator, source_author: x.author || '' } } });
   const out = rec.sts.map(mk); for (const x of out) applyFix(x);
-  for (const row of rec.rows || []) out.push(...hhSts(p.vol, row[0], { id: nidOf(p, row[0]), source_sequence: row[0], effective: { canonical_name: row[2] } }, p.id));   // HH hükümleri
+  if (hhHukumGecerli()) {   // HH hükümleri (el-Câmi‘dekiyle aynı olanlar ayıklanır)
+    const bySeq = new Map(); for (const x of out) { let l = bySeq.get(x.n.source_sequence); if (!l) bySeq.set(x.n.source_sequence, l = []); l.push(x); }
+    for (const row of rec.rows || []) out.push(...hhAyikla(bySeq.get(row[0]) || [], hhSts(p.vol, row[0], { id: nidOf(p, row[0]), source_sequence: row[0], effective: { canonical_name: row[2] } }, p.id)));
+  }
   for (const a of R.added) {
     const m = rec.bmeta[a.block_id]; if (!m) continue;
     const sev = Number(a.sev || 0); const kind = { 'Taʿdîl': 'T', 'Cerh': 'C', 'Karma / Mukayyed': 'K' }[a.type] || 'D';
@@ -4776,7 +4796,7 @@ function critDetail(m) {
     '<div class="row" style="margin:0 0 6px"><button class="btn sm" data-critexport="' + esc(m.c) + '">⤓ Bu münekkidin raporu (HTML · Markdown · Word · PDF)</button></div>' +
     '<div class="hint" style="margin:0 0 6px">' + sts.length + ' kayıt · ' + direct + ' müellifin kendi hükmü · ' + chained + ' senedli nakil · ' + (sts.length - direct - chained) + ' senedsiz nakil · satıra tıklayınca metindeki yeri açılır</div>' +
     '<div class="wrap"><table class="tbl sub-tbl" data-tid="crit-st"><thead><tr><th data-sk="n">Râvi</th><th data-sk="t">Lafız</th><th data-sk="t">Tür</th><th data-sk="n" class="num">Şiddet</th><th data-sk="t">Kaynak</th><th data-sk="t">Sened / nakil yolu</th></tr></thead><tbody>' +
-    sts.map(s => (CPOP.set(gotoAttr(s), s), '<tr data-cpop="' + esc(gotoAttr(s)) + '" title="Hükmün ayrıntısı ve metni" class="' + (eCounts(s) ? '' : 'dim') + '"><td data-v="' + seqKey(s) + '"><b>' + '#' + s.n.source_sequence + '</b><div class="ar small" style="font-size:calc(14px * var(--yb))">' + esc(s.n.effective.canonical_name) + '</div></td><td class="ar">' + esc(s.phrase || '(zımnî)') + '</td><td>' + kindTag(eKind(s), eType(s).split(' /')[0]) + '</td><td class="num" data-v="' + (eKind(s) === 'K' ? eTMax(s) - eCMax(s) : eSev(s)) + '">' + sevText(s) + '</td><td class="ar small" style="font-size:calc(14px * var(--yb))">' + esc(srcShort(s.b)) + '</td><td>' + senedHTML(s) + '</td></tr>')).join('') + '</tbody></table></div>';
+    sts.map(s => (CPOP.set(gotoAttr(s), s), '<tr data-cpop="' + esc(gotoAttr(s)) + '" title="Hükmün ayrıntısı ve metni" class="' + (eCounts(s) ? '' : 'dim') + '"><td data-v="' + seqKey(s) + '"><b>' + '#' + s.n.source_sequence + '</b><div class="ar small" style="font-size:calc(14px * var(--yb))">' + esc(s.n.effective.canonical_name) + '</div></td><td class="ar">' + esc(s.phrase || '(zımnî)') + '</td><td>' + kindTag(eKind(s), eType(s).split(' /')[0]) + '</td><td class="num" data-v="' + (eKind(s) === 'K' ? eTMax(s) - eCMax(s) : eSev(s)) + '">' + sevText(s) + '</td><td class="ar small" style="font-size:calc(14px * var(--yb))">' + esc(srcShort(s.b)) + (s.origin === 'HH' ? ' ' + kodlar(['HH']) : hhAyniRozet(s)) + '</td><td>' + senedHTML(s) + '</td></tr>')).join('') + '</tbody></table></div>';
 }
 
 /* ---------- Teâruz ve nakil karşılaştırması (CTN) ----------
