@@ -2617,12 +2617,21 @@ function hhAyikla(sc, hh) {
 }
 const hhAyniRozet = s => s.hhAyni && s.hhAyni.length ? '<div class="small" title="Aynı münekkitin aynı hükmü HH’de de var (söz #' + s.hhAyni.join(', #') + '); ayrıca sayılmaz">' + kodlar(['SC', 'HH']) + (s.hhAyni.length > 1 ? ' <span class="muted">×' + s.hhAyni.length + '</span>' : '') + '</div>' : '';
 const hhStsOf = n => n ? hhAyikla(stOf(n), hhSts(disCilt(n), n.source_sequence, n)) : [];
+// Soluk (sayılmayan) kaydın sebebi: inceleme kararı, işaretler ya da düşük güven
+function sayilmamaSebebi(s) {
+  const r = rv(s); if (r && (r.v === 'no' || r.v === 'del')) return 'araştırmacı yanlış diye işaretledi';
+  const f = (s.flags || []).filter(x => FLAGTXT[x]).map(x => FLAGTXT[x] + (x === 'hedef-şüpheli' && s.target_who ? ' (“' + s.target_who + '”)' : ''));
+  if (f.length) return f.join(', ');
+  if (!'TCJKN'.includes(eKind(s))) return 'hüküm türü sayılmaz (' + (KNAME[eKind(s)] || eKind(s)) + ')';
+  return 'güven düşük (' + s.confidence + ')';
+}
 function hhPopHTML(s) {
   const C = CTX.critic(eCritic(s)), k = eKind(s);
   return '<div class="kicker">Râvi #' + s.n.source_sequence + ' · ' + kod('HH') + ' Câmiu Hâdimi’l-Haremeyn</div>' +
     '<h3 class="ar" style="margin:4px 0 8px;font-size:calc(24px * var(--yb))">' + esc(s.n.effective.canonical_name) + '</h3>' +
     '<div class="insp"><div class="phrase ' + kc(k) + '">' + esc(s.phrase || '') + '</div></div>' +
-    '<div class="badges">' + kindTag(k, s.type) + '<span class="tag">' + sevText(s) + '</span>' + (s.mufassar ? '<span class="tag">' + esc(s.mufassar) + '</span>' : '') + '</div>' +
+    '<div class="badges">' + kindTag(k, s.type) + '<span class="tag">' + sevText(s) + '</span>' + (s.mufassar ? '<span class="tag">' + esc(s.mufassar) + '</span>' : '') + (eCounts(s) ? '' : '<span class="tag warn">sayılmaz</span>') + '</div>' +
+    (eCounts(s) ? '' : '<div class="note" style="margin-top:6px">Sayıma girmez: ' + esc(sayilmamaSebebi(s)) + '.</div>') +
     '<dl class="kv" style="margin-top:10px"><dt>Münekkit</dt><dd>' + esc(C ? C.tr : (s.critic_written || '—')) + (C && C.death ? ' · ö. ' + C.death : '') + ' <span class="ar">' + esc(s.critic_written || '') + '</span></dd>' +
     '<dt>Kaynak</dt><dd>' + kod('HH') + ' HH’deki cerh–ta‘dîl sözü (söz #' + s.hhSoz + ')' + (s.transmitter ? ' · nakleden: <span class="ar">' + esc(s.transmitter) + '</span>' : '') + '</dd><dt>Mertebe</dt><dd>' + esc(s.grade) + '</dd></dl>' +
     '<p class="hint">Sözün tam metni ve kaynağı râvinin Hükümler sekmesinde, münekkidin başlığı altındadır.</p>' +
@@ -4688,6 +4697,7 @@ function critPopHTML(s) {
     '<h3 class="ar" style="margin:4px 0 8px;font-size:calc(24px * var(--yb))">' + esc(s.n.effective.canonical_name) + '</h3>' +
     '<div class="insp"><div class="phrase ' + kc(k) + '">' + (s.phrase ? esc(s.phrase) : '(Zımnî: du‘afâ kitabında zikir)') + '</div></div>' +
     '<div class="badges">' + kindTag(k, eType(s).replace(' / İnsan kontrolü gerekli', ' (insan kontrolü)')) + '<span class="tag">' + sevText(s) + '</span>' + (s.mufassar ? '<span class="tag">' + esc(s.mufassar) + '</span>' : '') + (eCounts(s) ? '' : '<span class="tag warn">sayılmıyor</span>') + '</div>' +
+    (eCounts(s) ? '' : '<div class="note" style="margin-top:6px">Sayıma girmez: ' + esc(sayilmamaSebebi(s)) + '.</div>') +
     '<dl class="kv" style="margin-top:10px"><dt>Münekkit</dt><dd>' + esc(C ? C.tr : (eCritic(s) || s.critic_written || '—')) + (C && C.death ? ' · ö. ' + C.death : '') + (eCritic(s) || s.critic_written ? ' <span class="ar">' + esc(eCritic(s) || s.critic_written) + '</span>' : '') + '</dd>' +
     '<dt>Kaynak eser</dt><dd><span class="ar">' + esc(srcShort(s.b)) + '</span> ' + esc(s.b.effective.source_locator || '') + '</dd>' +
     '<dt>Nakil</dt><dd>' + esc(s.transmission || '—') + (s.transmitter ? ' · aktaran: ' + esc(crName(s.transmitter, s.transmitter)) : '') + '</dd>' +
@@ -4796,7 +4806,7 @@ function critDetail(m) {
     '<div class="row" style="margin:0 0 6px"><button class="btn sm" data-critexport="' + esc(m.c) + '">⤓ Bu münekkidin raporu (HTML · Markdown · Word · PDF)</button></div>' +
     '<div class="hint" style="margin:0 0 6px">' + sts.length + ' kayıt · ' + direct + ' müellifin kendi hükmü · ' + chained + ' senedli nakil · ' + (sts.length - direct - chained) + ' senedsiz nakil · satıra tıklayınca metindeki yeri açılır</div>' +
     '<div class="wrap"><table class="tbl sub-tbl" data-tid="crit-st"><thead><tr><th data-sk="n">Râvi</th><th data-sk="t">Lafız</th><th data-sk="t">Tür</th><th data-sk="n" class="num">Şiddet</th><th data-sk="t">Kaynak</th><th data-sk="t">Sened / nakil yolu</th></tr></thead><tbody>' +
-    sts.map(s => (CPOP.set(gotoAttr(s), s), '<tr data-cpop="' + esc(gotoAttr(s)) + '" title="Hükmün ayrıntısı ve metni" class="' + (eCounts(s) ? '' : 'dim') + '"><td data-v="' + seqKey(s) + '"><b>' + '#' + s.n.source_sequence + '</b><div class="ar small" style="font-size:calc(14px * var(--yb))">' + esc(s.n.effective.canonical_name) + '</div></td><td class="ar">' + esc(s.phrase || '(zımnî)') + '</td><td>' + kindTag(eKind(s), eType(s).split(' /')[0]) + '</td><td class="num" data-v="' + (eKind(s) === 'K' ? eTMax(s) - eCMax(s) : eSev(s)) + '">' + sevText(s) + '</td><td class="ar small" style="font-size:calc(14px * var(--yb))">' + esc(srcShort(s.b)) + (s.origin === 'HH' ? ' ' + kodlar(['HH']) : hhAyniRozet(s)) + '</td><td>' + senedHTML(s) + '</td></tr>')).join('') + '</tbody></table></div>';
+    sts.map(s => (CPOP.set(gotoAttr(s), s), '<tr data-cpop="' + esc(gotoAttr(s)) + '" title="' + esc(eCounts(s) ? 'Hükmün ayrıntısı ve metni' : 'Soluk: sayıma girmez — ' + sayilmamaSebebi(s)) + '" class="' + (eCounts(s) ? '' : 'dim') + '"><td data-v="' + seqKey(s) + '"><b>' + '#' + s.n.source_sequence + '</b><div class="ar small" style="font-size:calc(14px * var(--yb))">' + esc(s.n.effective.canonical_name) + '</div></td><td class="ar">' + esc(s.phrase || '(zımnî)') + '</td><td>' + kindTag(eKind(s), eType(s).split(' /')[0]) + '</td><td class="num" data-v="' + (eKind(s) === 'K' ? eTMax(s) - eCMax(s) : eSev(s)) + '">' + sevText(s) + '</td><td class="ar small" style="font-size:calc(14px * var(--yb))">' + esc(srcShort(s.b)) + (s.origin === 'HH' ? ' ' + kodlar(['HH']) : hhAyniRozet(s)) + '</td><td>' + senedHTML(s) + '</td></tr>')).join('') + '</tbody></table></div>';
 }
 
 /* ---------- Teâruz ve nakil karşılaştırması (CTN) ----------
