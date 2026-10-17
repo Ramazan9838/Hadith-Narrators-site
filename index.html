@@ -1067,6 +1067,12 @@ td.stact .btn { padding: 2px 6px; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .center[data-ctab="talebe"] .pane { --accent: #7cb8ec; --accent-2: #9ccaf2; --accent-soft: #1d2c3a; } }
 /* Hocaları / Talebeleri: özetin kaynağı seçicisi */
 .hk-sec { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 4px 0 8px; }
+/* Hoca/talebe listelerindeki tıklanabilir adlar: metin rengiyle, üstüne gelince vurgulu */
+.linkbtn.kisi-ad { color: var(--ink); }
+.linkbtn.kisi-ad:hover { color: var(--accent); }
+/* Kişi kartı: Arapça değerler okunur boyda */
+#gen-dialog .kv .ar { font-size: calc(18px * var(--yb)); }
+#gen-dialog h3.ar { font-size: calc(22px * var(--yb)); }
 
 </style>
 </head>
@@ -2288,9 +2294,9 @@ function disKisi(V, id) { const x = id != null && V.kis[id]; return x ? { id, ad
 const disKisiBtn = p => p ? '<button class="linkbtn ar" data-diskisi="' + p.id + '">' + esc(p.ad) + '</button>' : '<span class="muted">belirtilmemiş</span>';
 // Birleşik listedeki kişinin adı: HH kişisiyse HH tam kartı, değilse CK kartı açılır
 function kisiAdBtn(P, ad, ckId) {
-  const st = ' style="font-size:calc(19px * var(--yb))"', hp = P && P.hh && P.hh.p && P.hh.p.id != null ? P.hh.p.id : null, ci = ckId || (P && P.ck ? P.ck[0] : null);
-  if (hp != null) return '<button class="linkbtn ar"' + st + ' data-diskisi="' + hp + '" title="HH kimlik kartı">' + esc(ad) + '</button>';
-  if (ci) return '<button class="linkbtn ar"' + st + ' data-ckkisi="' + ci + '" title="CK kişi bilgisi">' + esc(ad) + '</button>';
+  const st = ' style="font-size:calc(17px * var(--yb))"', hp = P && P.hh && P.hh.p && P.hh.p.id != null ? P.hh.p.id : null, ci = ckId || (P && P.ck ? P.ck[0] : null);
+  if (hp != null) return '<button class="linkbtn ar kisi-ad"' + st + ' data-diskisi="' + hp + '" title="HH kimlik kartı">' + esc(ad) + '</button>';
+  if (ci) return '<button class="linkbtn ar kisi-ad"' + st + ' data-ckkisi="' + ci + '" title="CK kişi bilgisi">' + esc(ad) + '</button>';
   return '<span class="ar"' + st + '>' + esc(ad) + '</span>';
 }
 // Yer: ikamet ya da nisbeden (harf-i tarifsiz biçim de denenir)
@@ -2481,7 +2487,7 @@ function adBicimleriHTML(n, V) {
   if (!L.length) return '';
   return '<h3 class="panel-title">Adın geçtiği biçimler <span class="muted">' + L.length + ' · kaynak metinlerde (el-Câmi‘in naklettiği eserlerde, kronolojik) · isnadlarda (صور الورود)</span></h3>' +
     '<div class="wrap"><table class="tbl" data-tid="ad-bicim"><thead><tr><th data-sk="t">Biçim</th><th>Geçtiği kaynaklar (el-Câmi‘)</th><th data-sk="n" class="num">İsnadlarda</th><th>Kaynak</th></tr></thead><tbody>' +
-    L.map(r => '<tr style="cursor:default"><td data-v="' + esc(r.ad) + '"><span class="ar" style="font-size:calc(19px * var(--yb))">' + esc(r.ad) + '</span>' + (r.yazi.length ? '<div class="small muted ar" title="Metinde geçtiği hâller">' + esc(r.yazi.slice(0, 4).join('، ')) + '</div>' : '') + '</td><td class="small dis-etiket">' + (r.ck.length ? r.ck.map(s => '<span class="tag ar">' + esc(s.split('،')[0]) + '</span>').join(' ') : '<span class="muted">—</span>') + '</td>' +
+    L.map(r => '<tr style="cursor:default"><td data-v="' + esc(r.ad) + '"><span class="ar" style="font-size:calc(17px * var(--yb))">' + esc(r.ad) + '</span>' + (r.yazi.length ? '<div class="small muted ar" title="Metinde geçtiği hâller">' + esc(r.yazi.slice(0, 4).join('، ')) + '</div>' : '') + '</td><td class="small dis-etiket">' + (r.ck.length ? r.ck.map(s => '<span class="tag ar">' + esc(s.split('،')[0]) + '</span>').join(' ') : '<span class="muted">—</span>') + '</td>' +
       '<td class="num" data-v="' + r.hh + '">' + (r.hh ? sayiTr(r.hh) : '<span class="muted">—</span>') + '</td><td>' + kodlar([].concat(r.ck.length ? ['SC'] : [], r.hh ? ['HH'] : [], r.ud ? ['UD'] : [])) + '</td></tr>').join('') + '</tbody></table></div>' +
     '<p class="hint">“İsnadlarda” sütunu, adın HH’deki 33 metin kitabının isnadlarında bu biçimde kaç kez geçtiğidir (صور الورود); altındaki küçük yazı, bağlaç ya da ekle birlikte geçtiği hâllerdir.</p>';
 }
@@ -2707,7 +2713,7 @@ function dzListe(lk, rows) {
 }
 function dzAdHucre(x, inner) {
   const e = x.ed;
-  return (inner || '<span class="ar" style="font-size:calc(19px * var(--yb))">' + esc(x.ad || '') + '</span>') +
+  return (inner || '<span class="ar" style="font-size:calc(17px * var(--yb))">' + esc(x.ad || '') + '</span>') +
     (x.manual ? '<div class="small muted">elle eklendi · ' + whoWhen(e) + '</div>' : e && !x.sil ? '<div class="small muted">✎ düzeltildi · ' + whoWhen(e) + (x.orig.ad && x.orig.ad !== x.ad ? ' · kaynakta: <span class="ar">' + esc(x.orig.ad) + '</span>' : '') + '</div>' : '') +
     (x.not ? '<div class="small muted" dir="auto">' + esc(x.not) + '</div>' : '');
 }
@@ -3744,7 +3750,7 @@ function listTable(n, key, title) {
   const row = x => {
     if (S.ledit === key + LSEP + x.key) return editForm(x);
     const I = kisi ? kisiBilgi(n, key, x) : null;
-    return '<tr style="cursor:default" class="' + (x.st === 'no' ? 'rej' : '') + '"><td data-v="' + esc(x.v) + '"><span class="' + (/[؀-ۿ]/.test(x.v) ? 'ar' : '') + '" style="font-size:calc(19px * var(--yb))">' + esc(x.v) + '</span>' + (x.kind ? ' <span class="tag">' + esc(HOW_TR[x.kind] || x.kind) + '</span>' : '') +
+    return '<tr style="cursor:default" class="' + (x.st === 'no' ? 'rej' : '') + '"><td data-v="' + esc(x.v) + '"><span class="' + (/[؀-ۿ]/.test(x.v) ? 'ar' : '') + '" style="font-size:calc(17px * var(--yb))">' + esc(x.v) + '</span>' + (x.kind ? ' <span class="tag">' + esc(HOW_TR[x.kind] || x.kind) + '</span>' : '') +
       (x.ed ? '<div class="small muted">✎ düzeltildi · ' + whoWhen(x.ed) + (x.orig && x.orig !== x.v ? ' · metinde: <span class="ar">' + esc(x.orig) + '</span>' : '') + '</div>' : '') + (x.note ? '<div class="small muted">' + esc(x.note) + '</div>' : '') + '</td>' +
       (kisi ? '<td class="num" data-v="' + (I.year || '') + '">' + (I.year ? 'h. ' + I.year + (I.yearHH ? ' ' + kodlar(['HH']) : '') : (x.vefat ? esc(x.vefat) : '<span class="muted">—</span>')) + '</td><td data-v="' + esc(I.place ? I.place.tr : '') + '">' + (I.place ? esc(I.place.tr) + (I.placeAuto ? ' <span class="small muted" title="Addaki nisbeden">(nisbe)</span>' : '') : '<span class="muted">—</span>') + '</td>' : '') +
       '<td class="num">' + new Set(x.ev.map(e => e.source)).size + '</td><td>' + (x.manual ? '<span class="small muted">elle · ' + whoWhen(x) + '</span>' : evChips(x.ev, 4)) + '</td><td style="white-space:nowrap">' +
