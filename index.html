@@ -2664,7 +2664,7 @@ function hhHukumler(n) {
     if (!sts.length && !(s.s >= 1 && s.s <= 3)) continue;   // “diğer bilgi” yalnız motor bir hüküm bulursa
     const hm = s.m.map(m => hhMunekkit(m[0])).filter(Boolean), ad = (s.m[0] || [])[0] || '';
     const c0 = (() => { const c = sozCekirdek(s.t); return c.length >= 6 && camiMetni(n).includes(c); })();
-    const kim = x => x && x.critic && (hm.includes(x.critic) || !hm.length) ? x.critic : hm.length === 1 ? hm[0] : (x && x.critic) || hm[0] || '';
+    const kim = x => !x ? hm[0] || '' : !hm.length || hm.includes(x.critic) ? x.critic : hm.length === 1 && (!x.critic || x.critic_ambiguous || !sts.some(y => hm.includes(y.critic))) ? hm[0] : x.critic || hm[0];   // tools/hh-hukum-hazirla.js ile aynı kural
     if (sts.length) for (const x of sts) { const c = kim(x) || ad; L.push({ soz: s, st: x, critic: c, ck: c0 || scK.has(c + '|' + lz(x.phrase)) }); }
     else L.push({ soz: s, st: null, critic: kim(null) || ad, ck: c0, kind: s.s === 1 ? 'T' : s.s === 2 ? 'C' : 'K' });
   }
@@ -6739,7 +6739,7 @@ const RAPOR = (() => {
   add('C', 1, 'ihtilat', 'Tahlît (karıştırma)', 0.55, ['التخليط']);
   add('C', 2, 'mubhem', 'Za‘f', 0.9, ['ضعيف(?: الحديث)?', 'كان ضعيفا(?: في الحديث)?']);
   add('C', 2, 'mubhem', 'Za‘îf saydılar (da‘‘afûhu)', 0.88, ['ضعفوه'], { plural: true });
-  add('C', 2, 'mubhem', 'Za‘îf saydı (da‘‘afehû)', 0.92, ['ضعفه'], { v: true });
+  add('C', 2, 'mubhem', 'Za‘îf saydı (da‘‘afehû)', 0.92, ['(?:ف)?ضعفه'], { v: true });
   add('C', 2, 'mubhem', 'Kötü görüşlü idi', 0.75, ['(?:كان )?(?<cr>\\S+(?: \\S+)?) ' + SAYYI + ' الراي فيه', SAYYI + ' الراي فيه']);
   add('C', 2, 'muhalefe', 'Münkerü’l-hadîs', 0.9, ['منكر الحديث', 'حديثه منكر'], { lvBy: { 'البخاري': 4 }, nt: 'Buhârî’de: “münkerü’l-hadîs dediğim kimseden rivayet helal olmaz.”' });
   add('C', 1, 'muhalefe', 'Hadisinde nekâret', 0.8, ['في حديثه نكاره', 'فيه نكاره'], { nt: 'Lisânü’l-Muhaddisîn: “fîhi nekâre” aslen hafif nekâret içindir.' });
@@ -6809,7 +6809,8 @@ const RAPOR = (() => {
   add('T', 3, 'zimni', 'Zehebî’nin «صح» işareti (tevsîkle amel edilir)', 0.7, ['صح'], { solo: true, nt: 'Zehebî Mîzân’da «صح» ile hakkındaki tevsîkin muteber olduğunu işaret eder.' });
   add('T', 4, 'tevsik', 'İmam (sıfat)', 0.6, ['الامام'], { solo: true });
   add('T', 2, 'sidk', 'Sâlih (memleketiyle)', 0.75, ['(?:بصري|كوفي|مدني|شامي|مكي|واسطي|مصري|بغدادي|حمصي|يماني) صالح']);
-  add('X', 0, '', '', 0, ['(?:لم|ولم|لا|ما) (?:يضعفه|يضعف حديثه|يوثقه|يرضه)']);   // olumsuz: «ولم يضعفه»
+  add('X', 0, '', '', 0, ['(?:لم|ولم|لا|ما) (?:يضعفه|يضعف حديثه|يوثقه)']);
+  add('X', 0, '', '', 0, ['اما من ثقه فلا', 'بغير ثقه', 'من غير ثقه']);   // «güvenilir birinden değil», «güvenmeden»: ta‘dîl değil   // olumsuz: «ولم يضعفه»
   add('T', 2, 'sidk', 'Senâsını güzel yapardı', 0.75, ['(?:ف)?(?:يحسن|احسن) الثناء عليه']);
   add('T', 4, 'tevsik', 'Mutlak olarak tevsik etti', 0.8, ['اطلق (?<cr>(?:\\S+ ){0,2}?\\S+) القول بتوثيقه'], { crReq: true });
   add('T', 4, 'tevsik', 'Sika sayardı (kâne yüvessikuhû)', 0.75, ['كان (?<cr>(?:\\S+ ){0,3}?\\S+) يوثقه'], { crReq: true });
@@ -7028,10 +7029,31 @@ const RAPOR = (() => {
   }
   const YAHYA = nz('يحيي');
   function resolveYahya(n, pos) {
+    // Yalın «يحيى»: bağlamdaki en yakın nakleden belirler. el-Kattân’ın râvileri: İbnü’l-Medînî (yalın «علي», «بن علي» değil), el-Fellâs,
+    // İbnü’l-Müsennâ, İbn Mehdî; İbn Maîn’in: ed-Dûrî, Osman b. Saîd ed-Dârimî, İbn Ebî Hayseme, İbnü’l-Cüneyd, İshâk b. Mansûr …
     const back = n.slice(Math.max(0, pos - 160), pos);
-    if (/(?:المديني|علي|عمرو بن علي|الفلاس|المثني|عبد الرحمن)[^.]{0,80}$/.test(back) || /^\s*[،,]?\s*(?:و|ولا )(?:عبد الرحمن|ابن مهدي)/.test(n.slice(pos + 4, pos + 22))) return 'يحيى بن سعيد القطان';
-    if (/(?:عباس|الدوري|ابي مريم|ابن الجنيد|الدارمي|ابن محرز|معين)[^.]{0,80}$/.test(back)) return 'يحيى بن معين';
+    const son = re => { let m, i = -1; const g = new RegExp(re.source, 'g'); while ((m = g.exec(back))) i = m.index; return i; };
+    const k = son(/(?:المديني|(?<!بن )علي(?![\u0621-\u064A])|عمرو بن علي|الفلاس|المثني|ابو موسي|عبد الرحمن|ابن خلاد|ابو بكر بن خلاد|بندار|محمد بن بشار|القواريري|ابو حفص)/);
+    const m = son(/(?:عباس|الدوري|ابي مريم|ابن الجنيد|الدارمي|عثمان بن سعيد|ابن ابي خيثمه|اسحاق بن منصور|معاويه بن صالح|معاويه|ابن محرز|الغلابي|عبد الله بن احمد|ابن طهمان|جعفر بن ابي عثمان|معين)/);
+    const yakin = i => i >= 0 && !/[.]/.test(back.slice(i)) && back.length - i <= 120;
+    if (/^\s*[،,]?\s*(?:و|ولا )(?:عبد الرحمن|ابن مهدي)/.test(n.slice(pos + 4, pos + 22))) return 'يحيى بن سعيد القطان';
+    if (yakin(k) && (!yakin(m) || k > m)) return 'يحيى بن سعيد القطان';
+    if (yakin(m)) return 'يحيى بن معين';
     return 'يحيى بن معين?';
+  }
+  // Yalın «سفيان»: nakleden belirler. İbn Uyeyne: el-Humeydî, İbnü’l-Medînî (yalın «علي»), İbn Ebî Ömer, Saîd b. Abdirrahmân, Kuteybe;
+  // es-Sevrî: İbn Mehdî («عبد الرحمن»), Vekî‘, Ebû Nuaym, Yahyâ el-Kattân, Abdürrezzâk, Kabîsa. Bağlam yoksa söz sahibi belirlenemez (boş kalır).
+  const SUFYAN = nz('سفيان');
+  function resolveSufyan(n, pos) {
+    const back = n.slice(Math.max(0, pos - 140), pos);
+    const son = re => { let m, i = -1; const g = new RegExp(re.source, 'g'); while ((m = g.exec(back))) i = m.index; return i; };
+    // «علي» yalnız nakleden olarak («حدثنا علي», «علي قال: سمعت»); «وقال علي والنسائي» gibi münekkit dizisindeki «علي» sayılmaz
+    const u = son(/(?:الحميدي|(?:حدثنا|ثنا|اخبرنا|قال) (?:علي|علي بن المديني|ابن المديني)(?![\u0621-\u064A])[\s،,:]*(?:قال[\s:]*)?(?:و?سمعت|حدثنا|ثنا|سالت|عن)|المديني[\s،,:]*(?:قال[\s:]*)?(?:سمعت|حدثنا|سالت)|ابن ابي عمر|سعيد بن عبد الرحمن|قتيبه|ابن المقري|الشافعي)/);
+    const t = son(/(?:عبد الرحمن|ابن مهدي|وكيع|ابو نعيم|الفضل بن دكين|قبيصه|عبد الرزاق|يحيي بن سعيد|يحيي القطان|ابو احمد الزبيري|الفريابي)/);
+    const yakin = i => i >= 0 && !/[.]/.test(back.slice(i)) && back.length - i <= 110;
+    if (yakin(u) && (!yakin(t) || u > t)) return 'سفيان بن عيينة';
+    if (yakin(t)) return 'سفيان الثوري';
+    return '';
   }
   function parseNames(n, pos, conv, maxNames) {
     // pos’tan itibaren “X وY وZ” biçimindeki münekkit dizisini ayrıştırır
@@ -7042,6 +7064,9 @@ const RAPOR = (() => {
       let m = matchAlias(n, q, conv && conv.extra);
       if (!m && n.startsWith(YAHYA, q) && !isAL(n[q + YAHYA.length]) && !/^\s+(?:بن|ابن)\s/.test(n.slice(q + YAHYA.length, q + YAHYA.length + 6))) {
         const c = resolveYahya(n, q); m = { canon: c.replace('?', ''), amb: c.endsWith('?'), len: YAHYA.length, written: 'يحيى' };
+      }
+      if (!m && n.startsWith(SUFYAN, q) && !isAL(n[q + SUFYAN.length]) && !/^\s+(?:بن|ابن)\s/.test(n.slice(q + SUFYAN.length, q + SUFYAN.length + 6))) {
+        const c = resolveSufyan(n, q); if (c) m = { canon: c, len: SUFYAN.length, written: 'سفيان' };
       }
       if (!m && /^عبد الرحمن(?![\u0621-\u064A])/.test(n.slice(q, q + 12)) && !/^\s+(?:بن|ابن)\s/.test(n.slice(q + 10, q + 16))) m = { canon: 'عبد الرحمن بن مهدي', amb: true, len: 10, written: 'عبد الرحمن' };
       if (!m) break;
@@ -7411,7 +7436,8 @@ const RAPOR = (() => {
           else { res.critics = defaultCanon ? [{ canon: defaultCanon, written: '' }] : []; res.basis = 'müellif'; t.reasons.push('Birinci şahıs anlatı (ra’eytuhû…): eser müellifinin kendi tecrübesi.'); }
         } else if (mk && (mk.type === 'anon' || mk.type === 'again')) {
           const ln = lastNamed(mk.pos, sc.ps) || (mk.type === 'again' ? lastNamed(mk.pos, 0) : null);
-          if (ln) { res.critics = ln.names; res.basis = 'bağlam'; t.reasons.push('İsimsiz “qâle:” → bağlamdaki son adlandırılmış kişi (' + ln.names.map(x => x.written).join('، ') + ').'); }
+          if (ln && (ln.type === 'ask' || ln.via === 'سألت' || ln.via === 'muhatap')) { res.critics = ln.names; res.basis = 'soru-cevap'; t.reasons.push('Soru–cevap: «سألت X … فقال:» → cevap veren, soru sorulan kişi (' + ln.names.map(x => x.written).join('، ') + ').'); }
+          else if (ln) { res.critics = ln.names; res.basis = 'bağlam'; t.reasons.push('İsimsiz “qâle:” → bağlamdaki son adlandırılmış kişi (' + ln.names.map(x => x.written).join('، ') + ').'); }
           else if (conv.asked) { res.critics = [{ canon: conv.c, written: 'قال' }]; res.basis = 'sorulan'; t.reasons.push('Suâlât eseri: isimsiz cevap sorulan münekkite ait.'); }
           else if (mk.type === 'again' && defaultCanon) { res.critics = [{ canon: defaultCanon, written: '' }]; res.basis = 'müellif'; t.reasons.push('“Ve merreten kâle”: aynı söz sahibi (eser müellifi).'); }
           else { res.basis = 'belirsiz'; t.flags.push('söz-sahibi-belirsiz'); t.reasons.push('İsimsiz “qâle:”; söz sahibi belirlenemedi.'); }
