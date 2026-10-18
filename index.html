@@ -7845,7 +7845,7 @@ const RAPOR = (() => {
     let idx = 0;
     for (const st of statements) {
       const items = st.items; const t0 = items[0];
-      const critics = t0.res.critics && t0.res.critics.length ? t0.res.critics : [{ canon: '', written: '' }];
+      let critics = t0.res.critics && t0.res.critics.length ? t0.res.critics : [{ canon: '', written: '' }];
       // Yalın bid‘at bir mezhep kaydıdır, cerh değildir; “sadûk, bid‘atla itham” gibi karma lafızda bid‘at kısmı da cerh
       // sayılmaz (yanında “ondan hadis alınmaz” türü bir cerh lafzı varsa cümle zaten cerh olur). Dâ‘î ayrı bir cerh lafzıdır.
       const ek = x => x.e.k === 'K' && x.e.sb === 'bidat' ? 'T' : x.e.k;
@@ -7880,6 +7880,17 @@ const RAPOR = (() => {
       else { type = 'Bilinmiyor / İnsan kontrolü gerekli'; main = [...kinds][0]; }
       // Tavır ve tercihin kimin hakkında olduğu ve yönü (râvinin adına göre)
       const yon = 'VP'.includes(main) ? yonBul(n, st, items, main, rtok) : null;
+      // «وكان أحب إليه من همام»: «إليه / عنده» tercih edeni gösterir; o da cümlede önce geçen «كان X»tir, sözü nakleden değil
+      let pAkt = '';   // tercih edene geçildiyse sözü söyleyen nakleden olur
+      if (main === 'P') {
+        const x = items.find(i => i.e.k === 'P'), sS = sentenceStart(n, st.start);
+        if (x && /(?:^|\s)(?:اليه|عنده)(?:\s|$)/.test(n.slice(x.c.start, x.c.end))) {
+          // en yakın «كان X» (adı bilinen münekkit); «وكان أحب إليه» gibi adsız «كان» atlanır
+          const once = n.slice(sS, x.c.start), re = /(?:^|[\s،,:])و?كان\s+/g, yer = []; let m;
+          while ((m = re.exec(once))) yer.push(m.index + m[0].length);
+          for (const p of yer.reverse()) { const r = parseNames(n, sS + p, conv); if (r.names.length && r.names.every(y => critic(y.canon) && !critic(y.canon).group)) { pAkt = (critics[0] || {}).canon || ''; critics = r.names.map(y => ({ canon: y.canon, written: y.written, amb: y.amb })); break; } }
+        }
+      }
       if (yon) { sebebs.length = 0; sebebs.push(yon.sb); type = main === 'V' ? (yon.sb === 'tavir-' ? 'Rivayet tavrı (olumsuz)' : 'Rivayet tavrı (olumlu)') : yon.sb === 'tercih+' ? 'Tercih (lehine)' : yon.sb === 'tercih-' ? 'Tercih (aleyhine)' : 'Tercih (yönü belirsiz)'; }
       const flags = [...new Set(items.flatMap(x => x.flags))];
       if (yon && yon.baska && !flags.includes('hedef-şüpheli')) flags.push('hedef-şüpheli');
@@ -7914,7 +7925,7 @@ const RAPOR = (() => {
         const direct = cr.canon && cr.canon === defaultCanon && !t0.res.via;
         // “via” ya aracı kişidir (ör. İbn Ebî Hâtim → Ebû Hâtim) ya da yalnız nakil kalıbıdır (“X قال”, “سألت” …); kalıp aktaran sayılmaz
         const viaFormula = VIA_FORMULA.has(t0.res.via);
-        const transmitter = direct ? '' : (t0.res.via && !viaFormula && t0.res.via !== cr.canon ? t0.res.via : defaultCanon);
+        const transmitter = pAkt && pAkt !== cr.canon ? pAkt : direct ? '' : (t0.res.via && !viaFormula && t0.res.via !== cr.canon ? t0.res.via : defaultCanon);
         const startO = map[st.start], endO = map[st.end];
         const phrase = text.slice(startO, endO);
         const grade = main === 'K' ? ('Karma · ta‘dîl ' + TLEVEL[Math.floor(tMax)] + ' + ' + sebebs.map(s => SEBEB[s]).join(', '))
