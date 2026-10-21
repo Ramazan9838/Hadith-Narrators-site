@@ -5423,6 +5423,7 @@ function renderMethod() {
   if ($('method-body').dataset.done) return;
   const L = CTX.LEXICON.filter(e => e.k !== 'X');
   const LMs = L.filter(e => /^Lisânü’l-Muhaddisîn/.test(e.nt || ''));
+  const CJs = L.filter(e => /Cüdey‘/.test(e.nt || ''));
   const row = (k, lv) => L.filter(e => e.k === k && e.lv === lv).flatMap(e => entryExamples(e, 2).list).filter((x, i, a) => a.indexOf(x) === i).slice(0, 16).map(esc).join(' · ');
   const crit = Object.values(CTX.CRITICS).filter(c => !c.group).sort((a, b) => (a.death || 9999) - (b.death || 9999));
   const ar = t => '<span class="ar">' + t + '</span>';
@@ -5435,22 +5436,28 @@ function renderMethod() {
     '<li><b>Ta‘n sebepleri:</b> İbn Hacer, <i>Nüzhetü’n-nazar</i> (on sebep).</li>' +
     '<li><b>Lafızların anlamı ve kullanımı:</b> Muhammed Halef Selâme, <i>Lisânü’l-Muhaddisîn</i> (5 cilt). Eserin cerh–ta‘dîl lafızları fihristindeki 692 lafız tek tek sözlükle karşılaştırıldı; Lisân’ın açıklamasına göre ' + LMs.length + ' kalıp eklendi ya da mertebesi düzeltildi. Bu kalıpların notunda “Lisânü’l-Muhaddisîn” yazar.</li>' +
     '<li><b>Uygulamadaki lafızlar:</b> İbn Hacer, <i>Lisânü’l-Mîzân</i> (thk. Ebû Ğudde) baştan sona tarandı: münekkite atfedilmiş 11.602 hüküm cümlesinde sözlüğün tanımadığı sık kalıplar ve listede olmayan münekkitler eklendi (' + L.filter(e => /^Lisânü’l-Mîzân/.test(e.nt || '')).length + ' kalıp; notlarında “Lisânü’l-Mîzân taraması” yazar).</li>' +
+    '<li><b>Mütekaddimûnun kullanımı:</b> Abdullah b. Yûsuf el-Cüdey‘, <i>Tahrîru ulûmi’l-hadîs</i> (2 cilt). “Nakdü’n-nakale” bâbı (I, 187–635) baştan sona okundu: lafızların münekkite göre anlamı, münekkitlerin sıfatı ve teâruz kuralları sözlüğe ve münekkit notlarına işlendi (' + CJs.length + ' kalıp; notlarında “Cüdey‘” yazar).</li>' +
     '<li><b>Hoca ve talebe:</b> el-Mizzî, <i>Tehzîbü’l-Kemâl</i> (rumuzlu hoca/talebe listeleri); İbn Hacer, <i>Takrîbü’t-Tehzîb</i> (tabaka ve vefat).</li>' +
     '<li><b>Münekkitlerin tavrı:</b> ez-Zehebî, <i>Zikru men yu‘temedu kavlühû fi’l-cerh ve’t-ta‘dîl</i>.</li></ul>' +
 
     '<h3>2. Mertebe ölçeği</h3><p>Sehâvî’nin tasnifinde adı geçen lafızlar orada bırakılmıştır. Sehâvî’de geçmeyen lafızlar Lisânü’l-Muhaddisîn’deki açıklamaya göre yerleştirilmiştir (ör. ' + ar('ذو مناكير، صاحب مناكير') + ' “metrûk lafızlarındandır” → −4; ' + ar('رضا، متين') + ' “sika anlamındadır” → +4). İki kaynak ayrıştığında Sehâvî’nin mertebesi korunur, Lisân’ın görüşü kalıbın notunda gösterilir (ör. ' + ar('واه') + ').</p><div class="wrap"><table class="tbl"><thead><tr><th>Değer</th><th>Mertebe</th><th>Sözlükteki kalıplar (örnek)</th></tr></thead><tbody>' +
     [6, 5, 4, 3, 2, 1].map(v => '<tr style="cursor:default"><td class="num">+' + v + '</td><td>' + esc(CTX.TLEVEL[v]) + '</td><td class="ar" style="font-size:calc(15px * var(--yb))">' + row('T', v) + '</td></tr>').join('') +
     [1, 2, 3, 4, 5, 6].map(v => '<tr style="cursor:default"><td class="num">−' + v + '</td><td>' + esc(CTX.CLEVEL[v]) + '</td><td class="ar" style="font-size:calc(15px * var(--yb))">' + row('C', v) + (v === 2 ? ' · ' + row('J', 2) : '') + '</td></tr>').join('') + '</tbody></table></div>' +
+    '<p><b>Üç mertebe:</b> Cüdey‘, İbn Ebî Hâtim’in iki taksiminden râvileri üç mertebeye ayırır (I, 561–566). Ölçekteki karşılıkları: <b>ihticâc</b> +3…+6 (sahih ve hasen râvisi); <b>i‘tibâr</b> +2…−2 (sâlih, şeyh; leyyin, leyse bi’l-kavî; za‘îf): hadisi mütâbaat ve şâhit için yazılır; <b>sukût</b> −3…−6 (metrûk, zâhib, kezzâb): hadisi i‘tibâra da elverişsizdir (II, 1075–1078). Cüdey‘ bir lafzın belirli bir münekkitteki anlamını o münekkitin kendi açıklamasıyla ya da istikrâyla gösterdiğinde mertebe yalnız o münekkit için değiştirilir; genel mertebe Sehâvî’de kalır.</p>' +
     '<p class="cite">Örnekler cilt metninde geçen yazımlardır; eserde (ya da seçili ciltte) geçen kalıplar, düzenli ifadeleri ve geçtikleri yerlerle Lafız dizini sayfasında listelenir.</p>' +
 
     '<h3>3. Münekkite ve esere özgü ıstılahlar</h3><ul>' +
-    '<li>el-Buhârî: ' + ar('منكر الحديث') + ' ve ' + ar('فيه نظر') + ' −4 (“münkerü’l-hadîs dediğimden rivayet helal olmaz”); ' + ar('سكتوا عنه') + ' = terk ettiler (ez-Zehebî, <i>el-Mûkıza</i>).</li>' +
-    '<li>Yahyâ b. Maîn: ' + ar('لا بأس به') + ' = sika (+4); ' + ar('لا شيء') + ' = ' + ar('ليس بشيء') + '.</li>' +
-    '<li>Ebû Hâtim: ' + ar('شيخ') + ' = hadisi yazılır ve incelenir (+2).</li>' +
-    '<li>İbn Hibbân: ' + ar('لا يحل كتب حديثه إلا على سبيل الاعتبار') + ' vaddâ‘ ve müttehemler içindir (−4); ' + ar('يغرب') + ' tevsikle birlikte gelirse itkânın eksikliğini bildirir.</li>' +
+    '<li>el-Buhârî: ' + ar('منكر الحديث') + ' ve ' + ar('فيه نظر') + ' −2. Zehebî ve sonrakiler ağır cerh sayar; Cüdey‘’in istikrâsına göre ikisi de değişik derecelerdeki râviler için kullanılmış mücmel cerhtir, “münkerü’l-hadîs dediğimden rivayet helal olmaz” sözü Buhârî’nin eserlerinde bulunmaz (I, 603–607, 614–616). ' + ar('مقارب الحديث') + ' +3 (hasen); ' + ar('في إسناده نظر') + ' rivayet hakkındadır; ' + ar('سكتوا عنه') + ' = terk ettiler (ez-Zehebî, <i>el-Mûkıza</i>; Cüdey‘, I, 631).</li>' +
+    '<li>Ahmed b. Hanbel: ' + ar('لا أعلم به بأسا') + ', ' + ar('صالح الحديث') + ', ' + ar('مقارب الحديث') + ' +3; ' + ar('جيد الحديث') + ' +4 (Cüdey‘, I, 571, 576–579, 584).</li>' +
+    '<li>Yahyâ b. Maîn ve Duhaym: ' + ar('لا بأس به') + ' = sika (+4); ' + ar('لا شيء') + ' = ' + ar('ليس بشيء') + ', mücmel cerh (Cüdey‘, I, 574, 619–622).</li>' +
+    '<li>Ebû Hâtim: ' + ar('شيخ') + ' +2, hadisi yazılır ve incelenir; Cüdey‘’e göre ne tevsîk ne cerhtir, az hadisli râvi içindir. ' + ar('لا يحتج به') + ' −1: kendi açıklamasıyla “mahalluhum’s-sıdk, hadisleri yazılır” (I, 580–583, 594).</li>' +
+    '<li>Mâlik: ' + ar('ليس بثقة') + ' −1; dediği beş râviden yalnız biri metrûktür (Cüdey‘, I, 623–624). Yahyâ el-Kattân: ' + ar('تركه') + ' −2, her zaman metrûk demek değildir (I, 626–630).</li>' +
+    '<li>İbn Hibbân: ' + ar('لا يحل كتب حديثه إلا على سبيل الاعتبار') + ' vaddâ‘ ve müttehemler içindir (−4); ' + ar('يغرب') + ' tevsikle birlikte gelirse itkânın eksikliğini bildirir; es-Sikât’ta zikretmesi +1 (i‘tibâr), ' + ar('أستخير الله فيه') + ' tevakkuftur, sayılmaz (Cüdey‘, I, 326–333).</li>' +
+    '<li>el-Ukaylî: ' + ar('لا يتابع على حديثه') + ' −1, sikalar için de söyler. ed-Dârekutnî: ' + ar('لين') + ' “metrûk ve sâkıt değil, adâletten düşürmeyen bir şeyle mecrûh” (−1) (Cüdey‘, I, 588, 610–611).</li>' +
     '<li>İbn Adî: ' + ar('هو في جملة الضعفاء') + ' bazen i‘tibâr olunan, bazen metrûk râvi için söylenir (−2, notlu).</li>' +
     '<li>ez-Zehebî: ' + ar('وُثِّق') + ' = tevsiki yalnız mütesâhil bir münekkitten gelen râvi (+1); ' + ar('مشّاه فلان') + ' = hakkındaki söze rağmen kabul etti (+2); atıfsız ' + ar('مجهول') + ' Ebû Hâtim’indir.</li>' +
-    '<li>İbnü’l-Kattân: ' + ar('لم تثبت عدالته') + ' = kimse açıkça sika dememiştir (cehâlet).</li>' +
+    '<li>İbnü’l-Kattân: ' + ar('لم تثبت عدالته') + ' = kimse açıkça sika dememiştir (cehâlet). Onun ve İbn Hazm’ın ' + ar('مجهول') + '’ü −1: cehâlette aşırı giderler (Cüdey‘, I, 503–504).</li>' +
+    '<li>Mütekaddimûn (Cûzcânî, İbn Adî, İbn Hibbân): ' + ar('روى المعضلات، معضل الحديث') + ' = münker rivayetler (−2), sonraki ıstılahtaki mu‘dal değildir (Cüdey‘, I, 617–618).</li>' +
     '<li>el-Cûzcânî: ' + ar('زائغ، مذموم المذهب') + ' mezhep kaydıdır (İbn Adî), rivayette za‘f değildir.</li></ul>' +
 
     '<h3>4. Sınıflar ve sebepler</h3><p>Her lafız bir sınıfa ve bir sebebe bağlanır. Cerh sebepleri İbn Hacer’in on ta‘n sebebini izler: adâlete ilişkin kizb, kizb ittihamı, fısk, cehâlet, bid‘at; zabta ilişkin fuhş-i galat, gaflet, vehim, muhâlefet, sû-i hıfz (ihtilât ve tedlîs ayrıca işaretlenir). Sebebi beyan edilmiş cerh <b>müfesser</b>, edilmemişi <b>mübhem</b> sayılır.</p>' +
@@ -5458,7 +5465,8 @@ function renderMethod() {
 
     '<h3>5. Sayım kuralları</h3><ul>' +
     '<li><b>Görüş ve nakil:</b> aynı münekkitin aynı (ya da birini kapsayan) lafızla verdiği hüküm, kaç eserde nakledilirse nakledilsin tek görüş sayılır; nakiller ayrıca gösterilir. Nakillerden biri hükmü kısaltıyorsa <i>ihtisâr</i>, ifade farklıysa <i>lafız farkı</i> işaretlenir. Aynı münekkitin farklı hükmü ayrı görüştür.</li>' +
-    '<li><b>Bid‘at:</b> yalın bid‘at ifadesi (' + ar('شيعي، قدري، مرجئ') + ') mezhep kaydıdır, cerh sayılmaz; aynı cümlede rivayetini reddeden bir lafız varsa cerhtir. Bid‘atına <b>dâ‘î</b> olmak tek başına cerhtir; ' + ar('غير داعية') + ' gibi olumsuzlar cerh değildir.</li>' +
+    '<li><b>Bid‘at:</b> yalın bid‘at ifadesi (' + ar('شيعي، قدري، مرجئ') + ') mezhep kaydıdır, cerh sayılmaz; aynı cümlede rivayetini reddeden bir lafız varsa cerhtir. Bid‘atına <b>dâ‘î</b> olmak tek başına cerhtir; ' + ar('غير داعية') + ' gibi olumsuzlar cerh değildir. Cüdey‘ dâ‘î ayrımını nazarî bulur ve sıdkı sabit râvide bid‘ati cerh saymaz (I, 396–411); sitede dâ‘î cerh sayılmaya devam eder.</li>' +
+    '<li><b>Rivayet tavrı ve tedlîs:</b> tavır ayrı sayılır; Cüdey‘’e göre yalnız sikadan rivayet ettiği bilinen münekkitlerin (Mâlik, Şu‘be, el-Kattân, İbn Mehdî, Ahmed, Ebû Zür‘a) rivayeti tevsîktir (I, 307–314). Tedlîs hafif cerh (−1) sayılır; Cüdey‘ onu yalnız tedlîs edilen rivayeti etkileyen nisbî bir cerh sayar (I, 376–378).</li>' +
     '<li><b>Şiî ricâl:</b> en-Necâşî, et-Tûsî, el-Keşşî, İbnü’l-Gadâirî, İbn Şehrâşûb, İbn Ebî Tayy, İbn Dâvûd el-Hillî ve el-Allâme el-Hillî’nin değerlendirmeleri “Şiî tevsîki / Şiî cerhi / İmâmî ricâl kaydı” olarak ayrı gösterilir; Sünnî cerh–ta‘dîl sayımına girmez.</li>' +
     '<li><b>Sayılmayanlar:</b> rivâyet (hadis) hükmü, diyânet övgüsü, sükût, münekkit tenkidi, hedefi başka kişi olan ya da soru cümlesindeki lafız (' + ar('يحتج به؟') + '), şartlı hükümler. Harf ve benzeri dış kaynak kayıtları da sayıma eklenmez.</li></ul>' +
 
@@ -5482,7 +5490,7 @@ function renderMethod() {
     '<li><b>Takrîbü’t-Tehzîb:</b> tabaka ve vefat maddenin metninden okunur. Yüzyılı yazılmamış vefat yılı, İbn Hacer’in mukaddimedeki kuralıyla tamamlanır (1–2. tabaka 1. asır, 3–8. tabaka 2. asır, 9–12. tabaka 3. asır). Kişi, ad ve rumuz kapsamasıyla eşleştirilir (isnadda geçen kişi o kitapta da geçer); birden çok aday kalırsa eşleştirilmez.</li>' +
     '<li><b>Sentez:</b> râvinin tahmini tabakası, hocalarının ortanca tabakası +1 ile talebelerininki −1’in ortalamasıdır; Takrîb’deki tabakayla karşılaştırılır. Tahmindir, hüküm değildir.</li></ul>' +
 
-    '<h3>9. Münekkitler</h3><p>Tavır sütunu Zehebî’nin üçlü taksimine (müteannit/müteşeddid, mütesâhil, mu‘tedil) dayanır; tercih için bir işarettir. Şehir sütunu münekkidin ilmî faaliyet merkezidir.</p><div class="wrap"><table class="tbl" data-tid="method-critics"><thead><tr><th data-sk="t">Münekkit</th><th data-sk="n">Vefat</th><th data-sk="t">Şehir · bölge</th><th data-sk="t">Tavır</th><th>Not</th></tr></thead><tbody>' +
+    '<h3>9. Münekkitler</h3><p>Tavır sütunu Zehebî’nin üçlü taksimine (müteannit/müteşeddid, mütesâhil, mu‘tedil) dayanır; tercih için bir işarettir. Şehir sütunu münekkidin ilmî faaliyet merkezidir. Notlarda Cüdey‘’in münekkitlerin sıfatı (I, 203–231) ve teâruz (I, 513–557) bahislerinden özetler vardır: tek başına sözü esas alınmayanlar (Ebü’l-Feth el-Ezdî, Mesleme b. Kāsım), mezhep tesiri görülenler (Cûzcânî, İbn Hırâş, Dûlâbî, İbn Ukde) ve cehâlette aşırı gidenler (İbnü’l-Kattân, İbn Hazm).</p><div class="wrap"><table class="tbl" data-tid="method-critics"><thead><tr><th data-sk="t">Münekkit</th><th data-sk="n">Vefat</th><th data-sk="t">Şehir · bölge</th><th data-sk="t">Tavır</th><th>Not</th></tr></thead><tbody>' +
     crit.map(c => '<tr style="cursor:default"><td data-v="' + esc(c.tr) + '">' + esc(c.tr) + (c.shii ? ' <span class="tag">Şiî ricâl</span>' : '') + '<div class="ar small muted" style="font-size:calc(14px * var(--yb))">' + esc(c.canon) + '</div></td><td class="num">' + (c.death || '') + '</td><td class="small" data-v="' + esc(c.region + ' ' + c.city) + '">' + esc(c.city) + '<div class="muted">' + esc(c.region) + '</div></td><td class="small">' + esc(c.approach) + '</td><td class="small">' + esc(c.note) + '</td></tr>').join('') + '</tbody></table></div>' +
 
     '<h3>10. Kaynak eser gelenekleri</h3><div class="wrap"><table class="tbl"><thead><tr><th>Eser (ayırt edici ad)</th><th>Atıfsız hükmün sahibi</th><th>Kural</th></tr></thead><tbody>' +
@@ -5499,7 +5507,8 @@ function renderMethod() {
     '<li>ez-Zehebî (ö. 748), <i>Mîzânü’l-i‘tidâl</i>, mukaddime; <i>el-Mûkıza fî ilmi mustalahi’l-hadîs</i>; <i>Zikru men yu‘temedu kavlühû fi’l-cerh ve’t-ta‘dîl</i>.</li>' +
     '<li>İbn Hacer el-Askalânî (ö. 852), <i>Nüzhetü’n-nazar</i>; <i>Takrîbü’t-Tehzîb</i>, mukaddime; <i>Lisânü’l-Mîzân</i> (thk. Abdülfettâh Ebû Ğudde).</li>' +
     '<li>el-Mizzî (ö. 742), <i>Tehzîbü’l-Kemâl fî esmâi’r-ricâl</i>.</li>' +
-    '<li>Muhammed Halef Selâme, <i>Lisânü’l-Muhaddisîn: Mu‘cem yu‘nâ bi-şerhi mustalahâti’l-muhaddisîn</i> (5 cilt, 2007); eserde sık başvurulan Abdullah b. Yûsuf el-Cüdey‘, <i>Tahrîru ulûmi’l-hadîs</i>.</li></ul>';
+    '<li>Muhammed Halef Selâme, <i>Lisânü’l-Muhaddisîn: Mu‘cem yu‘nâ bi-şerhi mustalahâti’l-muhaddisîn</i> (5 cilt, 2007).</li>' +
+    '<li>Abdullah b. Yûsuf el-Cüdey‘, <i>Tahrîru ulûmi’l-hadîs</i> (2 cilt, Beyrut: Müessesetü’r-Reyyân, 1424/2003), I, 187–635 (“Nakdü’n-nakale”); II, 997–1086.</li></ul>';
   docToc($('method-body'), 'm', { 3: 'm:4', 8: 'm:9', 9: 'm:10' });
 }
 // Uzun belge: solda içindekiler (yapışkan), bölüm başlıkları id alır; verilen bölümler katlanır.
@@ -6776,7 +6785,7 @@ const RAPOR = (() => {
   // Tavır: ez-Zehebî’nin üçlü taksimi (müteannit / mütesâhil / mu‘tedil; Zikru men yu‘temedu kavlühû fi’l-cerh ve’t-ta‘dîl)
   // ve sonraki değerlendirmeler (İbn Hacer, Lisân mukaddimesi; el-Mu‘allimî) esas alınmıştır.
   const CRITICS = [
-    ['شعبة بن الحجاج', 'Şu‘be b. el-Haccâc', 160, 'müteşeddid', ['شعبه بن الحجاج', 'شعبه'], ''],
+    ['شعبة بن الحجاج', 'Şu‘be b. el-Haccâc', 160, 'müteşeddid', ['شعبه بن الحجاج', 'شعبه'], 'Râvilerden pek azından razı olur: tevsîki güçlüdür, cerhinde ihtiyat gerekir (Cüdey‘, Tahrîr I, 222–223).'],
     ['سفيان الثوري', 'Süfyân es-Sevrî', 161, '', ['سفيان الثوري', 'الثوري'], ''],
     ['حماد بن زيد', 'Hammâd b. Zeyd', 179, '', ['حماد بن زيد'], ''],
     ['عبد الله بن المبارك', 'Abdullah b. el-Mübârek', 181, '', ['ابن المبارك', 'عبد الله بن المبارك'], ''],
@@ -6784,45 +6793,45 @@ const RAPOR = (() => {
     ['أبو عوانة', 'Ebû Avâne el-Veddâh', 176, '', ['ابو عوانه', 'ابا عوانه'], ''],
     ['وكيع بن الجراح', 'Vekî‘ b. el-Cerrâh', 197, '', ['وكيع'], ''],
     ['سفيان بن عيينة', 'Süfyân b. Uyeyne', 198, '', ['ابن عيينه', 'سفيان بن عيينه'], ''],
-    ['يحيى بن سعيد القطان', 'Yahyâ b. Saîd el-Kattân', 198, 'müteşeddid', ['يحيي بن سعيد القطان', 'يحيي القطان', 'يحيي بن سعيد', 'القطان'], ''],
-    ['عبد الرحمن بن مهدي', 'Abdurrahmân b. Mehdî', 198, 'mu‘tedil', ['عبد الرحمن بن مهدي', 'عبد الرحمن ابن مهدي', 'ابن مهدي'], ''],
+    ['يحيى بن سعيد القطان', 'Yahyâ b. Saîd el-Kattân', 198, 'müteşeddid', ['يحيي بن سعيد القطان', 'يحيي القطان', 'يحيي بن سعيد', 'القطان'], 'İbn Mehdî ile ayrıştığında İbn Mehdî’nin sözü tercih edilir (İbnü’l-Medînî); ikisinin birlikte terk ettiği râvinin “cerhi iyileşmez”, birlikte rivayet ettiği “köprüyü geçmiştir” (Zehebî). “Terakehû”su her zaman metrûk demek değildir (Cüdey‘, Tahrîr I, 224–225, 626–629).'],
+    ['عبد الرحمن بن مهدي', 'Abdurrahmân b. Mehdî', 198, 'mu‘tedil', ['عبد الرحمن بن مهدي', 'عبد الرحمن ابن مهدي', 'ابن مهدي'], 'Yahyâ el-Kattân ile ayrıştığında onun sözü tercih edilir, çünkü “ikisinden daha mutedildir” (İbnü’l-Medînî; Cüdey‘, Tahrîr I, 225, 629).'],
     ['يزيد بن هارون', 'Yezîd b. Hârûn', 206, '', ['يزيد بن هارون'], ''],
     ['عفان بن مسلم', 'Affân b. Müslim', 219, '', ['عفان'], ''],
     ['ابن سعد', 'İbn Sa‘d', 230, '', ['ابن سعد', 'محمد بن سعد'], ''],
-    ['يحيى بن معين', 'Yahyâ b. Maîn', 233, 'müteşeddid', ['يحيي بن معين', 'ابن معين', 'بن معين'], 'İbn Maîn’in “lâ be’se bih / leyse bihî be’s” ifadesi kendi ıstılahında “sika” demektir.'],
-    ['علي بن المديني', 'Ali b. el-Medînî', 234, '', ['علي بن المديني', 'ابن المديني'], ''],
-    ['أحمد بن حنبل', 'Ahmed b. Hanbel', 241, 'mu‘tedil', ['احمد بن حنبل', 'الامام احمد', 'احمد', 'ابن حنبل'], ''],
+    ['يحيى بن معين', 'Yahyâ b. Maîn', 233, 'müteşeddid', ['يحيي بن معين', 'ابن معين', 'بن معين'], 'İbn Maîn’in “lâ be’se bih / leyse bihî be’s” ifadesi kendi ıstılahında “sika” demektir. Cüdey‘: “müteşeddid” nitelemesini genel olarak doğru bulmaz, birkaç râvide ibaresi serttir; “leyse bi-şey’” mücmel cerhtir. Hakkında farklı rivayetler gelince son sözü aranır (Cüdey‘, Tahrîr I, 226–228, 516, 533–534, 619–622).'],
+    ['علي بن المديني', 'Ali b. el-Medînî', 234, '', ['علي بن المديني', 'ابن المديني'], 'Müteşeddidlerdendir; rivayet ettiği râvi onun katında sika sayılır (Ebû Zür‘a; Cüdey‘, Tahrîr I, 229).'],
+    ['أحمد بن حنبل', 'Ahmed b. Hanbel', 241, 'mu‘tedil', ['احمد بن حنبل', 'الامام احمد', 'احمد', 'ابن حنبل'], 'Cerh–ta‘dîlde orta yolludur; ihtilaflı râvide sözü hakem gibidir. “Lâ a‘lemu bihî be’sen / lâ a‘lemu illâ hayran”ı sika ya da sadûk içindir; “sâlihu’l-hadîs”i ihticâc olunan râvi, “ceyyidü’l-hadîs”i sika içindir (Cüdey‘, Tahrîr I, 229, 571, 576–578, 584).'],
     ['عمرو بن علي الفلاس', 'Amr b. Ali el-Fellâs', 249, '', ['الفلاس', 'عمرو بن علي', 'ابو حفص الفلاس'], ''],
-    ['البخاري', 'el-Buhârî', 256, 'mu‘tedil', ['محمد بن اسماعيل البخاري', 'البخاري'], 'Buhârî’de “münkerü’l-hadîs” rivayeti helal olmayan râvi için (İbnü’l-Kattân’ın naklettiği söz, bu metinde de geçer); “fîhi nazar” ve “sekatû anhu” ağır cerhtir.'],
-    ['الجوزجاني', 'İbrâhîm b. Ya‘kūb el-Cûzcânî (es-Sa‘dî)', 259, 'müteşeddid', ['ابو اسحاق السعدي الجوزجاني', 'ابو اسحاق الجوزجاني', 'ابراهيم بن يعقوب الجوزجاني', 'الجوزجاني', 'السعدي'], 'Kûfelilere / Şîa’ya karşı cerhi ihtiyatla alınır (İbn Hacer, Lisânü’l-Mîzân mukaddimesi); İbn Adî, onun “mezmûmü’l-mezheb” ifadesinin rivayette za‘f kastetmediğini belirtir.'],
-    ['العجلي', 'Ahmed b. Abdullah el-İclî', 261, 'mütesâhil', ['احمد العجلي', 'العجلي', 'ابو الحسن العجلي', 'احمد بن عبد الله العجلي'], 'Tevsikte mütesâhil kabul edilir (el-Mu‘allimî ve sonrakiler).'],
+    ['البخاري', 'el-Buhârî', 256, 'mu‘tedil', ['محمد بن اسماعيل البخاري', 'البخاري'], 'Zehebî ve sonrakiler “münkerü’l-hadîs” ve “fîhi nazar”ı Buhârî’de ağır cerh sayar (İbnü’l-Kattân’ın naklettiği söz bu metinde de geçer). Cüdey‘’in istikrâsına göre ikisi de değişik derecelerdeki râviler için kullanılmış mücmel cerhtir; sitede −2 sayılır. “Sekatû anhu” = terakûhu; “fî isnâdihî nazar” rivayet hakkındadır (Cüdey‘, Tahrîr I, 603–607, 614–616, 631–632).'],
+    ['الجوزجاني', 'İbrâhîm b. Ya‘kūb el-Cûzcânî (es-Sa‘dî)', 259, 'müteşeddid', ['ابو اسحاق السعدي الجوزجاني', 'ابو اسحاق الجوزجاني', 'ابراهيم بن يعقوب الجوزجاني', 'الجوزجاني', 'السعدي'], 'Kûfelilere / Şîa’ya karşı cerhi ihtiyatla alınır (İbn Hacer, Lisânü’l-Mîzân mukaddimesi); İbn Adî, onun “mezmûmü’l-mezheb” ifadesinin rivayette za‘f kastetmediğini belirtir. Cüdey‘: Kûfeli bir râvi hakkındaki cerhi, mezhep tesirinden uzak bir münekkit uymadıkça alınmaz (Cüdey‘, Tahrîr I, 215–216, 522).'],
+    ['العجلي', 'Ahmed b. Abdullah el-İclî', 261, 'mütesâhil', ['احمد العجلي', 'العجلي', 'ابو الحسن العجلي', 'احمد بن عبد الله العجلي'], 'Tevsikte mütesâhil kabul edilir (el-Mu‘allimî ve sonrakiler). Cüdey‘ katılmaz: ibaresi çoğunlukla öteki münekkitlere uyar; teferrüd ettiği tevsîk, öteki münekkitlerinki gibi değerlendirilir (Cüdey‘, Tahrîr I, 324).'],
     ['مسلم', 'Müslim b. el-Haccâc', 261, '', ['مسلم بن الحجاج'], ''],
-    ['أبو زرعة الرازي', 'Ebû Zür‘a er-Râzî', 264, 'mu‘tedil', ['ابو زرعه الرازي', 'ابو زرعه', 'ابوزرعه', 'ابا زرعه'], ''],
+    ['أبو زرعة الرازي', 'Ebû Zür‘a er-Râzî', 264, 'mu‘tedil', ['ابو زرعه الرازي', 'ابو زرعه', 'ابوزرعه', 'ابا زرعه'], 'Cerh–ta‘dîlinde vera‘ ve tecrübe görülür (Zehebî); rivayet ettiği râvi onun katında sikadır (Cüdey‘, Tahrîr I, 230, 313).'],
     ['أبو داود', 'Ebû Dâvûd', 275, '', ['ابو داود'], 'Metinde et-Tayâlisî (ö. 204) ile es-Sicistânî (ö. 275) karışabilir; bağlamdan doğrulayın.'],
-    ['أبو حاتم الرازي', 'Ebû Hâtim er-Râzî', 277, 'müteşeddid', ['ابو حاتم الرازي', 'ابو حاتم', 'ابا حاتم', 'ابوحاتم'], 'Ebû Hâtim’de “şeyh” orta mertebedir (yüktebü hadîsühû ve yünzaru fîh).'],
+    ['أبو حاتم الرازي', 'Ebû Hâtim er-Râzî', 277, 'müteşeddid', ['ابو حاتم الرازي', 'ابو حاتم', 'ابا حاتم', 'ابوحاتم'], 'Müteannittir: tevsîk ettiği râviye güvenilir, telyîn ettiğinde başkalarına bakılır (Zehebî). “Lâ yuhtecc bih”i kendi açıklamasıyla “mahalluhum’s-sıdk, hadisleri yazılır” demektir (hafif cerh); “şeyh”i az hadisli râvi içindir, ne tevsîk ne cerhtir; “mechûl”ünde ayn ve hâl cehâletini ayırmaz (Cüdey‘, Tahrîr I, 230–231, 500–503, 580–583, 594).'],
     ['يعقوب بن سفيان الفسوي', 'Ya‘kūb b. Süfyân el-Fesevî', 277, '', ['يعقوب بن سفيان', 'الفسوي', 'يعقوب الفسوي'], ''],
     ['يعقوب بن شيبة', 'Ya‘kūb b. Şeybe', 262, '', ['يعقوب بن شيبه'], ''],
     ['الترمذي', 'et-Tirmizî', 279, 'mütesâhil', ['الترمذي'], ''],
-    ['ابن خراش', 'İbn Hırâş', 283, 'müteşeddid', ['ابن خراش', 'عبد الرحمن بن خراش', 'عبد الرحمن بن يوسف بن خراش'], ''],
+    ['ابن خراش', 'İbn Hırâş', 283, 'müteşeddid', ['ابن خراش', 'عبد الرحمن بن خراش', 'عبد الرحمن بن يوسف بن خراش'], 'Şiîliği sebebiyle Şamlılar hakkındaki cerhinde mezhep tesiri görülür (İbn Hacer; Cüdey‘, Tahrîr I, 207–208, 522–523).'],
     ['صالح جزرة', 'Sâlih b. Muhammed Cezere', 293, '', ['صالح جزره', 'صالح بن محمد جزره', 'جزره', 'صالح بن محمد البغدادي', 'ابو علي صالح بن محمد', 'صالح بن محمد'], ''],
     ['النسائي', 'en-Nesâî', 303, 'müteşeddid', ['النسائي'], ''],
     ['زكريا الساجي', 'Zekeriyyâ es-Sâcî', 307, '', ['زكريا الساجي', 'الساجي'], ''],
-    ['ابن خزيمة', 'İbn Huzeyme', 311, 'mütesâhil', ['ابن خزيمه'], ''],
+    ['ابن خزيمة', 'İbn Huzeyme', 311, 'mütesâhil', ['ابن خزيمه'], 'Mütesâhil sayılması tartışmalıdır: Cüdey‘’e göre mechûlleri tevsîk ettiği iddiası doğru değildir, râvileri cehâletle de cerh eder; Sahîh’inde ihticâcı tevsîktir (Cüdey‘, Tahrîr I, 324–325).'],
     ['أبو عروبة الحراني', 'Ebû Arûbe el-Harrânî', 318, '', ['ابو عروبه الحراني', 'ابو عروبه'], ''],
-    ['العقيلي', 'el-Ukaylî', 322, 'müteşeddid', ['العقيلي', 'ابو جعفر العقيلي'], ''],
+    ['العقيلي', 'el-Ukaylî', 322, 'müteşeddid', ['العقيلي', 'ابو جعفر العقيلي'], '“Lâ yütâba‘ alâ hadîsih”i sikalar için de söyler, tek başına sebep sayılmaz; kitabına bazı sikaları da almıştır (Cüdey‘, Tahrîr I, 474, 610–611).'],
     ['ابن أبي حاتم', 'İbn Ebî Hâtim', 327, '', ['ابن ابي حاتم', 'بن ابي حاتم', 'عبد الرحمن بن ابي حاتم'], 'Çoğu zaman babası Ebû Hâtim’in veya Ebû Zür‘a’nın sözünü nakleder; el-Cerh ve’t-ta‘dîl’de kontrol edin.'],
     ['أبو العرب', 'Ebü’l-Arab et-Temîmî', 333, '', ['ابو العرب'], ''],
-    ['ابن حبان', 'İbn Hibbân', 354, 'iki yönlü', ['ابو حاتم محمد بن حبان البستي', 'ابو حاتم ابن حبان البستي', 'ابو حاتم بن حبان البستي', 'ابو حاتم ابن حبان', 'ابو حاتم بن حبان', 'ابو حاتم البستي', 'ابن حبان', 'بن حبان', 'البستي'], 'el-Mecrûhîn’de cerhte şiddetli, es-Sikât’ta (mechûlleri tevsikte) mütesâhil kabul edilir.'],
+    ['ابن حبان', 'İbn Hibbân', 354, 'iki yönlü', ['ابو حاتم محمد بن حبان البستي', 'ابو حاتم ابن حبان البستي', 'ابو حاتم بن حبان البستي', 'ابو حاتم ابن حبان', 'ابو حاتم بن حبان', 'ابو حاتم البستي', 'ابن حبان', 'بن حبان', 'البستي'], 'el-Mecrûhîn’de cerhte şiddetli, es-Sikât’ta (mechûlleri tevsikte) mütesâhil kabul edilir. Cüdey‘: es-Sikât’ta hüccet olan da yalnız i‘tibâr olunan da vardır, i‘tibâra elverişsiz râvi yoktur (sitede +1); “estahîrullâh fîh” tereddüttür; aynı râviyi iki kitabına da almışsa iki sözü düşer (Cüdey‘, Tahrîr I, 325–334).'],
     ['ابن عدي', 'İbn Adî', 365, 'mu‘tedil', ['الحافظ ابو احمد بن عدي الجرجاني', 'ابو احمد عبد الله بن عدي الجرجاني', 'ابو احمد بن عدي', 'ابن عدي', 'بن عدي'], '“Ercû ennehû lâ be’se bih” İbn Adî’nin ihtiyatlı ta‘dîl formülüdür; hükmü tetebbu‘ (istikrâ) sonucudur.'],
-    ['أبو الفتح الأزدي', 'Ebü’l-Feth el-Ezdî', 374, 'müteşeddid', ['ابو الفتح الازدي', 'الازدي', 'ابو فتح الازدي'], 'Zehebî: “Ebü’l-Feth cerhte aşırı gider” (Mîzân, Ebân b. İshâk maddesi; bu metinde).'],
+    ['أبو الفتح الأزدي', 'Ebü’l-Feth el-Ezdî', 374, 'müteşeddid', ['ابو الفتح الازدي', 'الازدي', 'ابو فتح الازدي'], 'Zehebî: “Ebü’l-Feth cerhte aşırı gider” (Mîzân, Ebân b. İshâk maddesi; bu metinde). Cüdey‘: kendisi mecrûhtur; tek başına cerhi ve ta‘dîli esas alınmaz (Cüdey‘, Tahrîr I, 212–213, 623).'],
     ['الدارقطني', 'ed-Dârekutnî', 385, 'mu‘tedil', ['ابو الحسن الدارقطني', 'الدارقطني', 'الدراقطني'], ''],
     ['ابن شاهين', 'İbn Şâhîn', 385, '', ['ابن شاهين'], ''],
     ['ابن خلفون', 'İbn Halfûn', 636, '', ['ابن خلفون', 'ابو بكر بن خلفون'], 'el-Mu‘lim bi-şuyûhi’l-Buhârî ve Müslim ile es-Sikât’ın müellifi; Muğlatay’ın İkmâl’i onun naklini çok aktarır.'],
-    ['الحاكم', 'el-Hâkim en-Nîsâbûrî', 405, 'mütesâhil', ['ابو عبد الله الحاكم', 'الحاكم'], ''],
+    ['الحاكم', 'el-Hâkim en-Nîsâbûrî', 405, 'mütesâhil', ['ابو عبد الله الحاكم', 'الحاكم'], 'Râviler hakkındaki açık sözü hüccettir; tesâhül Müstedrek’teki tashîhindedir. Cehâleti iki râvinin rivayetiyle kalkmış sayar (Cüdey‘, Tahrîr I, 334–337).'],
     ['حمزة السهمي', 'Hamza es-Sehmî', 427, '', ['حمزه السهمي', 'السهمي'], ''],
     ['أبو نعيم الأصبهاني', 'Ebû Nuaym el-İsfahânî', 430, '', ['ابو نعيم الاصبهاني', 'ابونعيم'], ''],
     ['النجاشي', 'en-Necâşî', 450, '', ['ابن النجاشي', 'النجاشي'], 'İmâmî ricâl âlimi.'],
-    ['ابن حزم', 'İbn Hazm', 456, '', ['ابن حزم', 'ابو محمد بن حزم'], ''],
+    ['ابن حزم', 'İbn Hazm', 456, '', ['ابن حزم', 'ابو محمد بن حزم'], 'Râvileri mechûl saymakta aşırı gider (İbn Hacer); ayrıca her cerhte tefsîr şart koşar (Cüdey‘, Tahrîr I, 471, 503–504).'],
     ['ابن أبي الفوارس', 'İbn Ebi’l-Fevâris', 412, '', ['ابن ابي الفوارس', 'بن ابي الفوارس'], ''],
     ['الكشي', 'Ebû Amr el-Keşşî', 350, '', ['ابو عمرو الكشي', 'الكشي'], 'İmâmî ricâl âlimi (Ma‘rifetü’r-ricâl).'],
     ['ابن الغضائري', 'İbnü’l-Gadâirî', null, '', ['ابن الغضائري'], 'İmâmî ricâl âlimi (5./11. yüzyıl).'],
@@ -6834,8 +6843,8 @@ const RAPOR = (() => {
     ['الخطيب البغدادي', 'el-Hatîb el-Bağdâdî', 463, '', ['الخطيب ابو بكر', 'ابو بكر الخطيب', 'الخطيب البغدادي', 'الخطيب'], ''],
     ['ابن عبد البر', 'İbn Abdilber', 463, '', ['ابن عبد البر', 'ابو عمر بن عبد البر'], ''],
     ['ابن ماكولا', 'İbn Mâkûlâ', 475, '', ['الامير ابو نصر بن ماكولا', 'ابو نصر بن ماكولا', 'ابن ماكولا'], 'Ensâb/zabt otoritesi; cerh-ta‘dîl hükmü vermez.'],
-    ['ابن الجوزي', 'İbnü’l-Cevzî', 597, '', ['ابن الجوزي', 'بن الجوزي'], ''],
-    ['ابن القطان الفاسي', 'İbnü’l-Kattân el-Fâsî', 628, '', ['ابو الحسن بن القطان', 'ابو الحسن ابن القطان', 'ابن القطان'], ''],
+    ['ابن الجوزي', 'İbnü’l-Cevzî', 597, '', ['ابن الجوزي', 'بن الجوزي'], 'ed-Du‘afâ ve’l-metrûkîn’inde nakil hataları ve ihlâlli kısaltmalar vardır; tek başına esas alınmaz (Cüdey‘, Tahrîr I, 476–477).'],
+    ['ابن القطان الفاسي', 'İbnü’l-Kattân el-Fâsî', 628, '', ['ابو الحسن بن القطان', 'ابو الحسن ابن القطان', 'ابن القطان'], 'Râvileri mechûl saymakta aşırı gider; Zehebî ve İbn Hacer reddeder (Cüdey‘, Tahrîr I, 503–504).'],
     ['النباتي', 'Ebü’l-Abbâs en-Nebâtî (İbnü’r-Rûmiyye)', 637, '', ['ابو العباس النباتي', 'النباتي'], ''],
     ['المزي', 'el-Mizzî', 742, '', ['المزي'], ''],
     ['الذهبي', 'ez-Zehebî', 748, 'mu‘tedil', ['الذهبي', 'صاحب الميزان'], 'Mîzân’da atıfsız “sika, sadûk, sâlih, leyyin” Zehebî’nin kendi hükmüdür; atıfsız “mechûl” ise Ebû Hâtim’indir (Mîzân mukaddimesi; bu metinde de geçer).'],
@@ -6848,23 +6857,23 @@ const RAPOR = (() => {
     ['منصور بن المعتمر', 'Mansûr b. el-Mu‘temir', 132, '', ['منصور بن المعتمر'], ''],
     ['أبو إسحاق السبيعي', 'Ebû İshâk es-Sebîî', 127, '', ['ابا اسحاق السبيعي', 'ابو اسحاق السبيعي'], ''],
     ['ياقوت الحموي', 'Yâkūt el-Hamevî', 626, '', ['ياقوت'], 'Edebiyat/biyografi kaynağı; cerh-ta‘dîl otoritesi değildir.'],
-    ['الدولابي', 'Ebû Bişr ed-Dûlâbî', 310, '', ['ابي بشر الدولابي', 'ابو بشر الدولابي', 'الدولابي'], ''],
+    ['الدولابي', 'Ebû Bişr ed-Dûlâbî', 310, '', ['ابي بشر الدولابي', 'ابو بشر الدولابي', 'الدولابي'], 'Hanefî taassubu vardır: muhalifi hakkındaki cerhi ve muvafığı hakkındaki ta‘dîli ihtiyatla alınır (İbn Adî; Cüdey‘, Tahrîr I, 216–217).'],
     ['حمزة الزيات', 'Hamza ez-Zeyyât', 156, '', ['حمزه الزيات'], ''],
     ['عبد الله بن أحمد بن حنبل', 'Abdullah b. Ahmed b. Hanbel', 290, '', ['عبد الله بن احمد'], 'Babası Ahmed b. Hanbel’in sözünü nakleder.'],
     ['ابن الجنيد', 'İbnü’l-Cüneyd', 260, '', ['ابن الجنيد'], ''],
     // Lisânü’l-Mîzân taramasında hüküm veren, listede olmayan münekkitler (vefat: ez-Zehebî, Siyer; Tezkiretü’l-huffâz)
     ['البزار', 'Ebû Bekr el-Bezzâr', 292, '', ['ابو بكر البزار', 'البزار'], 'el-Müsned (el-Bahru’z-zehhâr) sahibi; Lisânü’l-Muhaddisîn: “leyyin” lafzını şiddetli cerhte de kullanır.'],
     ['ابن الجارود', 'İbnü’l-Cârûd en-Nîsâbûrî', 307, '', ['ابن الجارود'], 'el-Müntekā ve ed-Du‘afâ sahibi.'],
-    ['ابن عقدة', 'İbn Ukde', 332, '', ['ابن عقده', 'ابو العباس بن عقده'], 'Kûfeli hâfız; kendisi hakkında da söz edilmiştir.'],
+    ['ابن عقدة', 'İbn Ukde', 332, '', ['ابن عقده', 'ابو العباس بن عقده'], 'Kûfeli hâfız; kendisi hakkında da söz edilmiştir. Şiî râviler lehine ta‘dîli ihtiyatla alınır (Cüdey‘, Tahrîr I, 524, 556).'],
     ['ابن المنادي', 'İbnü’l-Münâdî', 336, '', ['ابن المنادي', 'ابو الحسين بن المنادي'], ''],
     ['ابن يونس', 'İbn Yûnus es-Sadefî', 347, '', ['ابو سعيد بن يونس', 'ابن يونس'], 'Târîhu Mısr sahibi.'],
     ['ابن قانع', 'İbn Kāni‘', 351, '', ['ابن قانع', 'عبد الباقي بن قانع'], ''],
-    ['مسلمة بن قاسم', 'Mesleme b. Kāsım el-Kurtubî', 353, '', ['مسلمه بن قاسم', 'مسلمه بن القاسم', 'مسلمه'], 'es-Sıla sahibi; kendisi hakkında da söz edilmiştir (ez-Zehebî).'],
+    ['مسلمة بن قاسم', 'Mesleme b. Kāsım el-Kurtubî', 353, '', ['مسلمه بن قاسم', 'مسلمه بن القاسم', 'مسلمه'], 'es-Sıla sahibi; kendisi hakkında da söz edilmiştir (ez-Zehebî). Tek başına cerhi ve ta‘dîli esas alınmaz (Cüdey‘, Tahrîr I, 213).'],
     ['أبو الشيخ الأصبهاني', 'Ebü’ş-Şeyh el-İsfahânî', 369, '', ['ابو الشيخ'], ''],
     ['الإسماعيلي', 'Ebû Bekr el-İsmâîlî', 371, '', ['الاسماعيلي', 'ابو بكر الاسماعيلي'], ''],
     ['أبو أحمد الحاكم', 'Ebû Ahmed el-Hâkim el-Kebîr', 378, '', ['ابو احمد الحاكم', 'الحاكم ابو احمد', 'ابو احمد الحاكم الكبير'], 'el-Künâ sahibi; Ebû Abdillah el-Hâkim’den ayrıdır.'],
     ['ابن منده', 'Ebû Abdillah İbn Mende', 395, '', ['ابو عبد الله بن منده', 'ابن منده'], ''],
-    ['السليماني', 'Ebü’l-Fazl es-Süleymânî', 404, '', ['السليماني', 'ابو الفضل السليماني'], ''],
+    ['السليماني', 'Ebü’l-Fazl es-Süleymânî', 404, '', ['السليماني', 'ابو الفضل السليماني'], 'Zehebî: büyüklere tan eden bir kitabı vardır, teferrüd ettiği söz dinlenmez (Cüdey‘, Tahrîr I, 607).'],
     ['الإدريسي', 'Ebû Sa‘d el-İdrîsî', 405, '', ['الادريسي', 'ابو سعد الادريسي'], 'Târîhu Semerkand sahibi.'],
     ['ابن مردويه', 'İbn Merdûyeh', 410, '', ['ابن مردويه'], ''],
     ['البرقاني', 'Ebû Bekr el-Berkānî', 425, '', ['البرقاني'], ''],
@@ -6885,16 +6894,16 @@ const RAPOR = (() => {
     // Bütün eserde ve HH’de iki ayrı yazımla “kayıtsız” kalan münekkitler (18.10.2026). Yalın adın kime gittiği nottadır.
     ['محمد بن عبد الله بن نمير', 'Muhammed b. Abdullah b. Numeyr', 234, '', ['محمد بن عبد الله بن نمير', 'محمد بن نمير', 'ابن نمير'], 'Cerh–ta‘dîl kitaplarında yalın «ابن نمير» oğul Muhammed’dir; babası Abdullah b. Numeyr (ö. 199) ayrı kişidir.'],
     ['ابن عمار الموصلي', 'Muhammed b. Abdullah b. Ammâr el-Mevsılî', 242, '', ['محمد بن عبد الله بن عمار', 'محمد بن عبد الله بن عمار الموصلي', 'محمد بن عمار', 'ابن عمار الموصلي', 'ابن عمار'], 'Yalın «ابن عمار» el-Mevsılî’dir; Hişâm b. Ammâr («هشام بن عمار») ayrı kişidir.'],
-    ['دحيم', 'Duhaym (Abdurrahmân b. İbrâhîm ed-Dımaşkī)', 245, '', ['دحيم', 'عبد الرحمن بن ابراهيم دحيم'], ''],
+    ['دحيم', 'Duhaym (Abdurrahmân b. İbrâhîm ed-Dımaşkī)', 245, '', ['دحيم', 'عبد الرحمن بن ابراهيم دحيم'], 'Şam râvilerinde merci; “lâ be’se bih”i sika demektir (Cüdey‘, Tahrîr I, 545, 574).'],
     ['أحمد بن صالح المصري', 'Ahmed b. Sâlih el-Mısrî', 248, '', ['احمد بن صالح المصري', 'احمد بن صالح'], 'Yalın «أحمد بن صالح» cerh–ta‘dîlde el-Mısrî’dir; Ahmed b. Sâlih el-Bağdâdî (ö. 245) ayrı kişidir.'],
     ['عثمان بن أبي شيبة', 'Osmân b. Ebî Şeybe', 239, '', ['عثمان بن ابي شيبه', 'عثمان بن محمد بن ابي شيبه'], ''],
-    ['أبو مسهر', 'Ebû Müshir el-Gassânî', 218, '', ['ابو مسهر', 'ابا مسهر', 'عبد الاعلي بن مسهر'], ''],
+    ['أبو مسهر', 'Ebû Müshir el-Gassânî', 218, '', ['ابو مسهر', 'ابا مسهر', 'عبد الاعلي بن مسهر'], 'Şamlıların cerh–ta‘dîlinde sözü kabul edilir (İbn Hibbân; Cüdey‘, Tahrîr I, 226).'],
     ['إسحاق بن راهويه', 'İshâk b. Râhûye', 238, '', ['اسحاق بن راهويه', 'ابن راهويه', 'اسحاق بن ابراهيم الحنظلي'], ''],
     ['إبراهيم الحربي', 'İbrâhîm el-Harbî', 285, '', ['ابراهيم الحربي', 'ابراهيم بن اسحاق الحربي', 'ابو اسحاق الحربي'], ''],
     ['علي بن الحسين بن الجنيد', 'Ali b. el-Hüseyn b. el-Cüneyd er-Râzî', 291, '', ['علي بن الحسين بن الجنيد', 'علي بن الجنيد'], 'Yalın «ابن الجنيد» (İbn Maîn’e soran İbrâhîm b. Abdullah el-Huttalî olabilir) bu kayda bağlanmaz.'],
     ['موسى بن هارون الحمال', 'Mûsâ b. Hârûn el-Hammâl', 294, '', ['موسي بن هارون الحمال', 'موسي بن هارون'], ''],
     ['مطين', 'Mutayyen (Muhammed b. Abdullah el-Hadramî)', 297, '', ['مطين', 'محمد بن عبد الله الحضرمي'], ''],
-    ['مالك بن أنس', 'Mâlik b. Enes', 179, '', ['مالك بن انس', 'الامام مالك'], 'Yalın «مالك» bağlanmaz (Mâlik b. Dînâr, Ebû Mâlik … ile karışır).'],
+    ['مالك بن أنس', 'Mâlik b. Enes', 179, '', ['مالك بن انس', 'الامام مالك'], 'Yalın «مالك» bağlanmaz (Mâlik b. Dînâr, Ebû Mâlik … ile karışır). Rivayet ettiği râvi sika sayılır; “leyse bi-sika”sı bazen sadûk ve i‘tibâr ehli içindir (sitede −1) (Cüdey‘, Tahrîr I, 223, 623–624).'],
     ['أبو علي النيسابوري', 'Ebû Ali en-Nîsâbûrî', 349, '', ['ابو علي النيسابوري', 'ابو علي الحافظ'], 'el-Hâkim’in hocası; el-Hâkim’de «أبو علي الحافظ» odur.'],
   ];
   // Söz işaretinin yalnız kalıbını bildiren “via” değerleri (aracı kişi değildir)
@@ -7021,10 +7030,12 @@ const RAPOR = (() => {
   const SAYYI = 'سي(?:ئ|ء|يء|ي)?';
   const HMZ = '(?:ء|ئ|ي)';
   const L = [];
+  const CJ = 'Cüdey‘, Tahrîr: ';   // Abdullah b. Yûsuf el-Cüdey‘, Tahrîru ulûmi’l-hadîs (Beyrut 1424/2003); notta cilt ve sayfa
   const add = (k, lv, sb, tr, w, pats, o) => { for (const p of [].concat(pats)) L.push(Object.assign({ k, lv, sb, tr, w, p }, o || {})); };
 
   // — Engelleyiciler (yanlış pozitifleri yutar) —
-  add('X', 0, '', '', 0, ['لا (?:يعرف|تعرف) (?:لل|في |من |عن |هذا|ذلك)', '(?:اقوال )?من وثقه', 'من ضعفه', 'من جرحه', '(?:اذا )?روي عنه ثقه', 'عن ثقه', 'حكم فيه نظر', 'قوله فيه نظر', 'ثبت (?:عنه|عن|ان|انه|في|لي|له|عندي|عند)', 'لا حجه (?:فيه|له|لهم)', 'حجه عليه', 'وتركته', 'شيخ له مجهول', 'صالح بن', 'ابو صالح', 'ابي صالح', 'صالح (?:ابن|بن)', 'حكمك عليهما', 'الا علي سبيل الاعتبار', 'لست مني في حل', 'اتق الله ولا تكذب', 'ولا تكذب']);
+  add('X', 0, '', '', 0, ['لا (?:يعرف|تعرف) (?:لل|في |من |عن |هذا|ذلك)', '(?:اقوال )?من وثقه', 'من ضعفه', 'من جرحه', '(?:اذا )?روي عنه ثقه', 'عن ثقه', 'حكم فيه نظر', 'قوله فيه نظر', 'ثبت (?:عنه|عن|ان|انه|في|لي|له|عندي|عند)', 'لا حجه (?:فيه|له|لهم)', 'حجه عليه', 'وتركته', 'شيخ له مجهول', 'صالح بن', 'ابو صالح', 'ابي صالح', 'صالح (?:ابن|بن)', 'حكمك عليهما', 'الا علي سبيل الاعتبار', 'لست مني في حل', 'اتق الله ولا تكذب', 'ولا تكذب',
+    '(?:يكتب|نكتب|اكتب) (?:حديثه )?علي الاعتبار', 'ما يعجبني الا علي الاعتبار']);   // Cüdey‘ II, 1073–1074: “alâ’l-i‘tibâr” = tanımak için yazmak
 
   // — TA‘DÎL —
   add('T', 6, 'tevsik', 'En üst tevsik', 0.95, ['اوثق الناس', 'اثبت الناس', '(?:من )?احفظ الناس', 'اليه المنتهي في (?:التثبت|الحفظ|الاتقان)', 'لا اعرف له نظيرا', 'لا يسال عن (?:مثله|مثل هذا)', 'امير المومنين في الحديث']);
@@ -7041,19 +7052,24 @@ const RAPOR = (() => {
   add('T', 4, 'tevsik', 'Tevsik ettiler (vessekûhu)', 0.88, ['وثقوه'], { plural: true });
   // Tırnak «…», “…”, "…" ve “جملة الثقات” yazımları (HH’deki 153 bin sözle sınandı: önce «» tırnaklı binlerce kayıt kaçıyordu)
   const QT = '[«"“”»()]?';
+  const SIKAT_NT = 'İbn Hibbân’ın es-Sikât’ı mechûlleri de kapsadığı için bu zımnî tevsik tek başına yeterli sayılmaz. ' + CJ + 'kitapta hüccet olan da yalnız i‘tibâr olunan da vardır, i‘tibâra elverişsiz râvi yoktur; bu yüzden İbn Hibbân’ın es-Sikât’ta zikretmesi +1 (i‘tibâr) sayılır (I, 328–333).';
   const SIKAT = '(?:الثقات|ثقات (?:التابعين|اتباع التابعين|اتباع الاتباع|المحدثين|اهل العلم)|طبقه (?:التابعين|اتباع التابعين)|نفر ثقات)';
-  add('T', 3, 'zimni', 'es-Sikât’ta zikretti (zımnî tevsik)', 0.8, ['(?:ذكره|ذكرها|ذكر|اورده|اوردها) (?<cr>(?:\\S+ ){0,5}?\\S+) في (?:كتاب |كتابه )?' + QT + '\\s*(?:جمله |تاريخ )?' + SIKAT + '\\s*' + QT, 'في ' + QT + '\\s*الثقات\\s*' + QT + ' لابن حبان', 'قال(?:ه)? (?<cr2>ابن حبان|بن حبان) في (?:كتاب )?' + QT + '\\s*(?:تاريخ )?' + SIKAT + '\\s*' + QT], { nt: 'İbn Hibbân’ın es-Sikât’ı mechûlleri de kapsadığı için bu zımnî tevsik tek başına yeterli sayılmaz.' });
+  add('T', 3, 'zimni', 'es-Sikât’ta zikretti (zımnî tevsik)', 0.8, ['(?:ذكره|ذكرها|ذكر|اورده|اوردها) (?<cr>(?:\\S+ ){0,5}?\\S+) في (?:كتاب |كتابه )?' + QT + '\\s*(?:جمله |تاريخ )?' + SIKAT + '\\s*' + QT, 'في ' + QT + '\\s*الثقات\\s*' + QT + ' لابن حبان', 'قال(?:ه)? (?<cr2>ابن حبان|بن حبان) في (?:كتاب )?' + QT + '\\s*(?:تاريخ )?' + SIKAT + '\\s*' + QT], { lvBy: { 'ابن حبان': 1 }, nt: SIKAT_NT });
   add('T', 3, 'sidk', 'Sadûk', 0.85, ['صدوق']);
-  add('T', 3, 'sidk', 'Lâ be’se bih', 0.88, ['لا باس به', 'ليس به باس', 'لا باس بحديثه', 'ما به باس'], { lvBy: { 'يحيى بن معين': 4 }, nt: 'İbn Maîn’in ıstılahında “sika” anlamına gelir.' });
+  add('T', 3, 'sidk', 'Lâ be’se bih', 0.88, ['لا باس به', 'ليس به باس', 'لا باس بحديثه', 'ما به باس'], { lvBy: { 'يحيى بن معين': 4, 'دحيم': 4 }, nt: 'İbn Maîn’in ve Duhaym’ın ıstılahında “sika” anlamına gelir. ' + CJ + 'sikaların bir mertebesidir; Ebû Hâtim’de bazen ihticâc, bazen yalnız i‘tibâr bildirir (I, 573–576).' });
   add('T', 3, 'sidk', 'Me’mûn / hıyâr', 0.7, ['مامون', 'خيار']);
   add('T', 3, 'sidk', 'Sıdk ehli', 0.8, ['من اهل الصدق(?: في الروايات)?']);
   add('T', 2, 'sidk', 'Mahalluhu’s-sıdk', 0.85, ['محله الصدق', 'الي الصدق ما هو', 'رووا عنه']);
-  add('T', 2, 'sidk', 'Sâlihu’l-hadîs / cey-yid / hasen', 0.85, ['صالح الحديث', 'جيد الحديث', 'حسن الحديث', 'مقارب الحديث']);
-  add('T', 2, 'sidk', 'Şeyh vasat / vasat', 0.7, ['شيخ وسط', 'وسط'], { solo: true });
-  add('T', 2, 'sidk', 'Şeyh (Ebû Hâtim ıstılahı)', 0.5, ['شيخ'], { solo: true, nt: 'Ebû Hâtim’de “şeyh”: hadisi yazılır ve incelenir.' });
+  add('T', 2, 'sidk', 'Sâlihu’l-hadîs', 0.85, ['صالح الحديث'], { lvBy: { 'أحمد بن حنبل': 3 }, nt: CJ + 'Ahmed bu lafzı sikadan aşağı ama ihticâc olunan râvi için kullanır (İbn İshâk hakkında: “sâlihu’l-hadîs, onunla ihticâc da ederim”); Ebû Hâtim’de çoğunlukla i‘tibâr bildirir (I, 584–586).' });
+  add('T', 2, 'sidk', 'Ceyyidü’l-hadîs', 0.85, ['جيد الحديث'], { lvBy: { 'أحمد بن حنبل': 4, 'أبو داود': 4 }, nt: CJ + 'sika ile eşdeğer bir ihticâc lafzıdır; Ahmed, Ebû Dâvûd ve Ebû Zür‘a ed-Dımaşkī bu anlamda kullanır (I, 571). Sehâvî beşinci mertebede sayar.' });
+  add('T', 2, 'sidk', 'Hasenü’l-hadîs', 0.85, ['حسن الحديث']);
+  add('T', 2, 'sidk', 'Mukâribü’l-hadîs', 0.85, ['مقارب الحديث'], { lvBy: { 'أحمد بن حنبل': 3, 'البخاري': 3 }, nt: CJ + 'Ahmed ve Buhârî’de hasenü’l-hadîs derecesidir; Tirmizî Buhârî’nin bu sözüne dayanarak hadisi hasen sayar (I, 578–579).' });
+  add('T', 2, 'itibar', 'Şeyh vasat / vasat', 0.7, ['شيخ وسط', 'وسط'], { solo: true, nt: CJ + '“vasat” ta‘dîl ile cerh arasıdır; râvinin hadisi ihticâca değil i‘tibâra elverir (Yahyâ el-Kattân, İbnü’l-Medînî, Ebû Zür‘a; I, 579–580).' });
+  add('T', 2, 'itibar', 'Şeyh (Ebû Hâtim ıstılahı)', 0.5, ['شيخ'], { solo: true, nt: 'Ebû Hâtim’de “şeyh”: hadisi yazılır ve incelenir. ' + CJ + 'tek başına söylenince ne tevsîk ne cerhtir; râvinin az hadisli olduğunu ve hadisle tanınmadığını bildirir, i‘tibâr mertebesidir (Zehebî: “cerh lafzı değildir, tevsîk lafzı da değildir”; I, 580–583).' });
   add('T', 2, 'sidk', 'Sâlih', 0.55, ['صالح'], { solo: true });
   add('T', 2, 'istikra', 'Hadisleri müstakim', 0.65, ['(?:احاديثه |عامتها |كلها )?مستقيمه(?: غير منكره)?', 'مستقيم الحديث', 'مقدار ما يرويه مستقيم']);
-  add('T', 1, 'itibar', 'Ta‘dîlin en alt mertebesi', 0.8, ['صويلح', 'صدوق ان شاء الله', 'ارجو انه لا باس (?:به|بها)', '(?:ما|لا) اعلم به باسا', 'مقبول', 'يعتبر (?:به|بحديثه)', 'يروي حديثه', 'ليس ببعيد من الصواب', 'متماسك']);
+  add('T', 1, 'itibar', 'Ta‘dîlin en alt mertebesi', 0.8, ['صويلح', 'صدوق ان شاء الله', 'ارجو انه لا باس (?:به|بها)', 'مقبول', 'يعتبر (?:به|بحديثه)', 'يروي حديثه', 'ليس ببعيد من الصواب', 'متماسك']);
+  add('T', 1, 'itibar', 'Beis bilmiyorum', 0.8, ['(?:ما|لا) اعلم به باسا'], { lvBy: { 'أحمد بن حنبل': 3 }, nt: CJ + 'Ahmed bu sözü yalnız sika ya da sadûk râviler için söyler (istikrâ); Zehebî mestûr ve üstü için kullanır (I, 576–577).' });
   add('T', 1, 'itibar', 'Hadisi yazılır', 0.8, ['يكتب حديثه'], { nt: 'Lisânü’l-Muhaddisîn: tek başına söylendiğinde râvinin zayıf olup terk edilmediğini (i‘tibâr) gösterir.' });
   add('T', 1, 'istikra', 'Münker hadis bulamadım (istikrâ)', 0.55, ['لم اجد له حديثا منكر(?:ا|) ?(?:المتن)?']);
 
@@ -7066,37 +7082,44 @@ const RAPOR = (() => {
   add('K', 1, 'itibar', 'Hadisi yazılır, delil olmaz', 0.85, ['يكتب حديثه ولا يحتج به']);
 
   // — CERH —
-  add('C', 1, 'mubhem', 'Hafif cerh', 0.85, ['فيه (?:ادني )?مقال', 'فيه ضعف', 'في حديثه ضعف', 'تعرف وتنكر', 'ليس بذاك(?: القوي)?', 'ليس بالقوي', 'ليس بقوي', 'ليس بالمتين', 'ليس بعمده', 'ليس بالمرضي', 'فيه خلف', 'طعنوا فيه', 'مطعون فيه', 'تكلموا فيه']);
+  add('J', 1, 'cehalet', 'Pek tanınmış değil', 0.8, ['ليس بذاك (?:المعروف|المشهور)'], { nt: CJ + '“leyse bi-zâke’l-ma‘rûf / el-meşhûr” şöhret eksikliği bildirir (I, 598).' });
+  add('C', 1, 'mubhem', 'Tanırsın da yadırgarsın da', 0.8, ['تعرف وتنكر'], { nt: CJ + 'râvinin hadisi bir doğru bir yanlış gelir, itkânı yoktur; mücmel bir telyîndir, derecesi öteki münekkitlerin sözüne bakılarak belirlenir (Yahyâ el-Kattân, İbn Mehdî, Buhârî, Ebû Hâtim; I, 601–602).' });
+  add('C', 1, 'mubhem', 'Hafif cerh', 0.85, ['فيه (?:ادني )?مقال', 'فيه ضعف', 'في حديثه ضعف', 'ليس بذاك(?: القوي)?', 'ليس بالقوي', 'ليس بقوي', 'ليس بالمتين', 'ليس بعمده', 'ليس بالمرضي', 'فيه خلف', 'طعنوا فيه', 'مطعون فيه', 'تكلموا فيه']);
   add('C', 1, 'mubhem', 'Hakkında konuşuldu', 0.75, ['تكلم فيه'], { v: true });
-  add('C', 1, 'suhifz', 'Leyyin', 0.85, ['لين(?: الحديث)?', 'فيه لين']);
+  add('C', 1, 'suhifz', 'Leyyin', 0.85, ['لين(?: الحديث)?', 'فيه لين'], { nt: CJ + 'ed-Dârekutnî: “leyyin” diyince metrûk ve sâkıt değil, adâletten düşürmeyen bir şeyle mecrûh râviyi kastederim. Aslı hıfz zaafıdır (I, 588–589).' });
   add('C', 1, 'suhifz', 'Tel’în etti (leyyenehû)', 0.9, ['لينه'], { v: true });
   add('C', 1, 'mubhem', 'Tenkit etti (ğamezehû)', 0.8, ['غمزه'], { v: true });
-  add('C', 1, 'suhifz', 'Hıfzı kötü', 0.85, [SAYYI + ' الحفظ', 'ليس بالحافظ']);
-  add('C', 1, 'muhalefe', 'Hata eder, muhalefet eder', 0.85, ['يخط(?:ئ|ي)(?:ء)? ويخالف', 'يخالف(?: الثقات)?']);
+  add('C', 1, 'suhifz', 'Hıfzı kötü', 0.85, [SAYYI + ' الحفظ'], { nt: CJ + 'sû-i hıfzla vasıflananların çoğunun hadisi i‘tibâr için yazılır; nadiren terk derecesine iner (I, 602–603).' });
+  add('C', 1, 'suhifz', 'Hâfız değil', 0.8, ['ليس بالحافظ'], { nt: CJ + 'İbnü’l-Kattân: “kendisinden daha hâfız olanı bulunan kimse için de söylenir”; çoğu kez sika ve sadûk râviler hakkındadır. Ebû Ahmed el-Hâkim’in “leyse bi’l-hâfız indehum”u önceki münekkitlerin sözüne bakılarak değerlendirilir (I, 589–590).' });
+  add('C', 1, 'muhalefe', 'Hata eder, muhalefet eder', 0.85, ['يخط(?:ئ|ي)(?:ء)? ويخالف', 'يخالف(?: الثقات)?'], { nt: CJ + '“yuhâlifü’s-sikât” mücmel cerhtir, şüzûz şüphesi doğurur; İbn Hibbân’ın es-Sikât’taki “yuhâlif / rubbemâ hâlefe”si düşürücü cerh değildir (I, 609–610).' });
   add('C', 1, 'vehm', 'Vehim / hata', 0.8, ['يخط(?:ئ|ي)(?:ء)? ويهم', 'يخط(?:ئ|ي)(?:ء)?', 'يهم', 'له اوهام', 'يغلط', 'ربما (?:اخطا|وهم)']);
   add('C', 2, 'fuhs', 'Çok hata yapar', 0.85, ['كثير (?:الخطا|الغلط|الوهم)']);
   add('C', 1, 'gaflet', 'Unutkan (nesiyy)', 0.7, ['نسيا للحديث', 'كان نسيا']);
-  add('C', 1, 'tedlis', 'Tedlîs', 0.85, ['مدلسا?', 'يدلس', 'كان يدلس']);
+  add('C', 1, 'tedlis', 'Tedlîs', 0.85, ['مدلسا?', 'يدلس', 'كان يدلس'], { nt: CJ + 'tedlîs nisbî bir cerhtir: tedlîs edilen (ya da tedlîs şüphesi bulunan) rivayeti etkiler, adâlete ve sikalığa aykırı değildir; “haddesenâ” dediği rivayeti kabul edilir (I, 376–378). Sitede hafif cerh (−1) sayılmaya devam eder.' });
   add('C', 1, 'ihtilat', 'İhtilât / tagayyür', 0.85, ['تغير باخره', 'تغير في اخر عمره', '(?:قد )?تغير', '(?:قد )?اختلط(?: البته)?', '(?:عيب عليه )?اختلاطه']);
   add('C', 1, 'ihtilat', 'Tahlît (karıştırma)', 0.55, ['التخليط']);
-  add('C', 2, 'mubhem', 'Za‘f', 0.9, ['ضعيف(?: الحديث)?', 'كان ضعيفا(?: في الحديث)?']);
+  add('C', 2, 'mubhem', 'Za‘f', 0.9, ['ضعيف(?: الحديث)?', 'كان ضعيفا(?: في الحديث)?'], { nt: CJ + 'mücmel cerhtir; hafif za‘ftan metrûke kadar değişir. İbn Maîn: “ضعيف dediğim sika değildir, hadisi yazılmaz.” İbn Adî’nin “fî cümleti’d-du‘afâ”sı i‘tibâr olunan için de metrûk için de söylenir (I, 607–609).' });
   add('C', 2, 'mubhem', 'Za‘îf saydılar (da‘‘afûhu)', 0.88, ['ضعفوه'], { plural: true });
   add('C', 2, 'mubhem', 'Za‘îf saydı (da‘‘afehû)', 0.92, ['(?:ف)?ضعفه'], { v: true });
   add('C', 2, 'mubhem', 'Kötü görüşlü idi', 0.75, ['(?:كان )?(?<cr>\\S+(?: \\S+)?) ' + SAYYI + ' الراي فيه', SAYYI + ' الراي فيه']);
-  add('C', 2, 'muhalefe', 'Münkerü’l-hadîs', 0.9, ['منكر الحديث', 'حديثه منكر'], { lvBy: { 'البخاري': 4 }, nt: 'Buhârî’de: “münkerü’l-hadîs dediğim kimseden rivayet helal olmaz.”' });
+  add('C', 2, 'muhalefe', 'Münkerü’l-hadîs', 0.9, ['منكر الحديث', 'حديثه منكر'], { nt: CJ + 'derecesi i‘tibâr olunandan ittiham edilene kadar değişir; bu yüzden bir yönden müfesser, bir yönden mücmeldir. İbnü’l-Kattân’ın Buhârî’den naklettiği “münkerü’l-hadîs dediğimden rivayet helal olmaz” sözü Buhârî’nin eserlerinde bulunmaz; istikrâya göre Buhârî de bu lafzı öteki münekkitler gibi kullanır. Yahyâ el-Kattân ve Ahmed bazen yalnız teferrüd (ferd-i mutlak) için söyler (I, 611–617). Zehebî ve sonrakiler Buhârî’de ağır cerh sayar.' });
   add('C', 1, 'muhalefe', 'Hadisinde nekâret', 0.8, ['في حديثه نكاره', 'فيه نكاره'], { nt: 'Lisânü’l-Muhaddisîn: “fîhi nekâre” aslen hafif nekâret içindir.' });
   add('C', 2, 'muhalefe', 'Münkerleri var', 0.85, ['له مناكير', 'له ما ينكر', 'عنده مناكير', 'يروي المناكير', 'يحدث بالمناكير', 'مما انكر عليه', 'ومما انكر عليه']);
   add('C', 2, 'suhifz', 'Muzdarib', 0.85, ['مضطرب الحديث']);
-  add('C', 2, 'mubhem', 'Vâh', 0.85, ['واه', 'واهي الحديث'], { nt: 'Sehâvî “vâh”ı za‘f mertebesinde sayar; Lisânü’l-Muhaddisîn’e göre muhaddislerin çoğunda istişhâda elverişsiz şiddetli za‘f anlamındadır.' });
-  add('C', 2, 'mubhem', 'Delil olmaz', 0.85, ['لا يحتج (?:به|بحديثه)', 'ليس ممن يحتج (?:به|بحديثه)', 'لا يحتجون (?:به|بحديثه)', 'ليس بمحل للحجه', 'خرج عن حد (?:من يحتج به|الاحتجاج به)']);
+  add('C', 2, 'mubhem', 'Vâh', 0.85, ['واه', 'واهي الحديث'], { nt: 'Sehâvî “vâh”ı za‘f mertebesinde sayar; Lisânü’l-Muhaddisîn’e göre muhaddislerin çoğunda istişhâda elverişsiz şiddetli za‘f anlamındadır. ' + CJ + '“vâhi’l-hadîs” “metrûkü’l-hadîs” anlamındadır (I, 626).' });
+  add('C', 2, 'mubhem', 'Delil olmaz', 0.85, ['لا يحتج (?:به|بحديثه)'], { lvBy: { 'أبو حاتم الرازي': 1 }, nt: CJ + 'mücmel cerhtir; i‘tibâr olunan sâlih râvi için de söylenir. Ebû Hâtim kendisi açıklar: “mahalluhum’s-sıdk, hadisleri yazılır ama ihticâc edilmez; hıfzları yoktu, ıztırapları çoktu” (I, 593–595).' });
+  add('C', 2, 'mubhem', 'Delil olmaz', 0.85, ['ليس ممن يحتج (?:به|بحديثه)', 'لا يحتجون (?:به|بحديثه)', 'ليس بمحل للحجه', 'خرج عن حد (?:من يحتج به|الاحتجاج به)']);
   add('C', 2, 'mubhem', 'Hüccet değil', 0.85, ['ليس بحجه'], { nt: 'Lisânü’l-Muhaddisîn: “leyse bi-hucce” delil olmayan her râvi için söylenir; şiddetli cerhte “lâ yuhtecc bih”ten daha çok kullanılır.' });
   add('C', 2, 'mubhem', 'Hadisi sahih değil', 0.8, ['(?:لم|لا) يصح حديثه']);
-  add('C', 2, 'mubhem', 'Fîhi nazar', 0.75, ['فيه نظر', 'في حديثه نظر'], { lvBy: { 'البخاري': 4 }, nt: 'Buhârî’de ağır cerhtir; başkalarında hafif.' });
-  add('C', 3, 'mubhem', 'Şiddetli za‘f', 0.9, ['ضعيف جدا', 'واه بمره', 'واهي بمره', 'منكر الحديث جدا', 'ليس ب' + SHAY, 'لا يساوي ' + SHAYA, 'مطرح(?: الحديث)?', 'مطروح(?: الحديث)?', 'طرحوا حديثه', 'ارم به', 'ردوا حديثه', 'مردود(?: الحديث)?', 'لا يكتب حديثه', 'لا يكتب عنه', 'لا تحل كتابه حديثه', 'لا تحل الروايه عنه', 'لا يحل الاحتجاج به', 'لا (?:يجوز|يحل|ينبغي) ان يحتج (?:به|بحديثه)', 'لا يجوز الاحتجاج (?:به|بخبره|بحديثه|بهذا الشيخ)', 'لا (?:تجوز|يجوز|تحل|يحل) الروايه عنه(?: بحال)?', 'لا يحل ان يشتغل بروايته', 'لم يكن يستاهل', 'لم يكن اهل ذاك']);
+  add('C', 2, 'mubhem', 'Fîhi nazar', 0.75, ['فيه نظر', 'في حديثه نظر'], { nt: CJ + 'Buhârî’de tevakkuf bildiren mücmel cerhtir; mechûlden sadûka kadar değişik derecelerdeki râviler için söylenmiştir, çoğu i‘tibâr ehlidir. Zehebî “Buhârî’de çoğunlukla müttehem” der; Cüdey‘ istikrâ ile bunu reddeder. İbn Abdilber’de sahâbîliğe, Süleymânî’de re’y ehli olmaya işaret edebilir (I, 603–607).' });
+  add('R', 0, 'hadis', 'İsnadında nazar var', 0.8, ['في اسناده نظر'], { nt: CJ + 'Buhârî’de zamir rivayete döner; râvi hakkında hüküm değildir (I, 606–607).' });
+  add('C', 3, 'mubhem', 'Şiddetli za‘f', 0.9, ['ضعيف جدا', 'واه بمره', 'واهي بمره', 'منكر الحديث جدا', 'لا يساوي ' + SHAYA, 'مطرح(?: الحديث)?', 'مطروح(?: الحديث)?', 'طرحوا حديثه', 'ارم به', 'ردوا حديثه', 'مردود(?: الحديث)?', 'لا يكتب حديثه', 'لا يكتب عنه', 'لا تحل كتابه حديثه', 'لا تحل الروايه عنه', 'لا يحل الاحتجاج به', 'لا (?:يجوز|يحل|ينبغي) ان يحتج (?:به|بحديثه)', 'لا يجوز الاحتجاج (?:به|بخبره|بحديثه|بهذا الشيخ)', 'لا (?:تجوز|يجوز|تحل|يحل) الروايه عنه(?: بحال)?', 'لا يحل ان يشتغل بروايته', 'لم يكن يستاهل', 'لم يكن اهل ذاك']);
+  add('C', 3, 'mubhem', 'Bir şey değil (leyse bi-şey’)', 0.9, ['ليس ب' + SHAY], { nt: CJ + 'mücmel cerhtir. İbn Maîn çok kullanır, çoğunlukla za‘îf, metrûk ve müttehem râviler için; Hâkim’in “az hadisli râvi” yorumu çoğunluk için doğru değildir. Başkasınca tevsîk edilen râvide Münzirî’ye göre “ihticâc edilecek hadisi yok” anlamındadır (I, 619–622).' });
   add('C', 3, 'muhalefe', 'Münkerlerde teferrüd', 0.85, ['انفرد بالمناكير']);
   add('C', 4, 'fuhs', 'Fuhş-i galat', 0.9, ['فحش خطوه', 'ممن فحش خطوه']);
-  add('C', 4, 'terk', 'Metrûk', 0.92, ['متروك(?: الحديث)?', 'كان (?:متروكا|ساقطا|هالكا|ذاهب الحديث)', 'تركوه', 'تركوا حديثه', 'ترك الناس حديثه', 'ترك حديثه', 'اتفقوا علي تركه', 'ذاهب(?: الحديث)?', 'ساقط', 'هالك', 'لا يعتبر (?:به|بحديثه)', 'سكتوا عنه']);
-  add('C', 4, 'terk', 'Terk etti (terakehû)', 0.85, ['تركه'], { v: true });
+  add('C', 4, 'terk', 'Metrûk', 0.92, ['متروك(?: الحديث)?', 'كان (?:متروكا|ساقطا|هالكا|ذاهب الحديث)', 'تركوه', 'تركوا حديثه', 'ترك الناس حديثه', 'ترك حديثه', 'اتفقوا علي تركه', 'ذاهب(?: الحديث)?', 'ساقط', 'هالك', 'لا يعتبر (?:به|بحديثه)']);
+  add('C', 4, 'terk', 'Sekatû anh (terk ettiler)', 0.85, ['سكتوا عنه'], { nt: CJ + 'nakil ifadesidir: söyleyen başkalarından haber verir; istikrâya göre “terakûhu” ile eşdeğerdir. Buhârî kullanır, başkalarında nadirdir (I, 631–632).' });
+  add('C', 4, 'terk', 'Terk etti (terakehû)', 0.85, ['تركه'], { v: true, lvBy: { 'يحيى بن سعيد القطان': 2 }, nt: CJ + '“terakehû fulân” her zaman “metrûk” demek değildir; münekkit râviyi yalnız za‘fı yüzünden bırakmış olabilir. Yahyâ el-Kattân ile İbn Mehdî’nin birlikte terk ettiği râvilerin bir kısmı da sadûktur; ikisi ayrıldığında İbn Mehdî’nin kabulü tercih edilir (I, 626–630).' });
   add('C', 4, 'terk', 'Rivayetini bıraktım', 0.7, ['انما تركت', 'تركت حديثه', 'ما استحل ان اروي عنه ' + SHAYA, 'ما استحل ان اروي عنه']);
   add('V', 0, 'tavir-', 'Ondan rivayet etmem (olumsuz tavır)', 0.8, ['لا اروي عن(?:ه)?', 'لا احدث عنه', 'كان لا يحدث عنه', 'لا يحدثان عن', 'كانا لا يحدثان عن']);
   add('V', 0, 'tavir-', 'Ondan rivayet ettiğini duymadım (olumsuz tavır)', 0.7, ['(?:ما|لم) (?:سمعت|رايت) (?<cr>\\S+(?: \\S+){0,3}?) (?:يحدث|بحدث|حدث|يحدثان|حدثا) عن(?:ه)?']);
@@ -7110,8 +7133,8 @@ const RAPOR = (() => {
   add('C', 1, 'zimni', 'Du‘afâ kitabında zikretti (zımnî cerh)', 0.75, ['(?:ذكره|ذكرها|اورده|اوردها) (?<cr>(?:\\S+ ){0,5}?\\S+) في (?:كتاب |كتابه )?' + QT + '\\s*(?:جمله |كتاب )?(?:ال)?ضعفاء(?: والمتروكين)?\\s*' + QT,
     'ذكره (?<cr2>الفسوي|يعقوب بن سفيان(?: الفسوي)?|يعقوب) في ' + QT + '\\s*باب من يرغب عن الروايه عنهم'], { nt: 'Kitaba alma zımnî cerhtir; ölçü müellifin kitabının şartına bağlıdır.' });
   add('T', 2, 'zimni', 'Sahîhinde hadisini tahrîc etti (zımnî tevsik)', 0.7, ['(?:خرج|اخرج|روي) (?<cr>(?:\\S+ ){0,3}?\\S+) (?:حديثه|له) في ' + QT + '\\s*(?:صحيحه|الصحيح|مستدركه|المستدرك)\\s*' + QT,
-    '(?:خرج|اخرج) (?:حديثه|له) في ' + QT + '\\s*(?:صحيحه|الصحيح|مستدركه|المستدرك)\\s*' + QT], { nt: 'Sahîh şartıyla tahrîc zımnî tevsiktir; el-Hâkim’in Müstedrek’i ve İbn Hibbân mütesâhil sayılır.' });
-  add('T', 2, 'zimni', 'Hadisini sahihledi', 0.7, ['صحح (?:له|حديثه)'], { v: true });
+    '(?:خرج|اخرج) (?:حديثه|له) في ' + QT + '\\s*(?:صحيحه|الصحيح|مستدركه|المستدرك)\\s*' + QT], { nt: 'Sahîh şartıyla tahrîc zımnî tevsiktir; el-Hâkim’in Müstedrek’i ve İbn Hibbân mütesâhil sayılır. ' + CJ + 'Sahîhayn’de ihticâc, sahibince “sika” ya da “sadûk” demektir (mütâbaat ve şevâhid hariç); Hâkim’in “sahîhu’l-isnâd”ı sika ya da sadûk demekse de Müstedrek’teki hataları yüzünden genellenemez (I, 315–320, 337).' });
+  add('T', 2, 'zimni', 'Hadisini sahihledi', 0.7, ['صحح (?:له|حديثه)'], { v: true, nt: CJ + 'tashîh isnadın râvilerini tevsîktir; Zehebî: Tirmizî ve İbn Huzeyme’nin tashîhi “ceyyid”, Dârekutnî ve Hâkim’inki en az hasen (I, 315–316).' });
   add('T', 2, 'sidk', 'Senâ etti (esnâ aleyh)', 0.75, ['اثني عليه(?: خيرا)?', 'احسن الثناء عليه'], { v: true });
   add('T', 2, 'sidk', 'Senâ ettiler', 0.7, ['اثنوا عليه'], { plural: true });
   add('T', 3, 'sidk', 'Razı oldu (radiyehû)', 0.75, ['رضيه'], { v: true });
@@ -7142,9 +7165,9 @@ const RAPOR = (() => {
   add('C', 3, 'terk', 'Ondan yazmayın / almayın (nehiy)', 0.85, ['لا (?:تكتبوا|تاخذوا|تحملوا|ترووا|تحدثوا) عنه(?: ' + SHAYA + ')?', 'لا (?:تكتبوا|تاخذوا) حديثه', 'لا (?:يكتب|يوخذ|يحمل) عنه(?: ' + SHAYA + ')?', 'لا يكتبون حديثه', 'لا اكتب (?:عنه|حديثه)']);
   add('C', 3, 'terk', 'Hadisi yazılmaz', 0.7, ['لا يكتب'], { solo: true });
   add('C', 2, 'terk', 'Ondan yazmadım', 0.65, ['لم (?:اكتب|نكتب) عنه(?: ' + SHAYA + '| حديثا(?: قط)?)?', '(?:ادركته|ادركناه|رايته) ولم (?:اكتب|نكتب) عنه', 'لم يكتب عنه', 'لم يحمل عنه', 'لا اروي حديثه'],
-    { nt: '“Lem ekteb anhu” çoğu zaman terk bildirir; bazen yalnız imkân bulamamayı anlatır (“lem ekteb anhu ve kâne sadûkan”): bağlama bakılmalıdır.' });
+    { nt: '“Lem ekteb anhu” çoğu zaman terk bildirir; bazen yalnız imkân bulamamayı anlatır (“lem ekteb anhu ve kâne sadûkan”): bağlama bakılmalıdır (Cüdey‘, I, 630–631).' });
   add('T', 1, 'itibar', 'Ondan yazınız', 0.7, ['اكتبوا عنه', 'اكتب عنه']);
-  add('T', 3, 'zimni', 'es-Sikât’ta zikretti (zımnî tevsik)', 0.75, ['(?<cr>(?:\\S+ ){0,2}?\\S+) (?:ذكره |ذكرها )?في (?:كتاب )?' + QT + '\\s*(?:جمله )?' + SIKAT + '\\s*' + QT], { crReq: true });
+  add('T', 3, 'zimni', 'es-Sikât’ta zikretti (zımnî tevsik)', 0.75, ['(?<cr>(?:\\S+ ){0,2}?\\S+) (?:ذكره |ذكرها )?في (?:كتاب )?' + QT + '\\s*(?:جمله )?' + SIKAT + '\\s*' + QT], { crReq: true, lvBy: { 'ابن حبان': 1 }, nt: SIKAT_NT });
   add('T', 3, 'zimni', 'Tevsîkini nakletti', 0.7, ['نقل (?<cr>(?:\\S+ ){0,2}?\\S+) توثيقه'], { crReq: true });
   add('T', 6, 'sahabe', 'Bedir’e katılanlar arasında saydı', 0.8, ['فيمن شهد (?:العقبه وبدرا|بدرا|احدا|العقبه)', 'في (?:كتاب )?' + QT + '\\s*الصحابه\\s*' + QT], { nt: 'İbn Hacer, Takrîb mukaddimesinde birinci mertebeyi sahâbîlere ayırır.' });
   add('T', 6, 'sahabe', 'Sahâbî', 0.7, ['الصحابي'], { solo: true });
@@ -7160,7 +7183,7 @@ const RAPOR = (() => {
   add('T', 4, 'tevsik', 'İkisi de sika', 0.75, ['(?:هما )?ثقتان'], { bas: true });
   add('C', 1, 'suhifz', 'Hıfzında bir şey var', 0.8, ['في حفظه ' + SHAY]);
   add('T', 3, 'sidk', 'Sıdk ehli (şeyhu sıdk)', 0.8, ['(?:كان )?(?:شيخ|رجل) صدق', 'كان شيخا صالحا']);
-  add('T', 3, 'sidk', 'Hayırdan başka bilmiyorum', 0.8, ['ما اعلم (?:منه |فيه |له |به )?الا خيرا']);
+  add('T', 3, 'sidk', 'Hayırdan başka bilmiyorum', 0.8, ['ما اعلم (?:منه |فيه |له |به )?الا خيرا'], { nt: CJ + 'Ahmed’de “leyse bihî be’s” ile eşdeğer bir ta‘dîldir; hemen hep sika ya da sadûk için söyler (I, 577–578).' });
   add('C', 2, 'mubhem', 'Arkadaşlarımız nezdinde zayıftı', 0.8, ['كان عند اصحابنا ضعيفا']);
   add('C', 3, 'mubhem', 'Bir şey değil', 0.85, ['ليس هو ب' + SHAY]);
   add('J', 2, 'cehalet', 'Hâli meçhul', 0.85, ['حاله مجهوله', 'مجهول الحال']);
@@ -7191,12 +7214,23 @@ const RAPOR = (() => {
   add('C', 2, 'suhifz', 'Hadisi muzdarib', 0.8, ['حديثه مضطرب']);
   add('C', 3, 'mubhem', 'Bir şey etmez', 0.85, ['ليس يساوي ' + SHAYA, 'لا يسوي ' + SHAYA, 'لم يكن ب' + SHAY, 'ليس حديثه ب' + SHAY]);
   add('C', 1, 'mubhem', 'Hakkında konuşurlar', 0.8, ['يتكلمون في (?:حديثه|حفظه)', 'تكلم الناس فيه']);
-  add('T', 2, 'sidk', 'Hadisi mukârib', 0.8, ['حديثه مقارب']);
+  add('T', 2, 'sidk', 'Hadisi mukârib', 0.8, ['حديثه مقارب'], { lvBy: { 'أحمد بن حنبل': 3, 'أبو حاتم الرازي': 3 }, nt: CJ + '“mukâribü’l-hadîs” anlamındadır (hasen); Ahmed ve Ebû Hâtim kullanır (I, 579).' });
   add('T', 2, 'sidk', 'Şeyh sâlih', 0.75, ['شيخ صالح']);
   add('T', 2, 'sidk', 'Senâ etti', 0.75, ['فاثني عليه(?: خيرا)?']);
   add('C', 4, 'terk', 'Ondan rivayet helal değil', 0.85, ['لا يحل لاحد ان يروي عنه', 'لا يحل الاخذ عنه', 'لا تحل (?:عندي )?الروايه عنه']);
   add('C', 4, 'terk', 'İnsanlar hadisini attı', 0.85, ['طرح الناس حديثه', 'سقط حديثه']);
   add('C', 5, 'kizb', 'Hadis uydururdu', 0.85, ['كان يفتعل الحديث', 'يفتعل الحديث', 'من المعروفين بالكذب(?: ووضع الحديث)?']);
+  add('C', 2, 'muhalefe', 'Mu‘dal (münker) rivayetler', 0.75, ['معضل (?:الحديث|الاخبار)', '(?:يروي|روي|حدث) (?:عن (?:\\S+ ){0,6}?)?(?:ب)?(?:ال)?معضلات', 'احاديث معضله', '(?:عامه )?احاديثه معاضيل'], { nt: CJ + 'mütekaddimûn (Cûzcânî, İbn Adî, İbn Hibbân; nadiren Buhârî, Ebû Hâtim, Ukaylî) “mu‘dal”ı münker ya da mevzû haber anlamında kullanır; sonraki ıstılahtaki mu‘dal (iki râvinin düşmesi) değildir (I, 617–618).' });
+  add('S', 0, 'sukut', 'Tevakkuf (estahîrullâh fîh)', 0.75, ['(?:ممن )?استخير الله (?:عز وجل )?فيه'], { nt: CJ + 'İbn Hibbân’ın lafzı: râviyi sikalara mı za‘iflere mi katacağında tereddüt eder; hüküm öteki münekkitlerin sözüne ve râvinin hadisine göre verilir (I, 326–327, 618–619).' });
+  add('C', 2, 'mubhem', 'Onunla uğraşılmaz', 0.75, ['لا يشتغل (?:به|بهم|بحديثه)'], { nt: CJ + 'Ebû Hâtim’in lafzı; açıkça terk değildir, za‘îf ile leyyin arasında kullanır (I, 634–635).' });
+  add('T', 4, 'tevsik', 'Sadûk, sika (te’kîd)', 0.9, ['صدوق ثقه', 'ثقه صدوق'], { nt: CJ + 'aynı münekkitten “sadûk” ile “sika” birlikte gelince asıl anlamı sikalığın te’kîdidir (Ahmed’in Ebû Bekir b. Ebû Şeybe hakkındaki sözü gibi); bazen tereddüt bildirir (Ebû Hâtim’in Simâk hakkındaki sözü; I, 572–573).' });
+  add('T', 2, 'sidk', 'Kitabı sahih (zabtu’l-kitâb)', 0.6, ['(?:كان )?صحيح الكتاب', 'كتابه صحيح', 'كان كتابه صحيحا', 'كتبه (?:صحاح|صحيحه)'], { nt: CJ + 'kitabını zabteden râvi, hıfzı zayıf olsa da kitabından rivayet ettiğinde zabt şartını taşır (Hemmâm, Hafs b. Gıyâs, ed-Derâverdî; I, 259–260, 440–441).' });
+  add('C', 2, 'gaflet', 'Telkîn kabul eder', 0.8, ['(?:كان )?يتلقن', '(?:يقبل|قبل) التلقين', 'كلما لقن (?:يلقن|تلقن)'], { nt: CJ + 'telkîn kabulü gafletten ya da tesâhülden doğar; telkîn edildiği hadisler reddedilir, mevzû telkîn edilmişse râvi metrûke kadar düşer (I, 423–426).' });
+  add('C', 1, 'vehm', 'Mevkûfu merfû, mürseli mevsûl yapar', 0.8, ['(?:كان )?رفاعا', 'يرفع (?:الموقوف|الموقوفات|المراسيل)', 'يو?صل المراسيل', 'يسند الموقوفات?'], { nt: CJ + 'sû-i hıfzın görünüşlerindendir (Şu‘be ve İbn Uyeyne’nin “kâne raffâ‘an”ı; I, 420–421).' });
+  add('C', 1, 'vehm', 'Tashîf eder', 0.75, ['(?:كان )?يصحف', 'كثير التصحيف'], { nt: CJ + 'az olursa sikaya zarar vermez, çoksa zabtı zedeler (I, 426–428).' });
+  add('C', 4, 'tuhmet', 'Duymadığını duydum der (sirkat)', 0.85, ['يدعي (?:ما لم يسمع|السماع)', 'يتناول ما لم يسمع'], { nt: CJ + 'hadis sirkati: başkasının hadisini duymadığı hâlde “haddesenâ” diyerek rivayet etmek; adâleti düşürür (I, 392–396).' });
+  add('C', 2, 'gaflet', 'Ne rivayet ettiğini bilmez', 0.8, ['(?:لا|لم يكن) (?:يدري|يعقل|يعرف) ما (?:يحدث|يروي)(?: به)?', 'لا يدري ما يقول'], { nt: CJ + 'gaflet; salâh ve emânet tek başına hadiste ta‘dîl değildir (Mâlik: “ne rivayet ettiklerini bilmiyorlardı”; I, 252–253, 413–418).' });
+  add('C', 1, 'gaflet', 'Hadis ehlinden değil', 0.6, ['(?:لم يكن|ليس) من (?:اصحاب|اهل) الحديث', 'ليس الحديث من (?:عمله|شانه)'], { nt: CJ + '“hadis ehlinden değil” sözü zabt eksikliğini bildirir (Eyyûb, Vekî‘, İbn Adî; I, 252–253, 413–415).' });
   add('C', 3, 'fuhs', 'İsnadları karıştırır (kalb)', 0.8, ['(?:كان )?يقلب الاسانيد(?: ويرفع المراسيل)?']);
   add('C', 1, 'mubhem', 'Hadisini beğenmem', 0.75, ['لا يعجبني حديثه']);
   add('C', 1, 'mubhem', 'İçimde ondan bir şey var', 0.75, ['في نفسي منه ' + SHAY]);
@@ -7216,7 +7250,8 @@ const RAPOR = (() => {
   const KANA = (p, ad) => ad ? '(?:كان|وكان) (?<cr>' + KW + '(?: ' + KW + '){0,3}?(?:\\s*[،,]? و' + KW + '(?: ' + KW + '){0,3}?)?) ' + p : 'كان ' + p;
   const kana = (k, lv, sb, tr, w, pats, o) => { for (const p of pats) { add(k, lv, sb, tr, w, KANA(p, true), Object.assign({ crReq: true }, o)); add(k, lv, sb, tr, w - 0.05, KANA(p, false), Object.assign({ kanaPlain: true }, o)); } };
   // Kendi uygulaması (rivayet etmezdi / ederdi) tavırdır; rivayeti helal görmemek, ondan nehyetmek, “bir şey saymamak” hükümdür (cerh).
-  kana('V', 0, 'tavir-', 'Ondan rivayet etmezdi (olumsuz tavır)', 0.8, ['لا (?:يحدث|يروي|يحدثنا|يكتب)(?:ان)? عن(?:ه|هما)?']);
+  const TAVIR_NT = CJ + 'Mâlik, Şu‘be, Yahyâ el-Kattân, İbn Mehdî, Ahmed ve Ebû Zür‘a gibi yalnız sikadan rivayet ettiği bilinen münekkitlerin rivayeti “hüve sika” demek gibidir; öteki sikaların rivayeti râviyi tanıtır ama tevsîk değildir. “Lem yuhaddis anhu” terk de olabilir, imkân bulamamak da (I, 302–314, 630–631). Sitede tavır ayrı sayılır, ta‘dîl–cerh toplamına girmez.';
+  kana('V', 0, 'tavir-', 'Ondan rivayet etmezdi (olumsuz tavır)', 0.8, ['لا (?:يحدث|يروي|يحدثنا|يكتب)(?:ان)? عن(?:ه|هما)?'], { nt: TAVIR_NT });
   kana('C', 3, 'terk', 'Ondan rivayeti helal görmez, nehyederdi (zımnî)', 0.8, ['لا يستحل ان يروي عنه', 'ينهي عن(?:ه| حديثه)', 'لا يراه ' + SHAYA]);
   // Olumlu tavır yalnız adı bilinen kişiyle (“kâne Yahyâ b. Sa‘îd yervî anh”, “mâ zâle İbn Avn yervî anh”); adsız “kâne yuhaddisu anh” alınmaz
   // Adla: «كان يحيى بن سعيد يروي عن أبان ولا يروي عن همام» — kimin hakkında olduğu ve yönü râvinin adına göre sonradan belirlenir
@@ -7224,7 +7259,7 @@ const RAPOR = (() => {
   // Tercih (mukayeseli ta‘dîl): «أحب إليّ من», «أثبت من», «أوثق منه» …; olumsuz karşılaştırma («أضعف من») yönü çevirir
   const MUK = '(?:احب|اثبت|اوثق|احفظ|اقوي|امثل|ارجح|اتقن|اضعف|الين|اوهي|اسوا|اكثر خطا|اكثر غلطا)';   // «أعلم من» («لا أعلم من روى»), «أقدم من», «أصح/أجود/أصلح من» (isnad, hadis) alınmaz
   add('P', 0, 'tercih0', 'Tercih (mukayese)', 0.7, [MUK + '(?: (?:الي|الينا|عندي|اليه|الينا|حديثا|رجلا|اسنادا))*(?: في [^\\s،,.:]+(?: [^\\s،,.:]+){0,3}?)? (?:منه|منها|منهما|من(?! (?:هذا|هذه|ان|روايه|حديث|كل|غيره|ذلك)(?![\\u0621-\\u064A])))(?![\\u0621-\\u064A])', '(?:مقدم|يقدم) (?:علي|عليه)(?![\\u0621-\\u064A])']);
-  add('V', 0, 'tavir+', 'Ondan rivayet ederdi (olumlu tavır)', 0.75, [KANA('(?:يحدث|يروي|يكتب)(?:ان)? عن(?:ه|هما)', true), '(?:ما زال|لم يزل) (?<cr>' + KW + '(?: ' + KW + '){0,3}?) (?:يحدث|يروي) عنه'], { crReq: true });
+  add('V', 0, 'tavir+', 'Ondan rivayet ederdi (olumlu tavır)', 0.75, [KANA('(?:يحدث|يروي|يكتب)(?:ان)? عن(?:ه|هما)', true), '(?:ما زال|لم يزل) (?<cr>' + KW + '(?: ' + KW + '){0,3}?) (?:يحدث|يروي) عنه'], { crReq: true, nt: TAVIR_NT });
   kana('C', 2, 'mubhem', 'Ondan razı değildi / za‘îf sayardı (zımnî)', 0.75, ['لا (?:يرضاه|يرضيه)(?: في الحديث)?', 'لا يستمر(?:ئ|ي)ه', 'لا يعبا (?:به|بحديثه)', 'لا يحفل به', '(?:شديد )?الحمل عليه', 'يحمل عليه', 'يضعفه(?: جدا)?', 'يضعف حديثه', 'يستضعفه', 'يوهنه']);
   kana('C', 1, 'mubhem', 'Hakkında konuşurdu / çekinirdi (zımnî)', 0.7, ['يتكلم فيه', 'يطعن فيه', 'قليل الميل اليه', 'يتقيه', 'يتقي حديثه']);
   kana('C', 1, 'suhifz', 'Hıfzından razı değildi (zımnî)', 0.7, ['لا يرضي حفظه']);
@@ -7234,7 +7269,8 @@ const RAPOR = (() => {
   add('C', 5, 'kizb', 'Onları uyduruyordu (ya‘meluhâ)', 0.75, ['(?:انه )?كان يعملها']);
   add('C', 4, 'terk', 'Susmak helal değil (Şu‘be)', 0.6, ['لا يحل (?:الكف|السكوت) عنه', 'لولا الحياء من الناس (?:ما|لما) صليت علي', 'لان يزني الرجل خير له من ان يروي عن']);
   add('C', 4, 'mubhem', 'Tâlif', 0.8, ['تالف']);
-  add('C', 4, 'tuhmet', 'Sika değil', 0.9, ['ليس بثقه', 'غير ثقه', 'ليس بالثقه', 'ليس ثقه', 'غير مامون', 'ليس بمامون']);
+  add('C', 4, 'mubhem', 'Sika değil', 0.9, ['ليس بثقه', 'غير ثقه', 'ليس بالثقه', 'ليس ثقه'], { lvBy: { 'مالك بن أنس': 1 }, nt: CJ + 'çoğunlukla metrûk ya da müttehem için söylenir; ancak Mâlik’in “leyse bi-sika” dediği beş râviden yalnız Harâm b. Osmân metrûktür, ötekiler sadûk ya da i‘tibâr ehlidir. Bu yüzden sebebi beyan edilmemiş (mücmel) cerhtir (I, 623–625).' });
+  add('C', 4, 'tuhmet', 'Me’mûn değil', 0.9, ['غير مامون', 'ليس بمامون']);
   add('C', 4, 'tuhmet', 'Müttehem', 0.9, ['متهما?(?: بالكذب| بالوضع)?', 'اتهم بال?كذب', 'يسرق الحديث', 'سرق الحديث', 'اشياء متهمه']);
   add('C', 4, 'tuhmet', 'İttiham etti (ittehemehû)', 0.9, ['اتهمه'], { v: true });
   add('C', 4, 'tuhmet', 'Mevzû rivayetler nakletti', 0.8, ['(?:روي|يروي) (?:عن:? (?:\\S+ ){0,7}?)?الموضوعات', '(?:روي|يروي) (?:عن (?:\\S+ ){0,6}?)?اشياء موضوعه', 'اشياء موضوعه']);
@@ -7251,18 +7287,18 @@ const RAPOR = (() => {
   add('C', 6, 'kizb', 'Kizbde mübalağa', 0.95, ['اكذب الناس', 'ركن الكذب', 'منبع الكذب', 'معدن الكذب', 'اليه المنتهي في (?:الكذب|الوضع)', 'دجال من الدجاجله']);
 
   // — CEHÂLET —
-  add('J', 2, 'cehalet', 'Mechûl', 0.9, ['(?:شيخ )?مجهول(?: الحال| العين)?', 'كان مجهولا', 'هو و\\S+ مجهول(?:ان|ون)', 'لا يعرف حاله', 'لا يدري من هو', 'فيه جهاله', 'يجهل', 'غير معروف']);
-  add('J', 2, 'cehalet', 'Tanınmıyor', 0.8, ['لا يكاد يعرف', 'لا اعرفه', 'لا يعرف(?: الا (?:بابنه|بهذا الحديث|به))?']);
+  add('J', 2, 'cehalet', 'Mechûl', 0.9, ['(?:شيخ )?مجهول(?: الحال| العين)?', 'كان مجهولا', 'هو و\\S+ مجهول(?:ان|ون)', 'لا يعرف حاله', 'لا يدري من هو', 'فيه جهاله', 'يجهل', 'غير معروف'], { lvBy: { 'ابن القطان الفاسي': 1, 'ابن حزم': 1 }, nt: CJ + 'İbnü’l-Kattân ve İbn Hazm râvileri mechûl saymakta aşırı gider, Zehebî ve İbn Hacer reddeder. Ebû Hâtim ayn ve hâl cehâletini ayırmaz; “mechûl”ü çoğunlukla az rivayetle tanınan râvi içindir (I, 500–504).' });
+  add('J', 2, 'cehalet', 'Tanınmıyor', 0.8, ['لا يكاد يعرف', 'لا اعرفه', 'لا يعرف(?: الا (?:بابنه|بهذا الحديث|به))?'], { nt: CJ + '“lâ a‘rifuhû” cehâleti söyleyenin bilgisine göre bildirir; İbn Maîn ve Ebû Hâtim çok kullanır, başkasının o râviyi tanıması mümkündür (I, 496–499).' });
   add('J', 2, 'cehalet', 'Kim olduğunu bilmiyorum', 0.85, ['لا ادري من هو(?:،? ?ولا ابن من هو)?']);
   add('J', 2, 'cehalet', 'Mechûl saydı (cehilehû)', 0.85, ['جهله'], { v: true });
-  add('J', 1, 'cehalet', 'Meşhur değil', 0.75, ['ليس بالمعروف', 'ليس بمعروف', 'ليس بالمشهور', 'مستور', 'كان مستورا']);
+  add('J', 1, 'cehalet', 'Meşhur değil', 0.75, ['ليس بالمعروف', 'ليس بمعروف', 'ليس بالمشهور', 'مستور', 'كان مستورا'], { nt: CJ + 'mestûr hâl cehâletidir; hadisi i‘tibâra elverir, şartları tamamlanırsa hasen olabilir (I, 482–483; II, 1077).' });
 
   // — BİD‘AT / MEZHEP —
   add('B', 1, 'bidat', 'Teşeyyu‘', 0.85, ['شيعيا?(?: جلدا?)?', 'غال(?:يا)? في التشيع', 'يغلو في التشيع', '(?:فيه )?غلو في التشيع', 'يتشيع', 'فيه تشيع', 'من الشيعه(?: الاماميه)?', 'في الشيعه الاماميه', 'غال']);
   add('B', 2, 'bidat', 'Rafz', 0.85, ['رافضيا?', 'يترفض', 'من الرافضه']);
   add('B', 1, 'bidat', 'Kader / ircâ / nasb / cehmiyye', 0.85, ['قدريا?', 'يري القدر', 'مرج(?:ئ|ي)(?:ء|ا)?', 'يري الارجاء', 'ناصبيا?', 'فيه نصب', 'جهميا?', 'خارجيا?', 'حروريا?', 'مبتدعا?', 'صاحب بدعه']);
   // Bid‘atına dâ‘î olmak tek başına cerh sayılır (kullanıcı kararı); “gayru dâ‘iye” gibi olumsuzlar engelleyicidir
-  add('C', 3, 'bidat', 'Bid‘atına dâ‘î', 0.85, ['(?:كان )?داعيه(?: الي (?:بدعته|مذهبه|رايه|القدر|الارجاء|التشيع|الرفض|ذلك))?', 'يدعو الي (?:بدعته|مذهبه|القدر|الارجاء|التشيع|الرفض)'], { dai: true, nt: 'Bid‘atına dâ‘î olan râvinin rivayeti reddedilir; tek başına cerh sayılır.' });
+  add('C', 3, 'bidat', 'Bid‘atına dâ‘î', 0.85, ['(?:كان )?داعيه(?: الي (?:بدعته|مذهبه|رايه|القدر|الارجاء|التشيع|الرفض|ذلك))?', 'يدعو الي (?:بدعته|مذهبه|القدر|الارجاء|التشيع|الرفض)'], { dai: true, nt: 'Bid‘atına dâ‘î olan râvinin rivayeti reddedilir; tek başına cerh sayılır. ' + CJ + 'dâ‘î ayrımını nazarî bulur; Yahyâ el-Kattân ve İbnü’l-Medînî’ye dayanarak sıdkı ve zabtı sabit râvide bid‘ati cerh saymaz (I, 396–411). Sitede dâ‘î cerh sayılmaya devam eder.' });
   add('X', 0, '', '', 0, ['غير داعيه', 'لم يكن داعيه', 'ما كان داعيه', 'ولا داعيه', 'لا يدعو']);
   add('B', 1, 'bidat', 'Mezhebi kınanmış', 0.8, ['مذموم المذهب', 'زا(?:ي|ئ)غ', 'مجاهر'], { nt: 'İbn Adî: es-Sa‘dî (Cûzcânî) bununla teşeyyu‘da gulüvvü kasteder, rivayette za‘fı değil.' });
   add('B', 1, 'bidat', 'İmâmî ricâl kaydı', 0.6, ['(?:ذكره|وذكره) (?<cr>(?:ابو جعفر )?الطوسي)', '(?:ذكره|وذكره) (?<cr2>النجاشي)', '(?:ذكره|وذكره) (?<cr3>(?:\\S+ ){0,4}?\\S+) في (?:رجال الشيعه|مصنفي الاماميه|الشيعه الاماميه|شيوخ الشيعه|رجال الاماميه)'], { imami: true, nt: 'Tûsî/Necâşî kaydı râvinin İmâmiyye’den sayıldığını gösterir; Sünnî tevsik değildir.' });
@@ -7279,7 +7315,7 @@ const RAPOR = (() => {
   add('R', 0, 'hadis', 'Mevzû / bâtıl', 0.8, ['موضوع(?:ان|ه)?', 'باطل(?:ان)?', 'لا اصل له', 'ليس له اصل', 'ليس بمحفوظ', 'غير محفوظ', 'مخارجها (?:ظلمه|مظلمه)', 'فيها متون لا تعرف', 'لا يثبت', 'فهو منكر', 'ليس (?:له|لها|لهذا الحديث|لهذا) اصل', 'لا يروي من وجه يثبت']);
   add('R', 0, 'hadis', 'Teferrüd (müfredât)', 0.5, ['من مفردات'], { ta: true });
   // — DİYÂNET —
-  add('D', 0, 'diyanet', 'Diyânet/zühd (rivayet ta‘dîli değil)', 0.6, ['من اهل (?:القران|الخير|الصلاح|الستر)(?: والستر)?', 'رجل صالح', '(?:كان )?من العباد', 'عابد', 'زاهد', 'متعبد', 'احد النساك'], { nt: 'Salah ve zühd övgüsü rivayette ta‘dîl değildir (Yahyâ el-Kattân’ın “sâlihler hadiste…” sözü, Müslim mukaddimesi).' });
+  add('D', 0, 'diyanet', 'Diyânet/zühd (rivayet ta‘dîli değil)', 0.6, ['من اهل (?:القران|الخير|الصلاح|الستر)(?: والستر)?', 'رجل صالح', '(?:كان )?من العباد', 'عابد', 'زاهد', 'متعبد', 'احد النساك'], { nt: 'Salah ve zühd övgüsü rivayette ta‘dîl değildir (Yahyâ el-Kattân’ın “sâlihler hadiste…” sözü, Müslim mukaddimesi; Cüdey‘, I, 252–253, 413–415).' });
   // — SÜKÛT —
   add('S', 0, 'sukut', 'Sükût (cerh de ta‘dîl de yok)', 0.8, ['بيض له', 'سكت عنه', 'لم يذكر فيه جرحا ولا تعديلا']);
 
@@ -7287,6 +7323,7 @@ const RAPOR = (() => {
   // — Lisânü’l-Muhaddisîn (M. Halef Selâme) maddelerine göre eklenenler —
   // Mertebe: Sehâvî’nin tasnifinde geçen lafızlar orada bırakıldı; geçmeyenler Lisân’daki açıklamaya göre yerleştirildi.
   const LM = 'Lisânü’l-Muhaddisîn: ';
+
   add('T', 6, 'tevsik', 'Benzersiz (ta‘dîlin zirvesi)', 0.9, ['احد الاحدين', 'نسيج وحده', 'ركن من الاركان', 'لا احد اثبت منه', 'اوثق عندي من نفسي', 'اليه المنتهي في (?:الثقه|الصدق)'], { nt: LM + 'en yüksek övgü lafızları (eşi ve benzeri yok; hadisin direklerinden).' });
   add('T', 6, 'tevsik', 'Cehbez', 0.6, ['جهبذ', 'جهباذ'], { solo: true, nt: LM + 'büyük sika ve sebt hâfızlar için kullanılır.' });
   add('T', 5, 'tevsik', 'Sikalığında ittifak', 0.9, ['مجمع علي (?:ثقته|توثيقه)', 'من معادن الصدق'], { nt: LM + '“mücma‘ alâ sikatihî” te’kîdli tevsik gibidir; “min ma‘âdini’s-sıdk” yüksek ta‘dîldir.' });
@@ -7294,13 +7331,13 @@ const RAPOR = (() => {
   add('T', 4, 'tevsik', 'Delil olur (yuhtecc bih)', 0.75, ['يحتج (?:به|بحديثه)', 'ثبتت عدالته'], { nt: LM + '“yuhtecc bih” sika demektir; ancak söyleyene ve bağlama göre derecesi değişir.' });
   add('T', 4, 'tevsik', 'Ta‘dîl etti (addelehû)', 0.85, ['عدله'], { v: true, nt: LM + '“addelehû fulân” sika saydı demektir (adalet ve zabt).' });
   add('T', 3, 'sidk', 'Câizü’l-hadîs', 0.8, ['جا' + HMZ + 'ز الحديث'], { nt: LM + 'çoğunlukla sadûk-hasenü’l-hadîs mertebesi; bazen i‘tibâr mertebesi.' });
-  add('T', 3, 'sidk', 'Hakkında hayırdan başka bir şey bilmiyorum', 0.8, ['لا (?:اعلم|نعلم) (?:منه |فيه |له )?الا خيرا'], { nt: LM + 'ta‘dîl lafzıdır; mertebesi ihtilaflıdır, aslen mutlak tevsike yakındır.' });
+  add('T', 3, 'sidk', 'Hakkında hayırdan başka bir şey bilmiyorum', 0.8, ['لا (?:اعلم|نعلم) (?:منه |فيه |له )?الا خيرا'], { nt: LM + 'ta‘dîl lafzıdır; mertebesi ihtilaflıdır, aslen mutlak tevsike yakındır. ' + CJ + 'Ahmed’de “leyse bihî be’s” ile eşdeğerdir (I, 577–578).' });
   add('T', 3, 'sidk', 'Hadisinde beis yok', 0.85, ['ما بحديثه باس', 'ما اعلم والله به باسا']);
   add('T', 2, 'sidk', 'İçimde ondan bir şüphe yok', 0.75, ['ليس في نفسي منه ' + SHAY], { nt: LM + 'genel bir tevsiktir, “sika” derecesine ulaşmaz.' });
   add('T', 2, 'sidk', 'Mukâribü’l-hâl / hadisleri iyi', 0.8, ['مقارب الحال', 'احاديثه جياد']);
   add('T', 2, 'sidk', 'Kabul etti (meşşâhu)', 0.75, ['مشاه'], { v: true, nt: LM + 'Zehebî gibi münekkitlerde “meşşâhu fulân”: hakkındaki söze rağmen kabul etti.' });
   add('T', 1, 'itibar', 'Sıdk, istisnalı', 0.8, ['قوي ان شاء الله', 'محله ان شاء الله الصدق'], { nt: LM + '“inşâallah” kaydı tereddüt ya da ihtiyat bildirir (sadûk inşâallah gibi).' });
-  add('T', 1, 'itibar', 'Tevsik edildi (wüssika)', 0.6, ['وثق'], { nt: LM + 'Zehebî’nin “wüssika”sı: tevsiki yalnız İbn Hibbân gibi mütesâhil bir münekkitten gelen râvi.' });
+  add('T', 1, 'itibar', 'Tevsik edildi (wüssika)', 0.6, ['وثق'], { nt: LM + 'Zehebî’nin “wüssika”sı: tevsiki yalnız İbn Hibbân gibi mütesâhil bir münekkitten gelen râvi. ' + CJ + 'Zehebî ve Heysemî’nin edilgen “vüssika / müvessak”ında tevsîk çoğunlukla İbn Hibbân’dandır; söyleyeni aranmalıdır (I, 522).' });
   add('T', 1, 'itibar', 'İstişhâd olunur / muhtemel', 0.75, ['يستشهد (?:به|بحديثه)', 'يحتمل (?:في الحديث|حديثه)', 'له احاديث صالحه'], { nt: LM + 'i‘tibâr mertebesi: hadisi mütâbaatla güçlenebilir.' });
 
   add('C', 1, 'mubhem', 'Za‘îf sayıldı (du‘‘ife)', 0.6, ['ضعف'], { solo: true, nt: LM + 'edilgen “du‘‘ife” kesin olmayan, hafif bir tazîfe işaret eder (telyîne yakın).' });
@@ -7312,7 +7349,8 @@ const RAPOR = (() => {
   add('C', 2, 'mubhem', 'Zayıflar arasında', 0.85, ['(?:هو )?في جمله الضعفاء'], { nt: LM + 'İbn Adî’nin lafzı; bazen i‘tibâr olunan, bazen metrûk râvi için.' });
   add('C', 2, 'mubhem', 'Mu‘temed değil', 0.8, ['غير معتمد', 'ليس بمعتمد', 'ما هو بعمده', 'ليس بمحكم الحديث', 'لا يفرح بما (?:يتفرد|ينفرد) به'], { nt: LM + '“gayru mu‘temed” = delil olmaz; bazen metrûk için de söylenir.' });
   add('C', 2, 'suhifz', 'Hıfzı bozuk', 0.85, ['ردي' + HMZ + '? الحفظ']);
-  add('C', 2, 'muhalefe', 'Münker rivayetler nakletti', 0.85, ['روي (?:احاديث )?مناكير', 'روي احاديث منكره', 'لا يتابع علي (?:حديثه|اكثر حديثه|عامه حديثه)'], { nt: LM + 'cerh lafzıdır; adaleti sabit râvide münkerlerinin azlığına işaret eder. “Lâ yütâba‘ alâ hadîsih” (Ukaylî) çoğunlukla hıfz zaafıdır.' });
+  add('C', 2, 'muhalefe', 'Münker rivayetler nakletti', 0.85, ['روي (?:احاديث )?مناكير', 'روي احاديث منكره'], { nt: LM + 'cerh lafzıdır; adaleti sabit râvide münkerlerinin azlığına işaret eder. ' + CJ + 'râvinin şahsını cerh gerektirmez; isnadda münkerin yükleneceği başka biri yoksa ya da râvi hiç tevsîk edilmemişse ona yüklenir (I, 611).' });
+  add('C', 2, 'muhalefe', 'Hadisine mütâbaat yok', 0.85, ['لا يتابع (?:علي|في) (?:حديثه|احاديثه|اكثر حديثه|عامه حديثه)'], { lvBy: { 'العقيلي': 1 }, nt: LM + '“Lâ yütâba‘ alâ hadîsih” (Ukaylî) çoğunlukla hıfz zaafıdır. ' + CJ + 'Buhârî’de çoğunlukla mechûl ya da az hadisli râvinin tek hadisi için söylenir (tazîf); Ukaylî sikalar için de söyler, tek başına sebep sayılmaz. İbnü’l-Kattân: “sikalığı bilinmeyen kimse hakkında söylenir” (I, 610–611).' });
   add('C', 2, 'mubhem', 'Aleyhinde konuştu (esâe’s-senâ)', 0.7, ['اسا' + HMZ + '? الثناء عليه'], { nt: LM + 'kadh bildirir; dine ya da rivayete yönelik olabilir.' });
   add('C', 3, 'mubhem', 'Hiçbir şey değil', 0.7, ['لا ' + SHAY, 'شبه لا ' + SHAY, 'ليس حديثه ب' + SHAY], { solo: true, nt: LM + '“lâ şey’” = “leyse bi-şey’”; çoğunlukla İbn Maîn.' });
   add('C', 3, 'suhifz', 'Şiddetli ıztırap', 0.8, ['شديد الاضطراب'], { nt: LM + 'şiddetli za‘fa delalet eder; “fi’l-müsned” gibi bir kayıtla hafifler.' });
@@ -7331,9 +7369,9 @@ const RAPOR = (() => {
 
   // — Lisânü’l-Mîzân taraması: münekkite atfedilmiş, sözlükte bulunmayan sık kalıplar —
   const LMZ = 'Lisânü’l-Mîzân taramasında sık geçen kalıp. ';
-  add('C', 4, 'tuhmet', 'Sika değil (lem yekün bi-sika)', 0.9, ['لم يكن بثقه', 'لم يكن ثقه'], { nt: LMZ + '“leyse bi-sika” ile aynı.' });
+  add('C', 4, 'mubhem', 'Sika değil (lem yekün bi-sika)', 0.9, ['لم يكن بثقه', 'لم يكن ثقه'], { nt: LMZ + '“leyse bi-sika” ile aynı (mücmel cerh; Cüdey‘, I, 623–625).' });
   add('C', 1, 'mubhem', 'Pek değil (lem yekün bi-zâk)', 0.85, ['لم يكن (?:في الحديث )?بذاك(?: القوي)?', 'غيره اثبت منه'], { nt: LMZ + '“leyse bi-zâk” gibi telyîndir.' });
-  add('C', 2, 'muhalefe', 'Münkerler rivayet etti', 0.85, ['حدث (?:بمناكير|بالمناكير)', '(?:عامه|اكثر) (?:حديثه|احاديثه|رواياته) (?:مناكير|منكره)', 'في (?:حديثه|احاديثه|رواياته) (?:بعض )?(?:المناكير|مناكير)', 'لا يتابع (?:في|علي) (?:حديثه|احاديثه)'], { nt: LMZ });
+  add('C', 2, 'muhalefe', 'Münkerler rivayet etti', 0.85, ['حدث (?:بمناكير|بالمناكير)', '(?:عامه|اكثر) (?:حديثه|احاديثه|رواياته) (?:مناكير|منكره)', 'في (?:حديثه|احاديثه|رواياته) (?:بعض )?(?:المناكير|مناكير)'], { nt: LMZ });
   add('C', 1, 'muhalefe', 'Mütâbaatı yok (lâ yütâba‘ aleyh)', 0.6, ['لا يتابع عليه', 'لم يتابع عليه'], { nt: LMZ + 'Buhârî ve Ukaylî’de çoğunlukla belirli bir hadis içindir (Lisânü’l-Muhaddisîn); râvi hakkında hafif kayıt sayılır.' });
   add('C', 2, 'vehm', 'Hadisinde vehim galip', 0.85, ['الغالب علي (?:حديثه|رواياته) الوهم', 'الغالب علي حديثه'], { nt: LMZ });
   add('C', 2, 'ihtilat', 'Muhallit', 0.8, ['مخلطا?', 'كان يخلط'], { nt: LMZ });
