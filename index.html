@@ -1180,6 +1180,8 @@ tr.mf-on td { background: color-mix(in srgb, #c0392b 6%, transparent); }
 :is(.center[data-ctab="hoca"], .center[data-ctab="talebe"], #gen-body) .tbl td:not(:first-child) .ar { font-weight: 500; font-size: calc(14.5px * var(--yb)); line-height: 1.6; }
 :is(.center[data-ctab="hoca"], .center[data-ctab="talebe"]) .tbl td.num { white-space: nowrap; }
 :is(.center[data-ctab="hoca"], .center[data-ctab="talebe"]) .tbl td.ar:not(:first-child) { font-weight: 500; font-size: calc(14.5px * var(--yb)); line-height: 1.6; }
+/* Kişi kartı: el-Câmi‘deki sayfaya giden açık düğme (sağ alt) */
+.kart-git { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
 
 </style>
 </head>
@@ -2473,12 +2475,14 @@ async function disKisiKart(n, id) {
   const bas = '<h3 class="ar" style="margin:0 0 8px">' + (ayni.length ? '<button class="linkbtn kart-ad" data-gonarr="|' + ayni[0][1] + '" title="Bu kişinin el-Câmi‘deki sayfasını aç (#' + ayni[0][1] + ')">' + esc(p.ad) + ' <span class="small" aria-hidden="true">↗</span></button>' : esc(p.ad)) + '</h3>';
   const kisa = kv([['Vefat', p.vefatMetni ? disAr(p.vefatMetni) : p.vefat ? 'h. ' + p.vefat : ''], ['Tabaka', p.tabaka ? p.tabaka + '. tabaka' : p.sahabi === 1 ? 'sahâbî' : ''], ['İkamet', p.ikamet && disAr(p.ikamet)], ['Nisbe', p.nisbe && disAr(p.nisbe)], ['İbn Hacer', p.ih && disAr(p.ih)]].filter(([, v]) => v));
   const not = '<p class="hint">' + kodlar(['HH']) + ' Kart, HH’deki kimlik kaydıdır; sayılar programdaki 33 metin kitabının isnadlarına göredir.</p>';
-  openDialog('Kişi kartı · HH #' + p.id, bas + kisa + '<div class="hint dis-yuk">Tam kimlik kartı yükleniyor…</div>' + not, true);
+  // Sağ altta açık düğme: adın bağlantı olduğu ilk bakışta anlaşılmıyordu (kullanıcı isteği)
+  const git = ayni.length ? '<div class="kart-git">' + ayni.map(([c, sq]) => '<button class="btn primary" data-gonarr="|' + sq + '">Bu râvinin el-Câmi‘deki sayfasına git → #' + sq + (c !== disCilt(n) ? ' · ' + c + '. cilt' : '') + '</button>').join('') + '</div>' : '';
+  openDialog('Kişi kartı · HH #' + p.id, bas + kisa + '<div class="hint dis-yuk">Tam kimlik kartı yükleniyor…</div>' + not + git, true);
   const K = (DIS.dizin || {}).kartlar, b = K ? String(Math.floor(p.id / K.bolum)) : null, sha = K && K.bloblar[b];
   if (!sha) { const y = $('gen-body').querySelector('.dis-yuk'); if (y) y.remove(); return; }
   const d = await disGetir('kart', sha), k = d && d.kartlar && d.kartlar[p.id];
   if (!$('gen-dialog').open || $('gen-title').textContent !== 'Kişi kartı · HH #' + p.id) return;   // pencere bu arada kapandıysa
-  $('gen-body').innerHTML = bas + (k ? kv(kartSatirlari(k)) : kisa + '<div class="note">Tam kart alınamadı' + (DIS.err['dis:kart:' + sha] ? ': ' + esc(DIS.err['dis:kart:' + sha]) : '') + '.</div>') + not;
+  $('gen-body').innerHTML = bas + (k ? kv(kartSatirlari(k)) : kisa + '<div class="note">Tam kart alınamadı' + (DIS.err['dis:kart:' + sha] ? ': ' + esc(DIS.err['dis:kart:' + sha]) : '') + '.</div>') + not + git;
 }
 // Yalnız CK’da bulunan kişi: CK’daki kısa kayıt
 function ckKisiKart(n, id) {
