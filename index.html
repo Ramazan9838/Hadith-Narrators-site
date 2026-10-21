@@ -1186,6 +1186,9 @@ tr.mf-on td { background: color-mix(in srgb, #c0392b 6%, transparent); }
 .baglam-roz { cursor: help; white-space: nowrap; }
 .stchip .bg-ic { color: var(--warn); font-weight: 800; margin-left: 2px; } .stchip .bg-ic.bad { color: var(--bad); }
 
+.dn-inc{min-width:180px;max-width:360px}
+.dn-inc .muted{font-size:12px;line-height:1.35;margin-top:2px}
+
 </style>
 </head>
 <body class="locked">
@@ -2821,7 +2824,10 @@ const DN_SEBEP = {
 function denetimRaporHTML() {
   const X = denetimVeri(); if (!X) return (DIS.dizin || {}).denetim ? '<h3 class="panel-title">Denetim (HH ile çapraz)</h3><div class="hint">Denetim verisi yükleniyor ya da sözlüğün bu sürümüyle hazırlanmamış (tools/denetim-hazirla.js).</div>' : '';
   const v = X.v, o = v.ozet, den = o.tutar + o.tur + o.munekkit, pc = x => den ? pct(x / den) : '—';
-  const tip = { tur: '⚠ Tür farkı', munekkit: '⚠ Münekkit farkı', kac: 'Kaçırılan' }, sec = UI.dnTip || '', seb = UI.dnSebep, L = v.kuyruk.filter(r => (!sec || r[2] === sec) && (seb == null || seb === '*' || (r[10] || '') === seb));
+  const tip = { tur: '⚠ Tür farkı', munekkit: '⚠ Münekkit farkı', kac: 'Kaçırılan' }, sec = UI.dnTip || '', seb = UI.dnSebep, inc = UI.dnInc || '*', IK = v.inceleme || {};
+  const incUy = r => inc === '*' || (inc === '-' ? !r[11] : r[11] === inc);
+  const L = v.kuyruk.filter(r => (!sec || r[2] === sec) && (seb == null || seb === '*' || (r[10] || '') === seb) && incUy(r));
+  const incSay = {}; for (const r of v.kuyruk) if (!sec || r[2] === sec) { const k = r[11] || '-'; incSay[k] = (incSay[k] || 0) + 1; }
   const sebSay = {}; for (const r of v.kuyruk) if (r[2] !== 'kac' && (!sec || r[2] === sec)) { const k = r[10] || ''; sebSay[k] = (sebSay[k] || 0) + 1; }
   const crit = {}; for (const r of v.kuyruk) if (r[2] !== 'kac') { const c = r[5] || '?'; (crit[c] = crit[c] || { tur: 0, munekkit: 0 })[r[2]]++; }
   const MAX = 300;
@@ -2833,9 +2839,10 @@ function denetimRaporHTML() {
       Object.entries(crit).sort((a, b) => (b[1].tur + b[1].munekkit) - (a[1].tur + a[1].munekkit)).slice(0, 60).map(([c, x]) => '<tr style="cursor:default"><td>' + esc(crName(c, c)) + '</td><td class="num">' + x.tur + '</td><td class="num">' + x.munekkit + '</td></tr>').join('') + '</tbody></table></div>', false, Object.keys(crit).length + ' münekkit') +
     '<div class="row" style="margin:8px 0"><span class="seg" role="group" aria-label="Uyuşmazlık türü">' + [['', 'Tümü', v.kuyruk.length]].concat(Object.keys(tip).map(k => [k, tip[k], v.kuyruk.filter(r => r[2] === k).length])).map(([k, l, c]) => '<button type="button" data-dntip="' + k + '" aria-pressed="' + (sec === k) + '">' + esc(l) + ' · ' + fmt(c) + '</button>').join('') + '</span></div>' +
     (Object.keys(sebSay).length && sec !== 'kac' ? '<div class="small muted" style="margin:4px 0">Olası sebep (okuma örneklemiyle belirlenen kalıplar):</div><div class="chips" style="margin-bottom:8px">' + [['*', 'Tümü', Object.values(sebSay).reduce((a, b) => a + b, 0)]].concat(Object.keys(DN_SEBEP).filter(k => sebSay[k]).map(k => [k, DN_SEBEP[k][0], sebSay[k]])).map(([k, l, c]) => '<button type="button" class="chip" data-dnsebep="' + k + '" aria-pressed="' + ((seb == null ? '*' : seb) === k) + '" title="' + esc(k === '*' ? '' : DN_SEBEP[k][1]) + '">' + esc(l) + ' <b>' + c + '</b></button>').join('') + '</div>' : '') +
-    '<div class="wrap"><table class="tbl" data-tid="dn-kuyruk"><thead><tr><th data-sk="n">Râvi</th><th data-sk="t">Tür</th><th data-sk="t">Motor</th><th data-sk="t">HH</th><th data-sk="t">Lafız / söz</th><th data-sk="t">Olası sebep</th></tr></thead><tbody>' +
+    (Object.keys(IK).length ? '<div class="small muted" style="margin:4px 0">İnceleme (kayıtların tek tek okunmasıyla verilen karar; üzerine gelince açıklama):</div><div class="chips" style="margin-bottom:8px">' + [['*', 'Tümü', Object.values(incSay).reduce((a, b) => a + b, 0), ''], ['-', 'İncelenmemiş', incSay['-'] || 0, 'Henüz tek tek okunmadı']].concat(Object.keys(IK).filter(k => incSay[k]).map(k => [k, IK[k][0], incSay[k], IK[k][1]])).map(([k, l, c, t]) => '<button type="button" class="chip" data-dninc="' + k + '" aria-pressed="' + (inc === k) + '" title="' + esc(t) + '">' + esc(l) + ' <b>' + c + '</b></button>').join('') + '</div>' : '') +
+    '<div class="wrap"><table class="tbl" data-tid="dn-kuyruk"><thead><tr><th data-sk="n">Râvi</th><th data-sk="t">Tür</th><th data-sk="t">Motor</th><th data-sk="t">HH</th><th data-sk="t">Lafız / söz</th><th data-sk="t">Olası sebep</th><th data-sk="t">İnceleme</th></tr></thead><tbody>' +
     L.slice(0, MAX).map(r => '<tr data-goto="arch:d:' + r[1] + ':' + (r[3] ? encodeURIComponent('dn:' + r[3]) : '') + '" title="Râviyi aç"><td data-v="' + (r[0] * 100000 + r[1]) + '"><b>#' + r[1] + '</b> <span class="small muted">c. ' + r[0] + '</span></td><td>' + esc(tip[r[2]]) + '</td>' +
-      '<td class="small">' + (r[5] ? esc(crName(r[5], r[5])) + ' · ' + esc(KNAME[r[7]] || r[7]) : '<span class="muted">hüküm yok</span>') + '</td><td class="small">' + esc(r[6] ? r[6].split('، ').map(c => crName(c, c)).join(', ') : '—') + ' · ' + esc(HH_SINIF[r[8]] || '') + '</td><td class="ar small">' + esc(r[9]) + '</td><td class="small" title="' + esc(r[2] === 'kac' ? '' : (DN_SEBEP[r[10] || ''] || DN_SEBEP[''])[1]) + '">' + (r[2] === 'kac' ? '' : esc((DN_SEBEP[r[10] || ''] || DN_SEBEP[''])[0])) + '</td></tr>').join('') +
+      '<td class="small">' + (r[5] ? esc(crName(r[5], r[5])) + ' · ' + esc(KNAME[r[7]] || r[7]) : '<span class="muted">hüküm yok</span>') + '</td><td class="small">' + esc(r[6] ? r[6].split('، ').map(c => crName(c, c)).join(', ') : '—') + ' · ' + esc(HH_SINIF[r[8]] || '') + '</td><td class="ar small">' + esc(r[9]) + '</td><td class="small" title="' + esc(r[2] === 'kac' ? '' : (DN_SEBEP[r[10] || ''] || DN_SEBEP[''])[1]) + '">' + (r[2] === 'kac' ? '' : esc((DN_SEBEP[r[10] || ''] || DN_SEBEP[''])[0])) + '</td><td class="small dn-inc">' + (r[11] ? '<b title="' + esc((IK[r[11]] || [])[1] || '') + '">' + esc((IK[r[11]] || [r[11]])[0]) + '</b>' + (r[12] ? '<div class="muted">' + esc(r[12]) + '</div>' : '') : '<span class="muted">—</span>') + '</td></tr>').join('') +
     '</tbody></table></div>' + (L.length > MAX ? '<p class="small muted">İlk ' + MAX + ' kayıt gösteriliyor (' + fmt(L.length) + ').</p>' : '') + '<p class="hint">Satıra basınca râvi açılır (cildi yüklüyse); uyuşmazlık olan hüküm Kaynak metinde seçili gelir.</p>';
 }
 const metinDenetimGecerli = () => { const D = (DIS.dizin || {}).metinDenetim; return D && D.sozluk === CTX.LEXICON.length && D.modul === CTM.VERSION ? D : null; };
@@ -6407,7 +6414,7 @@ document.addEventListener('click', e => {
     S.nedit = null; saveRev(); renderRail(); renderCenter(); renderInspector(); return; }
   const dk = t.closest('[data-diskisi]'); if (dk) { disKisiKart(NBYID[S.nid], dk.dataset.diskisi); return; }
   const ckk = t.closest('[data-ckkisi]'); if (ckk) { ckKisiKart(NBYID[S.nid], ckk.dataset.ckkisi); return; }
-  const dnt = t.closest('[data-dntip]'); if (dnt) { UI.dnTip = dnt.dataset.dntip; UI.dnSebep = '*'; saveUI(); renderReport(); return; }
+  const dnt = t.closest('[data-dntip]'); if (dnt) { UI.dnTip = dnt.dataset.dntip; UI.dnSebep = '*'; UI.dnInc = '*'; saveUI(); renderReport(); return; }
   const hks = t.closest('[data-hkaynak]'); if (hks) { UI.hkaynak = hks.dataset.hkaynak; saveUI(); renderCenter(); return; }
   const ds = t.closest('[data-diss]'); if (ds) { const n = NBYID[S.nid], V = disVeri(n), x = V && V.hh.sozler.find(s => s.id === +ds.dataset.diss); if (x && x.p) disMetinGoster(n, x.p, x.t); return; }
   const dt = t.closest('[data-dist]'); if (dt) { disMetinGoster(NBYID[S.nid], +dt.dataset.dist); return; }
@@ -6453,6 +6460,7 @@ document.addEventListener('click', e => {
   const ld = t.closest('[data-ldel]'); if (ld) { if (!need('edit')) return; const [key, i] = ld.dataset.ldel.split('|'); const n = NBYID[S.nid]; const L = idnOf(n.id, true).l[key]; const x = L.add.splice(+i, 1)[0]; logAct('kimlik', ({ hocalar: 'Hoca', talebeler: 'Talebe', rihle: 'Mekân' })[key] + ' silindi: ' + x.v, { nid: n.id, seq: n.source_sequence, before: x }); saveRev(); renderCenter(); return; }
   const cr = t.closest('[data-crit]'); if (cr) { S.critSel = cr.dataset.crit; S.critAll = false; S.critPh = ''; if (isPhone() && S.critSel) setCrail(false); const D = critData(); if (D) { renderCritList(D); renderCritCenter(D); $('critics-scroll').scrollTop = 0; } else renderCritics(); return; }
   const hkf = t.closest('[data-hkf]'); if (hkf) { hkListe(hkf.dataset.hkf); return; }
+  const dni = t.closest('[data-dninc]'); if (dni) { UI.dnInc = dni.dataset.dninc; saveUI(); renderReport(); return; }
   const dsb = t.closest('[data-dnsebep]'); if (dsb) { UI.dnSebep = dsb.dataset.dnsebep; saveUI(); renderReport(); return; }
   const cph = t.closest('tr[data-crph]'); if (cph) { S.critPh = S.critPh === cph.dataset.crph ? '' : cph.dataset.crph; S.critAll = false; const D = critData(); if (D) renderCritCenter(D); return; }
   const ctb = t.closest('[data-crtab]'); if (ctb) { S.critTab = ctb.dataset.crtab; const D = critData(); if (D) renderCritCenter(D); return; }
