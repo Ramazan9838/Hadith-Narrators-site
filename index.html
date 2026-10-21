@@ -6,7 +6,7 @@
 <title>Cerh-Taʿdîl · Kaynak Kontrolü</title>
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self' https://api.github.com https://generativelanguage.googleapis.com; img-src data:; base-uri 'none'; form-action 'none'">
 <meta name="generator" content="cerh-tadil/build.py CTX 2.0.0">
-<meta name="cerh-motor" content="4875c28da041c9e6">
+<meta name="cerh-motor" content="89eaf6c126f8c828">
 <style>
 /* =========================================================
    Cerh-Ta‘dîl · Kaynak Kontrolü — arayüz stilleri
@@ -1182,6 +1182,9 @@ tr.mf-on td { background: color-mix(in srgb, #c0392b 6%, transparent); }
 :is(.center[data-ctab="hoca"], .center[data-ctab="talebe"]) .tbl td.ar:not(:first-child) { font-weight: 500; font-size: calc(14.5px * var(--yb)); line-height: 1.6; }
 /* Kişi kartı: el-Câmi‘deki sayfaya giden açık düğme (sağ alt) */
 .kart-git { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
+.tag.bad { background: color-mix(in srgb, var(--bad) 12%, transparent); color: var(--bad); border-color: transparent; }
+.baglam-roz { cursor: help; white-space: nowrap; }
+.stchip .bg-ic { color: var(--warn); font-weight: 800; margin-left: 2px; } .stchip .bg-ic.bad { color: var(--bad); }
 
 </style>
 </head>
@@ -2734,6 +2737,12 @@ function hhAyikla(sc, hh) {
   return out;
 }
 const hhAyniRozet = s => s.hhAyni && s.hhAyni.length ? '<div class="small" title="Aynı münekkitin aynı hükmü HH’de de var (söz #' + s.hhAyni.join(', #') + '); ayrıca sayılmaz">' + kodlar(['SC', 'HH']) + (s.hhAyni.length > 1 ? ' <span class="muted">×' + s.hhAyni.length + '</span>' : '') + '</div>' : '';
+// Bağlam denetimi rozetleri (olumsuzlanmış lafız, itiraz, kayıtlı cerh): hükmün yanında görünür; açıklama üzerine gelince
+const BAGLAM_ROZ = { olumsuz: ['¬ olumsuzlanmış', 'warn'], itiraz: ['⚑ itiraz edilmiş', 'bad'], mukayyed: ['kayıtlı cerh', ''] };
+function baglamRozet(s) {
+  return (s.flags || []).filter(f => BAGLAM_ROZ[f]).map(f => { const why = (s.reasons || []).find(r => f === 'olumsuz' ? /Olumsuz edat/.test(r) : f === 'itiraz' ? /itiraz/.test(r) : /Kayıtlı cerh/.test(r));
+    return '<span class="tag ' + BAGLAM_ROZ[f][1] + ' baglam-roz" title="' + esc(FLAGTXT[f] + (why ? ' — ' + why : '') + ' (Tespit raporu → Bağlam denetimi)') + '">' + BAGLAM_ROZ[f][0] + '</span>'; }).join(' ');
+}
 const hhStsOf = n => n ? hhAyikla(stOf(n), hhSts(disCilt(n), n.source_sequence, n)) : [];
 // Soluk (sayılmayan) kaydın sebebi: inceleme kararı, işaretler ya da düşük güven
 function sayilmamaSebebi(s) {
@@ -3919,7 +3928,7 @@ function stChip(s) {
   const k = eKind(s); const cur = S.sel && S.sel.type === 'st' && S.sel.id === s.uid;
   const who = eCritic(s) ? crName(eCritic(s), s.critic_written) : (s.critic_written || '?');
   return '<button class="stchip ' + kc(k) + (eCounts(s) ? '' : ' dim') + '" data-st="' + esc(s.uid) + '" aria-current="' + cur + '" title="' + esc(eType(s) + ' · ' + (s.grade || '') + (s.flags.length ? ' · ' + s.flags.map(f => FLAGTXT[f] || f).join(', ') : '')) + '">' +
-    '<span class="sw"></span>' + (s.phrase ? '<span class="ph">' + esc(s.phrase) + '</span>' : '<span class="who muted">zımnî</span>') + '<span class="who">' + esc(who) + '</span>' + revMark(s) + noteBadge('s:' + s.uid) + '</button>';
+    '<span class="sw"></span>' + (s.phrase ? '<span class="ph">' + esc(s.phrase) + '</span>' : '<span class="who muted">zımnî</span>') + '<span class="who">' + esc(who) + '</span>' + ((s.flags || []).includes('olumsuz') ? '<span class="bg-ic" aria-label="olumsuzlanmış">¬</span>' : '') + ((s.flags || []).includes('itiraz') ? '<span class="bg-ic bad" aria-label="itiraz edilmiş">⚑</span>' : '') + revMark(s) + noteBadge('s:' + s.uid) + '</button>';
 }
 function renderRulingsTab(n) {
   hhStsOf(n);   // el-Câmi‘ hükümlerine “HH’de de” işareti (çiftler ayrı satır olmaz)
@@ -3934,7 +3943,7 @@ function renderRulingsTab(n) {
     '<td class="num">' + s.b.block_order + '</td><td><div class="ar" style="font-size:calc(15px * var(--yb))">' + esc(srcShort(s.b)) + '</div><div class="small muted">' + esc(s.b.effective.source_locator || '') + '</div>' + hhAyniRozet(s) + '</td>' +
     (grouped ? '' : '<td><div>' + esc(crLabel(s)) + '</div>' + (s.critic_written && s.critic_written !== 'قلت' ? '<div class="ar small muted" style="font-size:calc(14px * var(--yb))">' + esc(s.critic_written) + '</div>' : '') + gorusRozet(s) + '</td>') +
     '<td class="ar lafiz">' + (s.phrase ? esc(s.phrase) : '<span class="muted small">(zımnî)</span>') + '</td>' +
-    '<td>' + kindTag(eKind(s), eType(s).replace(' / İnsan kontrolü gerekli', '')) + '</td><td data-v="' + (eKind(s) === 'K' ? eTMax(s) - eCMax(s) : eSev(s)) + '">' + sevScale(s) + '</td>' +
+    '<td>' + kindTag(eKind(s), eType(s).replace(' / İnsan kontrolü gerekli', '')) + (baglamRozet(s) ? '<div>' + baglamRozet(s) + '</div>' : '') + '</td><td data-v="' + (eKind(s) === 'K' ? eTMax(s) - eCMax(s) : eSev(s)) + '">' + sevScale(s) + '</td>' +
     '<td class="small">' + esc((s.sebebs || []).map(x => CTX.SEBEB[x]).join(', ')) + (s.mufassar ? '<div class="muted">' + esc(s.mufassar) + '</div>' : '') + '</td>' +
     '<td class="small">' + esc(s.transmission) + (s.transmitter ? '<div class="muted">aktaran: ' + esc(crName(s.transmitter, s.transmitter)) + '</div>' : '') + '</td>' +
     '<td data-v="' + s.confidence + '">' + confBar(s.confidence) + ' ' + revMark(s) + denetimRozet(s) + noteBadge('s:' + s.uid) + (s.flags.length ? '<div class="small muted">' + esc(s.flags.map(f => FLAGTXT[f] || f).join(', ')) + '</div>' : '') + '</td>' +
@@ -4507,7 +4516,7 @@ function inspStatement(s) {
   const same = stOfBlock(s.b).filter(x => x !== s && x.start === s.start && x.end === s.end);
   let out = '<div class="kicker">Blok ' + s.b.block_order + ' · ' + esc(authorTr(s.b)) + '</div>' +
     '<div class="phrase ' + kc(k) + '">' + (s.phrase ? esc(s.phrase) : '<span style="font-family:var(--ui);font-size:calc(14px * var(--yb))">(Zımnî: du‘afâ kitabında zikir)</span>') + '</div>' +
-    '<div class="badges">' + kindTag(k, eType(s).replace(' / İnsan kontrolü gerekli', ' (insan kontrolü)')) + denetimRozet(s) + '<span class="tag">' + sevScale(s) + ' ' + (k === 'K' ? '−' + eCMax(s) + ' / +' + Math.floor(eTMax(s)) : (eSev(s) > 0 ? '+' : '') + eSev(s)) + '</span>' +
+    '<div class="badges">' + kindTag(k, eType(s).replace(' / İnsan kontrolü gerekli', ' (insan kontrolü)')) + denetimRozet(s) + baglamRozet(s) + '<span class="tag">' + sevScale(s) + ' ' + (k === 'K' ? '−' + eCMax(s) + ' / +' + Math.floor(eTMax(s)) : (eSev(s) > 0 ? '+' : '') + eSev(s)) + '</span>' +
     (s.mufassar ? '<span class="tag">' + esc(s.mufassar) + '</span>' : '') + '<span class="tag">güven ' + s.confidence + '</span>' + (eCounts(s) ? '' : '<span class="tag warn">sayılmıyor</span>') + s.flags.filter(f => f !== 'elle').map(f => '<span class="tag warn">' + esc(FLAGTXT[f] || f) + '</span>').join('') + '</div>';
   const inceleme = '<div class="sec rev-sec"><h4>İnceleme</h4>' + (r.v ? '<div class="hint" style="margin-bottom:6px">Son karar: <b>' + ({ ok: '✓ Doğru', no: '✗ Yanlış', fix: '✎ Düzeltildi' }[r.v] || r.v) + '</b>' + (r.at ? ' · ' + whoWhen(r) : '') + '</div>' : '') + '<div class="review-row req-edit">' +
     '<button class="btn okb" data-rev="ok" aria-pressed="' + (r.v === 'ok') + '" title="Kısayol: A">✓ Doğru</button><button class="btn nob" data-rev="no" aria-pressed="' + (r.v === 'no') + '" title="Kısayol: X">✗ Yanlış</button><button class="btn" data-rev="fix" aria-pressed="' + (r.v === 'fix') + '" title="Kısayol: E">✎ Düzelt</button>' + (r.v ? '<button class="btn ghost" data-rev="clear">Sıfırla</button>' : '') + (AUTH.can('st-del') && s.origin === 'CTX' ? '<button class="btn ghost" data-rev="del" title="Hükmü listeden kaldır (geri alınabilir)">🗑 Kaldır</button>' : '') + '</div>' +
@@ -4941,8 +4950,8 @@ const SATIR = { recs: {}, loaded: false, job: null, again: false };
 const CST = new Map(), SUMC = new Map();   // dilim → inceleme durumu / satır özetleri (önbellek)
 function dropChunkCaches(id) { HYD.delete(id); CST.delete(id); SUMC.delete(id); LSTC.delete(id); CRITC = CRITF = null; }
 function lightOf(rec) {
-  return { id: rec.id + '#satir', sig: rec.sig, blocks: rec.blocks, nc: rec.sts.filter(x => x.critic).length, rows: rec.rows,
-    sts: rec.sts.map(x => [x.uid, x.seq, x.critic || '', x.kind, x.severity, x.tMax, x.cMax, x.counts ? 1 : 0, x.flags || [], x.mufassar || '', x.sebebs || [], x.phrase || '', (x.terms || []).map(t => t.id), x.critic_written || '', x.question ? 1 : 0, x.confidence ?? 1]) };
+  return { id: rec.id + '#satir', sig: rec.sig, blocks: rec.blocks, hit: rec.hit, nc: rec.sts.filter(x => x.critic).length, rows: rec.rows,
+    sts: rec.sts.map(x => [x.uid, x.seq, x.critic || '', x.kind, x.severity, x.tMax, x.cMax, x.counts ? 1 : 0, x.flags || [], x.mufassar || '', x.sebebs || [], x.phrase || '', (x.terms || []).map(t => t.id), x.critic_written || '', x.question ? 1 : 0, x.confidence ?? 1, x.source || '', x.bid ?? null, x.type || '']) };
 }
 // Dilimin depodaki inceleme kaydından: râvi durumları, râvi başına not sayısı, incelenen hüküm sayısı
 function chunkState(p) {
@@ -5034,7 +5043,7 @@ function buildCorpus(scope, onStep) {
       if (p === PK) { KORPUS.done++; continue; }   // beklerken açılmış olabilir: açık dilim canlı veriden okunur
       const sig = corpusSig(p);
       let rec = cache[p.id] && cache[p.id].sig === sig ? cache[p.id] : null;
-      if (!rec) { rec = await hazirOzet(p) || compactPackage(p); try { await IDB.put('dizin', rec); } catch (e) { } }
+      if (!rec) { rec = await hazirOzet(p) || compactPackage(p); IDB.put('dizin', rec).catch(() => { }); }   // yazma beklenmez (şifreleme arka planda)
       if (!(SATIR.recs[p.id] && SATIR.recs[p.id].sig === sig)) keepLight(p, rec);
       KORPUS.recs[p.id] = rec; KORPUS.done++; LEXC = CRITC = CRITF = null;
       if (onStep) onStep();
@@ -5084,7 +5093,7 @@ function critPopHTML(s) {
   return '<div class="kicker">Râvi #' + s.n.source_sequence + ' · blok ' + s.b.block_order + ' · ' + esc(authorTr(s.b)) + '</div>' +
     '<h3 class="ar" style="margin:4px 0 8px;font-size:calc(24px * var(--yb))">' + esc(s.n.effective.canonical_name) + '</h3>' +
     '<div class="insp"><div class="phrase ' + kc(k) + '">' + (s.phrase ? esc(s.phrase) : '(Zımnî: du‘afâ kitabında zikir)') + '</div></div>' +
-    '<div class="badges">' + kindTag(k, eType(s).replace(' / İnsan kontrolü gerekli', ' (insan kontrolü)')) + '<span class="tag">' + sevText(s) + '</span>' + denetimRozet(s) + (s.mufassar ? '<span class="tag">' + esc(s.mufassar) + '</span>' : '') + (eCounts(s) ? '' : '<span class="tag warn">sayılmıyor</span>') + '</div>' +
+    '<div class="badges">' + kindTag(k, eType(s).replace(' / İnsan kontrolü gerekli', ' (insan kontrolü)')) + '<span class="tag">' + sevText(s) + '</span>' + denetimRozet(s) + baglamRozet(s) + (s.mufassar ? '<span class="tag">' + esc(s.mufassar) + '</span>' : '') + (eCounts(s) ? '' : '<span class="tag warn">sayılmıyor</span>') + '</div>' +
     (eCounts(s) ? '' : '<div class="note" style="margin-top:6px">Sayıma girmez: ' + esc(sayilmamaSebebi(s)) + '.</div>') +
     '<dl class="kv" style="margin-top:10px"><dt>Münekkit</dt><dd>' + esc(C ? C.tr : (eCritic(s) || s.critic_written || '—')) + (C && C.death ? ' · ö. ' + C.death : '') + (eCritic(s) || s.critic_written ? ' <span class="ar">' + esc(eCritic(s) || s.critic_written) + '</span>' : '') + '</dd>' +
     '<dt>Kaynak eser</dt><dd><span class="ar">' + esc(srcShort(s.b)) + '</span> ' + esc(s.b.effective.source_locator || '') + '</dd>' +
@@ -5173,7 +5182,7 @@ function lightSts(p) {
   const nOf = (seq, name) => { let n = nn.get(seq); if (!n) nn.set(seq, n = { id: nidOf(p, seq), source_sequence: seq, effective: { canonical_name: name || '' } }); return n; };
   const nm = new Map(L.rows.map(r => [r[0], r[2]])), bySeq = new Map();
   for (const a of L.sts) {
-    const s = { uid: a[0], origin: 'CTX', seq: a[1], critic: a[2], kind: a[3], severity: a[4], tMax: a[5], cMax: a[6], counts: !!a[7], flags: a[8], mufassar: a[9], sebebs: a[10], phrase: a[11], terms: a[12].map(id => ({ id })), critic_written: a[13] || a[2] || '', question: !!a[14], confidence: a[15] ?? 1, _R: R, archPkg: p.id, n: nOf(a[1], nm.get(a[1])) };
+    const s = { uid: a[0], origin: 'CTX', seq: a[1], critic: a[2], kind: a[3], severity: a[4], tMax: a[5], cMax: a[6], counts: !!a[7], flags: a[8], mufassar: a[9], sebebs: a[10], phrase: a[11], terms: a[12].map(id => ({ id })), critic_written: a[13] || a[2] || '', question: !!a[14], confidence: a[15] ?? 1, type: a[18] || (CTX.KIND[a[3]] || {}).tr || a[3], b: { id: a[17], block_order: 0, effective: { source_name: a[16] || '', source_locator: '', source_author: '' } }, _R: R, archPkg: p.id, n: nOf(a[1], nm.get(a[1])) };
     applyFix(s); out.push(s); let l = bySeq.get(a[1]); if (!l) bySeq.set(a[1], l = []); l.push(s);
   }
   for (const row of L.rows) out.push(...hhAyikla(bySeq.get(row[0]) || [], hhSts(p.vol, row[0], nOf(row[0], row[2]), p.id)));
@@ -5347,7 +5356,7 @@ function critDetail(m) {
   return (dn ? '<div class="hint" style="margin:0 0 6px">' + kodlar(['HH']) + ' HH ile denetim: <span class="dn ok">✓ ' + dn.tutar + ' doğrulandı</span> ' + (dn.tur ? '<span class="dn warn">⚠ ' + dn.tur + ' tür farkı</span> ' : '') + (dn.munekkit ? '<span class="dn bad">⚠ ' + dn.munekkit + ' münekkit farkı</span> ' : '') + '<span class="muted">· ' + dn.yok + ' HH’de yok</span></div>' : '') +
     '<div class="hint" style="margin:0 0 6px">' + all.length + ' kayıt · ' + direct + ' müellifin kendi hükmü · ' + chained + ' senedli nakil · ' + (all.length - direct - chained) + ' senedsiz nakil · satıra tıklayınca metindeki yeri açılır</div>' +
     '<div class="wrap"><table class="tbl sub-tbl" data-tid="crit-st"><thead><tr><th data-sk="n">Râvi</th><th data-sk="t">Lafız</th><th data-sk="t">Tür</th><th data-sk="n" class="num">Şiddet</th><th data-sk="t">Kaynak</th><th data-sk="t">Sened / nakil yolu</th></tr></thead><tbody>' +
-    sts.map(s => (CPOP.set(gotoAttr(s), s), '<tr data-cpop="' + esc(gotoAttr(s)) + '"' + grup(s) + ' title="' + esc(eCounts(s) ? 'Hükmün ayrıntısı ve metni' : ayriSayilir(s) ? 'Ayrı sayılır (' + KNAME[eKind(s)] + '); ta‘dîl–cerh toplamına girmez' : 'Soluk: sayıma girmez — ' + sayilmamaSebebi(s)) + '" class="kodsatir' + (eCounts(s) || ayriSayilir(s) ? '' : ' dim') + '"><td data-v="' + seqKey(s) + '"><b>' + '#' + s.n.source_sequence + '</b><div class="ar small" style="font-size:calc(14px * var(--yb))">' + esc(s.n.effective.canonical_name) + '</div></td><td class="ar">' + esc(s.phrase || '(zımnî)') + '</td><td>' + kindTag(eKind(s), eType(s).split(' /')[0]) + '</td><td class="num" data-v="' + (eKind(s) === 'K' ? eTMax(s) - eCMax(s) : eSev(s)) + '">' + sevText(s) + '</td><td class="ar small" style="font-size:calc(14px * var(--yb))">' + esc(srcShort(s.b)) + (s.origin === 'HH' ? ' ' + kodlar(['HH']) : hhAyniRozet(s)) + ' ' + denetimRozet(s) + '</td><td>' + senedHTML(s) + '</td></tr>')).join('') + '</tbody></table></div>' +
+    sts.map(s => (CPOP.set(gotoAttr(s), s), '<tr data-cpop="' + esc(gotoAttr(s)) + '"' + grup(s) + ' title="' + esc(eCounts(s) ? 'Hükmün ayrıntısı ve metni' : ayriSayilir(s) ? 'Ayrı sayılır (' + KNAME[eKind(s)] + '); ta‘dîl–cerh toplamına girmez' : 'Soluk: sayıma girmez — ' + sayilmamaSebebi(s)) + '" class="kodsatir' + (eCounts(s) || ayriSayilir(s) ? '' : ' dim') + '"><td data-v="' + seqKey(s) + '"><b>' + '#' + s.n.source_sequence + '</b><div class="ar small" style="font-size:calc(14px * var(--yb))">' + esc(s.n.effective.canonical_name) + '</div></td><td class="ar">' + esc(s.phrase || '(zımnî)') + '</td><td>' + kindTag(eKind(s), eType(s).split(' /')[0]) + (baglamRozet(s) ? '<div>' + baglamRozet(s) + '</div>' : '') + '</td><td class="num" data-v="' + (eKind(s) === 'K' ? eTMax(s) - eCMax(s) : eSev(s)) + '">' + sevText(s) + '</td><td class="ar small" style="font-size:calc(14px * var(--yb))">' + esc(srcShort(s.b)) + (s.origin === 'HH' ? ' ' + kodlar(['HH']) : hhAyniRozet(s)) + ' ' + denetimRozet(s) + '</td><td>' + senedHTML(s) + '</td></tr>')).join('') + '</tbody></table></div>' +
     (sts.length < all.length ? '<div class="row" style="margin-top:8px"><button class="btn sm" data-critall>Tümünü göster (' + fmt(all.length) + ' kayıt)</button> <span class="hint">İlk ' + sts.length + ' kayıt gösteriliyor.</span></div>' : '');
 }
 
@@ -5547,13 +5556,14 @@ function wilson(k, n) { if (!n) return null; const z = 1.96, p = k / n, d = 1 + 
 function pct(x) { return (x * 100).toFixed(1).replace('.', ',') + '%'; }
 // Tespit raporu: kapsamdaki (bütün eser ya da bu cilt) bütün râviler — cilt başına tablo, havuzlanmış isabet
 // (Wilson %95), türe göre dağılım; Râvi 1–50 için eski (SQLite) ayrıştırıcıyla karşılaştırma
+// Tespit raporu hafif özetlerden (SATIR) hesaplanır: tam özeti (KORPUS) beklemez; hafif özeti eksik dilim varsa önce o hazırlanır
 function renderReport() {
-  if (!ensureScope($('report-body'), renderReport)) return;
+  if (!critSrcLight(S.scope)) { critPrepare($('report-body'), () => { if (S.view === 'report') renderReport(); }); return; }
   const V = {};
   for (const p of scopePkgs(S.scope)) {
     let sts, blocks, hit, nIds, R;
     if (p === PK) { sts = ALL.concat(ADDED); blocks = Object.keys(BLK).length; hit = Object.values(BLK).filter(b => b._st.length).length; nIds = NARR.map(n => n.id); R = REV; }
-    else { const rec = KORPUS.recs[p.id]; if (!rec) continue; sts = hydrate(p, rec); blocks = rec.blocks; hit = rec.hit; nIds = rec.narrator_ids || []; R = revOf(p); }
+    else { const L = SATIR.recs[p.id]; sts = lightSts(p).filter(x => x.origin !== 'HH'); blocks = L.blocks; hit = L.hit || 0; nIds = L.rows.map(r => r[1]); R = revOf(p); }
     const v = V[p.vol] = V[p.vol] || { vol: p.vol, sts: [], blocks: 0, hit: 0, narrators: 0, reviewedN: 0, added: 0, from: p.from, to: p.to };
     for (const s of sts) v.sts.push(s);
     v.blocks += blocks; v.hit += hit; v.narrators += p.count; v.added += R.added.length;
@@ -7656,6 +7666,31 @@ const RAPOR = (() => {
   add('C', 1, 'mubhem', 'Ondan razı olmadı (lem yarzahu / lem yahmedhu)', 0.75, ['(?:لم|ولم|فلم) (?:يرضه|يحمده|يرضاه|يحمد امره)'], { nt: 'Olumlu bir sözün ardından gelen çekince («لم يكن به بأس … ولم يحمده», Ahmed): hafif cerh.' });
   // e) Cerhe itiraz: söyleyenin (çoğunlukla müellif ya da şârih) cerhi reddi — cerhin reddi (N). Asıl cerh kendi sahibinin görüşü olarak kalır, işaretlenir.
   add('N', 0, 'meta', 'Cerhe itiraz (cerhi reddetti)', 0.8, ['(?:و|ف)?لا يلتفت (?:الي|اليه)(?: (?:قول|كلام) \\S+(?: \\S+){0,2})?(?: فيه)?', '(?:هو|هذا|وهذا|فيه) تحامل', 'تحامل (?:عليه|منه)', 'ليس (?:ذلك|هذا) بقادح', 'لا يقدح (?:فيه|ذلك فيه)', 'من (?:اتهمه|ضعفه|جرحه|تكلم فيه)(?: \\S+){0,3} فقد (?:كذب|اخطا|ظلم|غلط)', 'لا عبره بقول \\S+(?: \\S+)? فيه', 'تكلم فيه بلا حجه'], { nt: 'Bağlam denetimi: bir cerhin reddi; asıl cerh “itiraz” işaretiyle kalır.' });
+  // — HH denetiminin “kaçırılan” listesi okunarak eklenenler (21.10.2026): HH’nin cerh–ta‘dîl saydığı, sözlükte bulunmayan lafızlar —
+  const KCR = 'HH denetimi (kaçırılanlar) taramasıyla eklendi. ';
+  add('C', 2, 'mubhem', 'Hadisi övülmez (gayru mahmûd)', 0.85, ['غير محمود(?: الحديث| في (?:ال)?حديث(?:ه)?)?', 'لا (?:يحمد|يحمدون)(?: الناس)? حديثه', '(?:يذمون|ذموا|رايتهم يذمون) حديثه'], { nt: KCR + 'Cûzcânî’nin sık kullandığı tad‘îf lafızları.' });
+  add('C', 2, 'mubhem', 'Hadisinden sakınılır', 0.85, ['(?:يتقون|يتقي|يتقى|اتقوا|لم يزل اصحاب الحديث يتقون) حديثه'], { nt: KCR });
+  add('C', 3, 'mubhem', 'Hadisiyle meşgul olunmaz (ihticâc için)', 0.85, ['لا يجوز الاشتغال (?:بحديثه|به)(?: للاحتجاج به)?', 'سقط الاحتجاج (?:به|باخباره|بحديثه|برواياته)'], { nt: KCR + 'İbn Hibbân.' });
+  add('C', 2, 'mubhem', 'Delil olmaz (gayru muhtecc)', 0.85, ['غير محتج (?:به|بحديثه)'], { nt: KCR });
+  add('C', 2, 'mubhem', 'Hadisi sabit olmadı', 0.8, ['(?:لم|لا) يثبت حديثه', 'لم يقم حديثه'], { nt: KCR + 'Buhârî.' });
+  add('C', 2, 'mubhem', 'İkna etmez (gayru mukni‘)', 0.8, ['غير مقنع', '(?:لم|لا) يقنع(?: الناس)? بحديثه'], { nt: KCR + 'Cûzcânî’nin üslûbu.' });
+  add('C', 3, 'mubhem', 'İşi bitmiş (ferağallâhu minh)', 0.75, ['فرغ الله منه'], { nt: KCR + 'Cûzcânî’nin üslûbu; HH cerh sayar.' });
+  add('B', 2, 'bidat', 'Yoldan sapmış (mezhep)', 0.75, ['مائل عن الطريق', 'من عتق الشيعه', 'يسب(?:ون)? (?:عليا|عثمان|السلف|الصحابه|ابا بكر وعمر)'], { nt: KCR + 'Cûzcânî “mâil ani’t-tarîk”i çoğunlukla teşeyyu‘ için kullanır.' });
+  add('C', 5, 'kizb', 'Yalanı ortaya çıktı', 0.85, ['ظهر منه علي الكذب', 'كذوبا?'], { nt: KCR });
+  add('C', 4, 'tuhmet', 'Ittiham etti (ramâhu)', 0.8, ['رماه(?! ب(?:التشيع|الرفض|القدر|الارجاء|النصب|الاعتزال))'], { v: true, nt: KCR + '«رماه ابن معين»: fiilin öznesi münekkittir.' });
+  add('C', 4, 'tuhmet', 'Ittiham edildi (belirli konuda)', 0.8, ['اتهم في (?:اكثاره|روايته|حديثه|سماعه|سماعاته)'], { nt: KCR });
+  add('C', 1, 'mubhem', 'Hadisi kuvvetli değil', 0.85, ['ليس حديثه (?:عن \\S+(?: \\S+)? )?بالقوي'], { nt: KCR });
+  add('C', 3, 'mubhem', 'Hadisi bir şey değil (belirli hocadan)', 0.85, ['ليس حديثه عن \\S+(?: \\S+)? ب' + SHAY], { nt: KCR });
+  add('C', 2, 'muhalefe', 'Münker rivayetler (zamirli ve fiilli biçimler)', 0.85, ['(?:و)?عامتها (?:مناكير|منكره)', '(?:يروي|روي) احاديث (?:ننكرها|ينكرها|انكرت عليه)', 'له (?:هكذا )?مناكير لا يتابع عليها'], { nt: KCR });
+  add('C', 1, 'muhalefe', 'Sikalardan ayrılarak tek kaldı', 0.8, ['ينفرد عن الثقات(?: باحاديث| بما لا يتابع عليه)?', 'اتي بخبر (?:منكر|باطل)'], { nt: KCR });
+  add('C', 2, 'gaflet', 'Gafleti şiddetli', 0.85, ['(?:كان )?شديد الغفله', '(?:كان )?صاحب غفله', 'فيه غفله شديده'], { nt: KCR });
+  add('C', 2, 'mubhem', 'Yanında bir şey yok', 0.75, ['(?:لم يكن|ليس) عنده ' + SHAY], { nt: KCR + 'Ebû Müshir.' });
+  add('C', 1, 'vehm', 'Hata ve vehim', 0.8, ['عنده (?:مراسيل و)?(?:وهم|غلط)(?: كثير)?', 'في حديثه بعض الضعف', 'يتكلمون في بعض حديثه'], { nt: KCR });
+  add('C', 1, 'suhifz', 'Kitapları gitti, karıştırdı', 0.8, ['ذهبت كتبه(?: فخلط(?: واضطرب)?)?'], { nt: KCR });
+  add('C', 4, 'terk', 'Terk edilir (yütrak)', 0.8, ['يترك'], { solo: true, nt: KCR + 'Dârekutnî.' });
+  add('T', 3, 'sidk', 'Sıdktan uzak tutulamaz', 0.8, ['ليس بمدفوع عن الصدق'], { nt: KCR + 'el-Hatîb.' });
+  add('T', 5, 'tevsik', 'En sağlamlarından', 0.8, ['(?:كان )?من اثبت (?:الناس|الشاميين|البصريين|الكوفيين|اهل \\S+)'], { nt: KCR });
+  add('T', 4, 'tevsik', 'Hâfız', 0.6, ['الحافظ'], { solo: true, nt: KCR + 'Tercemenin başında tek başına “el-hâfız” (Zehebî): sika sıfatıdır (Sehâvî, hâfızı tevsîk lafızları arasında sayar).' });
   // «Ne tevsîk ne tad‘îf»: hüküm yok (sükût); olumsuzlama kuralı iki lafzı ayrı ayrı tersine çevirmesin
   add('S', 0, '', 'Ne tevsîk ne tad‘îf', 0.85, ['(?:لا|ما) وثق ولا ضعف', '(?:لا|ما) ضعف ولا وثق', 'لم يوثق ولم يضعف', 'لا يوثق ولا يضعف', 'لم يوثقه احد ولم يضعفه', 'ما رايت احدا وثقه(?:، بل ولا تكلم فيه)?'], { nt: 'Hakkında ta‘dîl de cerh de bulunmadığını bildirir; hüküm sayılmaz.' });
 
@@ -9409,7 +9444,7 @@ const RAPOR = (() => {
   else root.CTD = factory(root.CTX);
 })(typeof self !== 'undefined' ? self : this, function (CTX) {
   'use strict';
-  const VERSION = '1.0.0';
+  const VERSION = '1.1.0';
   const N = t => CTX.nz(t || '').replace(/[^ء-ي ]/g, ' ').replace(/\s+/g, ' ').trim();
   const cekirdek = t => { const s = String(t || ''); const i = s.indexOf(':'); const c = N(i >= 0 ? s.slice(i + 1) : s); return c.length >= 8 ? c : N(s); };
   // Tür ile HH sınıfı bağdaşıyor mu? Yalnız açık çelişki (güçlü ta‘dîl ↔ cerh) uyuşmazlık sayılır; HH hafif cerhi («ليس بالقوي») bazen ta‘dîl sınıflar.
@@ -9438,7 +9473,9 @@ const RAPOR = (() => {
       if (!(soz.s >= 1 && soz.s <= 3)) continue;
       // Kısa söz (ör. «ليس بثقة») metinde başka münekkitin ağzından da geçebilir: söyleyenin adıyla birlikte tam metin aranır
       const c = cekirdek(soz.t), tam = N(soz.t); if (c.length < 6 || !M.includes(c) || (c.length < 16 && !M.includes(tam))) continue;
-      const aday = P.filter(x => x.p && x.p.length >= 3 && c.includes(x.p));
+      // Aday: el-Câmi‘ lafzı sözün içinde (çekirdek ya da tam metin: çekirdek sözdeki ilk «:»dan sonrasıdır, «وذكره ابن حبان في الثقات فقال: …» gibi
+      // sözlerde lafız öncesinde kalır) ya da söz el-Câmi‘ lafzının içinde («لا أعرفه» ↔ «لا أعرفه، وبعضهم قواه»)
+      const aday = P.filter(x => x.p && x.p.length >= 3 && (c.includes(x.p) || tam.includes(x.p) || (c.length >= 6 && x.p.includes(c))));
       if (!aday.length) { if (soz.s !== 3 && soz.critics.length) kac.push({ soz: soz.id, critics: soz.critics, sinif: soz.s, t: soz.t }); continue; }
       if (!soz.critics.length) continue;   // HH söyleyeni belirlenmemiş: yalnız kaçırılan denetlenir
       // Zehebî’nin ıstılahı: Mîzân’da atıfsız «mechûl» Ebû Hâtim’in sözüdür; HH bunu Zehebî’ye yazar → uyuşmazlık sayılmaz
