@@ -1169,6 +1169,17 @@ tr.mf-on td { background: color-mix(in srgb, #c0392b 6%, transparent); }
 .ctabs { margin: 16px 0 10px; }
 .cwait { display: flex; align-items: center; gap: 10px; }
 @media (max-width: 880px) { .cdesk #critics-body { padding: 16px 16px 72px; } .chead { grid-template-columns: 1fr; } }
+/* Özet çubukları: basınca o kişiler listelenir */
+.sbar[data-hkf] { cursor: pointer; border-radius: 6px; }
+.sbar[data-hkf]:hover, .sbar[data-hkf]:focus-visible { background: var(--accent-soft); outline: none; }
+/* Hocaları / Talebeleri tabloları: kişi adı sade, okunaklı ve sağa yaslı; bağlantı rengi yalnız üzerine gelince */
+:is(.center[data-ctab="hoca"], .center[data-ctab="talebe"], #gen-body) .tbl td:first-child { min-width: 200px; max-width: 360px; }
+:is(.center[data-ctab="hoca"], .center[data-ctab="talebe"], #gen-body) .tbl td:first-child > :is(.ar, .linkbtn.ar) { display: block; width: 100%; text-align: right; direction: rtl; font-size: calc(16px * var(--yb)) !important; font-weight: 600; line-height: 1.5; color: var(--ink); text-decoration: none; }
+:is(.center[data-ctab="hoca"], .center[data-ctab="talebe"], #gen-body) .tbl td:first-child > .linkbtn.ar:hover { color: var(--accent); text-decoration: none; }
+:is(.center[data-ctab="hoca"], .center[data-ctab="talebe"], #gen-body) .tbl td:first-child > .small { text-align: right; }
+:is(.center[data-ctab="hoca"], .center[data-ctab="talebe"], #gen-body) .tbl td:not(:first-child) .ar { font-weight: 500; font-size: calc(14.5px * var(--yb)); line-height: 1.6; }
+:is(.center[data-ctab="hoca"], .center[data-ctab="talebe"]) .tbl td.num { white-space: nowrap; }
+:is(.center[data-ctab="hoca"], .center[data-ctab="talebe"]) .tbl td.ar:not(:first-child) { font-weight: 500; font-size: calc(14.5px * var(--yb)); line-height: 1.6; }
 
 </style>
 </head>
@@ -4191,18 +4202,19 @@ function sentezKisiler(n, key) {
   return birlesikKisiler(n, key === 'talebeler' ? 'talebe' : 'hoca').P.filter(x => x.src.tumu)
     .map(x => ({ v: x.ad, src: x.kod.has('HH') ? 'HH' : x.kod.has('TKZ') ? 'Tehzîb' : x.kod.has('CK') ? 'CK' : 'liste', year: x.src.tumu.year, place: x.src.tumu.place, tab: x.src.tumu.tab }));
 }
-function sbar(rows, tot) { return rows.map(([l, c]) => '<div class="sbar"><span class="l">' + l + '</span><span class="b"><i style="width:' + Math.round(c / tot * 100) + '%"></i></span><span class="c">' + c + ' · %' + Math.round(c / tot * 100) + '</span></div>').join(''); }
-function sentezKart(ppl, title) {
+// rows: [etiket, sayı, süzgeç?]; süzgeç verilirse satır tıklanabilir (Hocaları/Talebeleri özetinde o kişiler listelenir)
+function sbar(rows, tot) { return rows.map(([l, c, f]) => '<div class="sbar"' + (f ? ' data-hkf="' + esc(f) + '" role="button" tabindex="0" title="Bu kişileri listele"' : '') + '><span class="l">' + l + '</span><span class="b"><i style="width:' + Math.round(c / tot * 100) + '%"></i></span><span class="c">' + c + ' · %' + Math.round(c / tot * 100) + '</span></div>').join(''); }
+function sentezKart(ppl, title, filt) {
   if (!ppl.length) return '<section class="card"><h3>' + title + '</h3><div class="hint">Kayıt yok.</div></section>';
   const ys = ppl.map(p => p.year).filter(Boolean), tabs = ppl.map(p => p.tab).filter(Boolean);
   const dec = {}; for (const y of ys) { const d = Math.floor(y / 10) * 10; dec[d] = (dec[d] || 0) + 1; }
   const pl = {}; let plN = 0; for (const p of ppl) if (p.place) { pl[p.place.tr] = (pl[p.place.tr] || 0) + 1; plN++; }
   const tb = {}; for (const t of tabs) { const r = Math.round(t); tb[r] = (tb[r] || 0) + 1; }
-  const plRows = Object.entries(pl).sort((a, b) => b[1] - a[1]); const top = plRows.slice(0, 6); if (plRows.length > 6) top.push(['diğer', plRows.slice(6).reduce((a, x) => a + x[1], 0)]);
+  const plRows = Object.entries(pl).sort((a, b) => b[1] - a[1]); const top = plRows.slice(0, 6).map(([k, v]) => [k, v, filt && 'yer:' + k]); if (plRows.length > 6) top.push(['diğer', plRows.slice(6).reduce((a, x) => a + x[1], 0), filt && 'yerx:' + plRows.slice(0, 6).map(x => x[0]).join('|')]);
   return '<section class="card"><h3>' + title + ' <span class="muted">' + ppl.length + ' kişi' + [...new Set(ppl.map(p => p.src).filter(x => x !== 'liste'))].map(x => ' · ' + x + ' dahil').join('') + '</span></h3>' +
-    '<div class="small"><b>Vefat</b> ' + (ys.length ? '· bilinen ' + ys.length + ' · h. ' + Math.min(...ys) + '–' + Math.max(...ys) + ' · ortanca ' + Math.round(median(ys)) : '· bilinmiyor') + '</div>' + (ys.length ? sbar(Object.keys(dec).sort((a, b) => a - b).map(d => [d + '’ler', dec[d]]), ys.length) : '') +
+    '<div class="small"><b>Vefat</b> ' + (ys.length ? '· bilinen ' + ys.length + ' · h. ' + Math.min(...ys) + '–' + Math.max(...ys) + ' · ortanca ' + Math.round(median(ys)) : '· bilinmiyor') + '</div>' + (ys.length ? sbar(Object.keys(dec).sort((a, b) => a - b).map(d => [d + '’ler', dec[d], filt && 'dec:' + d]), ys.length) : '') +
     '<div class="small" style="margin-top:6px"><b>Memleket</b> ' + (plN ? '· bilinen ' + plN : '· bilinmiyor') + '</div>' + (plN ? sbar(top, plN) : '') +
-    '<div class="small" style="margin-top:6px"><b>Tabaka</b> ' + (tabs.length ? '· bilinen ' + tabs.length + ' · ortanca ' + median(tabs).toFixed(1) : '· bilinmiyor') + '</div>' + (tabs.length ? sbar(Object.keys(tb).sort((a, b) => a - b).map(t => [t + '. ' + esc(CTK.TABAKA_TR[t] || ''), tb[t]]), tabs.length) : '') + '</section>';
+    '<div class="small" style="margin-top:6px"><b>Tabaka</b> ' + (tabs.length ? '· bilinen ' + tabs.length + ' · ortanca ' + median(tabs).toFixed(1) : '· bilinmiyor') + '</div>' + (tabs.length ? sbar(Object.keys(tb).sort((a, b) => a - b).map(t => [t + '. ' + esc(CTK.TABAKA_TR[t] || ''), tb[t], filt && 'tab:' + t]), tabs.length) : '') + '</section>';
 }
 function listeSentez(n) {
   const H = sentezKisiler(n, 'hocalar'), T = sentezKisiler(n, 'talebeler');
@@ -4388,13 +4400,13 @@ function hkOzet(n, key, B) {
   const soz = (sel === 'tumu' || sel === 'HH') && V ? (() => { const ids = new Set(L.filter(x => x.hh && x.hh.p).map(x => x.hh.p.id)); return (V.hh.sozler || []).filter(s => s.m.some(m => ids.has(m[1]))); })() : [];
   return bar + kpis(kp) + '<h3 class="panel-title">' + (hoca ? 'Tahsil — nerede yetişti' : 'Tahdîs — nerede rivayet etti') + ' <span class="muted">' + (hoca ? 'hocalarından' : 'talebelerinden') + ' hareketle · ' + esc(ad) + ' · ' + birim + ' sayısına göre · otomatik çıkarım — hüküm değildir</span></h3>' +
     (ozet ? '<div class="note info">' + esc(ozet) + ' ' + kodK + '</div>' : '') +
-    '<div class="set-grid"><section class="card"><h3>' + (hoca ? 'Hocalarının yeri' : 'Talebelerinin yeri') + ' ' + kodK + '</h3>' + (YL.length ? sbar(YL.slice(0, 7).map(e => [esc(e.tr) + ' <span class="muted">· ' + e.k + ' ' + kim + '</span>', e.r]), top || 1) +
+    '<div class="set-grid"><section class="card"><h3>' + (hoca ? 'Hocalarının yeri' : 'Talebelerinin yeri') + ' ' + kodK + '</h3>' + (YL.length ? sbar(YL.slice(0, 7).map(e => [esc(e.tr) + ' <span class="muted">· ' + e.k + ' ' + kim + '</span>', e.r, 'yer:' + e.tr]), top || 1) +
       '<div class="small muted" style="margin-top:4px">' + YL.slice(0, 3).map(e => esc(e.tr) + ': <span class="ar">' + e.ad.sort((a, b) => b[1] - a[1]).slice(0, 3).map(a => esc(a[0])).join('، ') + '</span>').join(' · ') + '</div>' +
       (bil < top ? '<div class="small muted">Yeri belirlenemeyen: ' + sayiTr(top - bil) + ' ' + birim + '</div>' : '') : '<div class="hint">Yer bilgisi yok.</div>') + '</section>' +
-    '<section class="card"><h3>' + (hoca ? 'Hocalarının durumu' : 'Talebelerinin durumu') + ' ' + kodK + '</h3>' + (it ? sbar(Object.entries(I).sort((a, b) => b[1] - a[1]).map(([c, w]) => [esc(c), w]), it) : '<div class="hint">Bilgi yok.</div>') +
+    '<section class="card"><h3>' + (hoca ? 'Hocalarının durumu' : 'Talebelerinin durumu') + ' ' + kodK + '</h3>' + (it ? sbar(Object.entries(I).sort((a, b) => b[1] - a[1]).map(([c, w]) => [esc(c), w, 'ih:' + c]), it) : '<div class="hint">Bilgi yok.</div>') +
       '<div class="small muted" style="margin-top:4px">' + (sel === 'CK' ? 'CK’daki rütbe' : sel === 'TKZ' ? 'Takrîb maddesindeki hüküm' : sel === 'tumu' ? 'İbn Hacer (HH), yoksa Takrîb ya da CK rütbesi' : 'İbn Hacer’e göre') + ' · ' + birim + '</div></section>' +
-    sentezKart(L.map(x => ({ v: x.ad, src: 'liste', year: x.src[sel].year, place: x.src[sel].place, tab: x.src[sel].tab })), (hoca ? 'Hocalarının' : 'Talebelerinin') + ' vefatı, yeri ve tabakası') + '</div>' +
-    (soz.length ? '<h4 class="dis-h4">' + (hoca ? 'Hocalarının' : 'Talebelerinin') + ' onun hakkındaki sözleri ' + kodlar(['HH']) + '</h4>' + soz.map(s => '<div class="dis-v"><span class="tag">' + (hoca ? 'hocası' : 'talebesi') + '</span> ' + s.m.map(m => '<b class="ar">' + esc(m[0]) + '</b>').join('، ') + ': <span class="ar">' + esc(s.t) + '</span>' + (s.p ? ' <button class="btn ghost sm" data-diss="' + s.id + '">Kaynağı göster</button>' : '') + '</div>').join('') : '') +
+    sentezKart(L.map(x => ({ v: x.ad, src: 'liste', year: x.src[sel].year, place: x.src[sel].place, tab: x.src[sel].tab })), (hoca ? 'Hocalarının' : 'Talebelerinin') + ' vefatı, yeri ve tabakası', true) + '</div>' +
+    (soz.length ? fold('hk:soz:' + key, (hoca ? 'Hocalarının' : 'Talebelerinin') + ' onun hakkındaki sözleri ' + kodlar(['HH']), soz.map(s => '<div class="dis-v"><span class="tag">' + (hoca ? 'hocası' : 'talebesi') + '</span> ' + s.m.map(m => '<b class="ar">' + esc(m[0]) + '</b>').join('، ') + ': <span class="ar">' + esc(s.t) + '</span>' + (s.p ? ' <button class="btn ghost sm" data-diss="' + s.id + '">Kaynağı göster</button>' : '') + '</div>').join(''), false, soz.length + ' söz · açmak için tıklayın') : '') +
     '<p class="hint">Özet, seçilen kümenin kişilerinden hesaplanır. <b>Tümü</b>: HH, el-Câmi‘ (kalıplar ve senetler), Tehzîb ve başka bir kümede de bulunan CK kişileri birleştirilerek her kişi bir kez sayılır; yalnız Cevâmi‘u’l-Kelim’de bulunan kişiler özete girmez, aşağıdaki listelerde görünür. Aynı kişi HH’deki tam adı, künyesi, şöhreti, lakabı ya da nisbesiyle tanınır (ör. yalnız «أبو عوانة» ya da «ابن عيينة» yazılmış hoca); birden çok aday kalırsa birleştirilmez. Bilgi önceliği: HH › Tehzîb › el-Câmi‘ › CK. Yer, ikamet ya da nisbeden çıkarılır; hoca–talebe kaydı tek başına doğrudan semâı ispat etmez.</p>';
 }
 // Râvinin vefat yılı: girilen değer, yoksa metinden (yaklaşıksa en erken yıl), yoksa HH kaydından
@@ -4413,6 +4425,18 @@ function idrakNotu(n, B) {
   return '<div class="note idrak"><b class="unlem">!</b> <b>İdrâk şüpheli</b> — râvinin vefatı ' + ry + '; aşağıdaki hocaların vefatı ondan 100 yıldan fazla öncedir. Ömür ve semâ yaşı düşünüldüğünde görüşmeleri uzak görünür; isnadda inkıtâ, tedlîs ya da ad karışıklığı (aynı adlı başka hoca) araştırılmalıdır. ' +
     L.slice(0, 12).map(({ x, y }) => '<span class="ar">' + esc(x.ad) + '</span> <span class="small muted">(ö. ' + y + ' · fark ' + (ry - y) + ')</span>').join('، ') + (L.length > 12 ? ' … +' + (L.length - 12) : '') +
     '<div class="small muted">Cüdey‘, <i>Tahrîru ulûmi’l-hadîs</i>, I, 97–112 (tarih ile idrâkin denetlenmesi). Vefat yılları HH › Tehzîb › el-Câmi‘ › CK sırasıyla alınır; otomatik denetimdir, hüküm değildir.</div></div>';
+}
+// Özet çubuğuna basınca: o yer, durum, vefat onyılı ya da tabakadaki hocalar/talebeler (seçili kümeye göre)
+function hkListe(tok) {
+  const n = NBYID[S.nid], key = S.tab === 'talebe' ? 'talebe' : 'hoca'; if (!n) return;
+  const B = birlesikKisiler(n, key), sel = hkSecim(B), i = tok.indexOf(':'), tur = tok.slice(0, i), v = tok.slice(i + 1);
+  const uy = { yer: o => o.place && o.place.tr === v, yerx: o => o.place && !v.split('|').includes(o.place.tr), ih: o => o.ih === v, dec: o => o.year && Math.floor(o.year / 10) * 10 === +v, tab: o => o.tab && Math.round(o.tab) === +v }[tur];
+  if (!uy) return;
+  const L = B.P.filter(x => x.src[sel] && uy(x.src[sel])).sort((a, b) => (a.src[sel].year || 9999) - (b.src[sel].year || 9999) || (b.src[sel].w || 0) - (a.src[sel].w || 0));
+  const ad = { yer: v, yerx: 'Öteki yerler', ih: v, dec: 'h. ' + v + '’ler (vefat)', tab: v + '. tabaka · ' + (CTK.TABAKA_TR[v] || '') }[tur];
+  openDialog(ad + ' — ' + (key === 'hoca' ? 'hocaları' : 'talebeleri') + ' (' + L.length + ')', '<p class="hint" style="margin:0 0 8px">Özet tablonun seçili kümesine göre (' + esc((HK_KAYNAK.find(h => h[0] === sel) || [sel, sel])[1]) + '); vefat sırasıyla. Bilgi önceliği: HH › Tehzîb › el-Câmi‘ › CK.</p>' +
+    '<div class="wrap"><table class="tbl" data-tid="hk-liste"><thead><tr><th data-sk="t">Ad</th><th data-sk="n" class="num">Vefat</th><th data-sk="t">Yer</th><th data-sk="n" class="num">Tabaka</th><th data-sk="t">Durum</th><th>Kaynak</th></tr></thead><tbody>' +
+    L.map(x => { const o = x.src[sel]; return '<tr style="cursor:default"><td data-v="' + esc(x.ad) + '">' + kisiAdBtn(x, x.ad) + '</td><td class="num">' + (o.year ? 'h. ' + o.year : '—') + '</td><td>' + esc(o.place ? o.place.tr : '—') + '</td><td class="num">' + (o.tab ? Math.round(o.tab) : '—') + '</td><td class="small">' + esc(o.ih || '—') + '</td><td>' + kodlar([...x.kod].map(k => k === 'TKZ' ? 'TKZ' : k).filter(k => k !== 'TKZ')) + (x.kod.has('TKZ') ? ' <span class="tag">Tehzîb</span>' : '') + '</td></tr>'; }).join('') + '</tbody></table></div>', true);
 }
 function hocaTalebeTab(n, key) {
   const V = disVeri(n), lk = key === 'hoca' ? 'hocalar' : 'talebeler', hoca = key === 'hoca';
@@ -6382,6 +6406,7 @@ document.addEventListener('click', e => {
     saveRev(); renderCenter(); return; }
   const ld = t.closest('[data-ldel]'); if (ld) { if (!need('edit')) return; const [key, i] = ld.dataset.ldel.split('|'); const n = NBYID[S.nid]; const L = idnOf(n.id, true).l[key]; const x = L.add.splice(+i, 1)[0]; logAct('kimlik', ({ hocalar: 'Hoca', talebeler: 'Talebe', rihle: 'Mekân' })[key] + ' silindi: ' + x.v, { nid: n.id, seq: n.source_sequence, before: x }); saveRev(); renderCenter(); return; }
   const cr = t.closest('[data-crit]'); if (cr) { S.critSel = cr.dataset.crit; S.critAll = false; S.critPh = ''; if (isPhone() && S.critSel) setCrail(false); const D = critData(); if (D) { renderCritList(D); renderCritCenter(D); $('critics-scroll').scrollTop = 0; } else renderCritics(); return; }
+  const hkf = t.closest('[data-hkf]'); if (hkf) { hkListe(hkf.dataset.hkf); return; }
   const cph = t.closest('tr[data-crph]'); if (cph) { S.critPh = S.critPh === cph.dataset.crph ? '' : cph.dataset.crph; S.critAll = false; const D = critData(); if (D) renderCritCenter(D); return; }
   const ctb = t.closest('[data-crtab]'); if (ctb) { S.critTab = ctb.dataset.crtab; const D = critData(); if (D) renderCritCenter(D); return; }
   if (t.closest('[data-critall]')) { S.critAll = true; const D = critData(); if (D) renderCritCenter(D); return; }
