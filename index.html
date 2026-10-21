@@ -278,10 +278,26 @@ h1 span { font-weight: 400; color: var(--ink-3); margin-left: 5px; }
 .center { display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--bg); }
 .nhead { background: var(--paper); border-bottom: 1px solid var(--line); padding: 10px 20px 0; flex: none; }
 /* Başlık: üstte gezinme + durum + onay + notlar; altında ad, kimlik satırı ve tek satırlık hüküm özeti */
-.nh-top { display: flex; align-items: center; gap: 6px 8px; flex-wrap: wrap; min-height: 32px; }
-.nh-top .grow { flex: 1; }
-.nh-top .nav-arrows { display: inline-flex; gap: 0; padding: 0; margin-left: -6px; }
-.nhead .nh-status { width: auto; max-width: 190px; padding: 4px 8px; font-size: calc(12.5px * var(--yb)); border-radius: 7px; }
+/* Tek satır: solda oklar; sağda ad ve hemen yanında sıra no */
+.nh-row { display: flex; align-items: center; gap: 8px; }
+.nh-row .nav-arrows { display: inline-flex; gap: 0; padding: 0; margin-left: -6px; }
+.nh-name { margin-left: auto; display: flex; align-items: center; gap: 10px; min-width: 0; }
+.nh-name h2 { min-width: 0; }
+.nh-no { flex: none; font: 600 calc(13px * var(--yb))/1 var(--ui); color: var(--ink-3); background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 4px 9px; white-space: nowrap; }
+.nh-status { width: auto; max-width: 220px; padding: 4px 8px; font-size: calc(12.5px * var(--yb)); border-radius: 7px; }
+.onay-pane { max-width: 720px; }
+.onay-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 6px 0 10px; }
+.onay-row label { font-weight: 600; color: var(--ink-2); }
+.notlar-pane { max-width: 860px; }
+.subtabs .n.n-ok { color: var(--ok); background: transparent; }
+/* Üst çubuğu açıp kapatan çentik: çubuğun alt kenarında ortada; kapalıyken yalnız o kalır */
+.tb-notch { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); z-index: 46; display: flex; align-items: center; gap: 5px; height: calc(17px * var(--yb)); padding: 0 12px; margin-top: 1px; background: var(--paper); color: var(--ink-3); border: 1px solid var(--line-2); border-top: 0; border-radius: 0 0 9px 9px; font: 600 calc(10.5px * var(--yb))/1 var(--ui); letter-spacing: .3px; cursor: pointer; opacity: .8; }
+.tb-notch:hover, .tb-notch:focus-visible { opacity: 1; color: var(--accent); background: var(--accent-soft); }
+.tb-notch .chev { transition: transform .2s; }
+.tb-notch[aria-expanded="false"] .chev { transform: rotate(180deg); }
+.tb-notch .lbl:empty { display: none; }
+body.tb-gizli .topbar { min-height: 0; padding: 0; gap: 0; }
+body.tb-gizli .topbar > :not(.tb-notch) { display: none !important; }
 .kbd.on-accent { background: transparent; color: inherit; border-color: currentColor; opacity: .85; }
 .nh-sum { margin: 6px 0 2px; }
 .nh-sum > summary { display: flex; align-items: center; gap: 6px 10px; flex-wrap: wrap; cursor: pointer; list-style: none; padding: 4px 0 6px; font-size: calc(12.5px * var(--yb)); color: var(--ink-2); border-radius: 6px; }
@@ -540,7 +556,7 @@ button.pill:hover { border-color: var(--accent-2); }
   .view, .desk, .center { display: block; }
   .scroll, #center-scroll { overflow: visible; }
   .eyebrow { display: none; }
-  .nhead .kicker { font-size: calc(10px * var(--yb)); gap: 6px; }
+  .nh-no { font-size: calc(11.5px * var(--yb)); padding: 3px 7px; }
   .verdict-stats { gap: 4px 12px; }
   .topbar { flex-wrap: wrap; padding: 8px 12px; gap: 8px; min-height: 0; }
   .views { order: 3; width: 100%; overflow-x: auto; scrollbar-width: none; -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); mask-image: linear-gradient(90deg, #000 85%, transparent); padding-right: 24px; }
@@ -567,7 +583,7 @@ button.pill:hover { border-color: var(--accent-2); }
 @media (forced-colors: active) { .hs { border-bottom: 2px solid CanvasText; } .minibar i { forced-color-adjust: none; } }
 @media print {
   body { overflow: visible; background: #fff; }
-  .topbar, .sourcebar, .rail, .inspector, .toolbar, .subtabs, .nav-arrows, .nh-top, .nh-sum { display: none !important; }
+  .topbar, .sourcebar, .rail, .inspector, .toolbar, .subtabs, .nav-arrows, .tb-notch, .nh-sum { display: none !important; }
   .desk { display: block; }
   .blk { break-inside: avoid; box-shadow: none; }
 }
@@ -955,7 +971,6 @@ td.stact .btn { padding: 2px 6px; }
 /* Yazdırma: paneller yer kaplamaz; râvi numarası, sayfa aralığı ve hüküm özeti çıktıda kalır */
 @media print {
   .desk { display: block !important; }
-  .nh-top { display: flex !important; } .nh-top > :not(.kicker) { display: none !important; }
   .nh-sum { display: block !important; } .nh-sum > summary { display: none !important; }
   .nh-sum::details-content { content-visibility: visible; display: block; }
   .nh-sum .verdict { display: grid !important; }
@@ -1199,6 +1214,7 @@ tr.mf-on td { background: color-mix(in srgb, #c0392b 6%, transparent); }
       </div>
     </div>
   </div>
+  <button class="tb-notch" id="tb-notch" type="button" aria-expanded="true" aria-keyshortcuts="M" aria-label="Üst menü" title="Üst menüyü gizle (M)"><span class="chev" aria-hidden="true">▴</span><span class="lbl"></span></button>
 </header>
 
 <div class="online-bar" id="online-bar" role="status" hidden></div>
@@ -1467,7 +1483,7 @@ const S = { scope: 'all', railVol: 'all', view: 'desk', nid: null, tab: 'kimlik'
 const VIEWS = ['home', 'desk', 'packages', 'critics', 'conflicts', 'lex', 'report', 'analyze', 'method', 'settings'];
 // Sekme sırası: râvi açılınca önce kim olduğu (Kimlik), sonra hocaları ve talebeleri, hükümler, sentez (ekip isteği)
 // “rihle” anahtarı eski adresler için korunur, sekmenin adı Mekân’dır (yer ve rıhle bilgileri birlikte); “sayfa”: el-Câmi‘in basılı sayfası (Şâdî b. Muhammed Âl-i Nu‘mân, el-Câmi‘ li-kütübi’d-du‘afâ); “uyari”: ayrıştırma uyarıları
-const TABS = [['kimlik', 'Kimlik'], ['hoca', 'Hocaları'], ['talebe', 'Talebeleri'], ['hukum', 'Hükümler'], ['sentez', 'Sentez'], ['kaynak', 'Kaynak metin'], ['rihle', 'Mekân'], ['sayfa', 'Şâdî · el-Câmi‘'], ['uyari', 'Uyarılar']];
+const TABS = [['kimlik', 'Kimlik'], ['hoca', 'Hocaları'], ['talebe', 'Talebeleri'], ['hukum', 'Hükümler'], ['sentez', 'Sentez'], ['kaynak', 'Kaynak metin'], ['rihle', 'Mekân'], ['sayfa', 'Şâdî · el-Câmi‘'], ['uyari', 'Uyarılar'], ['onay', 'Onay'], ['notlar', 'Notlar']];
 
 /* ---------- Eser, ciltler ve dilimler ----------
    Kullanıcı bütün eseri tek sürekli râvi listesi olarak görür (IDX). İç düzende veri cilt başına ardışık 50’şer
@@ -3200,7 +3216,7 @@ function approveNarrator() {
   const V = railVol(), nx = nextUnreviewed(IDXNID.get(S.nid), V);
   renderSourcebar();
   if (nx) { selectNarrator(nx.nid, true); toast('Onaylandı. Sıradaki: #' + nx.seq); }
-  else { renderRail(); renderHead(); renderInspector(); toast('Onaylandı. ' + (V ? V + '. ciltte' : 'Eserde') + ' incelenmemiş râvi kalmadı.'); }
+  else { renderRail(); if (S.tab === 'onay') renderCenter(); else renderHead(); renderInspector(); toast('Onaylandı. ' + (V ? V + '. ciltte' : 'Eserde') + ' incelenmemiş râvi kalmadı.'); }
 }
 
 /* ---------- Ciltler görünümü ---------- */
@@ -3320,6 +3336,13 @@ function fitTopbar() {
   tb.classList.remove('tb-lbl', 'tb-nav', 'tb-min', 'tb-xs'); navMoreLabel();
   if (isPhone() || document.body.classList.contains('locked')) return;
   for (const c of ['tb-lbl', 'tb-nav', 'tb-min', 'tb-xs']) { if (v.scrollWidth <= v.clientWidth + 1) return; tb.classList.add(c); navMoreLabel(); }
+}
+// Üst çubuk, yan paneller gibi açılır–kapanır: ortadaki çentikle ya da M tuşuyla; seçim saklanır
+function setTopbar(show) { UI.tbHide = !show; saveUI(); applyTopbar(); }
+function applyTopbar() {
+  const h = !!UI.tbHide, b = $('tb-notch'); document.body.classList.toggle('tb-gizli', h);
+  if (b) { b.setAttribute('aria-expanded', String(!h)); b.title = (h ? 'Üst menüyü göster' : 'Üst menüyü gizle') + ' (M)'; b.querySelector('.lbl').textContent = h ? 'Menü' : ''; }
+  if (!h) fitTopbar();
 }
 // “Diğer ▾” düğmesi, açık görünüm menüdeyse onun adını taşır
 function navMoreLabel() {
@@ -3660,18 +3683,28 @@ function renderHead() {
   const n = NBYID[S.nid], a = AGG[n.id];
   const st = (REV.narr[n.id] || {}).status || 'Kontrol edilmedi';
   const nn = narrNoteCount(n);
+  // Tek satır: solda râvi değiştiren oklar, sağda ad ve hemen yanında sıra no; durum/onay ve notlar kendi sekmelerinde
   $('nhead').innerHTML =
-    '<div class="nh-top"><span class="nav-arrows"><button class="btn ghost sm icon" data-act="prev" aria-label="Önceki râvi" title="Önceki râvi (K)">↑</button><button class="btn ghost sm icon" data-act="next" aria-label="Sonraki râvi" title="Sonraki râvi (J)">↓</button></span>' +
-    '<span class="kicker"><span>Râvi #' + n.source_sequence + '</span></span><span class="grow"></span>' +   // cilt ve sayfa “Şâdî · el-Câmi‘” sekmesinde
-    '<label class="sr-only" for="head-status">Râvi durumu</label><select class="field sm nh-status" id="head-status" title="Râvi durumu"' + (AUTH.can('review') ? '' : ' disabled') + '>' + SNAP.summary.statuses.map(x => '<option' + (x === st ? ' selected' : '') + '>' + esc(x) + '</option>').join('') + '</select>' +
-    '<button class="btn primary sm req-edit" data-act="approve" title="“Sorun yok” olarak onayla ve ' + (railVol() ? 'bu ciltteki ' : '') + 'sıradaki incelenmemiş râviye geç (O)">✓ Onayla · sıradaki <span class="kbd on-accent">O</span></button>' +
-    '<button class="btn ghost sm" data-act="narr-notes" title="Râvi hakkındaki araştırmacı notları">' + NOTE_SVG + ' Notlar' + (nn ? ' <b>' + nn + '</b>' : '') + '</button></div>' +
-    '<h2>' + esc(fieldVal(n, 'isim')) + '</h2>' + idLine(n) +
+    '<div class="nh-row"><span class="nav-arrows"><button class="btn ghost sm icon" data-act="prev" aria-label="Önceki râvi" title="Önceki râvi (K)">↑</button><button class="btn ghost sm icon" data-act="next" aria-label="Sonraki râvi" title="Sonraki râvi (J)">↓</button></span>' +
+    '<span class="nh-name"><span class="nh-no" title="Râvi sıra numarası"><span class="sr-only">Râvi </span>#' + n.source_sequence + '</span><h2>' + esc(fieldVal(n, 'isim')) + '</h2></span></div>' + idLine(n) +
     '<div class="subtabs" role="tablist">' + deskTabs().map(([k, l], i) => {
-      const cnt = k === 'kaynak' ? n.blocks.length : k === 'hukum' ? a.sts.length : k === 'uyari' ? (uyariListesi(n).length || '') : '';
-      return '<button role="tab" data-tab="' + k + '" aria-selected="' + (S.tab === k) + '" title="Kısayol: ' + (i + 1) + '">' + l + (cnt !== '' ? '<span class="n' + (k === 'uyari' ? ' n-uyari' : '') + '">' + cnt + '</span>' : '') + '</button>';
+      const cnt = k === 'kaynak' ? n.blocks.length : k === 'hukum' ? a.sts.length : k === 'uyari' ? (uyariListesi(n).length || '') : k === 'notlar' ? (nn || '') : '';
+      const ok = k === 'onay' && REVIEWED(st) ? '<span class="n n-ok" title="' + esc(st) + '">✓</span>' : '';
+      return '<button role="tab" data-tab="' + k + '" aria-selected="' + (S.tab === k) + '" title="' + (k === 'onay' ? 'Râvi durumu: ' + esc(st) + (i < 9 ? ' · ' : '') : '') + (i < 9 ? 'Kısayol: ' + (i + 1) : '') + '">' + l + ok + (cnt !== '' ? '<span class="n' + (k === 'uyari' ? ' n-uyari' : '') + '">' + cnt + '</span>' : '') + '</button>';
     }).join('') + '</div>';
 }
+// Onay sekmesi: râvinin inceleme durumu ve “Onayla · sıradaki”
+function renderReviewTab(n) {
+  const a = AGG[n.id], r = REV.narr[n.id] || {}, st = r.status || 'Kontrol edilmedi';
+  return '<div class="pane"><section class="onay-pane"><h3 class="panel-title">Râvinin inceleme durumu</h3>' +
+    '<div class="onay-row"><label for="head-status">Durum</label><select class="field sm nh-status" id="head-status" title="Râvi durumu"' + (AUTH.can('review') ? '' : ' disabled') + '>' + SNAP.summary.statuses.map(x => '<option' + (x === st ? ' selected' : '') + '>' + esc(x) + '</option>').join('') + '</select>' +
+    '<button class="btn primary sm req-edit" data-act="approve" title="“Sorun yok” olarak onayla ve ' + (railVol() ? 'bu ciltteki ' : '') + 'sıradaki incelenmemiş râviye geç (O)">✓ Onayla · sıradaki <span class="kbd on-accent">O</span></button></div>' +
+    '<div class="hint">' + a.reviewed + ' / ' + a.total + ' hüküm incelendi.' + (r.at ? ' Son değişiklik: ' + whoWhen(r) : '') + ' Hükümler tek tek Hükümler ve Kaynak metin sekmelerinde incelenir; <span class="kbd">O</span> tuşu her sekmede râviyi onaylayıp sıradakine geçer.</div></section></div>';
+}
+// Notlar sekmesi: inceleme notu ve araştırmacı notları (ayrıntı paneliyle aynı içerik)
+function renderNotesTab(n) { return '<div class="pane notlar-pane">' + narrNotesHTML(n) + '</div>'; }
+// Sekme değişimi: ayrıntı paneli boşta ise (râvi notları) yeniden çizilir; Notlar sekmesindeyken notlar orada yinelenmez
+function setTab(k) { S.tab = k; renderCenter(); if (!S.sel) renderInspector(); writeHash(); $('center-scroll').scrollTop = 0; }
 // Kimlik sekmesinin başı: motorun (CTX, kural tabanlı) hüküm özeti — “YZ Yorumu” — ve açılır sayılar
 function yzYorumu(n) {
   const a = AGG[n.id];
@@ -3778,6 +3811,8 @@ function renderCenter() {
   else if (S.tab === 'talebe') body.innerHTML = renderStudentsTab(n);
   else if (S.tab === 'uyari') body.innerHTML = renderWarningsTab(n);
   else if (S.tab === 'rihle') body.innerHTML = renderRihleTab(n);
+  else if (S.tab === 'onay') body.innerHTML = renderReviewTab(n);
+  else if (S.tab === 'notlar') body.innerHTML = renderNotesTab(n);
   else body.innerHTML = renderPageTab(n);
   document.documentElement.style.setProperty('--ar-size', UI.arSize + 'px');
 }
@@ -4475,14 +4510,17 @@ function inspBlock(b) {
     '<div class="sec"><h4>Değişiklik geçmişi</h4>' + (hist.length ? hist.map(h => '<div class="hint"><b>' + esc(h.field_name) + '</b> · ' + esc(h.display_name) + '<br>' + esc(JSON.parse(h.old_value || '""')) + ' → ' + esc(JSON.parse(h.new_value || '""')) + '<br><span class="muted">' + esc(new Date(h.changed_at).toLocaleString('tr-TR')) + '</span></div>').join('') : '<div class="hint">Kayıt yok.</div>') + '</div>' +
     '<p><button class="btn sm" data-raw="block:' + b.id + '">Ham HTML</button></p>';
 }
-function inspNarrator(n) {
+function narrNotesHTML(n) {
   const a = AGG[n.id]; const r = REV.narr[n.id] || {};
   return '<div class="sec first"><h4>İnceleme notu · Râvi #' + n.source_sequence + '</h4><textarea class="field" id="narr-note" rows="3" dir="auto" placeholder="Râvi hakkında inceleme notu…"' + (AUTH.can('review') ? '' : ' readonly') + '>' + esc(r.note || '') + '</textarea><div class="hint">' + a.reviewed + ' / ' + a.total + ' hüküm incelendi.' + (r.at ? ' Son değişiklik: ' + whoWhen(r) : '') + '</div></div>' +
-    notesSection('n:' + n.id, 'Araştırmacı notları · bu râvi') +
+    notesSection('n:' + n.id, 'Araştırmacı notları · bu râvi');
+}
+function inspNarrator(n) {
+  return (S.view === 'desk' && S.tab === 'notlar' ? '<p class="hint">Bu râvinin notları ortadaki Notlar sekmesinde açık.</p>' : narrNotesHTML(n)) +
     '<p class="hint" style="margin-top:14px">Metinde renkli bir lafza tıklayınca hükmün ayrıntısı burada açılır. Kullanım ve kısayollar: <button class="linkbtn" data-act="help">Yardım <span class="kbd">?</span></button></p>';
 }
 function shortcutsHTML() {
-  const k = [['J / K', 'Sonraki / önceki râvi'], ['N / P', 'Sonraki / önceki hüküm'], ['1 … 8', 'Sekmeler'], ['A · X · E', 'Doğru · Yanlış · Düzelt'], ['O', 'Râviyi onayla, sıradakine geç'], ['R', 'Râvi listesini aç / kapat'], ['H', 'Hüküm (ayrıntı) panelini aç / kapat'], ['Shift R · Shift H', 'Paneli sabitle / sabitlemeyi kaldır'], ['/', 'Râvi ara'], ['Ctrl K', 'Hızlı arama'], ['T', 'Tema'], ['?', 'Yardım'], ['Esc', 'Katman katman kapat (menü → panel → seçim)']];
+  const k = [['J / K', 'Sonraki / önceki râvi'], ['N / P', 'Sonraki / önceki hüküm'], ['1 … 9', 'Sekmeler'], ['M', 'Üst menüyü gizle / göster'], ['A · X · E', 'Doğru · Yanlış · Düzelt'], ['O', 'Râviyi onayla, sıradakine geç'], ['R', 'Râvi listesini aç / kapat'], ['H', 'Hüküm (ayrıntı) panelini aç / kapat'], ['Shift R · Shift H', 'Paneli sabitle / sabitlemeyi kaldır'], ['/', 'Râvi ara'], ['Ctrl K', 'Hızlı arama'], ['T', 'Tema'], ['?', 'Yardım'], ['Esc', 'Katman katman kapat (menü → panel → seçim)']];
   return '<div class="shortcuts">' + k.map(([a, b]) => '<span>' + a.split(' ').map(x => x.length <= 6 && x !== '…' && x !== '·' && x !== '/' || x === '/' ? '<span class="kbd">' + esc(x) + '</span>' : esc(x)).join(' ') + '</span><span>' + esc(b) + '</span>').join('') + '</div>';
 }
 
@@ -5961,6 +5999,7 @@ document.addEventListener('keydown', e => {
   if (d && ((ax === 'x') === (e.key === 'ArrowLeft' || e.key === 'ArrowRight'))) { setSize(k, splitCur(k) + sign * d); saveUI(); e.preventDefault(); e.stopPropagation(); }
 }, true);
 applySizes();
+$('tb-notch').addEventListener('click', () => setTopbar(!!UI.tbHide)); applyTopbar();
 let drwRaf = 0; window.addEventListener('resize', () => { cancelAnimationFrame(drwRaf); drwRaf = requestAnimationFrame(() => { layoutDrawers(); fitTopbar(); }); });
 // Yazdırırken hüküm özeti (Sayılar) açık basılır; sonra eski hâline döner
 window.addEventListener('beforeprint', () => { const d = document.querySelector('.nh-sum'); if (d && !d.open) { d.dataset.printOpen = '1'; d.open = true; } });
@@ -6039,7 +6078,7 @@ document.addEventListener('click', e => {
     if (kb) { if (DRW.mode.rail !== 'closed') { const c = document.querySelector('.nitem[aria-current="true"]'); if (c) c.focus(); } else $('rail-notch').focus({ preventScroll: true }); }
     return;
   }
-  const tab = t.closest('[data-tab]'); if (tab) { S.tab = tab.dataset.tab; renderCenter(); writeHash(); $('center-scroll').scrollTop = 0; return; }
+  const tab = t.closest('[data-tab]'); if (tab) { setTab(tab.dataset.tab); return; }
   const leg = t.closest('[data-leg]'); if (leg) { const k = leg.dataset.leg; UI.hidden = UI.hidden.includes(k) ? UI.hidden.filter(x => x !== k) : UI.hidden.concat(k); saveUI(); renderCenter(); return; }
   const sb = t.closest('[data-scope]'); if (sb) { S.scope = UI.scope = sb.dataset.scope; saveUI(); S.critSel = ''; S.lexSel = ''; setView(S.view, false); return; }
   const ga = t.closest('[data-goto^="arch:"]');
@@ -6082,9 +6121,8 @@ document.addEventListener('click', e => {
   const cm = t.closest('[data-confmore]'); if (cm) { S.confLimit = (S.confLimit || 100) + 200; renderConflicts(); return; }
   const co = t.closest('[data-confopen]'); if (co) { S.confOpen = S.confOpen === co.dataset.confopen ? null : co.dataset.confopen; renderConflicts(); return; }
   const cfc = t.closest('[data-cf-clear]'); if (cfc) { Object.assign(CF, { region: '', approach: '', century: '', lean: '', min: 0 }); UI.cf = CF; saveUI(); renderCritics(); return; }
-  const nn = t.closest('[data-act="narr-notes"]'); if (nn) { S.sel = null; renderCenter(); renderInspector(); openInspector(); const el = $('notes-n:' + S.nid); if (el) { el.scrollIntoView({ block: 'start' }); const ta = el.querySelector('textarea'); if (ta) ta.focus(); } return; }
-  const ne = t.closest('[data-nedit]'); if (ne) { S.nedit = ne.dataset.nedit; renderInspector(); const f = $('nedit-v'); if (f) f.focus(); return; }
-  if (t.closest('[data-ncancel]')) { S.nedit = null; renderInspector(); return; }
+  const ne = t.closest('[data-nedit]'); if (ne) { S.nedit = ne.dataset.nedit; renderInspector(); if (S.tab === 'notlar') renderCenter(); const f = $('nedit-v'); if (f) f.focus(); return; }
+  if (t.closest('[data-ncancel]')) { S.nedit = null; renderInspector(); if (S.tab === 'notlar') renderCenter(); return; }
   const nsv = t.closest('[data-nsave],[data-ndel]'); if (nsv) {
     const [key, id] = (nsv.dataset.nsave || nsv.dataset.ndel).split('|'); const list = REV.notes[key] || []; const x = list.find(y => y.id === id); if (!x) return;
     const me = AUTH.me() || {}; if (!((x.by === me.username && AUTH.can('note')) || AUTH.can('note-any'))) { need('note-any'); return; }
@@ -6199,7 +6237,7 @@ document.addEventListener('submit', e => {
     const x = Object.assign({ id: 'nt' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), text, at: new Date().toISOString() }, by());
     (REV.notes[key] = REV.notes[key] || []).push(x);
     logAct('not', noteTarget(key).label + ' notu: ' + text.slice(0, 100), Object.assign(noteTarget(key), { after: text }));
-    saveRev(); renderRail(); renderHead(); renderInspector(); if (S.tab === 'kaynak' || S.tab === 'hukum') renderCenter(); toast('Not eklendi.'); return;
+    saveRev(); renderRail(); renderHead(); renderInspector(); if (['kaynak', 'hukum', 'notlar'].includes(S.tab)) renderCenter(); toast('Not eklendi.'); return;
   }
   const tf = e.target.closest('form[data-tsave]');
   if (tf) { e.preventDefault(); saveBlockText(+tf.dataset.tsave, tf.querySelector('[name=text]').value, tf.querySelector('[name=note]').value.trim()); return; }
@@ -6240,7 +6278,7 @@ document.addEventListener('change', e => {
   if (e.target.dataset && e.target.dataset.cff) { const k = e.target.dataset.cff; CFF[k] = e.target.type === 'checkbox' ? e.target.checked : e.target.value; UI.cff = CFF; S.confLimit = 0; saveUI(); renderConflicts(); }
   if (e.target.dataset && e.target.dataset.cf) { CF[e.target.dataset.cf] = e.target.value; UI.cf = CF; saveUI(); renderCritics(); }
   if (e.target.dataset && e.target.dataset.urole) { const id = e.target.dataset.urole; try { const old = AUTH.setRole(id, e.target.value); const x = AUTH.list().find(y => y.id === id); logAct('kullanıcı', 'Rol: ' + x.username + ' · ' + AUTH.roleName(old) + ' → ' + AUTH.roleName(x.role), { pkg: '', before: old, after: x.role }); toast('Rol güncellendi.'); } catch (err) { toast(err.message, true); } renderSettings(); }
-  if (e.target.id === 'narr-status' || e.target.id === 'head-status') { if (!need('review')) { e.target.value = (REV.narr[S.nid] || {}).status || 'Kontrol edilmedi'; return; } const r = REV.narr[S.nid] = REV.narr[S.nid] || {}; const old = r.status || 'Kontrol edilmedi'; r.status = e.target.value; Object.assign(r, { at: new Date().toISOString() }, by()); logAct('râvi-durum', old + ' → ' + r.status, { nid: S.nid, seq: NBYID[S.nid].source_sequence, before: old, after: r.status }); saveRev(); renderRail(); renderHead(); renderSourcebar(); if (!(S.sel)) renderInspector(); toast('Râvi durumu: ' + r.status); }
+  if (e.target.id === 'narr-status' || e.target.id === 'head-status') { if (!need('review')) { e.target.value = (REV.narr[S.nid] || {}).status || 'Kontrol edilmedi'; return; } const r = REV.narr[S.nid] = REV.narr[S.nid] || {}; const old = r.status || 'Kontrol edilmedi'; r.status = e.target.value; Object.assign(r, { at: new Date().toISOString() }, by()); logAct('râvi-durum', old + ' → ' + r.status, { nid: S.nid, seq: NBYID[S.nid].source_sequence, before: old, after: r.status }); saveRev(); renderRail(); if (S.tab === 'onay') renderCenter(); else renderHead(); renderSourcebar(); if (!(S.sel)) renderInspector(); toast('Râvi durumu: ' + r.status); }
 });
 document.addEventListener('input', e => {
   if (e.target.id === 'dis-q') { DIS.q = e.target.value; disSozFiltre(); return; }
@@ -6302,6 +6340,7 @@ document.addEventListener('keydown', e => {
   if (k === 'Escape') { escLayer(); return; }
   if (k === '?') { openHelp(); return; }
   if (k === 't' || k === 'T') { toggleTheme(); return; }
+  if (k === 'm' || k === 'M') { e.preventDefault(); setTopbar(!!UI.tbHide); return; }
   if (S.view !== 'desk') return;
   if (k === 'r' || k === 'R') { if (e.shiftKey) setPin('rail', !UI.pin.rail); else toggleDrawer('rail'); }
   else if (k === 'h' || k === 'H') { if (e.shiftKey) setPin('insp', !UI.pin.insp); else toggleDrawer('insp'); }
@@ -6310,7 +6349,7 @@ document.addEventListener('keydown', e => {
   else if (k === 'n' || k === 'N') stepStatement(1);
   else if (k === 'p' || k === 'P') stepStatement(-1);
   else if (k === '/') { e.preventDefault(); openDrawer('rail', { focus: '#q' }); }
-  else if (/^[1-9]$/.test(k)) { const tb = deskTabs()[+k - 1]; if (!tb) return; S.tab = tb[0]; renderCenter(); writeHash(); $('center-scroll').scrollTop = 0; }
+  else if (/^[1-9]$/.test(k)) { const tb = deskTabs()[+k - 1]; if (!tb) return; setTab(tb[0]); }
   else if (k === 'a' || k === 'A') setReview('ok');
   else if (k === 'x' || k === 'X') setReview('no');
   else if (k === 'e' || k === 'E') setReview('fix');
