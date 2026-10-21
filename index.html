@@ -5223,6 +5223,7 @@ function renderCritCenter(D) {
   const el = $('critics-body'), m = S.critSel && D.by.get(S.critSel);
   el.innerHTML = m ? critPage(m) : critHome(D);
   if (m && S.critTab === 'hukum' && !critFull()) critPrepare($('crit-hukum'), () => { if (S.view === 'critics' && S.critSel === m.c) renderCritCenter(critData() || D); });
+  if (m && S.critTab === 'lafiz' && $('crit-ph-wait')) critPrepare($('crit-ph-wait'), () => { if (S.view === 'critics' && S.critSel === m.c) renderCritCenter(critData() || D); });
 }
 // Genel görünüm: sayılar ve dağılımlar (kapsamın bütün münekkitleri)
 function critHome(D) {
@@ -5265,12 +5266,16 @@ function critPage(m) {
   return head + body;
 }
 // Lafızlar: münekkidin kullandığı lafızlar, kaç kayıtta ve kaç râvi hakkında
+const lafizKey = s => (s.phrase || '(zımnî)').trim() + '|' + eKind(s);
 function critLafiz(m) {
   const by = {};
-  for (const s of m.st) { const ph = (s.phrase || '(zımnî)').trim(), k = eKind(s); const e = by[ph + '|' + k] = by[ph + '|' + k] || { ph, k, n: 0, narr: new Set(), sev: eKind(s) === 'K' ? eTMax(s) - eCMax(s) : eSev(s) }; e.n++; e.narr.add(s.n.id); }
-  const L = Object.values(by).sort((a, b) => b.n - a.n);
-  return '<p class="hint" style="margin:0 0 8px">' + L.length + ' farklı lafız · bir lafza tıklayınca Lafız dizininde aranabilir (Ctrl+K).</p><div class="wrap"><table class="tbl" data-tid="crit-lafiz"><thead><tr><th data-sk="t">Lafız</th><th data-sk="t">Tür</th><th data-sk="n" class="num">Şiddet</th><th data-sk="n" class="num">Kayıt</th><th data-sk="n" class="num">Râvi</th></tr></thead><tbody>' +
-    L.map(e => '<tr style="cursor:default"><td class="ar" style="font-size:calc(17px * var(--yb))">' + esc(e.ph) + '</td><td>' + kindTag(e.k, KNAME[e.k] || e.k) + '</td><td class="num">' + (e.sev > 0 ? '+' : '') + e.sev + '</td><td class="num">' + e.n + '</td><td class="num">' + e.narr.size + '</td></tr>').join('') + '</tbody></table></div>';
+  for (const s of m.st) { const ph = (s.phrase || '(zımnî)').trim(), k = eKind(s); const e = by[ph + '|' + k] = by[ph + '|' + k] || { key: ph + '|' + k, ph, k, n: 0, narr: new Set(), sev: eKind(s) === 'K' ? eTMax(s) - eCMax(s) : eSev(s) }; e.n++; e.narr.add(s.n.id); }
+  const L = Object.values(by).sort((a, b) => b.n - a.n), F = S.critPh ? critFull() : null;
+  // Açılan lafzın kayıtları: münekkidin hüküm tablosu yalnız o lafızla (sened, kaynak; satır hükmün penceresini açar)
+  const alt = e => { if (S.critPh !== e.key) return ''; const fm = F && F.by.get(m.c);
+    return '<tr class="sub"><td colspan="5">' + (F ? (fm ? critDetail(Object.assign({}, fm, { st: fm.st.filter(s => lafizKey(s) === e.key) })) : '<div class="hint">Kayıt yok.</div>') : '<div id="crit-ph-wait"></div>') + '</td></tr>'; };
+  return '<p class="hint" style="margin:0 0 8px">' + L.length + ' farklı lafız · bir lafza tıklayınca o lafızla verilen hükümler (râvi, kaynak, sened) altında açılır; yeniden tıklayınca kapanır.</p><div class="wrap"><table class="tbl" data-tid="crit-lafiz"><thead><tr><th data-sk="t">Lafız</th><th data-sk="t">Tür</th><th data-sk="n" class="num">Şiddet</th><th data-sk="n" class="num">Kayıt</th><th data-sk="n" class="num">Râvi</th></tr></thead><tbody>' +
+    L.map(e => '<tr data-crph="' + esc(e.key) + '" aria-expanded="' + (S.critPh === e.key) + '" title="Bu lafızla verilen hükümleri göster"><td class="ar" style="font-size:calc(17px * var(--yb))">' + esc(e.ph) + '</td><td>' + kindTag(e.k, KNAME[e.k] || e.k) + '</td><td class="num">' + (e.sev > 0 ? '+' : '') + e.sev + '</td><td class="num">' + e.n + '</td><td class="num">' + e.narr.size + '</td></tr>' + alt(e)).join('') + '</tbody></table></div>';
 }
 // Râviler: hakkında hüküm verdiği râviler (râvi sayfasına götürür)
 function critRavi(m) {
@@ -6376,7 +6381,8 @@ document.addEventListener('click', e => {
     logAct('kimlik', ({ hocalar: 'Hoca', talebeler: 'Talebe', rihle: 'Mekân' })[key] + ' ' + (v === 'ok' ? 'onaylandı' : v === 'no' ? 'reddedildi' : 'adaya döndü') + ': ' + (it ? it.v : k2), { nid: n.id, seq: n.source_sequence, before, after: v || 'aday' });
     saveRev(); renderCenter(); return; }
   const ld = t.closest('[data-ldel]'); if (ld) { if (!need('edit')) return; const [key, i] = ld.dataset.ldel.split('|'); const n = NBYID[S.nid]; const L = idnOf(n.id, true).l[key]; const x = L.add.splice(+i, 1)[0]; logAct('kimlik', ({ hocalar: 'Hoca', talebeler: 'Talebe', rihle: 'Mekân' })[key] + ' silindi: ' + x.v, { nid: n.id, seq: n.source_sequence, before: x }); saveRev(); renderCenter(); return; }
-  const cr = t.closest('[data-crit]'); if (cr) { S.critSel = cr.dataset.crit; S.critAll = false; if (isPhone() && S.critSel) setCrail(false); const D = critData(); if (D) { renderCritList(D); renderCritCenter(D); $('critics-scroll').scrollTop = 0; } else renderCritics(); return; }
+  const cr = t.closest('[data-crit]'); if (cr) { S.critSel = cr.dataset.crit; S.critAll = false; S.critPh = ''; if (isPhone() && S.critSel) setCrail(false); const D = critData(); if (D) { renderCritList(D); renderCritCenter(D); $('critics-scroll').scrollTop = 0; } else renderCritics(); return; }
+  const cph = t.closest('tr[data-crph]'); if (cph) { S.critPh = S.critPh === cph.dataset.crph ? '' : cph.dataset.crph; S.critAll = false; const D = critData(); if (D) renderCritCenter(D); return; }
   const ctb = t.closest('[data-crtab]'); if (ctb) { S.critTab = ctb.dataset.crtab; const D = critData(); if (D) renderCritCenter(D); return; }
   if (t.closest('[data-critall]')) { S.critAll = true; const D = critData(); if (D) renderCritCenter(D); return; }
   if (t.closest('#crail-notch')) { setCrail(UI.crail !== 'open', true); return; }
