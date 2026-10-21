@@ -6,7 +6,7 @@
 <title>Cerh-Taʿdîl · Kaynak Kontrolü</title>
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self' https://api.github.com https://generativelanguage.googleapis.com; img-src data:; base-uri 'none'; form-action 'none'">
 <meta name="generator" content="cerh-tadil/build.py CTX 2.0.0">
-<meta name="cerh-motor" content="1c06c62189089162">
+<meta name="cerh-motor" content="e8d04c90d0a30768">
 <style>
 /* =========================================================
    Cerh-Ta‘dîl · Kaynak Kontrolü — arayüz stilleri
@@ -1368,7 +1368,7 @@ const KSTACK = ['T', 'N', 'K', 'B', 'J', 'C'];                        // doğrul
 const KNAME = { T: 'Ta‘dîl', N: 'Cerhin reddi', K: 'Karma', B: 'Mezhep / bid‘at', J: 'Cehâlet', C: 'Cerh', R: 'Rivâyet hükmü', V: 'Rivayet tavrı', P: 'Tercih', D: 'Diyânet', S: 'Sükût', M: 'Münekkit tenkidi' };
 const KDESC = { T: 'Râviyi güvenilir kılan ifade', N: 'Bir cerhin reddi veya hafifletilmesi', K: 'Ta‘dîl + kayıt (mukayyed) bir arada', B: 'Mezhep/bid‘at nitelemesi (ta‘n sebebi)', J: 'Tanınmama (cehâlet)', C: 'Adâlet veya zabta yönelik cerh', R: 'Hüküm râviye değil rivayete (hadise) ait', V: 'Bir kimsenin ondan rivayet edip etmemesi (olumlu/olumsuz tavır); ta‘dîl–cerh toplamına girmez, Münekkitler’de ayrı sayılır. “Ondan yazmayın” gibi başkalarına tavsiye cerhtir', P: 'Tercih (mukayeseli ta‘dîl): râviyi bir başkasından üstün ya da aşağı tutma (lehine/aleyhine); ta‘dîl–cerh toplamına girmez, Münekkitler’de ayrı sayılır', D: 'Diyânet/zühd övgüsü (rivayet ta‘dîli değil)', S: 'Cerh ve ta‘dîl zikredilmemiş', M: 'Münekkidin kendisi hakkında değerlendirme' };
 const kc = k => 'k-' + String(k || 'd').toLowerCase();
-const FLAGTXT = { mezhep: 'Mezhep / bid‘at notu (cerh sayılmaz)', 'şiî-ricâl': 'Şiî ricâl (Sünnî sayıma girmez)', 'hedef-şüpheli': 'Başka kişi hakkında olabilir', soru: 'Soru cümlesi', 'soru-teyit': 'Soru–cevapla teyit', 'söz-sahibi-belirsiz': 'Söz sahibi belirsiz', 'isnad-içi': 'Senet içinde', derleme: 'Derleme eser', zeame: 'Za‘ame (nakleden katılmıyor)', 'istilah-zehebi': 'Zehebî ıstılahı', rüya: 'Rüyaya dayalı', şartlı: 'Şartlı hüküm', zımnî: 'Zımnî (kitaba alma)', olumsuz: 'Olumsuzlanmış lafız (tersine çevrildi)', itiraz: 'Ardından itiraz var (atıf ya da hüküm tartışmalı)', mukayyed: 'Kayıtlı (mukayyed) cerh: belirli bir hocadan rivayetine mahsus' };
+const FLAGTXT = { mezhep: 'Mezhep / bid‘at notu (cerh sayılmaz)', 'şiî-ricâl': 'Şiî ricâl (Sünnî sayıma girmez)', 'hedef-şüpheli': 'Başka kişi hakkında olabilir', soru: 'Soru cümlesi', 'soru-teyit': 'Soru–cevapla teyit', 'söz-sahibi-belirsiz': 'Söz sahibi belirsiz', 'isnad-içi': 'Senet içinde', derleme: 'Derleme eser', zeame: 'Za‘ame (nakleden katılmıyor)', 'istilah-zehebi': 'Zehebî ıstılahı', rüya: 'Rüyaya dayalı', şartlı: 'Şartlı hüküm', zımnî: 'Zımnî (kitaba alma)', olumsuz: 'Olumsuzlanmış lafız (tersine çevrildi)', itiraz: 'Ardından itiraz var (atıf ya da hüküm tartışmalı)', mukayyed: 'Kayıtlı (mukayyed) cerh: belirli bir hocadan rivayetine mahsus; genel cerh sayılmaz', 'mukayyed-t': 'Kayıtlı (mukayyed) ta‘dîl: belirli bir hocadan rivayetine mahsus', elle: 'Elle düzeltme (HH denetiminde tek tek okunarak düzeltildi ya da eklendi)' };
 
 /* ---------- Yerel depolama: KASA’nın şifreli deposu (bellekte çözülmüş, diske AES-256-GCM ile) ---------- */
 const store = KASA.store;
@@ -1447,7 +1447,22 @@ function eType(s) { const r = rv(s); return r && r.v === 'fix' && r.fix && r.fix
 function eKind(s) { const r = rv(s); if (r && r.v === 'fix' && r.fix && r.fix.type) return { 'Taʿdîl': 'T', 'Cerh': 'C', 'Karma / Mukayyed': 'K' }[r.fix.type] || s.kind; return s.kind; }
 function eCritic(s) { const r = rv(s); return r && r.v === 'fix' && r.fix && r.fix.critic ? r.fix.critic : s.critic; }
 function eSev(s) { const r = rv(s); return r && r.v === 'fix' && r.fix && r.fix.sev !== undefined && r.fix.sev !== '' ? Number(r.fix.sev) : s.severity; }
-function eCounts(s) { const r = rv(s); if (r && r.v === 'no') return false; if (r && r.v === 'fix' && r.fix && r.fix.counts) return r.fix.counts === 'yes'; if (r && (r.v === 'ok' || r.v === 'fix')) return 'TCJKN'.includes(eKind(s)) && !(s.flags || []).includes('şiî-ricâl'); return s.counts; }
+function eCounts(s) { const r = rv(s); if (r && r.v === 'no') return false; if (r && r.v === 'fix' && r.fix && r.fix.counts) return r.fix.counts === 'yes'; if (r && (r.v === 'ok' || r.v === 'fix')) return 'TCJKN'.includes(eKind(s)) && !(s.flags || []).includes('şiî-ricâl') && !isMkyC(s); return s.counts; }
+// Kayıtlı (mukayyed) cerh — kullanıcı kararı (21.10.2026): genel cerh sayılmaz, mutlak ta‘dîlle teâruz oluşturmaz; yalnız başka bir münekkitin
+// aynı hocadan rivayetine mahsus ta‘dîliyle teâruzdur («Yahyâ’dan rivayetinde zayıf» ↔ «Yahyâ’dan rivayetinde sika»). Hoca adı «kayd:…» işaretinde.
+function kaydOf(s) { const f = (s.flags || []).find(x => x.startsWith('kayd:')); return f ? f.slice(5) : ''; }
+function isMkyC(s) { return (s.flags || []).includes('mukayyed') && 'CJK'.includes(eKind(s)); }
+function kaydEs(a, b) { if (!a || !b) return false; const x = a.split(' '), y = b.split(' '), k = Math.min(x.length, y.length); for (let i = 0; i < k; i++) if (x[i] !== y[i]) return false; return true; }
+function flagTr(f) { return f.startsWith('kayd:') ? 'Kayıt: ' + f.slice(5) + ' rivayeti' : FLAGTXT[f] || f; }
+// Kayıtlı teâruz çiftleri: farklı münekkitlerden aynı hocaya mahsus kayıtlı cerh (sayılmayan) ve ta‘dîl
+function kaydTearuz(sts) {
+  const ok = s => rv(s)?.v !== 'no' && !s.question && !(s.flags || []).some(f => f === 'hedef-şüpheli' || f === 'şiî-ricâl');
+  const C = sts.filter(s => ok(s) && isMkyC(s) && 'CJ'.includes(eKind(s)) && eCMax(s) >= 2 && kaydOf(s));
+  const T = sts.filter(s => ok(s) && eKind(s) === 'T' && kaydOf(s) && (eCounts(s) || rv(s)?.v === 'ok'));
+  const out = [];
+  for (const c of C) for (const t of T) if (eCritic(c) && eCritic(t) && eCritic(c) !== eCritic(t) && kaydEs(kaydOf(c), kaydOf(t))) out.push([t, c]);
+  return out;
+}
 function eCMax(s) { const v = eSev(s); const k = eKind(s); return k === 'K' ? Math.max(1, s.cMax) : v < 0 ? -v : 0; }
 function eTMax(s) { const v = eSev(s); const k = eKind(s); return k === 'K' ? s.tMax : v > 0 ? v : 0; }
 function crName(canon, written) {
@@ -1501,19 +1516,21 @@ function aggSts(sts) {
   const critics = new Set(counted.map(eCritic).filter(c => c && !(CTX.critic(c) || {}).group));
   let maxC = 0, maxT = 0; const cAt = {}, tAt = {};
   for (const s of counted) {
-    const k = eKind(s), cm = eCMax(s), tm = eTMax(s), c = eCritic(s) || '?';
+    const k = eKind(s), cm = isMkyC(s) ? 0 : eCMax(s), tm = eTMax(s), c = eCritic(s) || '?';
     if ('CJBK'.includes(k) && cm) { if (cm > maxC) maxC = cm; (cAt[cm] = cAt[cm] || new Set()).add(c); }
     if ('TK'.includes(k) && tm >= 1) { if (tm > maxT) maxT = tm; (tAt[Math.floor(tm)] = tAt[Math.floor(tm)] || new Set()).add(c); }
   }
   const tCr = new Set(counted.filter(s => eKind(s) === 'T').map(eCritic).filter(Boolean));
   const cCr = new Set(counted.filter(s => 'C'.includes(eKind(s)) && eCMax(s) >= 2).map(eCritic).filter(Boolean));
-  const conflict = [...tCr].some(a => [...cCr].some(b => b !== a));
+  const kTearuz = kaydTearuz(sts);
+  const conflict = [...tCr].some(a => [...cCr].some(b => b !== a)) || kTearuz.length > 0;
+  const mukayyed = sts.filter(s => isMkyC(s) && rv(s)?.v !== 'no');
   const mufassar = counted.some(s => 'CJB'.includes(eKind(s)) && s.mufassar === 'müfesser');
   const CSB = ['kizb', 'tuhmet', 'fuhs', 'gaflet', 'fisk', 'vehm', 'muhalefe', 'cehalet', 'bidat', 'suhifz', 'ihtilat', 'tedlis', 'terk', 'mubhem'];
-  const sebebs = [...new Set(counted.filter(s => 'CJBK'.includes(eKind(s))).flatMap(s => s.sebebs || []))].filter(x => CSB.includes(x));
+  const sebebs = [...new Set(counted.filter(s => 'CJBK'.includes(eKind(s)) && !isMkyC(s)).flatMap(s => s.sebebs || []))].filter(x => CSB.includes(x));
   if (sebebs.length > 1) sebebs.splice(sebebs.indexOf('mubhem') >>> 0, sebebs.includes('mubhem') ? 1 : 0);
   const reviewed = sts.filter(s => rv(s)).length;
-  return { sts, counted, gorus, gOf, mezhep, shii, byK, critics, maxC, maxT, cAt, tAt, conflict, mufassar, sebebs, reviewed, total: sts.length, tCr, cCr };
+  return { sts, counted, gorus, gOf, mezhep, shii, byK, critics, maxC, maxT, cAt, tAt, conflict, mufassar, sebebs, reviewed, total: sts.length, tCr, cCr, kTearuz, mukayyed };
 }
 let AGG = {}; function recomputeAgg() { AGG = {}; CONFC = {}; for (const n of NARR) AGG[n.id] = agg(n); }
 var CONFC = {};
@@ -2750,7 +2767,7 @@ const hhStsOf = n => n ? hhAyikla(stOf(n), hhSts(disCilt(n), n.source_sequence, 
 // Soluk (sayılmayan) kaydın sebebi: inceleme kararı, işaretler ya da düşük güven
 function sayilmamaSebebi(s) {
   const r = rv(s); if (r && (r.v === 'no' || r.v === 'del')) return 'araştırmacı yanlış diye işaretledi';
-  const f = (s.flags || []).filter(x => FLAGTXT[x]).map(x => FLAGTXT[x] + (x === 'hedef-şüpheli' && s.target_who ? ' (“' + s.target_who + '”)' : ''));
+  const f = (s.flags || []).filter(x => FLAGTXT[x] || x.startsWith('kayd:')).map(x => flagTr(x) + (x === 'hedef-şüpheli' && s.target_who ? ' (“' + s.target_who + '”)' : ''));
   if (f.length) return f.join(', ');
   if (!'TCJKN'.includes(eKind(s))) return 'hüküm türü sayılmaz (' + (KNAME[eKind(s)] || eKind(s)) + ')';
   return 'güven düşük (' + s.confidence + ')';
@@ -3727,7 +3744,8 @@ function verdictText(n, a) {
   if (a.maxT) parts.push('En yüksek ta‘dîl: <b>' + esc(tl[Math.floor(a.maxT)]) + '</b> (' + esc(names(a.tAt[Math.floor(a.maxT)] || new Set()).join(', ') || '—') + ')');
   if (!a.maxC && !a.maxT) parts.push('Sayılan cerh veya ta‘dîl lafzı yok' + (a.sts.length ? ' (yalnız rivayet, diyânet veya işaretli kayıtlar).' : '.'));
   const tags = [];
-  if (a.conflict) tags.push('<span class="tag warn" title="Farklı münekkitlerden ta‘dîl ve cerh">⇄ Teâruz</span>');
+  if (a.conflict) tags.push('<span class="tag warn" title="' + (a.kTearuz && a.kTearuz.length ? 'Farklı münekkitlerden aynı hocaya mahsus kayıtlı ta‘dîl ve cerh' : 'Farklı münekkitlerden ta‘dîl ve cerh') + '">⇄ Teâruz</span>');
+  if (a.mukayyed && a.mukayyed.length) tags.push('<span class="tag" title="Belirli bir hocadan rivayetine mahsus cerh (' + esc([...new Set(a.mukayyed.map(kaydOf).filter(Boolean))].join('، ')) + '); genel cerh sayılmaz, mutlak ta‘dîlle teâruz oluşturmaz">Kayıtlı cerh · ' + a.mukayyed.length + '</span>');
   if (a.mufassar) tags.push('<span class="tag">Müfesser cerh var</span>');
   if (a.sebebs.length) tags.push('<span class="tag">Sebep: ' + esc(a.sebebs.filter(s => !['mubhem', 'zimni', 'meta'].includes(s)).map(s => CTX.SEBEB[s]).join(', ') || 'mübhem') + '</span>');
   return parts.join(' · ') + (tags.length ? ' ' + tags.join(' ') : '');
@@ -3739,7 +3757,8 @@ function verdictBrief(n, a) {
   if (a.maxC) tags.push('<span class="tag k k-c" title="' + esc('En ağır cerh: ' + a.maxC + '. mertebe — ' + CTX.CLEVEL[a.maxC]) + '">Cerh · ' + a.maxC + '. mertebe</span>');
   if (a.maxT) tags.push('<span class="tag k k-t" title="' + esc('En yüksek ta‘dîl: ' + CTX.TLEVEL[Math.floor(a.maxT)]) + '">Ta‘dîl · ' + esc(short(CTX.TLEVEL[Math.floor(a.maxT)])) + '</span>');
   if (!a.maxC && !a.maxT) tags.push('<span class="tag">Sayılan cerh veya ta‘dîl yok</span>');
-  if (a.conflict) tags.push('<span class="tag warn" title="Farklı münekkitlerden ta‘dîl ve cerh">⇄ Teâruz</span>');
+  if (a.conflict) tags.push('<span class="tag warn" title="' + (a.kTearuz && a.kTearuz.length ? 'Farklı münekkitlerden aynı hocaya mahsus kayıtlı ta‘dîl ve cerh' : 'Farklı münekkitlerden ta‘dîl ve cerh') + '">⇄ Teâruz</span>');
+  if (a.mukayyed && a.mukayyed.length) tags.push('<span class="tag" title="Belirli bir hocadan rivayetine mahsus cerh (' + esc([...new Set(a.mukayyed.map(kaydOf).filter(Boolean))].join('، ')) + '); genel cerh sayılmaz, mutlak ta‘dîlle teâruz oluşturmaz">Kayıtlı cerh · ' + a.mukayyed.length + '</span>');
   if (a.mufassar) tags.push('<span class="tag">Müfesser cerh</span>');
   return tags.join('');
 }
@@ -3934,7 +3953,7 @@ function metinSirasi(sts) { const yer = s => s.end > s.start ? s.start : Infinit
 function stChip(s) {
   const k = eKind(s); const cur = S.sel && S.sel.type === 'st' && S.sel.id === s.uid;
   const who = eCritic(s) ? crName(eCritic(s), s.critic_written) : (s.critic_written || '?');
-  return '<button class="stchip ' + kc(k) + (eCounts(s) ? '' : ' dim') + '" data-st="' + esc(s.uid) + '" aria-current="' + cur + '" title="' + esc(eType(s) + ' · ' + (s.grade || '') + (s.flags.length ? ' · ' + s.flags.map(f => FLAGTXT[f] || f).join(', ') : '')) + '">' +
+  return '<button class="stchip ' + kc(k) + (eCounts(s) ? '' : ' dim') + '" data-st="' + esc(s.uid) + '" aria-current="' + cur + '" title="' + esc(eType(s) + ' · ' + (s.grade || '') + (s.flags.length ? ' · ' + s.flags.map(flagTr).join(', ') : '')) + '">' +
     '<span class="sw"></span>' + (s.phrase ? '<span class="ph">' + esc(s.phrase) + '</span>' : '<span class="who muted">zımnî</span>') + '<span class="who">' + esc(who) + '</span>' + ((s.flags || []).includes('olumsuz') ? '<span class="bg-ic" aria-label="olumsuzlanmış">¬</span>' : '') + ((s.flags || []).includes('itiraz') ? '<span class="bg-ic bad" aria-label="itiraz edilmiş">⚑</span>' : '') + revMark(s) + noteBadge('s:' + s.uid) + '</button>';
 }
 function renderRulingsTab(n) {
@@ -3953,7 +3972,7 @@ function renderRulingsTab(n) {
     '<td>' + kindTag(eKind(s), eType(s).replace(' / İnsan kontrolü gerekli', '')) + (baglamRozet(s) ? '<div>' + baglamRozet(s) + '</div>' : '') + '</td><td data-v="' + (eKind(s) === 'K' ? eTMax(s) - eCMax(s) : eSev(s)) + '">' + sevScale(s) + '</td>' +
     '<td class="small">' + esc((s.sebebs || []).map(x => CTX.SEBEB[x]).join(', ')) + (s.mufassar ? '<div class="muted">' + esc(s.mufassar) + '</div>' : '') + '</td>' +
     '<td class="small">' + esc(s.transmission) + (s.transmitter ? '<div class="muted">aktaran: ' + esc(crName(s.transmitter, s.transmitter)) + '</div>' : '') + '</td>' +
-    '<td data-v="' + s.confidence + '">' + confBar(s.confidence) + ' ' + revMark(s) + denetimRozet(s) + noteBadge('s:' + s.uid) + (s.flags.length ? '<div class="small muted">' + esc(s.flags.map(f => FLAGTXT[f] || f).join(', ')) + '</div>' : '') + '</td>' +
+    '<td data-v="' + s.confidence + '">' + confBar(s.confidence) + ' ' + revMark(s) + denetimRozet(s) + noteBadge('s:' + s.uid) + (s.flags.length ? '<div class="small muted">' + esc(s.flags.map(flagTr).join(', ')) + '</div>' : '') + '</td>' +
     '<td class="stact"><span class="req-edit"><button class="btn ghost sm" data-stact="' + esc(s.uid) + '|ok" title="Doğru">✓</button><button class="btn ghost sm" data-stact="' + esc(s.uid) + '|no" title="Yanlış (sayımdan çıkar)">✗</button></span><span class="req-edit"><button class="btn ghost sm" data-stact="' + esc(s.uid) + '|fix" title="Düzelt: tür, münekkit, şiddet, lafız/pasaj, sened, aktaran, sebep">✎</button><button class="btn ghost sm" data-stact="' + esc(s.uid) + '|del" title="Hükmü kaldır">🗑</button></span></td></tr>';
   const head = '<thead><tr><th data-sk="n">Blok</th><th data-sk="t">Kaynak</th><th data-sk="t">Münekkit</th><th data-sk="t">Lafız</th><th data-sk="t">Tür</th><th data-sk="n">Şiddet (−6…+6)</th><th data-sk="t">Sebep</th><th data-sk="t">Nakil</th><th data-sk="n">Güven</th><th>İşlem</th></tr></thead>';
   if (UI.groupByCritic) {
@@ -4093,7 +4112,9 @@ function severityChart(rows) {
 function conflictNotes(n, a, rows) {
   const out = [];
   const nm = set => [...set].map(c => crName(c, c)).join(', ');
-  if (a.conflict) {
+  if (a.mukayyed.length) out.push('<div class="note info"><b>Kayıtlı cerh:</b> ' + esc(a.mukayyed.map(s => crName(eCritic(s), s.critic_written) + ' — ' + kaydOf(s) + ' rivayeti').join('; ')) + '. Belirli bir hocadan rivayete mahsus cerh genel cerh sayılmaz ve mutlak ta‘dîlle teâruz oluşturmaz; başka bir münekkit aynı hocadan rivayetinde ta‘dîl ederse teâruzdur.</div>');
+  if (a.kTearuz.length) out.push('<div class="note">⇄ <b>Kayıtlı teâruz:</b> ' + esc(a.kTearuz.map(([t, c]) => kaydOf(c) + ' rivayetinde: ' + crName(eCritic(t), '') + ' ta‘dîl, ' + crName(eCritic(c), '') + ' cerh').join('; ')) + '.</div>');
+  if (a.conflict && [...a.tCr].some(x => [...a.cCr].some(y => y !== x))) {
     out.push('<div class="note">⇄ <b>Teâruz:</b> ta‘dîl — ' + esc(nm(a.tCr)) + '; cerh — ' + esc(nm(a.cCr)) + '.</div>');
     out.push('<div class="note info">Klasik ölçüt: <b>müfesser cerh ta‘dîle takdim edilir</b>; mübhem cerh, adâleti sabit bir râvi hakkında sebep beyan edilmedikçe tek başına ta‘dîli düşürmez (el-Hatîb, <i>el-Kifâye</i>; İbnü’s-Salâh, <i>Ulûmü’l-hadîs</i>, 23. nev‘). ' +
       (a.mufassar ? 'Bu râvide cerh <b>müfesserdir</b> (' + esc(a.sebebs.filter(s => ['kizb', 'tuhmet', 'fuhs', 'gaflet', 'fisk', 'vehm', 'ihtilat', 'tedlis', 'bidat', 'suhifz'].includes(s)).map(s => CTX.SEBEB[s]).join(', ')) + '); sebebin râvinin rivayetinin tamamına mı (kizb, fuhş-i galat) yoksa bir kısmına mı (ihtilât sonrası, belli şeyhlerden) yöneldiği ayrıca incelenmeli.' : 'Bu râvide cerh <b>mübhem</b> görünüyor; sebep beyanı aranmalı.') + '</div>');
@@ -4524,7 +4545,7 @@ function inspStatement(s) {
   let out = '<div class="kicker">Blok ' + s.b.block_order + ' · ' + esc(authorTr(s.b)) + '</div>' +
     '<div class="phrase ' + kc(k) + '">' + (s.phrase ? esc(s.phrase) : '<span style="font-family:var(--ui);font-size:calc(14px * var(--yb))">(Zımnî: du‘afâ kitabında zikir)</span>') + '</div>' +
     '<div class="badges">' + kindTag(k, eType(s).replace(' / İnsan kontrolü gerekli', ' (insan kontrolü)')) + denetimRozet(s) + baglamRozet(s) + '<span class="tag">' + sevScale(s) + ' ' + (k === 'K' ? '−' + eCMax(s) + ' / +' + Math.floor(eTMax(s)) : (eSev(s) > 0 ? '+' : '') + eSev(s)) + '</span>' +
-    (s.mufassar ? '<span class="tag">' + esc(s.mufassar) + '</span>' : '') + '<span class="tag">güven ' + s.confidence + '</span>' + (eCounts(s) ? '' : '<span class="tag warn">sayılmıyor</span>') + s.flags.filter(f => f !== 'elle').map(f => '<span class="tag warn">' + esc(FLAGTXT[f] || f) + '</span>').join('') + '</div>';
+    (s.mufassar ? '<span class="tag">' + esc(s.mufassar) + '</span>' : '') + '<span class="tag">güven ' + s.confidence + '</span>' + (eCounts(s) ? '' : '<span class="tag warn">sayılmıyor</span>') + s.flags.filter(f => f !== 'elle').map(f => '<span class="tag warn">' + esc(flagTr(f)) + '</span>').join('') + '</div>';
   const inceleme = '<div class="sec rev-sec"><h4>İnceleme</h4>' + (r.v ? '<div class="hint" style="margin-bottom:6px">Son karar: <b>' + ({ ok: '✓ Doğru', no: '✗ Yanlış', fix: '✎ Düzeltildi' }[r.v] || r.v) + '</b>' + (r.at ? ' · ' + whoWhen(r) : '') + '</div>' : '') + '<div class="review-row req-edit">' +
     '<button class="btn okb" data-rev="ok" aria-pressed="' + (r.v === 'ok') + '" title="Kısayol: A">✓ Doğru</button><button class="btn nob" data-rev="no" aria-pressed="' + (r.v === 'no') + '" title="Kısayol: X">✗ Yanlış</button><button class="btn" data-rev="fix" aria-pressed="' + (r.v === 'fix') + '" title="Kısayol: E">✎ Düzelt</button>' + (r.v ? '<button class="btn ghost" data-rev="clear">Sıfırla</button>' : '') + (AUTH.can('st-del') && s.origin === 'CTX' ? '<button class="btn ghost" data-rev="del" title="Hükmü listeden kaldır (geri alınabilir)">🗑 Kaldır</button>' : '') + '</div>' +
     (r.v === 'fix' || S.editing ? fixForm(s, r) : '') + (r.note && r.v !== 'fix' ? '<div class="hint">Not: ' + esc(r.note) + '</div>' : '') +
@@ -4553,7 +4574,7 @@ function inspStatement(s) {
   out += notesSection('s:' + s.uid, 'Araştırmacı notları · bu hüküm');
   return out;
 }
-const BASIS = { 'işaret': 'Açık söz işareti (qâle X / semi‘tü X)', fiil: 'Fiilin öznesi (da‘‘afehû X, vessekahû X)', 'sonra-atıf': 'Hükümden sonra “qâlehû X”', kultu: '“Kultu” → eser müellifi', 'müellif': 'Atıfsız → eser müellifi (veya eser geleneği)', 'bağlam': 'İsimsiz “qâle” → bağlamdaki kişi', sorulan: 'Suâlât: sorulan münekkit', 'soru-cevap': 'Soru–cevap: “evet” diyen', zeame: '“Za‘ame X” (nakleden katılmıyor olabilir)', belirsiz: 'Belirlenemedi', 'zımnî': 'Kitaba alma (zımnî)', elle: 'Araştırmacı' };
+const BASIS = { 'işaret': 'Açık söz işareti (qâle X / semi‘tü X)', fiil: 'Fiilin öznesi (da‘‘afehû X, vessekahû X)', 'sonra-atıf': 'Hükümden sonra “qâlehû X”', kultu: '“Kultu” → eser müellifi', 'müellif': 'Atıfsız → eser müellifi (veya eser geleneği)', 'bağlam': 'İsimsiz “qâle” → bağlamdaki kişi', sorulan: 'Suâlât: sorulan münekkit', 'soru-cevap': 'Soru–cevap: “evet” diyen', zeame: '“Za‘ame X” (nakleden katılmıyor olabilir)', belirsiz: 'Belirlenemedi', 'zımnî': 'Kitaba alma (zımnî)', elle: 'Araştırmacı', 'elle-hh': 'Elle düzeltme (HH denetimi)' };
 function fixForm(s, r) {
   const f = (r && r.fix) || {};
   const crit = Object.keys(CTX.CRITICS).sort((a, b) => (CTX.critic(a).death || 9999) - (CTX.critic(b).death || 9999));
@@ -4901,7 +4922,7 @@ var LSTC = new Map();   // dilim → hafif özetten kurulan hüküm nesneleri (M
 const LEXBYID = Object.fromEntries(CTX.LEXICON.map(e => [e.id, e]));
 // Motor özeti (build.py: ctlex, ctparse, ctkimlik, ctkorpus): sözlük ya da motor değişince bütün özetler yenilenir
 const MOTOR = (document.querySelector('meta[name="cerh-motor"]') || {}).content || CTX.VERSION;
-function corpusSig0(p) { return [p.kind === 'snapshot' ? RKEY0 : (VOLS[p.vol] || {}).sha, p.from, p.to, MOTOR, CTKR.BICIM].join('|'); }
+function corpusSig0(p) { return [p.kind === 'snapshot' ? RKEY0 : (VOLS[p.vol] || {}).sha, p.from, p.to, MOTOR, CTKR.BICIM].join('|') + (ELLED.sha ? '|e' + ELLED.sha.slice(0, 12) : ''); }
 function corpusSig(p) { return corpusSig0(p) + '|' + store.get(rkeyOf(p) + ':blkv', 0); }
 /* ---------- Depodaki hazır özet (kaynak/korpus; tools/korpus-hazirla.js) ----------
    Dilim özetleri sözlük ya da motor değiştikçe depoda yeniden üretilir; ortak kayıt bağlıysa tarayıcı çözümlemeyi
@@ -4923,6 +4944,30 @@ async function korpusDizin() {
   } catch (e) { KDEPO.err = e.message || String(e); }
   return KDEPO.dizin;
 }
+// Elle düzeltmeler (kaynak/elle/duzeltme.json; src/ctkorpus.js elleUygula): HH denetiminden tek tek okunmuş hüküm düzeltmeleri.
+// Ortak kayıt bağlıyken gizli depodan özetiyle indirilir, tarayıcıda şifreli saklanır; değişince açık dilim yeniden çözümlenir.
+// Hazır özet yalnız aynı düzeltme dosyasıyla üretildiyse kullanılır (dizindeki “elle” özeti).
+const ELLE_YOL = 'kaynak/elle/duzeltme.json';
+const ELLED = { sha: '', at: 0, err: '' };
+function elleUygula(d, sha) {
+  if (sha === ELLED.sha) return;
+  CTKR.setElle(d); ELLED.sha = sha || '';
+  if (SNAP) { prepare(SNAP); renderAll(); }
+}
+async function elleGetir() {
+  if (!ELLED.sha) { try { const r = await IDB.get('harf', 'elle'); if (r && r.data && r.sha) elleUygula(r.data, r.sha); } catch (e) { } }
+  const c = ortakCfg(); if (!c || !AUTH.me()) return;
+  if (Date.now() - ELLED.at < 600000) return; ELLED.at = Date.now();
+  try {
+    const gh = ORT.client(c), m = await gh.meta(ELLE_YOL);
+    if (!m || !m.sha) { elleUygula(null, ''); return; }
+    if (m.sha !== ELLED.sha) {
+      const t = await gh.blob(m.sha);
+      if (typeof t === 'string' && await ORT.blobSha(t) === m.sha) { const d = JSON.parse(t); try { await IDB.put('harf', { id: 'elle', data: d, sha: m.sha }); } catch (e) { } elleUygula(d, m.sha); }
+    }
+    ELLED.err = '';
+  } catch (e) { ELLED.err = e.message || String(e); }
+}
 // Cildin hazır özet dosyası (aynı anda tek cilt bellekte tutulur; dilimler cilt sırasıyla istenir)
 function korpusCilt(e) {
   if (KDEPO.cilt && KDEPO.cilt.blob === e.blob) return KDEPO.cilt.p;
@@ -4937,10 +4982,10 @@ function korpusCilt(e) {
 async function hazirOzet(p) {
   if (p.kind !== 'volume' || !VOLS[p.vol]) return null;
   const R = revOf(p); if (!CTKR.hazirUygun(R)) return null;
-  const d = await korpusDizin(); if (!d || d.motor !== MOTOR || d.bicim !== CTKR.BICIM) return null;
+  const d = await korpusDizin(); if (!d || d.motor !== MOTOR || d.bicim !== CTKR.BICIM || (d.elle || '') !== ELLED.sha) return null;
   const e = d.ciltler[p.vol]; if (!e || e.sha256 !== VOLS[p.vol].sha) return null;
   const V = await korpusCilt(e), r = V && V.paketler && V.paketler[p.id];
-  if (!r || r.sig0 !== corpusSig0(p)) return null;
+  if (!r || r.sig0 !== corpusSig0(p).replace(/\|e[0-9a-f]{12}$/, '')) return null;
   const rec = Object.assign({ id: p.id, sig: corpusSig(p) }, CTKR.kaldirileniAyikla(r, R)); delete rec.sig0;
   return rec;
 }
@@ -5371,7 +5416,7 @@ function critDetail(m) {
    Hükümler “etkin” (inceleme uygulanmış) değerlere indirgenip CTN’ye verilir. Araştırmacı kararları
    dilimin kaydında: REV.conf['<râvi>|<teâruz>'] = { karar, durum, not, at, by } */
 function effLv(s) { const k = eKind(s); return k === 'K' ? (eTMax(s) >= eCMax(s) ? Math.floor(eTMax(s)) : -eCMax(s)) : eSev(s); }
-function ctnFlat(sts) { return sts.map(s => ({ uid: s.uid, critic: eCritic(s), kind: eKind(s), lv: effLv(s), sebebs: s.sebebs || [], mufassar: s.mufassar || '', phrase: s.phrase || '', start: s.start || 0, end: s.end || 0, block: s.b.id, source: srcShort(s.b), author: s.b.effective.source_author || '', chain: s.chain || '', transmission: s.transmission || '', basis: s.basis || '', counts: eCounts(s), question: !!s.question, _s: s })); }
+function ctnFlat(sts) { return sts.map(s => ({ uid: s.uid, critic: eCritic(s), kind: eKind(s), lv: effLv(s), sebebs: s.sebebs || [], mufassar: s.mufassar || '', phrase: s.phrase || '', start: s.start || 0, end: s.end || 0, block: s.b.id, source: srcShort(s.b), author: s.b.effective.source_author || '', chain: s.chain || '', transmission: s.transmission || '', basis: s.basis || '', counts: eCounts(s), question: !!s.question, kayd: kaydOf(s), mky: isMkyC(s) && rv(s)?.v !== 'no' && !(s.flags || []).includes('hedef-şüpheli'), _s: s })); }
 function narrConflicts(n) { if (!CONFC[n.id]) CONFC[n.id] = CTN.conflicts(ctnFlat(stOf(n).concat(hhStsOf(n)))); return CONFC[n.id]; }
 function nakilOf(s) { for (const c of narrConflicts(s.n)) if (c.type === 'nakil' && (c.nakil.q.sts.some(x => x.uid === s.uid) || c.nakil.e.sts.some(x => x.uid === s.uid))) return c; return null; }
 const KARAR_TR = { cerh: 'Cerh tercih edilir', tadil: 'Ta‘dîl tercih edilir', cem: 'Cem‘ (birleştirme)', tevakkuf: 'Tevakkuf', asl: 'Asla dönülmeli', yok: 'Teâruz yok (yanlış tespit)', hata: 'Nakil hatası', rivayet: 'Farklı rivayet' };
@@ -5683,7 +5728,7 @@ function runAnalyzer() {
   const btn = $('anz-csv'); if (btn) btn.disabled = false;
   $('anz-out').innerHTML = '<div class="blk"><header class="blk-head"><span class="bno">ÇÖZÜMLEME</span><span class="bauthor">' + r.statements.length + ' hüküm · ' + r.notes.length + ' ıstılah notu</span></header><div class="btext">' + renderText(text, r.statements, { markers: r.markers, notes: r.notes }) + '</div></div>' +
     '<div class="wrap"><table class="tbl"><thead><tr><th>Münekkit</th><th>Lafız</th><th>Tür</th><th>Şiddet</th><th>Mertebe</th><th>Dayanak</th><th>Güven</th></tr></thead><tbody>' +
-    r.statements.map(s => '<tr style="cursor:default" class="' + (s.counts ? '' : 'dim') + '"><td>' + esc(crName(s.critic, s.critic_written)) + '</td><td class="ar">' + esc(s.phrase) + '</td><td>' + kindTag(s.kind, s.type.split(' /')[0]) + '</td><td>' + sevScale(s) + '</td><td class="small">' + esc(s.grade) + '</td><td class="small">' + esc(BASIS[s.basis] || s.basis) + (s.flags.length ? '<div class="muted">' + esc(s.flags.map(f => FLAGTXT[f] || f).join(', ')) + '</div>' : '') + '</td><td>' + confBar(s.confidence) + '</td></tr>').join('') + '</tbody></table></div>';
+    r.statements.map(s => '<tr style="cursor:default" class="' + (s.counts ? '' : 'dim') + '"><td>' + esc(crName(s.critic, s.critic_written)) + '</td><td class="ar">' + esc(s.phrase) + '</td><td>' + kindTag(s.kind, s.type.split(' /')[0]) + '</td><td>' + sevScale(s) + '</td><td class="small">' + esc(s.grade) + '</td><td class="small">' + esc(BASIS[s.basis] || s.basis) + (s.flags.length ? '<div class="muted">' + esc(s.flags.map(flagTr).join(', ')) + '</div>' : '') + '</td><td>' + confBar(s.confidence) + '</td></tr>').join('') + '</tbody></table></div>';
 }
 
 /* ---------- Yöntem ---------- */
@@ -5751,7 +5796,7 @@ function renderMethod() {
     '<li><b>En uzun eşleşme:</b> çakışan kalıplardan en uzunu alınır; böylece ' + ar('لا يحتج به') + ' ta‘dîl sayılmaz. Olumsuzluklar “fe-” ile de tanınır (' + ar('فلا يحتج به، فليس بثقة') + ').</li>' +
     '<li><b>Bağlam: olumsuzlama (21.10.2026).</b> Sözlükte olumsuz biçimi bulunmayan bir lafzın hemen önünde olumsuz edat varsa (' + ar('ليس، لم، لا، ما، غير') + ') hüküm tersine çevrilir: olumsuzlanan ta‘dîl cerh (' + ar('ليس يكتب حديثه') + ' “hadisi yazılmaz”, ' + ar('غير صدوق') + ', ' + ar('ما كان ثقة') + '), olumsuzlanan cerh cerhin reddi sayılır (' + ar('لم يكن متهما') + ', ' + ar('وما تركه أحد') + '). İlgi ve şart cümleciğindeki lafız hüküm değildir (' + ar('فيما لم يخالف الثقات') + ', ' + ar('من لم يجهل') + ', ' + ar('بعد ما اختلط') + '); «lâ … illâ» istisnası hükmü teyit eder (' + ar('ما ترك حديثه إلا للرفض') + '); ' + ar('لا وثق ولا ضعف') + ' hüküm sayılmaz. Bütün eserde yapılan bağlam taramasında eski motorun bu kayıtları sistematik olarak ters saydığı görüldü; düzeltme örneklem okumasıyla yaklaşık %80 isabetli çıktı, kalan yanlışların çoğu sözün başka kişi ya da hadis hakkında olmasıdır.</li>' +
     '<li><b>Bağlam: itiraz.</b> Hükmün ardından nakle ya da hükme itiraz geliyorsa (' + ar('وهذا وهم، وليس كما قال، تحامل، لا يلتفت إليه') + ') hüküm işaretlenir; sayım değişmez, çünkü itirazın atfa mı hükme mi yöneldiği okunarak belirlenmelidir. Her iki grup Tespit raporunun <i>Bağlam denetimi</i> bölümünde listelenir. Cerhe yönelik açık itiraz (' + ar('لا يلتفت إلى قول الأزدي، هو تحامل، ليس بقادح، من اتهمه فقد كذب') + ') itirazı yapanın cerhin reddi sayılır.</li>' +
-    '<li><b>Bağlam: kimin hakkında.</b> Söz râvinin akrabası (' + ar('وأبوه ضعيف، ابنه هشام ضعيف') + ') ya da cümlede daha önce adı geçen başka kişi hakkındaysa (' + ar('يروي عن الزبير بواطيل والزبير ثقة') + ') sayılmaz; araya yeni söyleyen girince bu zincir kesilir. ' + ar('في الصحابة') + ' tek başına sahâbîlik sayılmaz. Belirli bir hocadan rivayetine mahsus cerh (' + ar('هو في قتادة ضعيف') + ') “kayıtlı cerh” olarak işaretlenir.</li>' +
+    '<li><b>Bağlam: kimin hakkında.</b> Söz râvinin akrabası (' + ar('وأبوه ضعيف، ابنه هشام ضعيف') + ') ya da cümlede daha önce adı geçen başka kişi hakkındaysa (' + ar('يروي عن الزبير بواطيل والزبير ثقة') + ') sayılmaz; araya yeni söyleyen girince bu zincir kesilir. ' + ar('في الصحابة') + ' tek başına sahâbîlik sayılmaz. Belirli bir hocadan rivayetine mahsus cerh (' + ar('هو في قتادة ضعيف') + ') “kayıtlı cerh” olarak işaretlenir: genel cerh sayılmaz ve mutlak ta‘dîlle teâruz oluşturmaz; yalnız başka bir münekkit aynı hocadan rivayetinde ta‘dîl ederse (' + ar('ثقة في يحيى بن سعيد') + ') teâruz sayılır (kullanıcı kararı, 21.10.2026).</li>' +
     '<li><b>Hedef kontrolü:</b> başka kişiye yönelen hükümler (' + ar('ويزيد ليس بشيء') + ', ' + ar('روى الكديمي -وهو ساقط-') + ') sayılmaz ve işaretlenir.</li>' +
     '<li><b>Haber metni ve ıstılah cümleleri:</b> merfû haberin ve âyetin içi taranmaz; ' + ar('كل من أقول فيه مجهول') + ' gibi tanımlar hüküm değildir.</li>' +
     '<li><b>Zımnî cerh:</b> du‘afâ eserlerinde açık lafız bulunmayan tercüme, kitaba alınması sebebiyle düşük güvenle kaydedilir.</li></ul>' +
@@ -6601,7 +6646,7 @@ document.addEventListener('mouseover', e => {
   if (!h) { tip.hidden = true; return; }
   let html = '';
   if (h.dataset.tip) { const [who, ph, ty, src] = h.dataset.tip.split('||'); html = '<b>' + esc(who) + '</b><span class="ar">' + esc(ph) + '</span>' + esc(ty) + (src ? '<div class="muted">' + esc(src) + '</div>' : ''); }
-  else if (h.dataset.st) { const s = STBY[h.dataset.st.split('|')[0]] || (ANZ && ANZ.statements.find(x => x.uid === h.dataset.st.split('|')[0])); if (!s) { tip.hidden = true; return; } html = '<b>' + esc(KNAME[eKind(s)]) + '</b> · ' + esc(crLabel(s)) + '<div>' + esc(s.grade) + '</div><div class="muted">güven ' + s.confidence + (s.flags.length ? ' · ' + esc(s.flags.map(f => FLAGTXT[f] || f).join(', ')) : '') + (h.dataset.st.includes('|') ? ' · ' + h.dataset.st.split('|').length + ' kayıt (tıkla: sırayla)' : '') + '</div>'; }
+  else if (h.dataset.st) { const s = STBY[h.dataset.st.split('|')[0]] || (ANZ && ANZ.statements.find(x => x.uid === h.dataset.st.split('|')[0])); if (!s) { tip.hidden = true; return; } html = '<b>' + esc(KNAME[eKind(s)]) + '</b> · ' + esc(crLabel(s)) + '<div>' + esc(s.grade) + '</div><div class="muted">güven ' + s.confidence + (s.flags.length ? ' · ' + esc(s.flags.map(flagTr).join(', ')) : '') + (h.dataset.st.includes('|') ? ' · ' + h.dataset.st.split('|').length + ' kayıt (tıkla: sırayla)' : '') + '</div>'; }
   tip.innerHTML = html; tip.hidden = false;
   const r = h.getBoundingClientRect(); const tw = tip.offsetWidth, th = tip.offsetHeight;
   tip.style.left = Math.max(8, Math.min(window.innerWidth - tw - 8, r.left + r.width / 2 - tw / 2)) + 'px';
@@ -6694,6 +6739,7 @@ function startApp() {
   if (hesapHazir()) setTimeout(() => hesapYayinla(), 1500);
   if (UI.cevAll) setTimeout(cevAc, 300);
   cevEskiPaketiSil();
+  elleGetir();
   disDizinGetir().then(d => { if (d) { renderCenter(); hhHukumYukle(); } });
   disDizinGetir(false, CKD).then(d => { if (d) renderCenter(); });
   tkzDizinGetir().then(d => { if (d && S.tab === 'hoca') renderCenter(); });
@@ -7887,6 +7933,8 @@ const RAPOR = (() => {
     'المشهور المتين الشيعه الاماميه البته هكذا يعني اي هو هي منه عنه فيه له به انما بمره عنده امره حاله اهل اصحاب اصله ' +
     'الوهم الغلط الضعف التخليط الاختلاط الانكار النكاره المجهولين الاثبات المشاهير الضعاف المراسيل المقاطيع البصريون الكوفيون المدنيون الشاميون المتبحر الناقد العارف الناظر المصنف المولف اليس الان الذي الشيء الشي الخلق الاحاديث المناكير الروايات الرجال مولي مولاهم نزيل من في عن الي علي مع قيل يقال وقيل ويقال اخر ذكر ذكره روي يروي حدث يحدث سمع وعنه عنه الذيل وغيره غيره').split(' '));
   const FIRSTNAMES = new Set('محمد احمد علي عمر عثمان يزيد يعلي سعيد سفيان يحيي زهير خالد مهدي سلم حماد ابراهيم اسماعيل موسي عيسي يونس هشام مالك نافع جابر انس عمرو عبد يعقوب داود سليمان حفص بكر زيد الفضل الصباح الحسن الحسين شعبه'.split(' '));
+  // Kayıtlı hükümde hoca adı olarak kabul edilen sık isimler (yalın «ضعيف في الزهري», «هو في قتادة ضعيف»)
+  const SEYH = new Set([...FIRSTNAMES, ...'قتاده ثابت حميد عطاء عكرمه مكحول منصور شريك ايوب عاصم سماك ليث معمر جرير سهيل العلاء الاعمش الزهري الثوري الاوزاعي الشعبي المقبري مجاهد طاوس حبيب الحكم حصين مغيره اسرائيل زائده هشيم عبيد عبيدالله سالم ربيعه صفوان عروه سهل بقيه شهر عوف قيس عبيده حجاج حريز ثور مسعر الاسود علقمه ابراهيم النخعي السبيعي الحسن البصري الاعرج الربيع الليث وكيع غندر بهز عفان مسدد قتيبه همام ابان سعد طلحه جعفر واصل فرقد سويد صالح عبيدالله عبدالله عبدالرحمن عبدالملك عبدالعزيز عبدالوهاب عبدالرزاق شيبان ورقاء'.split(' ')]);
 
   /* ---------- 7. İsim ayrıştırma ---------- */
   function matchAlias(n, pos, extra) {
@@ -8496,19 +8544,38 @@ const RAPOR = (() => {
       // Yalnız işarettir, sayımı değiştirmez; incelemede bakılır (itiraz atfın kendisine mi, hükme mi, başka bir şeye mi).
       const itz = ITIRAZ.exec(n.slice(st.end, Math.min(n.length, st.end + 110)));
       if (itz) flags.push('itiraz');
-      // Kayıtlı (mukayyed) cerh: belirli bir hocadan ya da bölgeden rivayetine mahsus («هو في قتادة ضعيف», «ضعيف في الزهري خاصة»).
-      // Yalnız işarettir; genel cerh gibi okunmamalı (HH bu sözleri çoğunlukla ta‘dîl sınıfına koyar).
-      const KAYD_X = /^(?:الحديث|حديثه|احاديثه|الروايه|روايته|رواياته|نفسه|دينه|الحفظ|حفظه|بعض|كل|شيء|شي|غيره|ذلك|هذا|ذاك|الجمله|اخر|اخره|عمره|حديث|روايه|بعضها|اكثر|عامه|كثير)$/;
-      let mky = null;
-      if ([...kinds].some(k => 'CJ'.includes(k))) {
-        const pa = /^\s*(?:،\s*)?(?:في|عن)\s+([\u0621-\u064A]+)(?:\s+(?:بن|ابن)\s+[\u0621-\u064A]+)?(?:\s+خاصه)?/.exec(n.slice(st.end, st.end + 40));
-        const pb = /(?:^|\s)(?:هو\s+)?(?:في|عن)\s+([\u0621-\u064A]+)(?:\s+(?:بن|ابن)\s+[\u0621-\u064A]+)?\s*$/.exec(n.slice(Math.max(sentenceStart(n, st.start), st.start - 30), st.start));
-        for (const m of [pa, pb]) if (m && !KAYD_X.test(m[1]) && !STOP.has(m[1])) { mky = m[0].trim(); break; }
+      // Kayıtlı (mukayyed) hüküm: belirli bir hocadan ya da bölgeden rivayetine mahsus («هو في قتادة ضعيف», «ضعيف في الزهري خاصة»,
+      // «في روايته عن يحيى ضعيف», «ثقة في الزهري»). Kullanıcı kararı (21.10.2026): kayıtlı cerh genel cerh sayılmaz ve mutlak ta‘dîlle
+      // teâruz oluşturmaz; yalnız aynı hocaya mahsus kayıtlı ta‘dîlle karşılaşırsa teâruzdur. Hoca adı «kayd:…» işaretiyle taşınır.
+      const KAYD_X = /^(?:الحديث|حديثه|احاديثه|الروايه|روايته|رواياته|نفسه|دينه|الحفظ|حفظه|بعض|كل|شيء|شي|غيره|غير|ذلك|هذا|ذاك|الجمله|اخر|اخره|عمره|حديث|روايه|بعضها|اكثر|عامه|كثير|نفسي|الشيوخ|شيوخه|المغازي|التفسير|القراءه|القراءات|الفقه|الفرائض|العربيه|السير|الاحكام|الرجال|ما|من|بعد|قبل|اول|لغيره|مثل|الضعفاء|الثقات|كتاب|كتابه|كتبه|الصحه|الكبر|الاحاديث|احاديث|المناكير|الحروف|حال|الحال|السماع|الصدق|الكذب|دين|الدين|العلم|الزهد|رايه|مذهبه|القدر|الارجاء|التشيع|الاعتزال|الميزان|ترجمه|ترجمته|مجلس|مجلسه|الاسانيد|الاسناد|اسناده|الاسناد|العلل|التاريخ|تاريخه|الكني|التابعين|الصحابه|الكوفيين|البصريين|الشاميين|المدنيين|الحجازيين|العراقيين|الاخبار|الاثار|فضائل|الفضائل|غرائب|الغرائب|المئه|اللقاء|لقاء|لقائه|العداله|انتسابه|نسبه|اسمه|كلامه|النبي|زمانه|وقته|عصره|بلده|اقوام|قوم|المتون|المتن|الرفع|الوقف|المراسيل|الاختلاط|اختلاطه|الامور|الشهاده|القضاء|السنه|الموضوعات|الشعر|اللغه|النحو|الادب|المسائل)$/;
+      const NM = '[\\u0621-\\u064A]+', AD = '((?:(?:ابن|ابي|ابو|عبد|ام)\\s+)?' + NM + '(?:\\s+(?:بن|ابن)\\s+(?:(?:ابي|ابو|عبد)\\s+)?' + NM + ')?)';
+      const RW = '(?:في\\s+)?(?:حديثه|روايته|رواياته|احاديثه|ما\\s+(?:روي|رواه|حدث(?:\\s+به)?))\\s+عن\\s+';
+      // Yalın «عن فلان» kayıt sayılmaz (Mîzân’daki «عن قتادة. مجهول» rivayet satırıdır); yalın «في فلان» yalnız hükme bitişik
+      // («ضعيف في الزهري», «هو في قتادة ضعيف», «: في الزهري ضعيف»)
+      const KA = new RegExp('^(?:\\s*(?:،\\s*)?' + RW + AD + '|\\s+في\\s+' + AD + ')(?:\\s+خاصه)?(?![\\u0621-\\u064A])');
+      const KB = new RegExp('(?:(?:^|\\s)(?:هو\\s+)?' + RW + AD + '|(?:^|\\s)(?:اذا|ما)\\s+(?:روي|حدث)\\s+عن\\s+' + AD + '|(?:(?:^|[:،])\\s*(?:هو\\s+)?|\\sهو\\s+)في\\s+' + AD + ')\\s*(?:،\\s*)?$');
+      // Yalın «في فلان»da fulan bir hoca adı olmalı (kitap adı, «في حكاياته», «في قول» değil): iki parçalı ad, künye/«ابن» ya da sık geçen hoca adı
+      const seyhMi = ad => / بن /.test(ad) || /^(?:ابن|ابي|ابو|ام) /.test(ad) || SEYH.has(ad.split(' ')[0]);
+      let mky = null, kayd = '';
+      const kk = [...kinds];
+      if (kk.some(k => 'CT'.includes(k))) {
+        const pa = KA.exec(n.slice(st.end, st.end + 50));
+        const pb = KB.exec(n.slice(Math.max(sentenceStart(n, st.start), st.start - 40), st.start));
+        for (const m of [pa, pb]) {
+          if (!m) continue;
+          const ad = (m[1] || m[2] || m[3] || '').trim(), son = ad.split(/\s+/).pop();
+          if (!ad || KAYD_X.test(ad.split(/\s+/)[0]) || STOP.has(ad.split(/\s+/)[0]) || /^(?:ال)?(?:ثقه|ضعيف|صدوق|منكر|متروك|كذاب)/.test(son)) continue;
+          if (m === pa ? !m[1] : !m[1] && !m[2]) { if (!seyhMi(ad.replace(/\s+/g, ' '))) continue; }   // yalın «في»
+          mky = m[0].trim(); kayd = ad.replace(/\s+/g, ' '); break;
+        }
       }
-      if (mky) flags.push('mukayyed');
+      const mkyC = mky && kk.includes('C');
+      if (mkyC) flags.push('mukayyed');
+      else if (mky && kk.includes('T')) flags.push('mukayyed-t');
+      if (mky) flags.push('kayd:' + kayd);
       const reasons = [...new Set(items.flatMap(x => x.reasons))];
       if (itz) reasons.push('Ardından itiraz var: “' + itz[1] + '”; atıf ya da hüküm tartışmalı olabilir.');
-      if (mky) reasons.push('Kayıtlı cerh: “' + mky + '” — belirli bir hocadan rivayetine mahsus olabilir.');
+      if (mky) reasons.push((mkyC ? 'Kayıtlı cerh' : 'Kayıtlı ta‘dîl') + ': “' + mky + '” — belirli bir hocadan rivayetine mahsus' + (mkyC ? '; genel cerh sayılmaz, mutlak ta‘dîlle teâruz oluşturmaz (aynı hocaya mahsus ta‘dîl hariç).' : '.'));
       const question = flags.includes('soru');
       // Müfesser / mübhem
       const cSebebs = items.filter(x => 'CJK'.includes(ek(x))).map(x => x.e.sb);
@@ -8562,7 +8629,7 @@ const RAPOR = (() => {
           transmitter, formula: viaFormula ? t0.res.via : '', chain: t0.res.chain || '', target: t0.target.t, target_who: (yon && yon.baska && yon.who) || t0.target.who || '',
           flags: fl, question, confidence: conf, reasons, notes: notes.filter(Boolean),
           terms: items.map(x => ({ id: x.e.id, k: x.e.k, lv: x.e.lv, sb: x.e.sb, tr: x.e.tr, start: map[x.c.start], end: map[x.c.end], text: text.slice(map[x.c.start], map[x.c.end]) })),
-          counts: !shii && !question && conf >= 0.5 && !flags.includes('hedef-şüpheli') && !flags.includes('rüya') && 'TCJKN'.includes(main)
+          counts: !shii && !question && conf >= 0.5 && !flags.includes('hedef-şüpheli') && !flags.includes('rüya') && !(mkyC && main === 'C') && 'TCJKN'.includes(main)
         });
       }
     }
@@ -9299,6 +9366,58 @@ const RAPOR = (() => {
   const uniq = a => [...new Set(a.filter(Boolean))];
   function yearText(x) { if (!x || !x.year) return ''; if (x.noCentury) return 'yüzler hanesi yazılmamış (…' + String(x.from || x.year).slice(-2) + (x.to && x.to !== x.from ? '–' + String(x.to).slice(-2) : '') + ')'; return 'h. ' + (x.approx ? x.from + '–' + x.to : x.year); }
   function stUid(b, s) { return (s.implicit ? 'z' : '') + b.id + ':' + s.start + ':' + s.end + ':' + (s.critic || s.critic_written || '-'); }
+  /* Elle düzeltme (kaynak/elle/duzeltme.json; gizli depo): HH denetiminde tek tek okunup motorun yanlış ya da eksik bulduğu hükümler.
+     Kayıt râvi (cilt-sıra) ve blok sırasıyla bağlanır; yalnız o hükmü değiştirir, motorun kurallarına dokunmaz.
+     a: 'ekle' (lafız p metinde aranır; cr münekkit, k tür, lv mertebe, sb sebep) · 'duzelt' (s/e/c ile bulunan hükmün münekkiti
+     ya da türü) · 'kaldir'. Sayıma girer (kullanıcı kararı, 21.10.2026); araştırmacının kendi kararı (✓ ✗ ✎) her zaman öndedir. */
+  let ELLE = null;
+  function setElle(d) { ELLE = d && d.kayitlar ? d : null; }
+  const MUF = new Set(['kizb', 'tuhmet', 'fuhs', 'gaflet', 'fisk', 'vehm', 'ihtilat', 'tedlis', 'bidat', 'suhifz']);
+  function elleTur(st, k, lv, sb) {
+    const T = k === 'T' || k === 'N' || k === 'K', C = k === 'C' || k === 'J' || k === 'K';
+    st.kind = k; st.kinds = [k];
+    st.tMax = k === 'N' ? 0.5 : T ? (k === 'K' ? (lv || 2) : lv || 0) : 0; st.cMax = C ? (k === 'K' ? 1 : lv || 0) : 0;
+    st.type = k === 'K' ? 'Karma / Mukayyed' : T ? 'Taʿdîl' : C ? 'Cerh' : k === 'B' ? 'Bid‘at / mezhep kaydı' : (CTX.KIND[k] || {}).tr || k;
+    st.severity = T && k !== 'K' ? st.tMax : C && k !== 'K' ? -st.cMax : k === 'K' ? st.tMax - st.cMax : 0;
+    st.sebebs = sb ? [sb] : (C ? ['mubhem'] : T ? ['tevsik'] : []);
+    st.mufassar = C ? (st.sebebs.some(x => MUF.has(x)) ? 'müfesser' : st.sebebs.includes('muhalefe') ? 'kısmen' : 'mübhem') : '';
+    st.grade = k === 'K' ? 'Karma · ta‘dîl ' + (CTX.TLEVEL[Math.floor(st.tMax)] || '') + ' + ' + st.sebebs.map(x => CTX.SEBEB[x] || x).join(', ')
+      : T ? 'Ta‘dîl · ' + (CTX.TLEVEL[Math.floor(st.tMax)] || '') : C ? 'Cerh · ' + (CTX.CLEVEL[st.cMax] || '') + (st.sebebs.length ? ' · ' + st.sebebs.map(x => CTX.SEBEB[x] || x).join(', ') : '') : st.type;
+  }
+  function elleMunekkit(st, cr) { const C = CTX.critic(cr); st.critic = cr; st.critic_info = C ? { tr: C.tr, death: C.death, approach: C.approach, note: C.note, group: C.group, shii: !!C.shii } : null; st.critic_ambiguous = false; }
+  // statements: CTX.analyze çıktısı (bloğun metniyle); vol, seq: râvi; order: blok sırası; text: çözümlenen metin
+  function elleUygula(statements, vol, seq, order, text, ids) {
+    const L = ELLE && ELLE.kayitlar[vol + '-' + seq]; if (!L) return statements;
+    let out = statements.slice();
+    for (const x of L) {
+      if (x.o !== order) continue;
+      const not = 'Elle düzeltme (HH denetimi' + (x.hh ? ', HH söz #' + x.hh : '') + ')' + (x.nt ? ': ' + x.nt : '');
+      const bul = () => out.find(s => s.start === x.s && s.end === x.e && (s.critic || '-') === (x.c || '-')) || (x.p ? out.find(s => s.phrase.includes(x.p) && (!x.c || s.critic === x.c)) : null);
+      if (x.a === 'kaldir') { const s = bul(); if (s) out = out.filter(y => y !== s); continue; }
+      if (x.a === 'duzelt') {
+        const s = bul(); if (!s) continue;
+        if (x.cr) elleMunekkit(s, x.cr);
+        if (x.k) elleTur(s, x.k, x.lv, x.sb);
+        s.flags = (s.flags || []).filter(f => f !== 'hedef-şüpheli' && f !== 'söz-sahibi-belirsiz').concat('elle');
+        s.reasons = (s.reasons || []).concat(not); s.confidence = Math.max(s.confidence || 0, 0.9);
+        s.counts = !s.shii && !s.question && 'TCJKN'.includes(s.kind) && !((s.flags || []).includes('mukayyed') && 'CJ'.includes(s.kind));
+        continue;
+      }
+      if (x.a === 'ekle') {
+        let i = -1; if (x.p) { i = text.indexOf(x.p, Math.max(0, (x.s || 0) - 400)); if (i < 0) i = text.indexOf(x.p); }
+        if (i < 0) continue;
+        const e = i + x.p.length, a = Math.max(0, text.lastIndexOf('.', i) + 1), z = text.indexOf('.', e);
+        const st = { key: (ids && ids.blockId != null ? 'b' + ids.blockId + '-' : '') + 'e' + i, block_id: ids && ids.blockId, narrator_id: ids && ids.narratorId,
+          start: i, end: e, nstart: i, nend: e, phrase: x.p, context: text.slice(a, z < 0 ? text.length : z).trim(), shii: false,
+          critic_written: '', basis: 'elle-hh', transmission: 'Doğrudan', transmitter: x.ak || '', formula: '', chain: '', target: 'explicit', target_who: '',
+          flags: ['elle'], question: false, confidence: 0.95, reasons: [not], notes: [], terms: [], origin_elle: true };
+        elleMunekkit(st, x.cr || ''); elleTur(st, x.k, x.lv, x.sb);
+        st.counts = 'TCJKN'.includes(st.kind);
+        out.push(st);
+      }
+    }
+    return out.sort((p, q) => p.start - q.start);
+  }
   function blockOpts(b, n) { return { sourceName: b.effective.source_name, sourceAuthor: b.effective.source_author, narratorNames: n._names, blockId: b.id, narratorId: n.id }; }
   // Kaynak bloğu künyesi düzeltmesi (eser, müellif, yer); çözümleme bu değerlerle yapılır
   function applyBlockFix(b, R) {
@@ -9320,6 +9439,7 @@ const RAPOR = (() => {
       b._text = tx && typeof tx.text === 'string' ? tx.text : b._otext;                // araştırmacı düzeltmesi varsa o
       b._title = b.raw_text.slice(0, b.content_start).replace(/[‌​]/g, '').replace(/^\s*•\s*/, '').trim();
       const r = CTX.analyze(b._text, blockOpts(b, n));
+      r.statements = elleUygula(r.statements, n.volume_id || Math.floor(n.id / 100000) || 1, n.source_sequence, b.block_order, b._text, { blockId: b.id, narratorId: n.id });
       b._notes = r.notes; b._markers = r.markers;
       const all = r.statements.map(s => { s.uid = stUid(b, s); s.b = b; s.n = n; s.origin = 'CTX'; return s; });
       const gone = s => !!(R.st && R.st[s.uid] && R.st[s.uid].v === 'del');       // kaldırılan hüküm: listelerden ve sayımdan çıkar
@@ -9379,7 +9499,7 @@ const RAPOR = (() => {
     const sts = rec.sts.filter(x => !del.has(x.uid)), bh = new Set(sts.map(x => x.bid));
     return Object.assign({}, rec, { sts, hit: bh.size });
   }
-  return { BICIM, HOW_TR, uniq, yearText, stUid, blockOpts, applyBlockFix, analiz, kim, alan, ozet, hazirUygun, kaldirileniAyikla };
+  return { setElle, elleUygula, BICIM, HOW_TR, uniq, yearText, stUid, blockOpts, applyBlockFix, analiz, kim, alan, ozet, hazirUygun, kaldirileniAyikla };
 });
 
 </script>
@@ -9516,6 +9636,18 @@ const RAPOR = (() => {
     for (const c of tC.filter(x => cC.includes(x))) {
       const tS = T.filter(s => s.critic === c), cS = C.filter(s => s.critic === c);
       out.push(Object.assign({ id: 'ici:' + c, type: 'içi', title: 'Aynı münekkitten farklı hükümler (ihtilâfü’l-kavl) · ' + (crit(c).tr || c), critic: c, tSide: tS, cSide: cS, pairs: [[c, c]] }, suggestInner(c, tS, cS)));
+    }
+    // 2b) Kayıtlı teâruz (kullanıcı kararı, 21.10.2026): kayıtlı cerh genel sayılmaz ve mutlak ta‘dîlle teâruz oluşturmaz; yalnız başka
+    // münekkitin aynı hocadan rivayetine mahsus ta‘dîliyle teâruzdur («Yahyâ’dan rivayetinde zayıf» ↔ «Yahyâ’dan rivayetinde sika»)
+    const kEs = (a, b) => { const x = a.split(' '), y = b.split(' '); for (let i = 0; i < Math.min(x.length, y.length); i++) if (x[i] !== y[i]) return false; return true; };
+    const KC = sts.filter(s => s.mky && s.kayd && s.critic && !s.question && 'CJ'.includes(s.kind) && s.lv <= -2 && !(CTX.critic(s.critic) || {}).group);
+    const KT = counted.filter(s => s.kayd && s.kind === 'T' && s.lv >= 2);
+    const kGrup = new Map();
+    for (const c of KC) { const ts = KT.filter(t => t.critic !== c.critic && kEs(c.kayd, t.kayd)); if (!ts.length) continue; const g = kGrup.get(c.kayd) || { t: new Set(), c: new Set() }; ts.forEach(t => g.t.add(t)); g.c.add(c); kGrup.set(c.kayd, g); }
+    for (const [kd, g] of kGrup) {
+      const tS = [...g.t], cS = [...g.c], pairs = [];
+      for (const a of tS) for (const b of cS) if (a.critic !== b.critic && !pairs.some(p => p[0] === a.critic && p[1] === b.critic)) pairs.push([a.critic, b.critic]);
+      out.push(Object.assign({ id: 'kayd:' + kd, type: 'arası', title: 'Münekkitler arası teâruz · aynı hocadan rivayette (' + kd + ')', kayd: kd, tSide: tS, cSide: cS, pairs }, suggest(tS, cS)));
     }
     // 3) Nakil farkları
     for (const r of collate(sts)) {
