@@ -6,6 +6,7 @@
 <title>Cerh-Taʿdîl · Kaynak Kontrolü</title>
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self' https://api.github.com https://generativelanguage.googleapis.com; img-src data:; base-uri 'none'; form-action 'none'">
 <meta name="generator" content="cerh-tadil/build.py CTX 2.0.0">
+<meta name="cerh-motor" content="67cfa0f404ba2b51">
 <style>
 /* =========================================================
    Cerh-Ta‘dîl · Kaynak Kontrolü — arayüz stilleri
@@ -1135,6 +1136,39 @@ tr.mf-on td { background: color-mix(in srgb, #c0392b 6%, transparent); }
 .kcounts.ek { margin-top: 3px; display: flex; flex-wrap: wrap; gap: 6px; }
 .note.idrak { border-left: 3px solid var(--bad); }
 .note.idrak .unlem { color: var(--bad); font-weight: 800; }
+/* ---------- Münekkitler: solda açılır–kapanır münekkit listesi, ortada seçilen münekkit ya da genel görünüm ----------
+   Çekmece düzeni çalışma masasıyla aynıdır (#view-critics.desk; data-rail = closed | overlay | docked). */
+.cdesk #critics-body { max-width: calc(1180px * var(--yb)); margin: 0 auto; padding: 20px max(var(--gutter, 28px), 28px) 48px; }
+.clist .citem { width: 100%; text-align: left; border: 1px solid transparent; background: transparent; border-radius: 10px; padding: 7px 9px 7px 11px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 8px; align-items: center; position: relative; color: inherit; font: inherit; cursor: pointer; }
+.clist .citem::before { content: ''; position: absolute; left: 2px; top: 9px; bottom: 9px; width: 3px; border-radius: 2px; background: var(--line-2); }
+.clist .citem[data-lean="cerh"]::before { background: var(--k-c); } .clist .citem[data-lean="tadil"]::before { background: var(--k-t); } .clist .citem[data-lean="karma"]::before { background: var(--warn); }
+.clist .citem:hover { background: var(--paper-2); }
+.clist .citem[aria-current="true"] { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 35%, transparent); }
+.citem .ci-n { font-size: calc(13px * var(--yb)); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.citem .ci-c { font-size: calc(11px * var(--yb)); font-weight: 650; color: var(--ink-3); background: var(--paper-2); border-radius: 7px; padding: 2px 7px; }
+.citem[aria-current="true"] .ci-c { background: var(--accent); color: var(--paper); }
+.citem .ci-s { grid-column: 1 / -1; display: flex; gap: 6px; align-items: baseline; font-size: calc(11px * var(--yb)); color: var(--ink-3); min-width: 0; white-space: nowrap; overflow: hidden; }
+.citem .ci-s .ar { font-size: calc(14px * var(--yb)); overflow: hidden; text-overflow: ellipsis; }
+.crail-tools { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.crail-tools details { width: 100%; }
+.crail-tools summary { cursor: pointer; font-size: calc(11.5px * var(--yb)); color: var(--ink-2); }
+.crail-tools .cf { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-top: 6px; font-size: calc(11.5px * var(--yb)); }
+.crail-tools .cf select, .crail-tools .cf input { max-width: 160px; }
+.chead { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 16px; align-items: start; margin-bottom: 14px; }
+.chead h2 { margin: 0; font-size: calc(24px * var(--yb)); }
+.chead .ar-big { font-family: var(--ar); font-size: calc(22px * var(--yb)); color: var(--ink-2); text-align: left; }
+.chead .ar-big bdi { unicode-bidi: isolate; }
+.chead .meta { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: calc(12.5px * var(--yb)); color: var(--ink-2); }
+.cback { font-size: calc(12px * var(--yb)); margin-bottom: 8px; }
+.cgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 14px; margin-top: 14px; }
+.cgrid .card h3 { margin-top: 0; }
+.ctop { list-style: none; margin: 0; padding: 0; }
+.ctop li button { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; align-items: center; text-align: left; border: 0; background: transparent; padding: 6px 4px; border-bottom: 1px solid var(--line); color: inherit; font: inherit; cursor: pointer; }
+.ctop li button:hover { background: var(--paper-2); }
+.ctop .muted { font-size: calc(11px * var(--yb)); }
+.ctabs { margin: 16px 0 10px; }
+.cwait { display: flex; align-items: center; gap: 10px; }
+@media (max-width: 880px) { .cdesk #critics-body { padding: 16px 16px 72px; } .chead { grid-template-columns: 1fr; } }
 
 </style>
 </head>
@@ -1259,7 +1293,15 @@ tr.mf-on td { background: color-mix(in srgb, #c0392b 6%, transparent); }
 
 <main class="view scroll" id="view-home" hidden><div class="pane home" id="home-body"></div></main>
 <main class="view scroll" id="view-packages" hidden><div class="pane" id="packages-body"></div></main>
-<main class="view scroll" id="view-critics" hidden><div class="pane" id="critics-body"></div></main>
+<main class="view desk cdesk" id="view-critics" data-rail="closed" hidden>
+  <aside class="drawer rail" id="crail" aria-label="Münekkit listesi" inert>
+    <div class="drawer-head"><h3>Münekkitler <span class="muted" id="crail-count"></span></h3><button class="btn ghost sm icon" id="crail-close" type="button" aria-label="Münekkit listesini kapat" title="Kapat">✕</button></div>
+    <div class="rail-head" id="crail-head"></div>
+    <ul class="nlist clist" id="clist" role="listbox" aria-label="Münekkit listesi"></ul>
+  </aside>
+  <button class="notch notch-l" id="crail-notch" type="button" aria-controls="crail" aria-expanded="false" title="Münekkit listesi"><span class="chev" aria-hidden="true">›</span><span class="lbl">Münekkitler</span><i class="fdot" hidden></i></button>
+  <section class="center" aria-label="Münekkit"><div class="scroll" id="critics-scroll" style="flex:1"><div class="pane" id="critics-body"></div></div></section>
+</main>
 <main class="view scroll" id="view-conflicts" hidden><div class="pane" id="conflicts-body"></div></main>
 <main class="view scroll" id="view-lex" hidden><div class="pane" id="lex-body"></div></main>
 <main class="view scroll" id="view-report" hidden><div class="pane" id="report-body"></div></main>
@@ -1346,33 +1388,11 @@ for (const n of NARR) {
   ALL.push(...n._st);
 }
 for (const s of ALL) { STBY[s.uid] = s; applyFix(s); }
-refreshAdded(); ANALYSIS_MS = Math.round(performance.now() - t0); LEX = null; LEXC = null; recomputeAgg();
+refreshAdded(); ANALYSIS_MS = Math.round(performance.now() - t0); LEX = null; LEXC = CRITC = CRITF = null; recomputeAgg();
 }
-function stUid(b, s) { return (s.implicit ? 'z' : '') + b.id + ':' + s.start + ':' + s.end + ':' + (s.critic || s.critic_written || '-'); }
-function blockOpts(b, n) { return { sourceName: b.effective.source_name, sourceAuthor: b.effective.source_author, narratorNames: n._names, blockId: b.id, narratorId: n.id }; }
-// Bir râvinin bütün kaynak bloklarını CTX ile çözümler (genel duruma dokunmaz)
-function analyzeNarrator(n, R) {
-  R = R || REV || {};
-  n._names = [n.effective.canonical_name, ...(n.effective.name_variants || [])];
-  n._st = []; n._kim = null; n._merv = null;
-  for (const b of n.blocks) {
-    applyBlockFix(b, R);
-    b._n = n;
-    const tx = R.txt && R.txt[b.id];
-    b._otext = b.raw_text.slice(b.content_start);                                    // özgün metin (değişmez)
-    b._text = tx && typeof tx.text === 'string' ? tx.text : b._otext;                // araştırmacı düzeltmesi varsa o
-    b._title = b.raw_text.slice(0, b.content_start).replace(/[‌​]/g, '').replace(/^\s*•\s*/, '').trim();
-    const r = CTX.analyze(b._text, blockOpts(b, n));
-    b._notes = r.notes; b._markers = r.markers;
-    const all = r.statements.map(s => { s.uid = stUid(b, s); s.b = b; s.n = n; s.origin = 'CTX'; return s; });
-    const gone = s => !!(R.st && R.st[s.uid] && R.st[s.uid].v === 'del');       // kaldırılan hüküm: listelerden ve sayımdan çıkar
-    b._st = all.filter(s => !gone(s)); b._del = all.filter(gone);
-    // Kaynak künyesi (son köşeli parantez) — görüntüde soluk
-    const ri = b._text.lastIndexOf('[');
-    b._refStart = ri > 0 && b._text.length - ri < 160 ? ri : b._text.length;
-    n._st.push(...b._st);
-  }
-}
+const stUid = CTKR.stUid, blockOpts = CTKR.blockOpts;
+// Bir râvinin bütün kaynak bloklarını CTX ile çözümler (genel duruma dokunmaz; src/ctkorpus.js)
+function analyzeNarrator(n, R) { CTKR.analiz(n, R || REV || {}); }
 function addedStatements() {
   return REV.added.filter(a => BLK[a.block_id]).map(a => {
     const b = BLK[a.block_id];
@@ -1398,13 +1418,7 @@ function applyFix(s) {
   for (const k of FIXF) s[k] = s._o[k];
   if (r && r.v === 'fix' && r.fix) for (const k of FIXF) if (r.fix[k] != null && r.fix[k] !== '') s[k] = r.fix[k];
 }
-// Kaynak bloğu künyesi düzeltmesi (eser, müellif, yer); çözümleme bu değerlerle yapılır
-function applyBlockFix(b, R) {
-  const e = b.effective;
-  if (!b._oe) b._oe = { source_name: e.source_name, source_author: e.source_author, source_locator: e.source_locator };
-  Object.assign(e, b._oe);
-  const o = R && R.blk && R.blk[b.id]; if (o) for (const k of ['source_name', 'source_author', 'source_locator']) if (o[k]) e[k] = o[k];
-}
+const applyBlockFix = CTKR.applyBlockFix;
 function stOf(n) { return n._st.concat(ADDED.filter(a => a.n === n)); }
 function stOfBlock(b) { return b._st.concat(ADDED.filter(a => a.b === b)); }
 
@@ -1837,8 +1851,8 @@ function ortakRefresh(r, quiet) {
     S.nid = NBYID[keep.nid] ? keep.nid : NARR[0].id;
     S.sel = keep.sel && (keep.sel.type !== 'st' || STBY[keep.sel.id]) ? keep.sel : null;
   }
-  HYD.clear(); CST.clear(); SUMC.clear();
-  LEXC = null;
+  HYD.clear(); CST.clear(); SUMC.clear(); LSTC.clear();
+  LEXC = CRITC = CRITF = null;
   if (ortakEditing()) ORTAK.needRender = true; else renderAll();
   if (!quiet) toast('Ortak kayıttan güncellendi: ' + r.changed.map(ortakLabel).filter((x, i, a) => a.indexOf(x) === i).join(', ') + (r.conflicts ? ' · ' + r.conflicts + ' çakışmada son değişiklik alındı' : ''));
 }
@@ -2665,7 +2679,7 @@ function hhHukumYukle() {
   if (eksik.length) Promise.all(eksik.map(sha => disGetir('huk', sha))).then(hhHukumHazir);
 }
 function hhHukumHazir() {
-  HHST.clear(); HYD.clear(); SUMC.clear(); LEXC = null; for (const d of Object.values(DIS.r)) if (d) delete d._hk; recomputeAgg();
+  HHST.clear(); HYD.clear(); SUMC.clear(); LSTC.clear(); LEXC = CRITC = CRITF = null; for (const d of Object.values(DIS.r)) if (d) delete d._hk; recomputeAgg();
   if (!STARTED) return;
   renderRail(); renderHead(); if (S.view === 'desk') renderCenter(); else setView(S.view, false);
 }
@@ -3130,7 +3144,7 @@ function registerVolume(rec) { rec.sc = CTP.scan(rec.html, { volume: rec.vol });
 // Ciltler değişti (yüklendi, silindi, ortak kayıttan geldi): dilimler ve eser dizini yeniden kurulur
 function volumesChanged() {
   rebuildPkgs();
-  HYD.clear(); CST.clear(); SUMC.clear(); LEXC = null;
+  HYD.clear(); CST.clear(); SUMC.clear(); LSTC.clear(); LEXC = CRITC = CRITF = null;
   const stale = PK.kind === 'volume' && VOLS[PK.vol] && (SNAP.integrity_at_export || {}).sha256 !== VOLS[PK.vol].sha;
   if (stale && PKGS.includes(PK)) { activatePackage(PK.id, { silent: true, keepNarr: true }); renderAll(); writeHash(); }
   else if (ensureActive()) { renderAll(); writeHash(); }
@@ -4069,30 +4083,14 @@ function conflictNotes(n, a, rows) {
    REV.idn[nid] = { f: { alan: { v, at, by } }, l: { hocalar|talebeler|rihle: { st: { anahtar: 'ok'|'no' }, add: [...] } } } */
 const KFIELDS = [['isim', 'Ana / standart isim'], ['kunye', 'Künye'], ['nisbe', 'Nisbe(ler)'], ['lakap', 'Lakap'], ['vela', 'Velâ'], ['memleket', 'Memleket / asıl'], ['ikamet', 'İkamet · nüzûl'], ['dogum', 'Doğum'], ['vefat', 'Vefat'], ['tabaka', 'Tabaka'], ['mezhep', 'Mezhep / fırka'], ['not', 'Diğer kimlik notları']];
 const NISBE_TR = { yer: 'yer', kabile: 'kabile', meslek: 'meslek / sıfat', 'diğer': 'türü belirsiz' };
-const HOW_TR = { nisbe: 'nisbe', memleket: 'min ehli', 'asıl': 'aslen', ikamet: 'sakin', 'nüzûl': 'nüzûl', 'görev': 'görev', 'kudûm': 'kudûm', 'rıhle': 'rıhle', 'tahdîs': 'tahdîs', 'semâ‘': 'semâ‘', 'mücâveret': 'mücâveret', hac: 'hac' };
-function kimOf(n) { if (!n._kim) n._kim = CTK.extract({ names: n._names, blocks: n.blocks.map(b => ({ id: b.id, text: b._text, source: srcShort(b) })) }); return n._kim; }
+const HOW_TR = CTKR.HOW_TR;
+const kimOf = CTKR.kim;
 // Merviyyât: el-Câmi‘ metnindeki senetlerde râvinin halka olarak geçtiği rivayetler (CTK.merviyyat; otomatik çıkarım)
 function mervOf(n) { if (!n._merv) n._merv = CTK.merviyyat({ names: n._names, blocks: n.blocks.map(b => ({ id: b.id, text: b._text, source: srcShort(b), author: b.effective.source_author || '' })) }); return n._merv; }
 function idnOf(nid, create) { if (create) { REV.idn = REV.idn || {}; return REV.idn[nid] = REV.idn[nid] || { f: {}, l: {} }; } return (REV.idn && REV.idn[nid]) || { f: {}, l: {} }; }
-function yearText(x) { if (!x || !x.year) return ''; if (x.noCentury) return 'yüzler hanesi yazılmamış (…' + String(x.from || x.year).slice(-2) + (x.to && x.to !== x.from ? '–' + String(x.to).slice(-2) : '') + ')'; return 'h. ' + (x.approx ? x.from + '–' + x.to : x.year); }
-function uniq(a) { return [...new Set(a.filter(Boolean))]; }
-function autoField(n, k) {
-  const K = kimOf(n);
-  switch (k) {
-    case 'isim': return n.effective.canonical_name;
-    case 'kunye': return uniq(K.kunye.map(x => x.v)).join('، ');
-    case 'nisbe': return uniq(K.nisbe.map(x => x.v)).join(' ');
-    case 'lakap': return uniq(K.lakap.map(x => x.v)).join('، ');
-    case 'vela': return uniq(K.vela.map(x => x.v)).join('؛ ');
-    case 'memleket': return uniq(K.belde.filter(x => ['nisbe', 'memleket', 'asıl'].includes(x.how)).map(x => x.v)).join(', ');
-    case 'ikamet': return uniq(K.belde.filter(x => ['ikamet', 'nüzûl', 'görev'].includes(x.how)).map(x => x.v + ' (' + HOW_TR[x.how] + ')')).join(', ');
-    case 'dogum': return K.dogum.map(x => x.v + (x.year ? ' — ' + yearText(x) : '')).join('؛ ');
-    case 'vefat': return K.vefat.map(x => x.v + (x.year ? ' — ' + yearText(x) : '')).join('؛ ');
-    case 'tabaka': return uniq(K.tabaka.map(x => x.v + (x.label ? ' (' + x.label + ')' : ''))).join('; ') || (K.tabakaTahmin ? K.tabakaTahmin.text + ' (tahmin)' : '');
-    case 'mezhep': return uniq(K.mezhep.map(x => x.v)).join(', ');
-    default: return '';
-  }
-}
+const yearText = CTKR.yearText;
+const uniq = CTKR.uniq;
+const autoField = CTKR.alan;
 function fieldVal(n, k) { const o = idnOf(n.id).f[k]; return o ? o.v : autoField(n, k); }
 function autoCands(n, k) {
   const K = kimOf(n);
@@ -4744,7 +4742,7 @@ function setReview(v) {
   } else REV.st[s.uid] = Object.assign({}, REV.st[s.uid] || {}, { v, at: new Date().toISOString() }, by());
   const VTR = { ok: 'Doğru', no: 'Yanlış', fix: 'Düzeltme', save: 'Düzeltme', clear: 'Sıfırlandı' };
   logAct('hüküm-karar', VTR[v] + ' · ' + crName(eCritic(s), s.critic_written) + ' · ' + (s.phrase || '(zımnî)'), Object.assign(stTarget(s), { before, after: REV.st[s.uid] || null }));
-  applyFix(s); LEX = null; LEXC = null;
+  applyFix(s); LEX = null; LEXC = CRITC = CRITF = null;
   saveRev(); recomputeAgg(); renderRail(); renderCenter(); renderInspector(); renderSourcebar();
   toast(v === 'ok' ? 'Doğru olarak işaretlendi.' : v === 'no' ? 'Yanlış olarak işaretlendi; sayımdan çıkarıldı.' : v === 'save' ? 'Düzeltme kaydedildi.' : 'İnceleme sıfırlandı.');
 }
@@ -4840,30 +4838,57 @@ function openAdd(b, start, phrase, pre) {
    verisinden, öteki dilimler bir kez çözümlenip tarayıcıda saklanan özetlerden (IndexedDB 'dizin') okunur;
    her dilimin kendi inceleme kararları uygulanır. */
 const KORPUS = { recs: {}, busy: null, done: 0, total: 0 };
-var LEXC = null;
+var LEXC = null, CRITC = null, CRITF = null;   // CRITC: münekkit listesi (hafif özetlerden), CRITF: münekkit sayfası (tam özetlerden)
+var LSTC = new Map();   // dilim → hafif özetten kurulan hüküm nesneleri (Münekkitler listesi)
 const LEXBYID = Object.fromEntries(CTX.LEXICON.map(e => [e.id, e]));
-function corpusSig(p) { return [p.kind === 'snapshot' ? RKEY0 : (VOLS[p.vol] || {}).sha, p.from, p.to, CTX.VERSION, CTX.LEXICON.length, CTP.VERSION, 'k5', store.get(rkeyOf(p) + ':blkv', 0)].join('|'); }
+// Motor özeti (build.py: ctlex, ctparse, ctkimlik, ctkorpus): sözlük ya da motor değişince bütün özetler yenilenir
+const MOTOR = (document.querySelector('meta[name="cerh-motor"]') || {}).content || CTX.VERSION;
+function corpusSig0(p) { return [p.kind === 'snapshot' ? RKEY0 : (VOLS[p.vol] || {}).sha, p.from, p.to, MOTOR, CTKR.BICIM].join('|'); }
+function corpusSig(p) { return corpusSig0(p) + '|' + store.get(rkeyOf(p) + ':blkv', 0); }
+/* ---------- Depodaki hazır özet (kaynak/korpus; tools/korpus-hazirla.js) ----------
+   Dilim özetleri sözlük ya da motor değiştikçe depoda yeniden üretilir; ortak kayıt bağlıysa tarayıcı çözümlemeyi
+   kendisi yapmaz, cildin hazır özetini indirir. Kullanılması için motor özeti, cilt dosyasının SHA-256’sı ve dilim
+   sınırları tutmalı; dilimde künye ya da metin düzeltmesi varsa o dilim tarayıcıda çözümlenir (kaldırılan hükümler
+   hazır özetten ayıklanır). Hazır özet bulunamazsa ya da alınamazsa tarayıcı eskisi gibi kendisi çözümler. */
+const KORPUS_DIZIN = 'kaynak/korpus/dizin.json';
+const KDEPO = { dizin: null, dsha: '', at: 0, err: '', cilt: null, busy: null };
+async function korpusDizin() {
+  const c = ortakCfg(); if (!c || !AUTH.me()) return null;
+  if (KDEPO.dizin && Date.now() - KDEPO.at < 600000) return KDEPO.dizin;
+  if (KDEPO.err && Date.now() - KDEPO.at < 60000) return KDEPO.dizin;
+  KDEPO.at = Date.now();
+  try {
+    const gh = ORT.client(c), m = await gh.meta(KORPUS_DIZIN);
+    if (!m || !m.sha) { KDEPO.dizin = null; KDEPO.err = ''; return null; }
+    if (m.sha !== KDEPO.dsha) { const d = JSON.parse(await gh.blob(m.sha)); KDEPO.dizin = d && d.ciltler ? d : null; KDEPO.dsha = m.sha; }
+    KDEPO.err = '';
+  } catch (e) { KDEPO.err = e.message || String(e); }
+  return KDEPO.dizin;
+}
+// Cildin hazır özet dosyası (aynı anda tek cilt bellekte tutulur; dilimler cilt sırasıyla istenir)
+function korpusCilt(e) {
+  if (KDEPO.cilt && KDEPO.cilt.blob === e.blob) return KDEPO.cilt.p;
+  const c = ortakCfg(); if (!c) return Promise.resolve(null);
+  const pr = (async () => {
+    const t = await ORT.client(c).blob(e.blob);
+    if (typeof t !== 'string' || await ORT.blobSha(t) !== e.blob) throw Error('dosya dizindeki özetle tutmuyor');
+    return JSON.parse(t);
+  })().catch(x => { KDEPO.err = x.message || String(x); KDEPO.cilt = null; return null; });
+  KDEPO.cilt = { blob: e.blob, p: pr }; return pr;
+}
+async function hazirOzet(p) {
+  if (p.kind !== 'volume' || !VOLS[p.vol]) return null;
+  const R = revOf(p); if (!CTKR.hazirUygun(R)) return null;
+  const d = await korpusDizin(); if (!d || d.motor !== MOTOR || d.bicim !== CTKR.BICIM) return null;
+  const e = d.ciltler[p.vol]; if (!e || e.sha256 !== VOLS[p.vol].sha) return null;
+  const V = await korpusCilt(e), r = V && V.paketler && V.paketler[p.id];
+  if (!r || r.sig0 !== corpusSig0(p)) return null;
+  const rec = Object.assign({ id: p.id, sig: corpusSig(p) }, CTKR.kaldirileniAyikla(r, R)); delete rec.sig0;
+  return rec;
+}
 function compactPackage(p) {
-  const data = packageData(p); const ns = Object.values(data.narrators);
-  const sts = [], bmeta = {}; let blocks = 0, hit = 0;
-  const ctx = (b, a, e) => b._text.slice(a, e).replace(/\s+/g, ' ');
-  for (const n of ns) {
-    analyzeNarrator(n, revOf(p));
-    for (const b of n.blocks) {
-      blocks++; if (b._st.length) hit++;
-      bmeta[b.id] = [n.source_sequence, n.effective.canonical_name, b.effective.source_name, b.effective.source_locator || ''];
-      for (const x of b._st) sts.push({
-        uid: x.uid, origin: 'CTX', seq: n.source_sequence, name: n.effective.canonical_name, bid: b.id, source: b.effective.source_name, locator: b.effective.source_locator || '',
-        critic: x.critic, critic_written: x.critic_written, kind: x.kind, type: x.type, severity: x.severity, tMax: x.tMax, cMax: x.cMax, counts: x.counts, flags: x.flags,
-        confidence: x.confidence, grade: x.grade, phrase: x.phrase, sebebs: x.sebebs, mufassar: x.mufassar, transmission: x.transmission, transmitter: x.transmitter, chain: x.chain,
-        start: x.start, end: x.end, basis: x.basis, question: !!x.question, author: b.effective.source_author || '',
-        terms: (x.terms || []).map(t => ({ id: t.id, k: t.k, start: t.start, text: t.text, pre: ctx(b, Math.max(0, t.start - 48), t.start), post: ctx(b, t.end, t.end + 48) }))
-      });
-    }
-  }
-  const kim = {}; for (const n of ns) kim[n.source_sequence] = Object.assign({ nid: n.id }, Object.fromEntries(['kunye', 'nisbe', 'memleket', 'ikamet', 'vefat', 'tabaka', 'mezhep'].map(k => [k, autoField(n, k)])));
-  const rows = ns.map(n => [n.source_sequence, n.id, n.effective.canonical_name, n.warnings.length + n.unclassified.length + n.orphan_sections.length, n.effective.name_variants || []]);
-  return { id: p.id, sig: corpusSig(p), narrators: ns.length, narrator_ids: ns.map(n => n.id), blocks, hit, bmeta, sts, kim, rows };
+  const rec = CTKR.ozet(Object.values(packageData(p).narrators), revOf(p));
+  return Object.assign({ id: p.id, sig: corpusSig(p) }, rec);
 }
 /* ---------- Hafif özetler (râvi listesi) ----------
    Her dilim için IndexedDB 'dizin' deposunda, tam özetin yanında “<dilim>#satir” kaydı tutulur: râvi satırları
@@ -4872,10 +4897,10 @@ function compactPackage(p) {
    Eksik ya da eskimiş özetler açılıştan sonra arka planda, tarayıcı boşta kaldıkça hazırlanır (kickIndex). */
 const SATIR = { recs: {}, loaded: false, job: null, again: false };
 const CST = new Map(), SUMC = new Map();   // dilim → inceleme durumu / satır özetleri (önbellek)
-function dropChunkCaches(id) { HYD.delete(id); CST.delete(id); SUMC.delete(id); }
+function dropChunkCaches(id) { HYD.delete(id); CST.delete(id); SUMC.delete(id); LSTC.delete(id); CRITC = CRITF = null; }
 function lightOf(rec) {
   return { id: rec.id + '#satir', sig: rec.sig, blocks: rec.blocks, nc: rec.sts.filter(x => x.critic).length, rows: rec.rows,
-    sts: rec.sts.map(x => [x.uid, x.seq, x.critic || '', x.kind, x.severity, x.tMax, x.cMax, x.counts ? 1 : 0, x.flags || [], x.mufassar || '', x.sebebs || [], x.phrase || '', (x.terms || []).map(t => t.id)]) };
+    sts: rec.sts.map(x => [x.uid, x.seq, x.critic || '', x.kind, x.severity, x.tMax, x.cMax, x.counts ? 1 : 0, x.flags || [], x.mufassar || '', x.sebebs || [], x.phrase || '', (x.terms || []).map(t => t.id), x.critic_written || '', x.question ? 1 : 0, x.confidence ?? 1]) };
 }
 // Dilimin depodaki inceleme kaydından: râvi durumları, râvi başına not sayısı, incelenen hüküm sayısı
 function chunkState(p) {
@@ -4949,12 +4974,12 @@ async function runIndex() {
     let rec = KORPUS.recs[p.id] && KORPUS.recs[p.id].sig === sig ? KORPUS.recs[p.id] : null;
     if (!rec) { try { const c = await IDB.get('dizin', p.id); if (c && c.sig === sig) rec = c; } catch (e) { } }
     if (p === PK) continue;
-    if (!rec) { rec = compactPackage(p); try { await IDB.put('dizin', rec); } catch (e) { } }
+    if (!rec) { rec = await hazirOzet(p) || compactPackage(p); if (p === PK) continue; try { await IDB.put('dizin', rec); } catch (e) { } }
     keepLight(p, rec);
     railDirty();
   }
 }
-function keepLight(p, rec) { const L = lightOf(rec); SATIR.recs[p.id] = L; SUMC.delete(p.id); IDB.put('dizin', L).catch(() => { }); }
+function keepLight(p, rec) { const L = lightOf(rec); SATIR.recs[p.id] = L; SUMC.delete(p.id); LSTC.delete(p.id); CRITC = null; IDB.put('dizin', L).catch(() => { }); }
 function scopePkgs(scope) { return scope === 'vol' ? PKGS.filter(p => p.vol === PK.vol) : PKGS; }
 function corpusReady(scope) { return scopePkgs(scope).every(p => p === PK || (KORPUS.recs[p.id] && KORPUS.recs[p.id].sig === corpusSig(p))); }
 function buildCorpus(scope, onStep) {
@@ -4967,9 +4992,9 @@ function buildCorpus(scope, onStep) {
       if (p === PK) { KORPUS.done++; continue; }   // beklerken açılmış olabilir: açık dilim canlı veriden okunur
       const sig = corpusSig(p);
       let rec = cache[p.id] && cache[p.id].sig === sig ? cache[p.id] : null;
-      if (!rec) { rec = compactPackage(p); try { await IDB.put('dizin', rec); } catch (e) { } }
+      if (!rec) { rec = await hazirOzet(p) || compactPackage(p); try { await IDB.put('dizin', rec); } catch (e) { } }
       if (!(SATIR.recs[p.id] && SATIR.recs[p.id].sig === sig)) keepLight(p, rec);
-      KORPUS.recs[p.id] = rec; KORPUS.done++; LEXC = null;
+      KORPUS.recs[p.id] = rec; KORPUS.done++; LEXC = CRITC = CRITF = null;
       if (onStep) onStep();
       await new Promise(r => setTimeout(r, 0));
     }
@@ -5038,7 +5063,7 @@ const multiVol = () => PKGS.length > 0 && PKGS[0].vol !== PKGS[PKGS.length - 1].
 // Kapsam hazır değilse ilerleme gösterir ve hazır olunca yeniden çizer
 function ensureScope(el, rerender) {
   if (corpusReady(S.scope)) return true;
-  el.innerHTML = scopeBar() + '<div class="card" style="max-width:560px"><h3>Eser çözümleniyor…</h3><span class="pkg-prog" style="width:100%;height:8px"><i id="corp-bar" style="width:0%"></i></span><div class="hint" id="corp-txt" style="margin-top:6px">Hazırlanıyor…</div><div class="hint">Râvilerin hükümleri bir kez çözümlenir ve özeti bu tarayıcıda saklanır; sonraki açılışlarda yalnız okunur.</div></div>';
+  el.innerHTML = scopeBar() + '<div class="card" style="max-width:560px"><h3>Eser verisi hazırlanıyor…</h3><span class="pkg-prog" style="width:100%;height:8px"><i id="corp-bar" style="width:0%"></i></span><div class="hint" id="corp-txt" style="margin-top:6px">Hazırlanıyor…</div><div class="hint">Dilim özetleri ortak kayıt bağlıysa depodaki hazır özetten alınır, değilse bu tarayıcıda bir kez çözümlenir; ikisi de bu tarayıcıda saklanır, sonraki açılışlarda yalnız okunur.</div></div>';
   buildCorpus(S.scope, () => { const bar = $('corp-bar'), t = $('corp-txt'); const r = KORPUS.done / Math.max(1, KORPUS.total); if (bar) bar.style.width = (r * 100) + '%'; if (t) t.textContent = '%' + Math.floor(r * 100); }).then(rerender);
   return false;
 }
@@ -5091,56 +5116,192 @@ function isnadLinks(chain) {
   return t.split(/\s*[،,]?\s*(?:حدثنا|حدثني|حدثنى|ثنا|أخبرنا|أخبرني|اخبرنا|اخبرني|أنبأنا|انبانا|سمعت|سمعتُ|قال|قالا|يقول|عن)\s*:?\s*/)
     .map(x => x.replace(/^[\s،,:]+|[\s،,:]+$/g, '').trim()).filter(x => x.length > 2 && x.length < 70);
 }
-function renderCritics() {
-  if (!ensureScope($('critics-body'), renderCritics)) return;
-  const all = criticAgg(scopeStatements(S.scope));
-  for (const m of all) { m.C = CTX.critic(m.c) || {}; m.x = critTotals(m); m.lean = critLean(m.x); }
-  const regions = [...new Set(all.map(m => m.C.region).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'tr'));
-  const centuries = [...new Set(all.map(m => centuryOf(m.C.death)).filter(Boolean))].sort((a, b) => a - b);
-  const qn = nz(S.critQ), ql = S.critQ.toLocaleLowerCase('tr');
-  const qk = /^#?(\d+)$/.exec(S.critQ.trim());
-  const list = all.filter(m => (!S.critQ || nz(m.c).includes(qn) || (qk && critKodu(m.c) === +qk[1]) || (m.C.tr || '').toLocaleLowerCase('tr').includes(ql) || (m.C.city || '').toLocaleLowerCase('tr').includes(ql) || (m.C.region || '').toLocaleLowerCase('tr').includes(ql)) &&
+/* ---------- Münekkitler: solda açılır–kapanır liste, ortada münekkit sayfası ya da genel görünüm ----------
+   Liste ve genel görünüm hafif özetlerden (SATIR) kurulur ve önbellekte tutulur (CRITC); yalnız kayıtlar değişince
+   yeniden hesaplanır. Münekkidin hüküm tablosu (sened, kaynak) tam özetleri ister (KORPUS); bunlar ilk gerekince
+   tarayıcı deposundan ya da depodaki hazır özetten bir kez yüklenir (CRITF). */
+UI.crail = UI.crail || 'open';
+UI.csort = UI.csort || 'vefat';
+S.critTab = S.critTab || 'hukum';
+// Hafif özetten hüküm nesneleri (sayım için gereken alanlar; inceleme kararları uygulanır, HH hükümleri ve araştırmacı eklemeleriyle)
+function lightSts(p) {
+  const L = SATIR.recs[p.id]; if (!L || L.sig !== corpusSig(p)) return null;
+  const c = LSTC.get(p.id); if (c && c.L === L) return c.out;
+  const R = revOf(p), out = [], nn = new Map();
+  const nOf = (seq, name) => { let n = nn.get(seq); if (!n) nn.set(seq, n = { id: nidOf(p, seq), source_sequence: seq, effective: { canonical_name: name || '' } }); return n; };
+  const nm = new Map(L.rows.map(r => [r[0], r[2]])), bySeq = new Map();
+  for (const a of L.sts) {
+    const s = { uid: a[0], origin: 'CTX', seq: a[1], critic: a[2], kind: a[3], severity: a[4], tMax: a[5], cMax: a[6], counts: !!a[7], flags: a[8], mufassar: a[9], sebebs: a[10], phrase: a[11], terms: a[12].map(id => ({ id })), critic_written: a[13] || a[2] || '', question: !!a[14], confidence: a[15] ?? 1, _R: R, archPkg: p.id, n: nOf(a[1], nm.get(a[1])) };
+    applyFix(s); out.push(s); let l = bySeq.get(a[1]); if (!l) bySeq.set(a[1], l = []); l.push(s);
+  }
+  for (const row of L.rows) out.push(...hhAyikla(bySeq.get(row[0]) || [], hhSts(p.vol, row[0], nOf(row[0], row[2]), p.id)));
+  for (const a of R.added) {
+    const r = IDXNID.get(nidOfBlock(p, a.block_id)); if (!r || r.p.id !== p.id) continue;
+    const sev = Number(a.sev || 0);
+    out.push({ uid: a.uid, origin: 'user', seq: r.seq, critic: a.critic || '', critic_written: a.critic || '', kind: { 'Taʿdîl': 'T', 'Cerh': 'C', 'Karma / Mukayyed': 'K' }[a.type] || 'D', type: a.type, severity: sev, tMax: sev > 0 ? sev : 0, cMax: sev < 0 ? -sev : 0, counts: true, flags: ['elle'], mufassar: '', sebebs: [], phrase: a.phrase, terms: [], confidence: 1, _R: R, archPkg: p.id, n: nOf(r.seq, r.name) });
+  }
+  LSTC.set(p.id, { L, out }); return out;
+}
+// Kapsamın hükümleri: açık dilim canlı veriden, ötekiler hafif özetten; özeti eksik dilim varsa null
+function critSrcLight(scope) {
+  const out = [];
+  for (const p of scopePkgs(scope)) {
+    if (p === PK) { out.push(...ALL.concat(ADDED), ...NARR.flatMap(n => hhStsOf(n))); continue; }
+    const l = lightSts(p); if (!l) return null; out.push(...l);
+  }
+  return out;
+}
+function critPrep(all) { for (const m of all) { m.C = CTX.critic(m.c) || {}; m.x = critTotals(m); m.lean = critLean(m.x); m.avg = m.sev.length ? m.sev.reduce((a, b) => a + b, 0) / m.sev.length : null; } return { all, by: new Map(all.map(m => [m.c, m])) }; }
+function critData() {
+  if (CRITC && CRITC.scope === S.scope) return CRITC;
+  const src = critSrcLight(S.scope); if (!src) return null;
+  CRITC = Object.assign(critPrep(criticAgg(src)), { scope: S.scope }); return CRITC;
+}
+function critFull() {
+  if (CRITF && CRITF.scope === S.scope) return CRITF;
+  if (!corpusReady(S.scope)) return null;
+  CRITF = Object.assign(critPrep(criticAgg(scopeStatements(S.scope))), { scope: S.scope }); return CRITF;
+}
+// Kapsamın özetleri hazır değilse hazırlanır (depodaki hazır özetten ya da tarayıcıda); ilerleme el’de gösterilir
+function critPrepare(el, then) {
+  el.innerHTML = '<div class="card" style="max-width:560px"><h3>Münekkit verisi hazırlanıyor…</h3><span class="pkg-prog" style="width:100%;height:8px"><i id="corp-bar" style="width:0%"></i></span><div class="hint" id="corp-txt" style="margin-top:6px">Hazırlanıyor…</div><div class="hint">Dilim özetleri ortak kayıt bağlıysa depodaki hazır özetten alınır, değilse bu tarayıcıda bir kez çözümlenir; ikisi de bu tarayıcıda saklanır, sonraki açılışlarda yalnız okunur.</div></div>';
+  buildCorpus(S.scope, () => { const bar = $('corp-bar'), t = $('corp-txt'); const r = KORPUS.done / Math.max(1, KORPUS.total); if (bar) bar.style.width = (r * 100) + '%'; if (t) t.textContent = '%' + Math.floor(r * 100); }).then(then);
+}
+function critFiltered(D) {
+  const qn = nz(S.critQ), ql = S.critQ.toLocaleLowerCase('tr'), qk = /^#?(\d+)$/.exec(S.critQ.trim());
+  const sorts = { vefat: (a, b) => (a.C.death || 9999) - (b.C.death || 9999) || b.st.length - a.st.length, hukum: (a, b) => b.st.length - a.st.length, ravi: (a, b) => b.narr.size - a.narr.size || b.st.length - a.st.length,
+    ad: (a, b) => (a.C.tr || critAd(a.c)).localeCompare(b.C.tr || critAd(b.c), 'tr'), cerh: (a, b) => critShare(b) - critShare(a) || b.st.length - a.st.length, tadil: (a, b) => critShare(a) - critShare(b) || b.st.length - a.st.length };
+  return D.all.filter(m => (!S.critQ || nz(m.c).includes(qn) || (qk && critKodu(m.c) === +qk[1]) || (m.C.tr || '').toLocaleLowerCase('tr').includes(ql) || (m.C.city || '').toLocaleLowerCase('tr').includes(ql) || (m.C.region || '').toLocaleLowerCase('tr').includes(ql)) &&
     (!CF.region || m.C.region === CF.region) && (!CF.approach || (CF.approach === '-' ? !m.C.approach : m.C.approach === CF.approach)) && (!CF.century || centuryOf(m.C.death) === +CF.century) && (!CF.lean || m.lean === CF.lean) && m.st.length >= (+CF.min || 0))
-    .sort((a, b) => (a.C.death || 9999) - (b.C.death || 9999) || b.st.length - a.st.length);
+    .sort(sorts[UI.csort] || sorts.vefat);
+}
+const critShare = m => m.x.t + m.x.c ? m.x.c / (m.x.t + m.x.c) : -1;
+const critName = m => (m.c.startsWith('?') ? '(kayıtsız) ' : '') + (m.C.tr || critAd(m.c));
+// Çekmece: masaüstünde metnin yanında, telefonda üstte açılır
+function layoutCrail() {
+  const v = $('view-critics'); if (!v) return;
+  const open = UI.crail === 'open', ph = isPhone();
+  const mode = !open ? 'closed' : ph ? 'overlay' : 'docked';
+  v.dataset.rail = mode; $('crail').inert = mode === 'closed';
+  $('crail-notch').setAttribute('aria-expanded', String(mode !== 'closed'));
+  const f = !!(S.critQ || CF.region || CF.approach || CF.century || CF.lean || +CF.min); $('crail-notch').querySelector('.fdot').hidden = !f;
+}
+function setCrail(open, focus) { UI.crail = open ? 'open' : 'closed'; saveUI(); layoutCrail(); if (open && focus) { const q = $('crit-q'); if (q) q.focus({ preventScroll: true }); } }
+function renderCritics() {
+  if (isPhone() && !S.critSel && UI.crail !== 'open' && !renderCritics.ph) { renderCritics.ph = 1; UI.crail = 'open'; }
+  layoutCrail();
+  const D = critData();
+  if (!D) { $('clist').innerHTML = ''; $('crail-head').innerHTML = ''; critPrepare($('critics-body'), renderCritics); return; }
+  renderCritHead(D); renderCritList(D); renderCritCenter(D);
+}
+function renderCritHead(D) {
+  const regions = [...new Set(D.all.map(m => m.C.region).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'tr'));
+  const centuries = [...new Set(D.all.map(m => centuryOf(m.C.death)).filter(Boolean))].sort((a, b) => a - b);
   const sel = (id, label, opts, v) => '<label class="cf"><span>' + label + '</span><select class="field sm" data-cf="' + id + '">' + opts.map(([k, l]) => '<option value="' + esc(k) + '"' + (String(v) === String(k) ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select></label>';
   const active = CF.region || CF.approach || CF.century || CF.lean || +CF.min;
-  let out = viewHead({ key: 'critics', title: 'Münekkitler', sub: list.length + ' / ' + all.length + ' söz sahibi', actions: scopeBar(),
-    help: 'Sütun başlığına tıklayınca artan, yeniden tıklayınca azalan sıralanır. <b>Tavır:</b> ez-Zehebî’nin taksimi (müteşeddid · mu‘tedil · mütesâhil). <b>Dağılım:</b> çubuğun altında ta‘dîl ve cerh (cerh + cehâlet + bid‘at) sayısı. Satıra tıklayınca münekkidin hükümleri sened / nakil yoluyla açılır; münekkit raporu da oradan alınır.' }) + scopeNote() +
-    '<div class="row cfilters"><div class="search" style="flex:1;min-width:220px;max-width:340px"><input id="crit-q" type="search" placeholder="Münekkit, şehir veya bölge ara…" value="' + esc(S.critQ) + '"></div>' +
+  $('crail-head').innerHTML = '<div class="search"><label class="sr-only" for="crit-q">Münekkit ara</label><input id="crit-q" type="search" placeholder="Münekkit, şehir, bölge veya #numara…" autocomplete="off" value="' + esc(S.critQ) + '"></div>' +
+    '<div class="crail-tools"><details' + (active ? ' open' : '') + '><summary>Süzgeçler' + (active ? ' · etkin' : '') + '</summary>' +
     sel('region', 'Bölge', [['', 'Tümü']].concat(regions.map(r => [r, r])), CF.region) +
     sel('approach', 'Tavır', [['', 'Tümü'], ['müteşeddid', 'Müteşeddid'], ['mu‘tedil', 'Mu‘tedil'], ['mütesâhil', 'Mütesâhil'], ['iki yönlü', 'İki yönlü'], ['-', 'Belirtilmemiş']], CF.approach) +
     sel('century', 'Asır (h.)', [['', 'Tümü']].concat(centuries.map(c => [c, c + '. asır'])), CF.century) +
     sel('lean', 'Ağırlık', [['', 'Tümü'], ['cerh', 'Cerh ağırlıklı'], ['tadil', 'Ta‘dîl ağırlıklı'], ['karma', 'Dengeli']], CF.lean) +
     '<label class="cf"><span>En az hüküm</span><input class="field sm" type="number" min="0" step="1" data-cf="min" value="' + (+CF.min || 0) + '" style="width:72px"></label>' +
-    (active ? '<button class="btn ghost sm" data-cf-clear>Süzgeçleri temizle</button>' : '') + '</div>';
-  out += '<div class="wrap"><table class="tbl crit" data-tid="critics"><thead><tr><th data-sk="t">Münekkit</th><th data-sk="n">Vefat</th><th data-sk="t">Şehir · bölge</th><th data-sk="t">Tavır</th><th data-sk="n" class="num">Hüküm</th><th data-sk="n" class="num">Râvi</th><th data-sk="n" title="Ta‘dîl / cerh dağılımı; çubuğun altında ta‘dîl ve cerh (cerh + cehâlet + bid‘at) sayısı. Cerh oranına göre sıralar.">Dağılım</th><th data-sk="n" class="num">Ort. şiddet</th></tr></thead><tbody>';
-  for (const m of list) {
-    const C = m.C; const unknown = m.c.startsWith('?'), ad = critAd(m.c), kd = critKodu(m.c);
-    const avg = m.sev.length ? (m.sev.reduce((a, b) => a + b, 0) / m.sev.length) : null;
-    const share = m.x.t + m.x.c ? (m.x.c / (m.x.t + m.x.c)).toFixed(3) : '';
-    out += '<tr data-crit="' + esc(m.c) + '" aria-current="' + (S.critSel === m.c) + '"><td data-v="' + esc(C.tr || ad) + '">' + esc(unknown ? '(kayıtsız) ' : '') + esc(C.tr || ad) + '<div class="ar small muted" style="font-size:calc(14px * var(--yb))">' + esc(ad) + (kd != null ? ' ' + kodRozet(kd, 'HH kişi numarası: aynı numaralı kayıtlar tek münekkittir; adı benzeyen başka numaralar ayrı kişidir') : '') + '</div></td><td class="num">' + (C.death || '') + '</td>' +
-      '<td class="small" data-v="' + esc((C.region || '') + ' ' + (C.city || '')) + '">' + (C.city ? esc(C.city) + '<div class="muted">' + esc(C.region) + '</div>' : '') + '</td><td class="small">' + esc(C.approach || (C.group ? 'müphem çoğul' : '')) + '</td><td class="num">' + m.st.length + '</td><td class="num">' + m.narr.size + '</td>' +
-      '<td style="min-width:150px" data-v="' + share + '">' + minibar(m.byK) + kindCounts(m.x) + '</td><td class="num" data-v="' + (avg === null ? '' : avg) + '">' + (avg === null ? '—' : (avg > 0 ? '+' : '') + avg.toFixed(1)) + '</td></tr>';
-    if (S.critSel === m.c) out += '<tr class="sub"><td colspan="8">' + critDetail(m) + '</td></tr>';
-  }
-  $('critics-body').innerHTML = out + '</tbody></table></div>';
-  const q = $('crit-q'); q.oninput = () => { S.critQ = q.value; renderCritics(); const q2 = $('crit-q'); q2.focus(); q2.setSelectionRange(q2.value.length, q2.value.length); };
+    (active ? '<button class="btn ghost sm" data-cf-clear style="margin-top:6px">Süzgeçleri temizle</button>' : '') + '</details></div>' +
+    '<div class="rail-sort"><span id="crit-count"></span><label>Sırala <select id="crit-sort">' + [['vefat', 'Vefat'], ['hukum', 'Hüküm sayısı'], ['ravi', 'Râvi sayısı'], ['ad', 'Ad'], ['cerh', 'Cerh oranı'], ['tadil', 'Ta‘dîl oranı']].map(([k, l]) => '<option value="' + k + '"' + (UI.csort === k ? ' selected' : '') + '>' + l + '</option>').join('') + '</select></label></div>';
+  const q = $('crit-q'); q.oninput = () => { S.critQ = q.value; renderCritList(critData()); layoutCrail(); };
+  $('crit-sort').onchange = e => { UI.csort = e.target.value; saveUI(); renderCritList(critData()); };
+}
+function renderCritList(D) {
+  if (!D) return;
+  const list = critFiltered(D);
+  $('crail-count').textContent = list.length + ' / ' + D.all.length;
+  $('crit-count').textContent = list.length + ' söz sahibi';
+  $('clist').innerHTML = list.map(m => { const kd = critKodu(m.c); return '<li><button type="button" class="citem" role="option" data-crit="' + esc(m.c) + '" data-lean="' + m.lean + '" aria-current="' + (S.critSel === m.c) + '" title="' + esc(critName(m) + ' · ' + m.st.length + ' hüküm · ' + m.narr.size + ' râvi') + '"><span class="ci-n">' + esc(critName(m)) + '</span><span class="ci-c">' + m.st.length + '</span>' +
+    '<span class="ci-s"><span class="ar">' + esc(critAd(m.c)) + '</span>' + (m.C.death ? '<span>ö. ' + m.C.death + '</span>' : '') + (m.C.city ? '<span>' + esc(m.C.city) + '</span>' : '') + (kd != null ? kodRozet(kd, 'HH kişi numarası') : '') + '</span></button></li>'; }).join('') || '<li class="empty-state">Süzgece uyan münekkit yok.</li>';
+}
+function renderCritCenter(D) {
+  const el = $('critics-body'), m = S.critSel && D.by.get(S.critSel);
+  el.innerHTML = m ? critPage(m) : critHome(D);
+  if (m && S.critTab === 'hukum' && !critFull()) critPrepare($('crit-hukum'), () => { if (S.view === 'critics' && S.critSel === m.c) renderCritCenter(critData() || D); });
+}
+// Genel görünüm: sayılar ve dağılımlar (kapsamın bütün münekkitleri)
+function critHome(D) {
+  const all = D.all, kayitli = all.filter(m => !m.c.startsWith('?')), say = (f, L) => { const o = {}; for (const m of L) { const k = f(m); if (k) o[k] = (o[k] || 0) + 1; } return Object.entries(o).sort((a, b) => b[1] - a[1]); };
+  const gor = all.reduce((a, m) => a + m.x.t + m.x.c, 0), t = all.reduce((a, m) => a + m.x.t, 0), c = all.reduce((a, m) => a + m.x.c, 0);
+  const narr = new Set(); for (const m of all) for (const id of m.narr) narr.add(id);
+  const asir = Object.entries(kayitli.reduce((o, m) => { const k = centuryOf(m.C.death); if (k) { o[k] = o[k] || [0, 0]; o[k][0]++; o[k][1] += m.st.length; } return o; }, {})).sort((a, b) => a[0] - b[0]);
+  const top = (L, n, sub) => '<ol class="ctop">' + L.slice(0, n).map(m => '<li><button type="button" data-crit="' + esc(m.c) + '"><span>' + esc(critName(m)) + ' <span class="muted ar">' + esc(critAd(m.c)) + '</span></span><span class="muted">' + sub(m) + '</span><span style="grid-column:1/-1">' + minibar(m.byK) + '</span></button></li>').join('') + '</ol>';
+  const N = 20, oranli = kayitli.filter(m => m.x.t + m.x.c >= N);
+  const lean = say(m => ({ cerh: 'Cerh ağırlıklı', tadil: 'Ta‘dîl ağırlıklı', karma: 'Dengeli' })[m.lean], all);
+  const card = (h, body, note) => '<section class="card"><h3>' + h + '</h3>' + body + (note ? '<div class="small muted" style="margin-top:6px">' + note + '</div>' : '') + '</section>';
+  return viewHead({ key: 'critics', title: 'Münekkitler', sub: fmt(all.length) + ' söz sahibi · ' + (S.scope === 'vol' && multiVol() ? PK.vol + '. cilt' : 'bütün eser'), actions: scopeBar(),
+    help: 'Soldaki listeden bir münekkit seçince sayfası açılır: hükümleri sened ve nakil yoluyla, lafızları, hakkında hüküm verdiği râviler ve notlar. Liste “Münekkitler” çentiğiyle açılıp kapanır; arama, süzgeç ve sıralama listenin başındadır. Sayılar inceleme kararları uygulanmış hâliyle, aynı münekkitin aynı râvi hakkındaki aynı hükmünün nakilleri tek görüş sayılarak hesaplanır. <b>Tavır:</b> ez-Zehebî’nin taksimi (müteşeddid · mu‘tedil · mütesâhil).' }) + scopeNote('Bir münekkide tıklayınca sayfası açılır.') +
+    kpis([['Kayıtlı münekkit', fmt(kayitli.length), all.length - kayitli.length ? '+ ' + fmt(all.length - kayitli.length) + ' kayıtsız söz sahibi' : ''], ['Hüküm kaydı', fmt(all.reduce((a, m) => a + m.st.length, 0)), 'nakiller dahil'], ['Görüş', fmt(gor), fmt(t) + ' ta‘dîl · ' + fmt(c) + ' cerh'], ['Hakkında hüküm olan râvi', fmt(narr.size), ''], ['Cerh oranı', gor ? '%' + Math.round(c / gor * 100) : '—', 'görüşler içinde']]) +
+    '<div class="cgrid">' +
+    card('En çok hüküm veren münekkitler', top(all.slice().sort((a, b) => b.st.length - a.st.length), 12, m => m.st.length + ' hüküm · ' + m.narr.size + ' râvi')) +
+    card('Asırlara göre münekkitler', asir.length ? sbar(asir.map(([k, v]) => [k + '. asır <span class="muted">· ' + fmt(v[1]) + ' hüküm</span>', v[0]]), kayitli.filter(m => centuryOf(m.C.death)).length) : '<div class="hint">Vefat bilgisi yok.</div>', 'Münekkit sayısı; vefat yılı kayıtlı olanlar') +
+    card('Bölgelere göre', sbar(say(m => m.C.region, kayitli).slice(0, 8).map(([k, v]) => [esc(k), v]), kayitli.filter(m => m.C.region).length || 1), 'Münekkidin ilmî faaliyet merkezi') +
+    card('Tavır (ez-Zehebî)', sbar(say(m => m.C.approach, kayitli).map(([k, v]) => [esc(k), v]), kayitli.filter(m => m.C.approach).length || 1), 'Tavrı kayıtlı münekkitler') +
+    card('Ağırlık', sbar(lean.map(([k, v]) => [k, v]), lean.reduce((a, x) => a + x[1], 0) || 1), 'Cerh oranı ≥ ⅔ cerh, ≤ ⅓ ta‘dîl ağırlıklı') +
+    card('Cerh oranı en yüksek', oranli.length ? top(oranli.slice().sort((a, b) => critShare(b) - critShare(a)), 8, m => '%' + Math.round(critShare(m) * 100) + ' cerh · ' + (m.x.t + m.x.c) + ' görüş') : '<div class="hint">' + N + '+ görüşlü münekkit yok.</div>', 'En az ' + N + ' görüşü olanlar') +
+    card('Ta‘dîl oranı en yüksek', oranli.length ? top(oranli.slice().sort((a, b) => critShare(a) - critShare(b)), 8, m => '%' + Math.round((1 - critShare(m)) * 100) + ' ta‘dîl · ' + (m.x.t + m.x.c) + ' görüş') : '<div class="hint">' + N + '+ görüşlü münekkit yok.</div>', 'En az ' + N + ' görüşü olanlar') +
+    '</div>';
+}
+const CTABS = [['hukum', 'Hükümler'], ['lafiz', 'Lafızlar'], ['ravi', 'Râviler'], ['hakkinda', 'Hakkında']];
+function critPage(m) {
+  const C = m.C, kd = critKodu(m.c), tab = CTABS.some(t => t[0] === S.critTab) ? S.critTab : 'hukum';
+  const head = '<div class="cback"><button class="linkbtn" data-crit="">← Münekkitler · genel görünüm</button></div>' +
+    '<div class="chead"><div><h2>' + esc(critName(m)) + '</h2><div class="ar-big"><bdi dir="rtl">' + esc(critAd(m.c)) + '</bdi>' + (kd != null ? ' ' + kodRozet(kd, 'HH kişi numarası: aynı numaralı kayıtlar tek münekkittir') : '') + '</div></div>' +
+    '<div class="vh-act"><button class="btn sm" data-critexport="' + esc(m.c) + '" title="Bu münekkidin raporu (HTML · Markdown · Word · PDF)">⤓ Rapor</button>' + scopeBar() + '</div>' +
+    '<div class="meta">' + [C.death ? 'ö. ' + C.death : '', C.city ? esc(C.city) + (C.region ? ' · ' + esc(C.region) : '') : '', C.approach ? 'Tavır: ' + esc(C.approach) : C.group ? 'müphem çoğul' : '', C.shii ? 'Şiî ricâl' : ''].filter(Boolean).map(x => '<span>' + x + '</span>').join('') + '</div></div>' +
+    kpis([['Hüküm kaydı', fmt(m.st.length), 'nakiller dahil'], ['Görüş', fmt(m.x.t + m.x.c), m.x.t + ' ta‘dîl · ' + m.x.c + ' cerh'], ['Râvi', fmt(m.narr.size), ''], ['Ort. şiddet', m.avg === null ? '—' : (m.avg > 0 ? '+' : '') + m.avg.toFixed(1), '−6 … +6'], ['Cerh oranı', critShare(m) < 0 ? '—' : '%' + Math.round(critShare(m) * 100), '']]) +
+    '<div style="max-width:520px">' + minibar(m.byK) + kindCounts(m.x) + '</div>' +
+    '<div class="subtabs ctabs" role="tablist">' + CTABS.map(([k, l]) => '<button role="tab" data-crtab="' + k + '" aria-selected="' + (tab === k) + '">' + l + '</button>').join('') + '</div>';
+  let body = '';
+  if (tab === 'hukum') { const F = critFull(), fm = F && F.by.get(m.c); body = '<div id="crit-hukum">' + (F ? (fm ? critDetail(fm) : '<div class="hint">Kayıt yok.</div>') : '') + '</div>'; }
+  else if (tab === 'lafiz') body = critLafiz(m);
+  else if (tab === 'ravi') body = critRavi(m);
+  else body = critHakkinda(m);
+  return head + body;
+}
+// Lafızlar: münekkidin kullandığı lafızlar, kaç kayıtta ve kaç râvi hakkında
+function critLafiz(m) {
+  const by = {};
+  for (const s of m.st) { const ph = (s.phrase || '(zımnî)').trim(), k = eKind(s); const e = by[ph + '|' + k] = by[ph + '|' + k] || { ph, k, n: 0, narr: new Set(), sev: eKind(s) === 'K' ? eTMax(s) - eCMax(s) : eSev(s) }; e.n++; e.narr.add(s.n.id); }
+  const L = Object.values(by).sort((a, b) => b.n - a.n);
+  return '<p class="hint" style="margin:0 0 8px">' + L.length + ' farklı lafız · bir lafza tıklayınca Lafız dizininde aranabilir (Ctrl+K).</p><div class="wrap"><table class="tbl" data-tid="crit-lafiz"><thead><tr><th data-sk="t">Lafız</th><th data-sk="t">Tür</th><th data-sk="n" class="num">Şiddet</th><th data-sk="n" class="num">Kayıt</th><th data-sk="n" class="num">Râvi</th></tr></thead><tbody>' +
+    L.map(e => '<tr style="cursor:default"><td class="ar" style="font-size:calc(17px * var(--yb))">' + esc(e.ph) + '</td><td>' + kindTag(e.k, KNAME[e.k] || e.k) + '</td><td class="num">' + (e.sev > 0 ? '+' : '') + e.sev + '</td><td class="num">' + e.n + '</td><td class="num">' + e.narr.size + '</td></tr>').join('') + '</tbody></table></div>';
+}
+// Râviler: hakkında hüküm verdiği râviler (râvi sayfasına götürür)
+function critRavi(m) {
+  const by = new Map();
+  for (const s of m.st) { let e = by.get(s.n.id); if (!e) by.set(s.n.id, e = { n: s.n, sts: [] }); e.sts.push(s); }
+  const L = [...by.values()].sort((a, b) => a.n.source_sequence - b.n.source_sequence);
+  return '<p class="hint" style="margin:0 0 8px">' + L.length + ' râvi · satıra tıklayınca râvinin sayfası açılır.</p><div class="wrap"><table class="tbl" data-tid="crit-ravi"><thead><tr><th data-sk="n">Râvi</th><th data-sk="t">Lafızlar</th><th data-sk="n" class="num">En ağır</th><th data-sk="n" class="num">Kayıt</th></tr></thead><tbody>' +
+    L.map(e => { const sev = e.sts.filter(eCounts).map(s => eKind(s) === 'K' ? -eCMax(s) : eSev(s)), mn = sev.length ? Math.min(...sev) : null, ph = [...new Set(e.sts.map(s => s.phrase).filter(Boolean))];
+      return '<tr data-gonarr="|' + e.n.source_sequence + '" title="Râvinin sayfasını aç"><td data-v="' + e.n.source_sequence + '"><b>#' + e.n.source_sequence + '</b> <span class="ar">' + esc(e.n.effective.canonical_name) + '</span></td><td class="ar small">' + esc(ph.slice(0, 3).join('، ')) + (ph.length > 3 ? ' …' : '') + '</td><td class="num" data-v="' + (mn ?? '') + '">' + (mn === null ? '—' : (mn > 0 ? '+' : '') + mn) + '</td><td class="num">' + e.sts.length + '</td></tr>'; }).join('') + '</tbody></table></div>';
+}
+function critHakkinda(m) {
+  const C = m.C;
+  return (C.note ? '<div class="note info">' + esc(C.note) + '</div>' : '<p class="hint">Bu münekkit için not yok.</p>') +
+    '<dl class="kv" style="margin-top:12px"><dt>Ad</dt><dd>' + esc(C.tr || '—') + ' <span class="ar">' + esc(critAd(m.c)) + '</span></dd><dt>Vefat</dt><dd>' + (C.death || '—') + '</dd><dt>Şehir · bölge</dt><dd>' + esc([C.city, C.region].filter(Boolean).join(' · ') || '—') + '</dd><dt>Tavır</dt><dd>' + esc(C.approach || '—') + '</dd></dl>' +
+    '<div class="row" style="margin-top:12px"><button class="btn sm" data-critexport="' + esc(m.c) + '">⤓ Bu münekkidin raporu (HTML · Markdown · Word · PDF)</button></div>';
 }
 // Koda göre renk: aynı numara hep aynı renk (altın açı ile ton); münekkit listesinde HH kişi numarası, hüküm tablosunda râvi numarası
 const kodTon = k => Math.round((+k * 137.508) % 360);
 const kodRozet = (k, t) => '<span class="kodr" style="--kh:' + kodTon(k) + '" title="' + esc(t || '') + '">#' + k + '</span>';
+const CRIT_MAX = 400;   // büyük münekkitlerde tablo önce bu kadar satırla çizilir (“Tümünü göster”)
 function critDetail(m) {
-  const sts = m.st.slice().sort((a, b) => seqKey(a) - seqKey(b));
+  const all = m.st.slice().sort((a, b) => seqKey(a) - seqKey(b)), sts = S.critAll ? all : all.slice(0, CRIT_MAX);
   let grp = 0, onceki = null;   // aynı râvinin satırları bir grup: sol şerit râvi numarasının rengi, gruplar dönüşümlü zemin
   const grup = s => { const k = seqKey(s); if (k !== onceki) { grp++; onceki = k; } return ' style="--kh:' + kodTon(k) + '" data-grp="' + (grp % 2) + '"'; };
-  const direct = sts.filter(s => s.transmission === 'Doğrudan').length, chained = sts.filter(s => s.chain).length;
-  const dn = denetimSayac(sts);
-  return (m.C.note ? '<div class="note info">' + esc(m.C.note) + '</div>' : '') +
-    (dn ? '<div class="hint" style="margin:0 0 6px">' + kodlar(['HH']) + ' HH ile denetim: <span class="dn ok">✓ ' + dn.tutar + ' doğrulandı</span> ' + (dn.tur ? '<span class="dn warn">⚠ ' + dn.tur + ' tür farkı</span> ' : '') + (dn.munekkit ? '<span class="dn bad">⚠ ' + dn.munekkit + ' münekkit farkı</span> ' : '') + '<span class="muted">· ' + dn.yok + ' HH’de yok</span></div>' : '') +
-    '<div class="row" style="margin:0 0 6px"><button class="btn sm" data-critexport="' + esc(m.c) + '">⤓ Bu münekkidin raporu (HTML · Markdown · Word · PDF)</button></div>' +
-    '<div class="hint" style="margin:0 0 6px">' + sts.length + ' kayıt · ' + direct + ' müellifin kendi hükmü · ' + chained + ' senedli nakil · ' + (sts.length - direct - chained) + ' senedsiz nakil · satıra tıklayınca metindeki yeri açılır</div>' +
+  const direct = all.filter(s => s.transmission === 'Doğrudan').length, chained = all.filter(s => s.chain).length;
+  const dn = denetimSayac(all);
+  return (dn ? '<div class="hint" style="margin:0 0 6px">' + kodlar(['HH']) + ' HH ile denetim: <span class="dn ok">✓ ' + dn.tutar + ' doğrulandı</span> ' + (dn.tur ? '<span class="dn warn">⚠ ' + dn.tur + ' tür farkı</span> ' : '') + (dn.munekkit ? '<span class="dn bad">⚠ ' + dn.munekkit + ' münekkit farkı</span> ' : '') + '<span class="muted">· ' + dn.yok + ' HH’de yok</span></div>' : '') +
+    '<div class="hint" style="margin:0 0 6px">' + all.length + ' kayıt · ' + direct + ' müellifin kendi hükmü · ' + chained + ' senedli nakil · ' + (all.length - direct - chained) + ' senedsiz nakil · satıra tıklayınca metindeki yeri açılır</div>' +
     '<div class="wrap"><table class="tbl sub-tbl" data-tid="crit-st"><thead><tr><th data-sk="n">Râvi</th><th data-sk="t">Lafız</th><th data-sk="t">Tür</th><th data-sk="n" class="num">Şiddet</th><th data-sk="t">Kaynak</th><th data-sk="t">Sened / nakil yolu</th></tr></thead><tbody>' +
-    sts.map(s => (CPOP.set(gotoAttr(s), s), '<tr data-cpop="' + esc(gotoAttr(s)) + '"' + grup(s) + ' title="' + esc(eCounts(s) ? 'Hükmün ayrıntısı ve metni' : ayriSayilir(s) ? 'Ayrı sayılır (' + KNAME[eKind(s)] + '); ta‘dîl–cerh toplamına girmez' : 'Soluk: sayıma girmez — ' + sayilmamaSebebi(s)) + '" class="kodsatir' + (eCounts(s) || ayriSayilir(s) ? '' : ' dim') + '"><td data-v="' + seqKey(s) + '"><b>' + '#' + s.n.source_sequence + '</b><div class="ar small" style="font-size:calc(14px * var(--yb))">' + esc(s.n.effective.canonical_name) + '</div></td><td class="ar">' + esc(s.phrase || '(zımnî)') + '</td><td>' + kindTag(eKind(s), eType(s).split(' /')[0]) + '</td><td class="num" data-v="' + (eKind(s) === 'K' ? eTMax(s) - eCMax(s) : eSev(s)) + '">' + sevText(s) + '</td><td class="ar small" style="font-size:calc(14px * var(--yb))">' + esc(srcShort(s.b)) + (s.origin === 'HH' ? ' ' + kodlar(['HH']) : hhAyniRozet(s)) + ' ' + denetimRozet(s) + '</td><td>' + senedHTML(s) + '</td></tr>')).join('') + '</tbody></table></div>';
+    sts.map(s => (CPOP.set(gotoAttr(s), s), '<tr data-cpop="' + esc(gotoAttr(s)) + '"' + grup(s) + ' title="' + esc(eCounts(s) ? 'Hükmün ayrıntısı ve metni' : ayriSayilir(s) ? 'Ayrı sayılır (' + KNAME[eKind(s)] + '); ta‘dîl–cerh toplamına girmez' : 'Soluk: sayıma girmez — ' + sayilmamaSebebi(s)) + '" class="kodsatir' + (eCounts(s) || ayriSayilir(s) ? '' : ' dim') + '"><td data-v="' + seqKey(s) + '"><b>' + '#' + s.n.source_sequence + '</b><div class="ar small" style="font-size:calc(14px * var(--yb))">' + esc(s.n.effective.canonical_name) + '</div></td><td class="ar">' + esc(s.phrase || '(zımnî)') + '</td><td>' + kindTag(eKind(s), eType(s).split(' /')[0]) + '</td><td class="num" data-v="' + (eKind(s) === 'K' ? eTMax(s) - eCMax(s) : eSev(s)) + '">' + sevText(s) + '</td><td class="ar small" style="font-size:calc(14px * var(--yb))">' + esc(srcShort(s.b)) + (s.origin === 'HH' ? ' ' + kodlar(['HH']) : hhAyniRozet(s)) + ' ' + denetimRozet(s) + '</td><td>' + senedHTML(s) + '</td></tr>')).join('') + '</tbody></table></div>' +
+    (sts.length < all.length ? '<div class="row" style="margin-top:8px"><button class="btn sm" data-critall>Tümünü göster (' + fmt(all.length) + ' kayıt)</button> <span class="hint">İlk ' + sts.length + ' kayıt gösteriliyor.</span></div>' : '');
 }
 
 /* ---------- Teâruz ve nakil karşılaştırması (CTN) ----------
@@ -6039,7 +6200,7 @@ document.addEventListener('keydown', e => {
 }, true);
 applySizes();
 $('tb-notch').addEventListener('click', () => setTopbar(!!UI.tbHide)); applyTopbar();
-let drwRaf = 0; window.addEventListener('resize', () => { cancelAnimationFrame(drwRaf); drwRaf = requestAnimationFrame(() => { layoutDrawers(); fitTopbar(); }); });
+let drwRaf = 0; window.addEventListener('resize', () => { cancelAnimationFrame(drwRaf); drwRaf = requestAnimationFrame(() => { layoutDrawers(); fitTopbar(); if (S.view === 'critics') layoutCrail(); }); });
 // Yazdırırken hüküm özeti (Sayılar) açık basılır; sonra eski hâline döner
 window.addEventListener('beforeprint', () => { const d = document.querySelector('.nh-sum'); if (d && !d.open) { d.dataset.printOpen = '1'; d.open = true; } });
 window.addEventListener('afterprint', () => { const d = document.querySelector('.nh-sum[data-print-open]'); if (d) { d.open = false; setTimeout(() => { delete d.dataset.printOpen; }, 0); } });
@@ -6215,7 +6376,11 @@ document.addEventListener('click', e => {
     logAct('kimlik', ({ hocalar: 'Hoca', talebeler: 'Talebe', rihle: 'Mekân' })[key] + ' ' + (v === 'ok' ? 'onaylandı' : v === 'no' ? 'reddedildi' : 'adaya döndü') + ': ' + (it ? it.v : k2), { nid: n.id, seq: n.source_sequence, before, after: v || 'aday' });
     saveRev(); renderCenter(); return; }
   const ld = t.closest('[data-ldel]'); if (ld) { if (!need('edit')) return; const [key, i] = ld.dataset.ldel.split('|'); const n = NBYID[S.nid]; const L = idnOf(n.id, true).l[key]; const x = L.add.splice(+i, 1)[0]; logAct('kimlik', ({ hocalar: 'Hoca', talebeler: 'Talebe', rihle: 'Mekân' })[key] + ' silindi: ' + x.v, { nid: n.id, seq: n.source_sequence, before: x }); saveRev(); renderCenter(); return; }
-  const cr = t.closest('[data-crit]'); if (cr) { S.critSel = S.critSel === cr.dataset.crit ? '' : cr.dataset.crit; renderCritics(); return; }
+  const cr = t.closest('[data-crit]'); if (cr) { S.critSel = cr.dataset.crit; S.critAll = false; if (isPhone() && S.critSel) setCrail(false); const D = critData(); if (D) { renderCritList(D); renderCritCenter(D); $('critics-scroll').scrollTop = 0; } else renderCritics(); return; }
+  const ctb = t.closest('[data-crtab]'); if (ctb) { S.critTab = ctb.dataset.crtab; const D = critData(); if (D) renderCritCenter(D); return; }
+  if (t.closest('[data-critall]')) { S.critAll = true; const D = critData(); if (D) renderCritCenter(D); return; }
+  if (t.closest('#crail-notch')) { setCrail(UI.crail !== 'open', true); return; }
+  if (t.closest('#crail-close')) { setCrail(false); return; }
   const lx = t.closest('[data-lex]'); if (lx) { S.lexSel = lx.dataset.lex; renderLex(); return; }
   const lk = t.closest('[data-lexk]'); if (lk) { S.lexK = lk.dataset.lexk; S.lexSel = ''; renderLex(); return; }
   const act = t.closest('[data-act]');
@@ -8777,6 +8942,109 @@ const RAPOR = (() => {
 </script>
 <script>
 /* =========================================================
+   CTKR — dilim (50 râvi) çözümlemesi ve özeti
+   Bir dilimin râvilerini CTX ile çözümler, kimlik alanlarını CTK ile çıkarır ve Münekkitler, Teâruz, Lafız dizini
+   ile râvi listesinin okuduğu özeti (korpus kaydı) kurar. Sayfa (app.js) ve tools/korpus-hazirla.js aynı kodu
+   kullanır; böylece depodaki hazır özet (kaynak/korpus) tarayıcıda kurulanla birebir aynıdır.
+   OZET: motor dosyalarının (ctlex, ctparse, ctkimlik, ctkorpus) özeti build.py’de sayfaya yazılır; depodaki
+   hazır özet yalnız bu özet tutuyorsa kullanılır (sözlük ya da motor değişince yeniden üretilmelidir).
+   ========================================================= */
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) module.exports = factory(require('./ctlex.js'), require('./ctkimlik.js'));
+  else root.CTKR = factory(root.CTX, root.CTK);
+})(typeof self !== 'undefined' ? self : this, function (CTX, CTK) {
+  'use strict';
+  const BICIM = 'k6';   // özet biçimi: alanlar değişince artırılır
+  const HOW_TR = { nisbe: 'nisbe', memleket: 'min ehli', 'asıl': 'aslen', ikamet: 'sakin', 'nüzûl': 'nüzûl', 'görev': 'görev', 'kudûm': 'kudûm', 'rıhle': 'rıhle', 'tahdîs': 'tahdîs', 'semâ‘': 'semâ‘', 'mücâveret': 'mücâveret', hac: 'hac' };
+  const uniq = a => [...new Set(a.filter(Boolean))];
+  function yearText(x) { if (!x || !x.year) return ''; if (x.noCentury) return 'yüzler hanesi yazılmamış (…' + String(x.from || x.year).slice(-2) + (x.to && x.to !== x.from ? '–' + String(x.to).slice(-2) : '') + ')'; return 'h. ' + (x.approx ? x.from + '–' + x.to : x.year); }
+  function stUid(b, s) { return (s.implicit ? 'z' : '') + b.id + ':' + s.start + ':' + s.end + ':' + (s.critic || s.critic_written || '-'); }
+  function blockOpts(b, n) { return { sourceName: b.effective.source_name, sourceAuthor: b.effective.source_author, narratorNames: n._names, blockId: b.id, narratorId: n.id }; }
+  // Kaynak bloğu künyesi düzeltmesi (eser, müellif, yer); çözümleme bu değerlerle yapılır
+  function applyBlockFix(b, R) {
+    const e = b.effective;
+    if (!b._oe) b._oe = { source_name: e.source_name, source_author: e.source_author, source_locator: e.source_locator };
+    Object.assign(e, b._oe);
+    const o = R && R.blk && R.blk[b.id]; if (o) for (const k of ['source_name', 'source_author', 'source_locator']) if (o[k]) e[k] = o[k];
+  }
+  // Bir râvinin bütün kaynak bloklarını CTX ile çözümler; R: dilimin inceleme kaydı (künye ve metin düzeltmeleri, kaldırılan hükümler)
+  function analiz(n, R) {
+    R = R || {};
+    n._names = [n.effective.canonical_name, ...(n.effective.name_variants || [])];
+    n._st = []; n._kim = null; n._merv = null;
+    for (const b of n.blocks) {
+      applyBlockFix(b, R);
+      b._n = n;
+      const tx = R.txt && R.txt[b.id];
+      b._otext = b.raw_text.slice(b.content_start);                                    // özgün metin (değişmez)
+      b._text = tx && typeof tx.text === 'string' ? tx.text : b._otext;                // araştırmacı düzeltmesi varsa o
+      b._title = b.raw_text.slice(0, b.content_start).replace(/[‌​]/g, '').replace(/^\s*•\s*/, '').trim();
+      const r = CTX.analyze(b._text, blockOpts(b, n));
+      b._notes = r.notes; b._markers = r.markers;
+      const all = r.statements.map(s => { s.uid = stUid(b, s); s.b = b; s.n = n; s.origin = 'CTX'; return s; });
+      const gone = s => !!(R.st && R.st[s.uid] && R.st[s.uid].v === 'del');       // kaldırılan hüküm: listelerden ve sayımdan çıkar
+      b._st = all.filter(s => !gone(s)); b._del = all.filter(gone);
+      // Kaynak künyesi (son köşeli parantez) — görüntüde soluk
+      const ri = b._text.lastIndexOf('[');
+      b._refStart = ri > 0 && b._text.length - ri < 160 ? ri : b._text.length;
+      n._st.push(...b._st);
+    }
+  }
+  function kim(n) { if (!n._kim) n._kim = CTK.extract({ names: n._names, blocks: n.blocks.map(b => ({ id: b.id, text: b._text, source: b.effective.source_name })) }); return n._kim; }
+  // Kimlik alanının otomatik değeri (metinden çıkarılan adaylar birleştirilerek)
+  function alan(n, k) {
+    const K = kim(n);
+    switch (k) {
+      case 'isim': return n.effective.canonical_name;
+      case 'kunye': return uniq(K.kunye.map(x => x.v)).join('، ');
+      case 'nisbe': return uniq(K.nisbe.map(x => x.v)).join(' ');
+      case 'lakap': return uniq(K.lakap.map(x => x.v)).join('، ');
+      case 'vela': return uniq(K.vela.map(x => x.v)).join('؛ ');
+      case 'memleket': return uniq(K.belde.filter(x => ['nisbe', 'memleket', 'asıl'].includes(x.how)).map(x => x.v)).join(', ');
+      case 'ikamet': return uniq(K.belde.filter(x => ['ikamet', 'nüzûl', 'görev'].includes(x.how)).map(x => x.v + ' (' + HOW_TR[x.how] + ')')).join(', ');
+      case 'dogum': return K.dogum.map(x => x.v + (x.year ? ' — ' + yearText(x) : '')).join('؛ ');
+      case 'vefat': return K.vefat.map(x => x.v + (x.year ? ' — ' + yearText(x) : '')).join('؛ ');
+      case 'tabaka': return uniq(K.tabaka.map(x => x.v + (x.label ? ' (' + x.label + ')' : ''))).join('; ') || (K.tabakaTahmin ? K.tabakaTahmin.text + ' (tahmin)' : '');
+      case 'mezhep': return uniq(K.mezhep.map(x => x.v)).join(', ');
+      default: return '';
+    }
+  }
+  // Dilimin özeti: hükümler (bağlamıyla), blok künyeleri, kimlik alanları, râvi satırları
+  function ozet(ns, R) {
+    const sts = [], bmeta = {}; let blocks = 0, hit = 0;
+    const ctx = (b, a, e) => b._text.slice(a, e).replace(/\s+/g, ' ');
+    for (const n of ns) {
+      analiz(n, R);
+      for (const b of n.blocks) {
+        blocks++; if (b._st.length) hit++;
+        bmeta[b.id] = [n.source_sequence, n.effective.canonical_name, b.effective.source_name, b.effective.source_locator || ''];
+        for (const x of b._st) sts.push({
+          uid: x.uid, origin: 'CTX', seq: n.source_sequence, name: n.effective.canonical_name, bid: b.id, source: b.effective.source_name, locator: b.effective.source_locator || '',
+          critic: x.critic, critic_written: x.critic_written, kind: x.kind, type: x.type, severity: x.severity, tMax: x.tMax, cMax: x.cMax, counts: x.counts, flags: x.flags,
+          confidence: x.confidence, grade: x.grade, phrase: x.phrase, sebebs: x.sebebs, mufassar: x.mufassar, transmission: x.transmission, transmitter: x.transmitter, chain: x.chain,
+          start: x.start, end: x.end, basis: x.basis, question: !!x.question, author: b.effective.source_author || '',
+          terms: (x.terms || []).map(t => ({ id: t.id, k: t.k, start: t.start, text: t.text, pre: ctx(b, Math.max(0, t.start - 48), t.start), post: ctx(b, t.end, t.end + 48) }))
+        });
+      }
+    }
+    const kimlik = {}; for (const n of ns) kimlik[n.source_sequence] = Object.assign({ nid: n.id }, Object.fromEntries(['kunye', 'nisbe', 'memleket', 'ikamet', 'vefat', 'tabaka', 'mezhep'].map(k => [k, alan(n, k)])));
+    const rows = ns.map(n => [n.source_sequence, n.id, n.effective.canonical_name, n.warnings.length + n.unclassified.length + n.orphan_sections.length, n.effective.name_variants || []]);
+    return { narrators: ns.length, narrator_ids: ns.map(n => n.id), blocks, hit, bmeta, sts, kim: kimlik, rows };
+  }
+  // Hazır özet bu dilime uygulanabilir mi: dilimde künye ya da metin düzeltmesi yoksa evet (kaldırılan hükümler ayıklanır)
+  function hazirUygun(R) { return !R || ((!R.blk || !Object.keys(R.blk).length) && (!R.txt || !Object.keys(R.txt).length)); }
+  function kaldirileniAyikla(rec, R) {
+    const del = R && R.st ? new Set(Object.keys(R.st).filter(k => R.st[k] && R.st[k].v === 'del')) : null;
+    if (!del || !del.size) return rec;
+    const sts = rec.sts.filter(x => !del.has(x.uid)), bh = new Set(sts.map(x => x.bid));
+    return Object.assign({}, rec, { sts, hit: bh.size });
+  }
+  return { BICIM, HOW_TR, uniq, yearText, stUid, blockOpts, applyBlockFix, analiz, kim, alan, ozet, hazirUygun, kaldirileniAyikla };
+});
+
+</script>
+<script>
+/* =========================================================
    CTN — nakil karşılaştırması (collatio) ve teâruz çıkarımı
    1) Nakil: aynı münekkidin aynı râvi hakkındaki sözü, sonraki bir eserde (özellikle ez-Zehebî’nin
       Mîzân, Dîvân, Muğnî vb.) önceki bir eserdekinden (asıl) farklı aktarılmış mı?
@@ -9750,13 +10018,18 @@ const KASA = (() => {
     }));
   }
   const run = (db, name, m, fn) => new Promise((res, rej) => { const t = db.transaction(name, m); const q = fn(t.objectStore(name)); t.oncomplete = () => res(q && q.result); t.onerror = () => rej(t.error); t.onabort = () => rej(t.error); });
-  async function encRec(n, v) { const k = v[KP[n]]; const o = { _e: await seal(dek, JSON.stringify(v), id + ':idb:' + n) }; if (k !== undefined) o[KP[n]] = k; return o; }
-  async function decRec(n, r) { if (!r || !r._e) return r; const o = JSON.parse(TD.decode(await unseal(dek, r._e, id + ':idb:' + n))); if (r[KP[n]] !== undefined) o[KP[n]] = r[KP[n]]; return o; }
+  // Büyük kayıtlar (cilt dosyaları, dilim özetleri) şifrelenmeden önce sıkıştırılır (_z): şifre çözme ve okuma çok kısalır
+  const GZ = typeof CompressionStream === 'function' && typeof DecompressionStream === 'function';
+  const gz = async t => new Uint8Array(await new Response(new Blob([t]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer());
+  const gunz = async u => new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
+  async function encRec(n, v) { const k = v[KP[n]], js = JSON.stringify(v), z = GZ && js.length > 32768; const o = { _e: await seal(dek, z ? await gz(js) : js, id + ':idb:' + n) }; if (z) o._z = 1; if (k !== undefined) o[KP[n]] = k; return o; }
+  async function decRec(n, r) { if (!r || !r._e) return r; const u = await unseal(dek, r._e, id + ':idb:' + n); const o = JSON.parse(r._z ? await gunz(u) : TD.decode(u)); if (r[KP[n]] !== undefined) o[KP[n]] = r[KP[n]]; return o; }
   const db = {
     async put(n, v) { const rec = await encRec(n, v); return run(await idb(), n, 'readwrite', st => st.put(rec)); },
     async del(n, k) { return run(await idb(), n, 'readwrite', st => st.delete(k)); },
     async get(n, k) { const r = await run(await idb(), n, 'readonly', st => st.get(k)); return r ? decRec(n, r) : null; },
-    async all(n) { const list = await run(await idb(), n, 'readonly', st => st.getAll()); const out = []; for (const r of list || []) { try { out.push(await decRec(n, r)); } catch (e) { } } return out; }
+    // Kayıtların şifresi paralel çözülür (WebCrypto ve açma işlemi ana iş parçacığını bekletmez)
+    async all(n) { const list = await run(await idb(), n, 'readonly', st => st.getAll()); return (await Promise.all((list || []).map(r => decRec(n, r).catch(() => undefined)))).filter(x => x !== undefined); }
   };
 
   /* ---------- Oturum: sekme boyunca (sessionStorage) veya “bu bilgisayarda açık tut” (cihaz anahtarı) ---------- */
