@@ -6,7 +6,7 @@
 <title>Cerh-Taʿdîl · Kaynak Kontrolü</title>
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self' https://api.github.com https://generativelanguage.googleapis.com; img-src data:; base-uri 'none'; form-action 'none'">
 <meta name="generator" content="cerh-tadil/build.py CTX 2.0.0">
-<meta name="cerh-motor" content="67cfa0f404ba2b51">
+<meta name="cerh-motor" content="04a5d572c1149964">
 <style>
 /* =========================================================
    Cerh-Ta‘dîl · Kaynak Kontrolü — arayüz stilleri
@@ -1360,7 +1360,7 @@ const KSTACK = ['T', 'N', 'K', 'B', 'J', 'C'];                        // doğrul
 const KNAME = { T: 'Ta‘dîl', N: 'Cerhin reddi', K: 'Karma', B: 'Mezhep / bid‘at', J: 'Cehâlet', C: 'Cerh', R: 'Rivâyet hükmü', V: 'Rivayet tavrı', P: 'Tercih', D: 'Diyânet', S: 'Sükût', M: 'Münekkit tenkidi' };
 const KDESC = { T: 'Râviyi güvenilir kılan ifade', N: 'Bir cerhin reddi veya hafifletilmesi', K: 'Ta‘dîl + kayıt (mukayyed) bir arada', B: 'Mezhep/bid‘at nitelemesi (ta‘n sebebi)', J: 'Tanınmama (cehâlet)', C: 'Adâlet veya zabta yönelik cerh', R: 'Hüküm râviye değil rivayete (hadise) ait', V: 'Bir kimsenin ondan rivayet edip etmemesi (olumlu/olumsuz tavır); ta‘dîl–cerh toplamına girmez, Münekkitler’de ayrı sayılır. “Ondan yazmayın” gibi başkalarına tavsiye cerhtir', P: 'Tercih (mukayeseli ta‘dîl): râviyi bir başkasından üstün ya da aşağı tutma (lehine/aleyhine); ta‘dîl–cerh toplamına girmez, Münekkitler’de ayrı sayılır', D: 'Diyânet/zühd övgüsü (rivayet ta‘dîli değil)', S: 'Cerh ve ta‘dîl zikredilmemiş', M: 'Münekkidin kendisi hakkında değerlendirme' };
 const kc = k => 'k-' + String(k || 'd').toLowerCase();
-const FLAGTXT = { mezhep: 'Mezhep / bid‘at notu (cerh sayılmaz)', 'şiî-ricâl': 'Şiî ricâl (Sünnî sayıma girmez)', 'hedef-şüpheli': 'Başka kişi hakkında olabilir', soru: 'Soru cümlesi', 'soru-teyit': 'Soru–cevapla teyit', 'söz-sahibi-belirsiz': 'Söz sahibi belirsiz', 'isnad-içi': 'Senet içinde', derleme: 'Derleme eser', zeame: 'Za‘ame (nakleden katılmıyor)', 'istilah-zehebi': 'Zehebî ıstılahı', rüya: 'Rüyaya dayalı', şartlı: 'Şartlı hüküm', zımnî: 'Zımnî (kitaba alma)' };
+const FLAGTXT = { mezhep: 'Mezhep / bid‘at notu (cerh sayılmaz)', 'şiî-ricâl': 'Şiî ricâl (Sünnî sayıma girmez)', 'hedef-şüpheli': 'Başka kişi hakkında olabilir', soru: 'Soru cümlesi', 'soru-teyit': 'Soru–cevapla teyit', 'söz-sahibi-belirsiz': 'Söz sahibi belirsiz', 'isnad-içi': 'Senet içinde', derleme: 'Derleme eser', zeame: 'Za‘ame (nakleden katılmıyor)', 'istilah-zehebi': 'Zehebî ıstılahı', rüya: 'Rüyaya dayalı', şartlı: 'Şartlı hüküm', zımnî: 'Zımnî (kitaba alma)', olumsuz: 'Olumsuzlanmış lafız (tersine çevrildi)', itiraz: 'Ardından itiraz var (atıf ya da hüküm tartışmalı)' };
 
 /* ---------- Yerel depolama: KASA’nın şifreli deposu (bellekte çözülmüş, diske AES-256-GCM ile) ---------- */
 const store = KASA.store;
@@ -5569,9 +5569,24 @@ function renderReport() {
   out += '<h3 class="panel-title">Ciltler</h3><div class="wrap"><table class="tbl" data-tid="report-vols"><thead><tr><th data-sk="n">Cilt</th><th data-sk="n" class="num">Râvi</th><th data-sk="n" class="num">Blok</th><th data-sk="n" class="num">Hüküm</th><th data-sk="n" class="num">Sayılan</th><th data-sk="n" class="num">Münekkitli</th><th data-sk="n" class="num">İncelenen râvi</th><th class="num">Kararlar</th><th data-sk="n" class="num">İsabet</th></tr></thead><tbody>' + line + '</tbody></table></div>';
   const mx = Math.max(1, ...TYPES.map(t => byType[t] || 0));
   out += '<h3 class="panel-title">Türe göre dağılım <span class="muted">inceleme kararları uygulanmış</span></h3><div class="chart" style="padding:14px 16px">' + TYPES.map(t => '<div style="display:grid;grid-template-columns:190px minmax(0,1fr) 78px;gap:4px 10px;align-items:center;margin-bottom:8px"><span class="small">' + esc(t) + '</span><div style="height:10px;border-radius:0 4px 4px 0;background:var(--accent-2);width:' + ((byType[t] || 0) / mx * 100) + '%;min-width:2px"></div><span class="small mono">' + fmt(byType[t] || 0) + '</span></div>').join('') + '</div>';
-  out += denetimRaporHTML() + metinRaporHTML();
+  out += baglamRaporHTML(rows.flatMap(r => r.sts)) + denetimRaporHTML() + metinRaporHTML();
   if (scopePkgs(S.scope).includes(SNAP_PKG)) out += legacyCompare();
   $('report-body').innerHTML = out;
+}
+// Bağlam denetimi (21.10.2026): lafzın cümlesi içinde okunmasıyla değişen ya da tartışmalı hükümler. Olumsuz edattan sonra
+// gelen lafız tersine çevrilir (motor, sayıma öyle girer); ardından itiraz gelen hüküm yalnız işaretlenir (sayım değişmez).
+const BAGLAM_MAX = 300;
+function baglamRaporHTML(sts) {
+  const ol = sts.filter(s => (s.flags || []).includes('olumsuz')), it = sts.filter(s => (s.flags || []).includes('itiraz'));
+  if (!ol.length && !it.length) return '';
+  const tablo = (L, tid) => '<div class="wrap"><table class="tbl" data-tid="' + tid + '"><thead><tr><th data-sk="n">Râvi</th><th data-sk="t">Münekkit</th><th data-sk="t">Lafız</th><th data-sk="t">Sayılan</th><th data-sk="t">Kaynak</th></tr></thead><tbody>' +
+    L.slice(0, BAGLAM_MAX).map(s => (CPOP.set(gotoAttr(s), s), '<tr data-cpop="' + esc(gotoAttr(s)) + '" title="Hükmün cümlesi ve ayrıntısı"><td data-v="' + seqKey(s) + '"><b>#' + s.n.source_sequence + '</b> <span class="ar small">' + esc(s.n.effective.canonical_name) + '</span></td><td>' + esc(crName(eCritic(s), s.critic_written)) + '</td><td class="ar">' + esc(s.phrase || '') + '</td><td>' + kindTag(eKind(s), eType(s).split(' /')[0]) + ' <span class="small">' + sevText(s) + '</span></td><td class="ar small">' + esc(srcShort(s.b)) + '</td></tr>')).join('') + '</tbody></table></div>' +
+    (L.length > BAGLAM_MAX ? '<div class="hint">İlk ' + BAGLAM_MAX + ' kayıt gösteriliyor (' + fmt(L.length) + ').</div>' : '');
+  return '<h3 class="panel-title">Bağlam denetimi <span class="muted">lafzın cümlesi içinde okunması</span>' + hintBtn('rp-baglam') + '</h3>' +
+    hintP('rp-baglam', 'Hükümler lafız lafız tespit edildiği için cümledeki olumsuz edat ya da hükümden sonra gelen itiraz gözden kaçabiliyordu. Bütün eserde yapılan bağlam taramasında (21.10.2026) olumsuz edattan sonra gelen lafızların sistematik olarak ters sayıldığı görüldü (ör. «ليس يكتب حديثه» ta‘dîl, «لم يكن متهما» ittiham, «غير صدوق» sadûk). Motor artık bunları tersine çevirir: olumsuzlanan ta‘dîl cerh, olumsuzlanan cerh ve cehâlet cerhin reddi sayılır; «فيما لم يخالف», «ما لم», «من لم» gibi ilgi/şart cümleciklerindeki lafız hüküm sayılmaz; «لا … إلا» istisnası hükmü teyit eder; «لا وثق ولا ضعف» hüküm değildir. Örneklem okumasında bu kayıtların yaklaşık %80’i doğru çıktı; kalanların çoğu başka kişi ya da hadis hakkındadır. Ardından «وهذا وهم», «وليس كما قال», «تحامل», «لا يلتفت إليه» gibi bir itiraz gelen hükümler yalnız işaretlenir, sayım değişmez: itiraz atfın kendisine mi, hükme mi yöneldiği okunarak karar verilmelidir. Satıra tıklayınca hükmün cümlesi açılır.') +
+    '<div class="cards compact">' + card('Olumsuzlanmış lafız', fmt(ol.length), fmt(ol.filter(s => eKind(s) === 'C').length) + ' ta‘dîl → cerh · ' + fmt(ol.filter(s => eKind(s) === 'N').length) + ' cerh → cerhin reddi') + card('İtiraz edilmiş hüküm', fmt(it.length), 'sayım değişmez; incelenmeli') + '</div>' +
+    (ol.length ? fold('rp:baglam:ol', 'Olumsuzlanmış lafızlar (' + fmt(ol.length) + ')', tablo(ol.slice().sort((a, b) => seqKey(a) - seqKey(b)), 'baglam-ol'), false) : '') +
+    (it.length ? fold('rp:baglam:it', 'İtiraz edilmiş hükümler (' + fmt(it.length) + ')', tablo(it.slice().sort((a, b) => seqKey(a) - seqKey(b)), 'baglam-it'), false) : '');
 }
 // Râvi 1–50: SQLite anlık görüntüsündeki eski tespitler ile yeni motorun aynı bloklardaki hükümleri
 function legacyCompare() {
@@ -5699,6 +5714,8 @@ function renderMethod() {
     '<h3>7. Metin süzgeçleri</h3><ul>' +
     '<li><b>Normalizasyon:</b> harekeler ve tatvîl silinir; ' + ar('أ إ آ ٱ') + ' → ' + ar('ا') + ', ' + ar('ى') + ' → ' + ar('ي') + ', ' + ar('ة') + ' → ' + ar('ه') + ', ' + ar('ؤ') + ' → ' + ar('و') + '; ' + ar('ئ') + ' korunur. Vurgular özgün imlâ üzerinde gösterilir.</li>' +
     '<li><b>En uzun eşleşme:</b> çakışan kalıplardan en uzunu alınır; böylece ' + ar('لا يحتج به') + ' ta‘dîl sayılmaz. Olumsuzluklar “fe-” ile de tanınır (' + ar('فلا يحتج به، فليس بثقة') + ').</li>' +
+    '<li><b>Bağlam: olumsuzlama (21.10.2026).</b> Sözlükte olumsuz biçimi bulunmayan bir lafzın hemen önünde olumsuz edat varsa (' + ar('ليس، لم، لا، ما، غير') + ') hüküm tersine çevrilir: olumsuzlanan ta‘dîl cerh (' + ar('ليس يكتب حديثه') + ' “hadisi yazılmaz”, ' + ar('غير صدوق') + ', ' + ar('ما كان ثقة') + '), olumsuzlanan cerh cerhin reddi sayılır (' + ar('لم يكن متهما') + ', ' + ar('وما تركه أحد') + '). İlgi ve şart cümleciğindeki lafız hüküm değildir (' + ar('فيما لم يخالف الثقات') + ', ' + ar('من لم يجهل') + ', ' + ar('بعد ما اختلط') + '); «lâ … illâ» istisnası hükmü teyit eder (' + ar('ما ترك حديثه إلا للرفض') + '); ' + ar('لا وثق ولا ضعف') + ' hüküm sayılmaz. Bütün eserde yapılan bağlam taramasında eski motorun bu kayıtları sistematik olarak ters saydığı görüldü; düzeltme örneklem okumasıyla yaklaşık %80 isabetli çıktı, kalan yanlışların çoğu sözün başka kişi ya da hadis hakkında olmasıdır.</li>' +
+    '<li><b>Bağlam: itiraz.</b> Hükmün ardından nakle ya da hükme itiraz geliyorsa (' + ar('وهذا وهم، وليس كما قال، تحامل، لا يلتفت إليه') + ') hüküm işaretlenir; sayım değişmez, çünkü itirazın atfa mı hükme mi yöneldiği okunarak belirlenmelidir. Her iki grup Tespit raporunun <i>Bağlam denetimi</i> bölümünde listelenir.</li>' +
     '<li><b>Hedef kontrolü:</b> başka kişiye yönelen hükümler (' + ar('ويزيد ليس بشيء') + ', ' + ar('روى الكديمي -وهو ساقط-') + ') sayılmaz ve işaretlenir.</li>' +
     '<li><b>Haber metni ve ıstılah cümleleri:</b> merfû haberin ve âyetin içi taranmaz; ' + ar('كل من أقول فيه مجهول') + ' gibi tanımlar hüküm değildir.</li>' +
     '<li><b>Zımnî cerh:</b> du‘afâ eserlerinde açık lafız bulunmayan tercüme, kitaba alınması sebebiyle düşük güvenle kaydedilir.</li></ul>' +
@@ -7614,6 +7631,49 @@ const RAPOR = (() => {
   add('T', 2, 'sidk', 'Semâ‘ı sahih', 0.6, ['(?:كان )?صحيح السماع'], { nt: LMZ + 'Geç dönem râvilerinde semâ‘ kayıtlarının sıhhatini bildiren kabul ifadesi.' });
   add('B', 1, 'bidat', 'Bid‘atla itham edildi (rümiye bi-…)', 0.85, ['(?:كان )?يرمي (?:بالتشيع|بالرفض|بالقدر|بالارجاء|بالنصب|بالاعتزال)', 'رمي (?:بالتشيع|بالرفض|بالقدر|بالارجاء|بالنصب|بالاعتزال)', 'من (?:شيوخ|رجال|كبار|غلاه) الشيعه', 'معتزليا?', 'من (?:كبار |شيوخ )?المعتزله', 'يري (?:الاعتزال|راي المعتزله)'], { nt: LMZ + 'Yalın mezhep kaydıdır; cerh sayılmaz.' });
 
+  // «Ne tevsîk ne tad‘îf»: hüküm yok (sükût); olumsuzlama kuralı iki lafzı ayrı ayrı tersine çevirmesin
+  add('S', 0, '', 'Ne tevsîk ne tad‘îf', 0.85, ['(?:لا|ما) وثق ولا ضعف', '(?:لا|ما) ضعف ولا وثق', 'لم يوثق ولم يضعف', 'لا يوثق ولا يضعف', 'لم يوثقه احد ولم يضعفه', 'ما رايت احدا وثقه(?:، بل ولا تكلم فيه)?'], { nt: 'Hakkında ta‘dîl de cerh de bulunmadığını bildirir; hüküm sayılmaz.' });
+
+  /* Olumsuzlama (bağlam denetimi, 21.10.2026): lafızdan hemen önce gelen olumsuz edat hükmü tersine çevirir
+     («ليس يكتب حديثه», «غير صدوق», «ما كان ثقه», «ولا مامون», «لم يكن متهما», «وما تركه احد»). Sözlükte olumsuz
+     biçimi ayrıca bulunan lafızlar (ليس بثقه, لا يحتج به …) zaten o kayıtla eşleşir; bu kural yalnız kalanlar içindir.
+     Olumsuzlanan ta‘dîl cerh olur (ثقه → “sika değil” 4, مامون → 4, صدوق → 3, يكتب حديثه → “hadisi yazılmaz” 3,
+     öteki ta‘dîl → 2); olumsuzlanan cerh ve cehâlet cerhin reddidir (N). Lafız kimliği korunur (Lafız dizini). */
+  const NEG_PRE = /(?:^|[\s،:.؛(«"])(?:و|ف)?(?:ليس|ليست|لم|لا|غير|ما)\s+(?:(?:هو|هي)\s+)?(?:(?:كان|يكن|يكون|تكن)\s+)?(?:(?:عندي|عندهم|عنده|عندنا)\s+)?(?:ب)?$/;
+  const NEG_REL = /(?:كثيرا|اول|منها|منه|حديثه|احاديثه|رواياته|عنه|عن|روي|يروي|عليه|بعض|في|كل|الي|علي|من|مثل|مع|كان|بعد|قبل|حين|عند)\s+ما\s+$/;
+  // İlgi ya da şart cümleciği: «fî-mâ lem yuhâlif», «mâ lem yuhâlif», «men lem yechel» — hüküm değil (lafız sayılmaz)
+  const NEG_SART = /(?:^|\s)(?:و|ف|ب|ا)?(?:فيما|بما|مما|ما|من|الا فيما)\s+(?:لم|لا)\s+(?:(?:يكن|كان)\s+)?$/;   // ilgi «mâ»: «kesîran mâ», «minhâ mâ», «revâ anhu mâ»
+  const NEG_DIS = /(?:من|ب)غير\s+$/;   // «min gayri», «bi-gayri»: olumsuzlama değil
+  const NEGC = new Map();
+  function negOf(e, w) {   // w: metinde eşleşen lafız
+    const lvT = /ثقه/.test(w) ? 4 : /مامون/.test(w) ? 4 : /صدوق/.test(w) ? 3 : /يكتب حديثه/.test(w) ? 3 : 2, key = e.k === 'T' ? lvT + (/مامون/.test(w) ? 'm' : '') : '';
+    let m = NEGC.get(e); if (!m) NEGC.set(e, m = {}); if (m[key]) return m[key];
+    let d;
+    if (e.k === 'T') {
+      const lv = lvT;
+      d = { k: 'C', lv, sb: lv === 4 && /مامون/.test(w) ? 'tuhmet' : 'mubhem', tr: 'Olumsuzlanmış ta‘dîl: ' + e.tr, w: e.w, p: e.p, id: e.id, neg: e,
+        nt: 'Bağlam: lafızdan önce olumsuz edat var; ta‘dîl değil, cerh sayıldı.' };
+    } else d = { k: 'N', lv: 0, sb: 'meta', tr: 'Olumsuzlanmış ' + (e.k === 'J' ? 'cehâlet' : 'cerh') + ': ' + e.tr, w: e.w, p: e.p, id: e.id, neg: e,
+      nt: 'Bağlam: lafızdan önce olumsuz edat var; cerh değil, cerhin reddi sayıldı.' };
+    m[key] = d; return d;
+  }
+  // Dönüş: false (olumsuzlama yok) · true (tersine çevrilir) · 'dus' (ilgi/şart cümleciği ya da sahâbîlik: lafız düşer)
+  function negated(n, c) {
+    const e = c.e; if (!'TCJ'.includes(e.k) || /^(?:\(\?:)?(?:لا|ليس|لم|لن|ما|غير)(?: |\b)/.test(e.p)) return false;
+    const pre = n.slice(Math.max(0, c.start - 30), c.start);
+    if (!NEG_PRE.test(pre) || NEG_DIS.test(pre)) return false;
+    if (NEG_SART.test(pre) && !/(?:^|[،:.؛\n]\s*|\s(?:و|ف))(?:ما|لم|لا)\s+(?:(?:يكن|كان)\s+)?$/.test(pre.replace(/(?:فيما|بما|مما|من)\s+(?=(?:لم|لا)\s)/, 'X '))) return 'dus';
+    if (e.sb === 'sahabe') return 'dus';
+    // İstisna «lâ … illâ»: «mâ turike hadîsuhû illâ li’r-rafd» hükmü teyit eder (olumsuzlama yok); «illâ bi-hayr» ise övgüdür
+    const post = n.slice(c.end, c.end + 40);
+    if (/^\s*(?:\S+\s+){0,3}?الا\s/.test(post) && !/^\s*(?:\S+\s+){0,3}?الا\s+(?:بخير|خيرا)/.test(post)) return false;
+    if (/(?:^|\s)(?:و|ف)?ما\s+(?:(?:هو|هي)\s+)?(?:ب)?$/.test(pre)) {   // «mâ»: cümle başında ya da «kâne/huve» ile olumsuzluktur, ilgi zamiri değil
+      if (NEG_REL.test(pre)) return false;
+      if (!/(?:^|[،:.؛\n]\s*|\s(?:و|ف))ما\s+/.test(pre) && !/ما\s+(?:هو|هي|كان)\s/.test(pre)) return false;
+    }
+    return true;
+  }
+
   // Derleme
   for (const e of L) {
     const src = e.p.replace(/ /g, '\\s+');
@@ -7623,6 +7683,7 @@ const RAPOR = (() => {
   }
 
   /* ---------- 6. Yardımcı desenler ---------- */
+  const ITIRAZ = /^(?:(?!وقال|ثم قال)[^\n]){0,95}?((?:و|ف)?(?:هذا|هو|ذا|قوله هذا|وقوله)\s+(?:وهم|غلط|خطا|وهما|مجازفه|تحامل)|وليس (?:كذلك|كما قال)|ليس كما قال|(?:و|ف)?لا يلتفت (?:الي|اليه)|فلم يصب|وتعقبه|ورد عليه|انما قال \S+(?: \S+)? ذلك في)/;
   const ISTILAH = /كل من (?:اقول|قلت)|اذا قلت|لم اعزه|لم اضفه|ولا اسنده|حد الثقه|قولهم(?:\s+فلان)?|متي قيل|البدعه علي ضربين|فهو من قبلي/;
   const MATN = /(?:مرفوعا|رفعه)\s*[:،]?|صلي الله عليه وسلم\s*(?:انه\s+)?(?:قال|يقول|فقال)?\s*:|\{/g;
   const FIRSTP = /(?:^|[\s،,])(?:ف|و)?(?:رايته|اتيته|وجدته|فوجدته|ذهبت|رايت|لقيته|سمعته|كتبت عنه|جالسته)(?![\u0621-\u064A])/;
@@ -8013,6 +8074,9 @@ const RAPOR = (() => {
         const trail = /^\s*(?:[.،,؛\n(]|$)/.test(a) || c.end >= limit;
         if (!(lead && trail)) continue;
       }
+      const ng = negated(n, c);
+      if (ng === 'dus') continue;   // ilgi/şart cümleciğindeki lafız: hüküm değil
+      if (ng) { const d = negOf(e, n.slice(c.start, c.end)); c.e = d; reasons.push('Olumsuz edattan sonra: “' + e.tr + '” tersine çevrildi.'); flags.push('olumsuz'); terms.push({ c, e: d, reasons, flags }); continue; }
       terms.push({ c, e, reasons, flags });
     }
 
@@ -8199,7 +8263,12 @@ const RAPOR = (() => {
       const flags = [...new Set(items.flatMap(x => x.flags))];
       if (yon && yon.baska && !flags.includes('hedef-şüpheli')) flags.push('hedef-şüpheli');
       if (mezhep) flags.push('mezhep');
+      // İtiraz (bağlam denetimi): hükmün hemen ardından nakle ya da hükme itiraz («وهذا وهم», «وليس كما قال», «تحامل», «لا يلتفت اليه»).
+      // Yalnız işarettir, sayımı değiştirmez; incelemede bakılır (itiraz atfın kendisine mi, hükme mi, başka bir şeye mi).
+      const itz = ITIRAZ.exec(n.slice(st.end, Math.min(n.length, st.end + 110)));
+      if (itz) flags.push('itiraz');
       const reasons = [...new Set(items.flatMap(x => x.reasons))];
+      if (itz) reasons.push('Ardından itiraz var: “' + itz[1] + '”; atıf ya da hüküm tartışmalı olabilir.');
       const question = flags.includes('soru');
       // Müfesser / mübhem
       const cSebebs = items.filter(x => 'CJK'.includes(ek(x))).map(x => x.e.sb);
