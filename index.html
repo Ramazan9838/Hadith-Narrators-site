@@ -1195,6 +1195,11 @@ tr.mf-on td { background: color-mix(in srgb, #c0392b 6%, transparent); }
 .mod-sec button[aria-checked="true"] { color: #fff; }
 .mod-sec button:focus-visible { outline: 2px solid var(--accent, #1f6b52); outline-offset: 1px; }
 @media (prefers-reduced-motion: reduce) { .mod-sec .mod-k { transition: none; } }
+/* Denetim 3. adım: iç denetim rozetleri */
+.dn.ic { color: #6b4fa0; border-color: #c8b6e8; background: #f4effc; }
+.dn.ic-ok { color: var(--ink-3, #777); border-color: var(--line-2, #ddd); background: transparent; font-weight: 500; }
+:root[data-theme="dark"] .dn.ic { background: #2c2440; color: #cdb8f5; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .dn.ic { background: #2c2440; color: #cdb8f5; } }
 
 </style>
 </head>
@@ -2270,7 +2275,7 @@ function cevMetin(key) {
    Bilgiler ayrı sekmede değil, ilgili sekmelerde gösterilir; her bilginin yanında kaynak kodu vardır: SC (el-Câmi‘, sitenin
    kaynak metni), CK (Cevâmi‘u’l-Kelim), HH, UD — aynı bilgi birden çok kaynakta geçiyorsa kodlar yan yana yazılır. HH’deki cerh–ta‘dîl sözleri
    (kaynak/dis/hukum) kullanıcı kararıyla hüküm sayılarına girer; öteki dış kaynak bilgileri girmez. */
-const DIS = { dizin: null, dsha: null, kis: null, kisSha: null, r: {}, m: {}, kart: {}, huk: {}, den: {}, md: {}, hl: {}, hhh: {}, busy: {}, err: {}, at: 0, idx: null, bel: null, q: '', sinif: '', on: 'dis:', yol: 'kaynak/dis/dizin.json' };
+const DIS = { dizin: null, dsha: null, kis: null, kisSha: null, r: {}, m: {}, kart: {}, huk: {}, den: {}, md: {}, ic: {}, hl: {}, hhh: {}, busy: {}, err: {}, at: 0, idx: null, bel: null, q: '', sinif: '', on: 'dis:', yol: 'kaynak/dis/dizin.json' };
 // Cevâmi‘u’l-Kelim (CK): tools/ck-hazirla.py → kaynak/dis/ck/ (dizin, kisiler, r/c<cilt>-<sıra>.json); aynı yükleyici, “ck:” önekiyle
 const CKD = { dizin: null, dsha: null, kis: null, kisSha: null, r: {}, busy: {}, err: {}, at: 0, idx: null, on: 'ck:', yol: 'kaynak/dis/ck/dizin.json' };
 const KOD_AD = { SC: 'el-Câmi‘ li-kütübi’d-du‘afâ (Şâdî Âl-i Nu‘mân) — sitenin kaynak metni', CK: 'Cevâmi‘u’l-Kelim 4.5 (Offok / İslâmweb) veritabanı', HH: 'Câmiu Hâdimi’l-Haremeyn li’s-Sünneti’n-Nebeviyye (Harf, 2014) veritabanı', UD: 'UD veri kümesi (râvi kimlik alanları)' };
@@ -2789,6 +2794,7 @@ function modSecici() {
 function hhHukumYukle() {
   const D = denetimGecerli(); if (D && !DIS.den[D.blob] && !DIS.busy['dis:den:' + D.blob]) disGetir('den', D.blob).then(x => { if (x) { DENIX = null; hhHukumHazir(); } });
   const MD = metinDenetimGecerli(); if (MD && !DIS.md[MD.blob] && !DIS.busy['dis:md:' + MD.blob]) disGetir('md', MD.blob).then(x => { if (x && S.view === 'report') renderReport(); });
+  const IC = icDenetimGecerli(); if (IC && !DIS.ic[IC.blob] && !DIS.busy['dis:ic:' + IC.blob]) disGetir('ic', IC.blob).then(x => { if (x && S.view === 'report') renderReport(); });
   const H = hhHukumGecerli(); if (!H) return;
   const eksik = Object.values(H.bloblar).filter(sha => !DIS.huk[sha] && !DIS.busy['dis:huk:' + sha] && !DIS.err['dis:huk:' + sha]);
   if (eksik.length) Promise.all(eksik.map(sha => disGetir('huk', sha))).then(hhHukumHazir);
@@ -2892,7 +2898,60 @@ function hhEsasDisi(s) {
 const hhEsasNotu = D => 'HH esas alındı: HH bu sözü ' + (D.d === 'tur' ? HH_SINIF[(D.q || [])[8]] + ' sayıyor' : ((D.q || [])[6] ? (D.q[6]).split('، ').map(c => crName(c, c)).join(', ') + '’e nispet ediyor' : 'başka münekkite nispet ediyor')) + (D.soz ? ' (HH söz #' + D.soz + ')' : '') + '; HH’deki kayıt sayılır';
 function denetimRozet(s) {
   const r = rv(s); if (r && (r.v === 'ok' || r.v === 'no' || r.v === 'fix')) return '';   // araştırmacı kararı önde (revMark)
-  return denetimRozet1(s) + metinRozet(s);
+  const D = denetimDurumu(s);
+  return denetimRozet1(s) + metinRozet(s) + (D && D.d === 'tutar' ? '' : icRozet(s));
+}
+/* ---------- Denetim 3. adım: iç denetim (src/ctic.js) ----------
+   HH ile doğrulanamayan (HH’de karşılığı olmayan) el-Câmi‘ hükümlerinde metne dayalı uyarılar: münekkit yok / listede yok / belirsiz,
+   hedef şüpheli, düşük güven, isnad içi, nakil farkı (ta‘dîl ↔ cerh). Uyarı hükmü sayımdan düşürmez; araştırmacının kararı önde.
+   Açık râvide canlı hesaplanır (düzeltilmiş metin ve kararlarla); bütün eser sayıları tools/ic-denetim-hazirla.js’ten. */
+const icDenetimGecerli = () => { const D = (DIS.dizin || {}).icDenetim; return D && D.sozluk === CTX.LEXICON.length && D.modul === CTI.VERSION ? D : null; };
+const icDuz = s => ({ uid: s.uid, critic: eCritic(s), critic_written: s.critic_written, critic_ambiguous: s.critic_ambiguous, flags: s.flags || [], basis: s.basis, confidence: s.confidence, start: s.start, counts: eCounts(s), reasons: s.reasons || [], implicit: s.implicit });
+function icDenetim(s) {
+  if (!s || s.origin === 'HH' || s.origin === 'user' || !eCounts(s)) return null;
+  const n = s.n, canli = n && NBYID[n.id] === n && !s.archPkg;
+  if (canli) {
+    const sts = stOf(n), key = sts.length + '|' + sts.filter(eCounts).length + '|' + (CONFC[n.id] ? 1 : 0);
+    if (!n._ic || n._ic.key !== key) {
+      const nk = new Map(); for (const c of narrConflicts(n)) if (c.type === 'nakil') for (const x of c.nakil.q.sts) nk.set(x.uid, { level: c.level, not: c.title });
+      n._ic = { key, m: CTI.denetle(sts.map(icDuz), { metin: x => (STBY[x.uid] && STBY[x.uid].b && STBY[x.uid].b._text) || '', nakil: x => nk.get(x.uid) }) };
+    }
+    return n._ic.m[s.uid] || [];
+  }
+  if (!s._ic) s._ic = CTI.denetle([icDuz(s)])[s.uid] || [];
+  return s._ic;
+}
+function icRozet(s) {
+  const L = icDenetim(s); if (!L) return '';
+  if (!L.length) return '<span class="dn ic-ok" title="HH’de karşılığı yok (denetlenemedi); iç denetimde sorun bulunmadı">iç ✓</span>';
+  return L.map(x => '<span class="dn ic" title="' + esc(CTI.KOD[x.k][1] + (x.not ? ': ' + x.not : '') + ' (iç denetim; hüküm yine sayılır)') + '">⚑ ' + esc(CTI.KOD[x.k][0]) + '</span>').join('');
+}
+// Râvi özeti (Hükümler başında): HH ile doğrulanamayan sayılan hükümlerin iç denetimi
+function icOzetHTML(n) {
+  if (isHHn(n)) return '';
+  const L = stOf(n).filter(s => { if (!eCounts(s)) return false; const d = (denetimDurumu(s) || {}).d; return !d || d === 'yok'; });
+  if (!L.length) return '';
+  const say = {}; let temiz = 0;
+  for (const s of L) { const k = icDenetim(s) || []; if (!k.length) temiz++; for (const x of k) say[x.k] = (say[x.k] || 0) + 1; }
+  const uy = L.length - temiz;
+  return '<div class="note info dn-ozet ic-ozet"><b>İç denetim</b> <span class="muted">(HH’de karşılığı olmayan ' + L.length + ' hüküm)</span>: <span class="dn ic-ok">iç ✓ ' + temiz + ' temiz</span> ' +
+    (uy ? '<span class="dn ic">⚑ ' + uy + ' uyarılı</span> <span class="small muted">' + CTI.SIRA.filter(k => say[k]).map(k => esc(CTI.KOD[k][0]) + ' ' + say[k]).join(' · ') + '</span>' : '') + ' <span class="small muted">· uyarı hükmü sayımdan düşürmez; ✓/✗ ile karara bağlanır</span></div>';
+}
+// Tespit raporu: iç denetim bölümü (bütün eser; özgün metinle)
+function icRaporHTML() {
+  const D = icDenetimGecerli(), v = D && DIS.ic[D.blob];
+  if (!v) return (DIS.dizin || {}).icDenetim ? '<h3 class="panel-title">İç denetim</h3><div class="hint">Veri yükleniyor ya da sözlüğün bu sürümüyle hazırlanmamış (tools/ic-denetim-hazirla.js).</div>' : '';
+  const o = v.ozet, sec = UI.icTip || '', L = v.kuyruk.filter(r => !sec || r[2] === sec), MAX = 300;
+  return '<h3 class="panel-title">İç denetim <span class="muted">HH ile doğrulanamayan el-Câmi‘ hükümleri · ' + fmt(o.ravi) + ' râvi · ' + esc(v.olusturma) + '</span></h3>' +
+    '<div class="cards compact">' + card('Sayılan el-Câmi‘ hükmü', fmt(o.sayilan), fmt(o.hh) + ' HH ile doğrulandı · ' + fmt(o.hhEsas || 0) + ' HH esas') + card('HH’de karşılığı yok', fmt(o.hhsiz), 'iç denetime girenler') +
+    card('iç ✓ temiz', fmt(o.temiz), o.hhsiz ? pct(o.temiz / o.hhsiz) : '—') + card('⚑ uyarılı', fmt(o.uyarili), o.hhsiz ? pct(o.uyarili / o.hhsiz) : '—') + '</div>' +
+    '<div class="wrap"><table class="tbl"><thead><tr><th>Uyarı</th><th>Açıklama</th><th class="num">Hüküm</th></tr></thead><tbody>' +
+    CTI.SIRA.map(k => '<tr style="cursor:default"><td><span class="dn ic">⚑ ' + esc(CTI.KOD[k][0]) + '</span></td><td class="small">' + esc(CTI.KOD[k][1]) + '</td><td class="num">' + fmt(v.kodHHsiz[k] || 0) + '</td></tr>').join('') + '</tbody></table></div>' +
+    '<div class="row" style="margin:8px 0"><span class="seg" role="group" aria-label="Uyarı türü">' + [['', 'Tümü', v.kuyruk.length]].concat(CTI.SIRA.map(k => [k, CTI.KOD[k][0], v.kodHHsiz[k] || 0])).map(([k, l, c]) => '<button type="button" data-ictip="' + k + '" aria-pressed="' + (sec === k) + '">' + esc(l) + ' · ' + fmt(c) + '</button>').join('') + '</span></div>' +
+    '<div class="wrap"><table class="tbl" data-tid="ic-kuyruk"><thead><tr><th data-sk="n">Râvi</th><th data-sk="t">Uyarı</th><th data-sk="t">Münekkit</th><th data-sk="t">Lafız</th><th data-sk="t">Not</th></tr></thead><tbody>' +
+    L.slice(0, MAX).map(r => '<tr data-goto="arch:d:' + r[1] + ':' + encodeURIComponent('dn:' + r[3]) + '" title="Râviyi aç"><td data-v="' + (r[0] * 100000 + r[1]) + '"><b>#' + r[1] + '</b> <span class="small muted">c. ' + r[0] + '</span></td><td><span class="dn ic">⚑ ' + esc(CTI.KOD[r[2]][0]) + '</span></td><td class="small">' + esc(r[4] ? crName(r[4], r[4]) : '—') + ' · ' + esc(KNAME[r[5]] || r[5]) + '</td><td class="ar small">' + esc(r[6]) + '</td><td class="small ar">' + esc(r[7] || '') + '</td></tr>').join('') +
+    '</tbody></table></div>' + (L.length > MAX ? '<p class="small muted">İlk ' + MAX + ' kayıt (' + fmt(L.length) + ').</p>' : '') +
+    '<p class="hint">Uyarılar hükmü sayımdan düşürmez; kayıt Kaynak metinde ✓ (doğru) ya da ✗ (yanlış) ile karara bağlanınca rozet kalkar. “iç ✓”: HH’de karşılığı yok, iç denetimde sorun bulunmadı.</p>';
 }
 function denetimRozet1(s) {
   const D = denetimDurumu(s); if (!D || D.d === 'yok') return '';
@@ -4059,7 +4118,7 @@ function renderRulingsTab(n) {
   let out = '<div class="toolbar">' + legendHTML(kindsHere) + '<span class="grow"></span>' +
     '<button class="btn sm" data-act="group" aria-pressed="' + UI.groupByCritic + '" title="Hükümleri münekkite göre grupla">Münekkite göre</button>' +
     viewMenu([['data-act="counted"', 'Yalnız sayılanlar', UI.countedOnly, 'Sayıma girmeyen kayıtları gizle'], ['data-act="old"', 'Eski tespitler', UI.showOld, 'SQLite ayrıştırıcısıyla karşılaştırma']]) + hintBtn('hukum') + '</div><div class="pane">' +
-    denetimOzetHTML(n) + metinOzetHTML(n) + hintP('hukum', 'Satıra tıklayınca hüküm sağdaki panelde açılır; aynı satıra yeniden tıklayınca kaynak metindeki yerine gidilir. Sağdaki düğmeler: ✓ doğru, ✗ yanlış, ✎ düzelt (tür, münekkit, şiddet, lafız/pasaj, sened, aktaran, sebep — sağdaki panelde açılır), 🗑 kaldır.') + '<div class="wrap">';
+    denetimOzetHTML(n) + metinOzetHTML(n) + icOzetHTML(n) + hintP('hukum', 'Satıra tıklayınca hüküm sağdaki panelde açılır; aynı satıra yeniden tıklayınca kaynak metindeki yerine gidilir. Sağdaki düğmeler: ✓ doğru, ✗ yanlış, ✎ düzelt (tür, münekkit, şiddet, lafız/pasaj, sened, aktaran, sebep — sağdaki panelde açılır), 🗑 kaldır.') + '<div class="wrap">';
   const row = (s, grouped) => '<tr data-st="' + esc(s.uid) + '" aria-current="' + (S.sel && S.sel.id === s.uid) + '" class="' + (eCounts(s) ? '' : 'dim') + '">' +
     '<td class="num">' + s.b.block_order + '</td><td><div class="ar" style="font-size:calc(15px * var(--yb))">' + esc(srcShort(s.b)) + '</div><div class="small muted">' + esc(s.b.effective.source_locator || '') + '</div>' + hhAyniRozet(s) + '</td>' +
     (grouped ? '' : '<td><div>' + esc(crLabel(s)) + '</div>' + (s.critic_written && s.critic_written !== 'قلت' ? '<div class="ar small muted" style="font-size:calc(14px * var(--yb))">' + esc(s.critic_written) + '</div>' : '') + gorusRozet(s) + '</td>') +
@@ -5729,7 +5788,7 @@ function renderReport() {
   out += '<h3 class="panel-title">Ciltler</h3><div class="wrap"><table class="tbl" data-tid="report-vols"><thead><tr><th data-sk="n">Cilt</th><th data-sk="n" class="num">Râvi</th><th data-sk="n" class="num">Blok</th><th data-sk="n" class="num">Hüküm</th><th data-sk="n" class="num">Sayılan</th><th data-sk="n" class="num">Münekkitli</th><th data-sk="n" class="num">İncelenen râvi</th><th class="num">Kararlar</th><th data-sk="n" class="num">İsabet</th></tr></thead><tbody>' + line + '</tbody></table></div>';
   const mx = Math.max(1, ...TYPES.map(t => byType[t] || 0));
   out += '<h3 class="panel-title">Türe göre dağılım <span class="muted">inceleme kararları uygulanmış</span></h3><div class="chart" style="padding:14px 16px">' + TYPES.map(t => '<div style="display:grid;grid-template-columns:190px minmax(0,1fr) 78px;gap:4px 10px;align-items:center;margin-bottom:8px"><span class="small">' + esc(t) + '</span><div style="height:10px;border-radius:0 4px 4px 0;background:var(--accent-2);width:' + ((byType[t] || 0) / mx * 100) + '%;min-width:2px"></div><span class="small mono">' + fmt(byType[t] || 0) + '</span></div>').join('') + '</div>';
-  out += baglamRaporHTML(rows.flatMap(r => r.sts)) + (modu() === 'hh' ? '<p class="hint">' + kodlar(['HH']) + ' HH modu: hükümler HH’nin cerh–ta‘dîl sözleridir; el-Câmi‘ ile HH karşılaştırması (denetim) el-Câmi‘ ve karma modlarında görünür.</p>' : denetimRaporHTML() + metinRaporHTML());
+  out += baglamRaporHTML(rows.flatMap(r => r.sts)) + (modu() === 'hh' ? '<p class="hint">' + kodlar(['HH']) + ' HH modu: hükümler HH’nin cerh–ta‘dîl sözleridir; el-Câmi‘ ile HH karşılaştırması (denetim) el-Câmi‘ ve karma modlarında görünür.</p>' : denetimRaporHTML() + metinRaporHTML() + icRaporHTML());
   if (scopePkgs(S.scope).includes(SNAP_PKG)) out += legacyCompare();
   $('report-body').innerHTML = out;
 }
@@ -6574,6 +6633,7 @@ document.addEventListener('click', e => {
     saveRev(); S.kedit = null; renderCenter(); toast('Kimlik bilgisi kaydedildi.'); return; }
   const le = t.closest('[data-ledit]'); if (le) { if (!need('edit')) return; S.ledit = le.dataset.ledit; renderCenter(); const f = document.querySelector('form[data-lsave] input[name="v"]'); if (f) f.focus(); return; }
   if (t.closest('[data-lcancel]')) { S.ledit = null; renderCenter(); return; }
+  const ict = t.closest('[data-ictip]'); if (ict) { UI.icTip = ict.dataset.ictip; saveUI(); renderReport(); return; }
   const md = t.closest('[data-mod]'); if (md && md.closest('.mod-sec')) { modSec(md.dataset.mod); return; }
   const mf = t.closest('[data-mfark]'); if (mf) { const b = BLK[+mf.dataset.mfark], R = b && b._mk && b._mk.R; if (R) openDialog('Kaynak metin farkları · Blok ' + b.block_order + ' ↔ HH', metinFarkHTML(b, R), true); return; }
   const gb = t.closest('[data-gotoblk]'); if (gb) { if ($('gen-dialog').open) $('gen-dialog').close(); const id = +gb.dataset.gotoblk; S.tab = 'kaynak'; S.sel = { type: 'block', id }; if (gb.dataset.fix && !need('text')) return; S.tedit = gb.dataset.fix ? id : S.tedit; renderCenter(); renderInspector(); const el = $('blk-' + id); if (el) el.scrollIntoView({ block: 'start', behavior: 'smooth' }); if (gb.dataset.fix) openInspector(); return; }
@@ -9946,6 +10006,84 @@ const RAPOR = (() => {
     return farklar;
   }
   return { VERSION, ESER, eser, kelimeler, fark, karsilastir, hukumIliskisi, onemliKelime, dice };
+});
+
+</script>
+<script>
+/* =========================================================
+   CTI — el-Câmi‘ hükümlerinin iç denetimi (denetim 3. adım)
+   HH’de karşılığı olmayan (dışarıdan doğrulanamayan) hükümler için metnin kendisine dayalı kontroller.
+   Her kontrol bir uyarıdır, hüküm sayımdan düşmez; araştırmacının ✓/✗ kararı önde gelir.
+     munekkit-yok     münekkit belirlenemedi (hüküm kime ait bilinmiyor)
+     munekkit-liste   söyleyenin adı metinde var, ama sitenin münekkit listesinde değil (kimliği doğrulanmadı)
+     munekkit-belirsiz münekkit adı birden çok kişiye uyuyor ya da söz sahibi işareti belirsiz
+     hedef            hüküm başka bir kişi hakkında olabilir: motorun “hedef şüpheli” işareti; «وأبوه ضعيف» gibi akraba öznesi;
+                      «روى عن فلان وهو متروك» (zamir hocaya dönebilir); «عن شيخ له مجهول»
+     guven            motorun güveni düşük (< 0,7)
+     isnad            söz isnadın içinde geçiyor (ravinin değil, senetteki birinin vasfı olabilir)
+     nakil            aynı münekkitin sözü başka kaynakta ta‘dîl ↔ cerh farkıyla nakledilmiş (CTN; tespit hatası ya da nakil farkı)
+   Münekkitin kendi ihtilâfı (ihtilâfü’l-kavl) bilginin özelliğidir, güvenilirlik uyarısı değildir: Teâruz’da gösterilir.
+   Girdi düz nesnelerdir; Node ve tarayıcıda çalışır (UMD).
+   ========================================================= */
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) module.exports = factory(require('./ctlex.js'));
+  else root.CTI = factory(root.CTX);
+})(typeof self !== 'undefined' ? self : this, function (CTX) {
+  'use strict';
+  const VERSION = '1.0.0';
+  const KOD = {
+    'munekkit-yok': ['münekkit yok', 'Münekkit belirlenemedi: hükmün kime ait olduğu metinden çıkarılamadı.'],
+    'munekkit-liste': ['münekkit listede yok', 'Söyleyenin adı metinde geçiyor, ama sitenin münekkit listesinde değil; kimliği doğrulanmadı'],
+    'munekkit-belirsiz': ['münekkit?', 'Münekkit belirsiz: ad birden çok kişiye uyuyor ya da söz sahibi işareti açık değil.'],
+    hedef: ['hedef?', 'Hüküm başka bir kişi hakkında olabilir'],
+    guven: ['düşük güven', 'Motorun güveni düşük (< %70): lafız ya da bağlam belirsiz (kitaba alınmadan çıkan zımnî hükümler hariç).'],
+    isnad: ['isnad içi', 'Söz isnadın içinde geçiyor; senetteki başka bir râvinin vasfı olabilir.'],
+    nakil: ['nakil farkı', 'Aynı münekkitin sözü başka bir kaynakta ta‘dîl ↔ cerh farkıyla nakledilmiş: tespit hatası ya da nakil farkı'],
+  };
+  const SIRA = Object.keys(KOD);
+  // Hükmün önündeki öznede başka biri: akraba zamiri, «عن فلان وهو …», «شيخ له / رجل»
+  const AKRABA = /(?:^|[\s،,])(?:و|ف)?(?:ابوه|ابيه|اباه|ابنه|ابنته|اخوه|اخاه|اخيه|اخته|جده|جدته|عمه|خاله|امه|زوجته|شيخه|شيوخه|مولاه|ولده|اولاده)\s+(?:هو\s+|ايضا\s+)?$/;
+  const ZAMIR = /(?:^|\s)(?:روي|يروي|حدث|يحدث|ثنا|حدثنا|اخبرنا)\s+عن\s+(?:[ء-ي]+\s+){1,7}?(?:و|ف)هو\s+$/;
+  const SEYH = /(?:عن|من)\s+(?:شيخ|شيوخ|رجل|رجال|قوم|اناس|امراه|نسوه|اعرابي)\s*(?:له|لنا|منهم)?\s*$/;
+  function hedefNedeni(text, start) {
+    if (text == null || start == null) return '';
+    let on = CTX.nz(String(text).slice(Math.max(0, start - 90), start));
+    const k = Math.max(on.lastIndexOf('.'), on.lastIndexOf(':'), on.lastIndexOf('\n'), on.lastIndexOf('؟'));
+    if (k >= 0) on = on.slice(k + 1);
+    on = on.replace(/[«»"“”()\[\]]/g, ' ').replace(/\s+/g, ' ');
+    let m;
+    if ((m = on.match(AKRABA))) return 'akraba öznesi «' + m[0].trim() + '»';
+    if (ZAMIR.test(on) && !/(?:^|\s)اذا\s+(?:روي|حدث)/.test(on)) return '«وهو» rivayet edilen kişiye dönebilir';
+    if (SEYH.test(on)) return 'rivayet edilen kişinin vasfı olabilir («' + on.match(SEYH)[0].trim() + '»)';
+    return '';
+  }
+  /**
+   * denetle(sts, { metin(s) → bloğun metni, nakil(s) → CTN nakil kaydı { level, not }|null })
+   *  sts: [{ uid, critic, critic_ambiguous, flags, basis, confidence, start, counts, reasons }]
+   * → { uid: [{ k, not }] }  (yalnız sayılan hükümler; sırası KOD sırası)
+   */
+  function denetle(sts, opt) {
+    opt = opt || {};
+    const out = {};
+    for (const s of sts) {
+      if (!s.counts) continue;
+      const L = [], fl = s.flags || [];
+      if (!s.critic && s.critic_written && s.critic_written !== 'قلت') L.push({ k: 'munekkit-liste', not: s.critic_written });
+      else if (!s.critic) L.push({ k: 'munekkit-yok' });
+      else if (s.critic_ambiguous || fl.includes('söz-sahibi-belirsiz') || s.basis === 'belirsiz') L.push({ k: 'munekkit-belirsiz' });
+      let h = '';
+      if (fl.includes('hedef-şüpheli')) h = ((s.reasons || []).find(r => /başka bir kişi/.test(r)) || 'motorun hedef işareti').replace(/^Hüküm başka bir kişi hakkında olabilir: /, '');
+      else if (s.basis !== 'zımnî' && opt.metin) h = hedefNedeni(opt.metin(s), s.start);
+      if (h) L.push({ k: 'hedef', not: h });
+      if (s.confidence != null && s.confidence < 0.7 && s.basis !== 'zımnî' && !s.implicit) L.push({ k: 'guven', not: '%' + Math.round(s.confidence * 100) });
+      if (fl.includes('isnad-içi')) L.push({ k: 'isnad' });
+      const nk = opt.nakil && opt.nakil(s);
+      if (nk && nk.level === 'hüküm') L.push({ k: 'nakil', not: nk.not || '' });
+      if (L.length) out[s.uid] = L;
+    }
+    return out;
+  }
+  return { VERSION, KOD, SIRA, denetle, hedefNedeni };
 });
 
 </script>
