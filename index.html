@@ -289,7 +289,13 @@ h1 span { font-weight: 400; color: var(--ink-3); margin-left: 5px; }
 .onay-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 6px 0 10px; }
 .onay-row label { font-weight: 600; color: var(--ink-2); }
 .notlar-pane { max-width: 860px; }
-.subtabs .n.n-ok { color: var(--ok); background: transparent; }
+.subtabs .n.n-durum { background: transparent; font-weight: 700; }
+.subtabs .n.d-yok { color: var(--ink-3); }
+.subtabs .n.d-ok { color: var(--ok); }
+.subtabs .n.d-duz { color: var(--accent); }
+.subtabs .n.d-uyar { color: var(--warn); }
+.subtabs .n.d-muph { color: var(--ink-2); }
+.subtabs .n.n-unlem { background: transparent; color: var(--bad); font-weight: 800; }
 /* Üst çubuğu açıp kapatan çentik: çubuğun alt kenarında ortada; kapalıyken yalnız o kalır */
 .tb-notch { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); z-index: 46; display: flex; align-items: center; gap: 5px; height: calc(17px * var(--yb)); padding: 0 12px; margin-top: 1px; background: var(--paper); color: var(--ink-3); border: 1px solid var(--line-2); border-top: 0; border-radius: 0 0 9px 9px; font: 600 calc(10.5px * var(--yb))/1 var(--ui); letter-spacing: .3px; cursor: pointer; opacity: .8; }
 .tb-notch:hover, .tb-notch:focus-visible { opacity: 1; color: var(--accent); background: var(--accent-soft); }
@@ -1073,7 +1079,6 @@ td.stact .btn { padding: 2px 6px; }
 .dis-tablolar { display: grid; gap: 14px; }
 .yz-yorum { margin: 0 0 12px; }
 .yz-yorum .panel-title { margin-top: 0; }
-.subtabs .n.n-uyari { background: var(--warn-bg); color: var(--warn); }
 .dis-etiket .tag.ar { font-size: calc(12.5px * var(--yb)); padding: 0 6px; }
 @media (max-width: 880px) { .dis-kv { grid-template-columns: 110px minmax(0, 1fr); } }
 @media print { .ksec, .dis-arac, .dis-src .btn { display: none; } }
@@ -1128,6 +1133,8 @@ tr.mf-on td { background: color-mix(in srgb, #c0392b 6%, transparent); }
 .linkbtn.kart-ad { font: inherit; color: var(--accent); text-align: inherit; }
 .tag.k.baska { opacity: .6; }
 .kcounts.ek { margin-top: 3px; display: flex; flex-wrap: wrap; gap: 6px; }
+.note.idrak { border-left: 3px solid var(--bad); }
+.note.idrak .unlem { color: var(--bad); font-weight: 800; }
 
 </style>
 </head>
@@ -3365,6 +3372,8 @@ function aboutHTML() {
    edilecek? “Kaldığınız yer” kartı tek birincil eylemdir; altında eserdeki ilerleme (tek satır ve cilt şeridi),
    geri dönülecek râviler, ekibin son araştırma hareketleri ve bölümlere giriş bulunur. Bütün eseri tarayan bir
    çözümleme yapılmaz: yalnız eser dizini, inceleme durumları ve önbellekli hareket kaydı okunur. Boş bölüm çizilmez. */
+// Onay sekmesinin yanındaki durum işareti: [işaret, renk sınıfı]
+const DURUM_ISARET = { 'Kontrol edilmedi': ['○', 'd-yok'], 'Sorun yok': ['✓', 'd-ok'], 'Düzeltildi': ['✓', 'd-duz'], 'Düzeltilmeli': ['✎', 'd-uyar'], 'Tekrar incelenecek': ['↻', 'd-uyar'], 'Müphem / karar verilemedi': ['?', 'd-muph'] };
 const HOME_FLAG = ['Tekrar incelenecek', 'Düzeltilmeli'];   // ekibin “sonra bakılacak” diye işaretlediği durumlar
 // Ana sayfada gösterilen hareketler: yalnız araştırma işlemleri (giriş, kasa, parola, kullanıcı, ortak kayıt vb. gösterilmez)
 const HOME_ACTS = new Set(['hüküm-karar', 'hüküm-ekle', 'hüküm-sil', 'hüküm-düzelt', 'hüküm-kaldır', 'hüküm-geri', 'râvi-durum', 'râvi-not', 'not', 'kimlik', 'künye', 'teâruz', 'metin', 'dış-düzelt', 'cilt-ekle', 'cilt-sil']);
@@ -3688,9 +3697,12 @@ function renderHead() {
     '<div class="nh-row"><span class="nav-arrows"><button class="btn ghost sm icon" data-act="prev" aria-label="Önceki râvi" title="Önceki râvi (K)">↑</button><button class="btn ghost sm icon" data-act="next" aria-label="Sonraki râvi" title="Sonraki râvi (J)">↓</button></span>' +
     '<span class="nh-name"><span class="nh-no" title="Râvi sıra numarası"><span class="sr-only">Râvi </span>#' + n.source_sequence + '</span><h2>' + esc(fieldVal(n, 'isim')) + '</h2></span></div>' + idLine(n) +
     '<div class="subtabs" role="tablist">' + deskTabs().map(([k, l], i) => {
-      const cnt = k === 'kaynak' ? n.blocks.length : k === 'hukum' ? a.sts.length : k === 'uyari' ? (uyariListesi(n).length || '') : k === 'notlar' ? (nn || '') : '';
-      const ok = k === 'onay' && REVIEWED(st) ? '<span class="n n-ok" title="' + esc(st) + '">✓</span>' : '';
-      return '<button role="tab" data-tab="' + k + '" aria-selected="' + (S.tab === k) + '" title="' + (k === 'onay' ? 'Râvi durumu: ' + esc(st) + (i < 9 ? ' · ' : '') : '') + (i < 9 ? 'Kısayol: ' + (i + 1) : '') + '">' + l + ok + (cnt !== '' ? '<span class="n' + (k === 'uyari' ? ' n-uyari' : '') + '">' + cnt + '</span>' : '') + '</button>';
+      const cnt = k === 'kaynak' ? n.blocks.length : k === 'hukum' ? a.sts.length : k === 'notlar' ? (nn || '') : '';
+      const nu = k === 'uyari' ? uyariListesi(n).length : 0;
+      const D = DURUM_ISARET[st] || DURUM_ISARET['Kontrol edilmedi'];
+      const ek = k === 'onay' ? '<span class="n n-durum ' + D[1] + '" title="' + esc(st) + '" aria-label="' + esc(st) + '">' + D[0] + '</span>'
+        : nu ? '<span class="n n-unlem" title="' + nu + ' uyarı" aria-label="' + nu + ' uyarı">!</span>' : '';
+      return '<button role="tab" data-tab="' + k + '" aria-selected="' + (S.tab === k) + '" title="' + (k === 'onay' ? 'Râvi durumu: ' + esc(st) + (i < 9 ? ' · ' : '') : '') + (i < 9 ? 'Kısayol: ' + (i + 1) : '') + '">' + l + ek + (cnt !== '' ? '<span class="n">' + cnt + '</span>' : '') + '</button>';
     }).join('') + '</div>';
 }
 // Onay sekmesi: râvinin inceleme durumu ve “Onayla · sıradaki”
@@ -4387,12 +4399,29 @@ function hkOzet(n, key, B) {
     (soz.length ? '<h4 class="dis-h4">' + (hoca ? 'Hocalarının' : 'Talebelerinin') + ' onun hakkındaki sözleri ' + kodlar(['HH']) + '</h4>' + soz.map(s => '<div class="dis-v"><span class="tag">' + (hoca ? 'hocası' : 'talebesi') + '</span> ' + s.m.map(m => '<b class="ar">' + esc(m[0]) + '</b>').join('، ') + ': <span class="ar">' + esc(s.t) + '</span>' + (s.p ? ' <button class="btn ghost sm" data-diss="' + s.id + '">Kaynağı göster</button>' : '') + '</div>').join('') : '') +
     '<p class="hint">Özet, seçilen kümenin kişilerinden hesaplanır. <b>Tümü</b>: HH, el-Câmi‘ (kalıplar ve senetler), Tehzîb ve başka bir kümede de bulunan CK kişileri birleştirilerek her kişi bir kez sayılır; yalnız Cevâmi‘u’l-Kelim’de bulunan kişiler özete girmez, aşağıdaki listelerde görünür. Aynı kişi HH’deki tam adı, künyesi, şöhreti, lakabı ya da nisbesiyle tanınır (ör. yalnız «أبو عوانة» ya da «ابن عيينة» yazılmış hoca); birden çok aday kalırsa birleştirilmez. Bilgi önceliği: HH › Tehzîb › el-Câmi‘ › CK. Yer, ikamet ya da nisbeden çıkarılır; hoca–talebe kaydı tek başına doğrudan semâı ispat etmez.</p>';
 }
+// Râvinin vefat yılı: girilen değer, yoksa metinden (yaklaşıksa en erken yıl), yoksa HH kaydından
+function raviVefatYili(n) {
+  const o = idnOf(n.id).f.vefat; if (o) return CTK.yearOf(o.v) || null;
+  const y = kimOf(n).vefat.find(x => x.year && !x.noCentury); if (y) return y.approx ? y.from : y.year;
+  const V = disVeri(n), p = V && V.hh && disKisi(V, V.hh.id); return p ? dzVefat(p.vefat) : null;
+}
+// İdrâk denetimi (Cüdey‘, Tahrîr I, 97–112): hocasının vefatı râvininkinden 100 yıldan fazla önceyse görüşmüş olması şüphelidir
+function idrakSupheli(n, B) {
+  const ry = raviVefatYili(n); if (!ry) return { ry, L: [] };
+  return { ry, L: B.P.map(x => { const y = (x.src.tumu || x.src.CK || {}).year; return y && ry - y > 100 ? { x, y } : null; }).filter(Boolean).sort((a, b) => a.y - b.y) };
+}
+function idrakNotu(n, B) {
+  const { ry, L } = idrakSupheli(n, B); if (!L.length) return '';
+  return '<div class="note idrak"><b class="unlem">!</b> <b>İdrâk şüpheli</b> — râvinin vefatı ' + ry + '; aşağıdaki hocaların vefatı ondan 100 yıldan fazla öncedir. Ömür ve semâ yaşı düşünüldüğünde görüşmeleri uzak görünür; isnadda inkıtâ, tedlîs ya da ad karışıklığı (aynı adlı başka hoca) araştırılmalıdır. ' +
+    L.slice(0, 12).map(({ x, y }) => '<span class="ar">' + esc(x.ad) + '</span> <span class="small muted">(ö. ' + y + ' · fark ' + (ry - y) + ')</span>').join('، ') + (L.length > 12 ? ' … +' + (L.length - 12) : '') +
+    '<div class="small muted">Cüdey‘, <i>Tahrîru ulûmi’l-hadîs</i>, I, 97–112 (tarih ile idrâkin denetlenmesi). Vefat yılları HH › Tehzîb › el-Câmi‘ › CK sırasıyla alınır; otomatik denetimdir, hüküm değildir.</div></div>';
+}
 function hocaTalebeTab(n, key) {
   const V = disVeri(n), lk = key === 'hoca' ? 'hocalar' : 'talebeler', hoca = key === 'hoca';
   const B = birlesikKisiler(n, key);
   return '<div class="pane">' + (V ? '' : disDurum(n)) + '<div class="toolbar-inline"><label class="small"><input type="checkbox" data-act="show-rej"' + (UI.showRejected ? ' checked' : '') + '> Reddedilenleri göster</label><span class="grow"></span>' + hintBtn(key) + '</div>' +
     (hoca ? hintP('hoca', 'Hocalar (şüyûh) “rivâ/haddese/semi‘a an …” ve Mîzân usulü “an … ve anhü …” kalıplarından çıkarılır. Olumsuz ve şartlı cümleler (“mâ haddese anhü”, “izâ revâ anhü sika”) ile senet içi adlar bu listeye alınmaz; senetlerdeki halkalar “el-Câmi‘ metnindeki senetli rivayetlerinden” bölümündedir. Adaylar doğrulanmamıştır. Talebeler ayrı sekmededir; ikisinden çıkan tahmini tabaka Sentez sekmesindedir.') : hintP('talebe', 'Talebeler (telâmîz) “ve anhü, revâ anhü, haddese anhü …” kalıplarından çıkarılır. Olumsuz ve şartlı cümleler ile senet içi adlar bu listeye alınmaz; senetlerdeki halkalar “el-Câmi‘ metnindeki senetli rivayetlerinden” bölümündedir. Adaylar doğrulanmamıştır. Hocalar ayrı sekmededir; ikisinden çıkan tahmini tabaka Sentez sekmesindedir.')) +
-    hkOzet(n, key, B) + mervBolum(n, V, key, B) + ckBolum(n, key, B) +
+    (hoca ? idrakNotu(n, B) : '') + hkOzet(n, key, B) + mervBolum(n, V, key, B) + ckBolum(n, key, B) +
     (V ? '<h3 class="panel-title">Dış kaynakta ' + (hoca ? 'hocaları (روى عن)' : 'talebeleri (روى عنه)') + ' ' + kodlar(['HH']) + ' <span class="muted">33 metin kitabının isnadlarından · rivayet sayısıyla · düzeltilebilir</span></h3>' + hhTablo(n, V, key, hoca ? 'Hocaları (روى عن)' : 'Talebeleri (روى عنه)') + (hoca ? hhKitaplar(V) : '') : '') +
     tkzBolum(n, lk) + '<h3 class="panel-title">Kaynak metinden çıkarılanlar ' + kodlar(['SC']) + ' <span class="muted">el-Câmi‘ blokları · düzeltilebilir</span></h3>' + listTable(n, lk, hoca ? 'Hocaları (şüyûh)' : 'Talebeleri (telâmîz)') + '</div>';
 }
@@ -5488,6 +5517,7 @@ function renderMethod() {
     '<li>Kaynak metinden çıkarılan adlar düzeltilebilir; vefat ve memleket girilen değerden, HH ya da Tehzîb/Takrîb kaydından veya addaki nisbeden gelir. Dış kaynak bilgileri (HH, UD) ilgili sekmelerde kaynak koduyla (SC, CK, HH, UD) gösterilir ve hüküm sayılarına eklenmez.</li>' +
     '<li><b>Tehzîbü’l-Kemâl:</b> “revâ an” ve “revâ anhü” listeleri rumuzlarıyla alınır. Rumuzsuz hoca, Kütüb-i Sitte’de ondan rivayeti olmayan hocadır.</li>' +
     '<li><b>Takrîbü’t-Tehzîb:</b> tabaka ve vefat maddenin metninden okunur. Yüzyılı yazılmamış vefat yılı, İbn Hacer’in mukaddimedeki kuralıyla tamamlanır (1–2. tabaka 1. asır, 3–8. tabaka 2. asır, 9–12. tabaka 3. asır). Kişi, ad ve rumuz kapsamasıyla eşleştirilir (isnadda geçen kişi o kitapta da geçer); birden çok aday kalırsa eşleştirilmez.</li>' +
+    '<li><b>İdrâk:</b> hocasının vefatı râvininkinden 100 yıldan fazla önceyse Hocalar sekmesinde “idrâk şüpheli” uyarısı çıkar; tarih, idrâkin ve semâın denetlenmesinde kullanılır (Cüdey‘, I, 97–112). Küçük yaşta Hz. Peygamber’i gören sahâbîdir, fakat rivayeti tâbiî rivayeti hükmünde mürseldir (I, 118–119); bu, sahâbîlik kaydının notunda belirtilir.</li>' +
     '<li><b>Sentez:</b> râvinin tahmini tabakası, hocalarının ortanca tabakası +1 ile talebelerininki −1’in ortalamasıdır; Takrîb’deki tabakayla karşılaştırılır. Tahmindir, hüküm değildir.</li></ul>' +
 
     '<h3>9. Münekkitler</h3><p>Tavır sütunu Zehebî’nin üçlü taksimine (müteannit/müteşeddid, mütesâhil, mu‘tedil) dayanır; tercih için bir işarettir. Şehir sütunu münekkidin ilmî faaliyet merkezidir. Notlarda Cüdey‘’in münekkitlerin sıfatı (I, 203–231) ve teâruz (I, 513–557) bahislerinden özetler vardır: tek başına sözü esas alınmayanlar (Ebü’l-Feth el-Ezdî, Mesleme b. Kāsım), mezhep tesiri görülenler (Cûzcânî, İbn Hırâş, Dûlâbî, İbn Ukde) ve cehâlette aşırı gidenler (İbnü’l-Kattân, İbn Hazm).</p><div class="wrap"><table class="tbl" data-tid="method-critics"><thead><tr><th data-sk="t">Münekkit</th><th data-sk="n">Vefat</th><th data-sk="t">Şehir · bölge</th><th data-sk="t">Tavır</th><th>Not</th></tr></thead><tbody>' +
@@ -7030,7 +7060,8 @@ const RAPOR = (() => {
   const SAYYI = 'سي(?:ئ|ء|يء|ي)?';
   const HMZ = '(?:ء|ئ|ي)';
   const L = [];
-  const CJ = 'Cüdey‘, Tahrîr: ';   // Abdullah b. Yûsuf el-Cüdey‘, Tahrîru ulûmi’l-hadîs (Beyrut 1424/2003); notta cilt ve sayfa
+  const CJ = 'Cüdey‘, Tahrîr: ';
+  const SAHABE_NT = CJ + 'Hz. Peygamber’i küçük yaşta (temyîzden önce) gören sahâbîdir; fakat ondan rivayeti tâbiî rivayeti hükmünde mürseldir (I, 118–119).';   // Abdullah b. Yûsuf el-Cüdey‘, Tahrîru ulûmi’l-hadîs (Beyrut 1424/2003); notta cilt ve sayfa
   const add = (k, lv, sb, tr, w, pats, o) => { for (const p of [].concat(pats)) L.push(Object.assign({ k, lv, sb, tr, w, p }, o || {})); };
 
   // — Engelleyiciler (yanlış pozitifleri yutar) —
@@ -7129,7 +7160,7 @@ const RAPOR = (() => {
     'لا صحبه (?:له|لها)', 'مختلف في صحبته', 'في صحبته نظر', '(?:لم|لا) (?:تصح|تثبت) صحبته', 'وهم من (?:زعم|قال) ان (?:له|لها) صحبه', 'ليس من الثقات']);
   // Yalnız cümle başında ya da «هو / إنه / كان» ile: «عن جده وله صحبة», «عن صحابي» gibi başkasına ait kullanımlar alınmaz
   add('T', 6, 'sahabe', 'Sahâbî (Takrîb’in birinci mertebesi)', 0.8, ['(?:هو |انه |كان )?(?:له|لها|له ولابيه) صحبه(?: وروايه)?', '(?:هو |انه |كان )?صحابي(?:ه|ا)?(?: (?:مشهور|صغير|جليل|معروف))?', '(?:ذكره|ذكرها) (?:\\S+ ){0,3}?في الصحابه',
-    '(?:عداده|معدود) في الصحابه', 'شهد (?:بدرا|احدا|العقبه|الخندق|الحديبيه)(?: وما بعدها)?', 'بدري', 'صاحب (?:رسول الله|النبي)', 'من (?:مسلمه الفتح|الطلقاء|المهاجرين|المهاجرات|الانصار)', 'ام المومنين'], { bas: true, nt: 'İbn Hacer, Takrîb mukaddimesinde birinci mertebeyi sahâbîlere ayırır (adâletü’s-sahâbe). Sahâbîliği ihtilaflı ya da iddia edilen kayıtlar alınmaz.' });
+    '(?:عداده|معدود) في الصحابه', 'شهد (?:بدرا|احدا|العقبه|الخندق|الحديبيه)(?: وما بعدها)?', 'بدري', 'صاحب (?:رسول الله|النبي)', 'من (?:مسلمه الفتح|الطلقاء|المهاجرين|المهاجرات|الانصار)', 'ام المومنين'], { bas: true, nt: 'İbn Hacer, Takrîb mukaddimesinde birinci mertebeyi sahâbîlere ayırır (adâletü’s-sahâbe). Sahâbîliği ihtilaflı ya da iddia edilen kayıtlar alınmaz. ' + SAHABE_NT });
   add('C', 1, 'zimni', 'Du‘afâ kitabında zikretti (zımnî cerh)', 0.75, ['(?:ذكره|ذكرها|اورده|اوردها) (?<cr>(?:\\S+ ){0,5}?\\S+) في (?:كتاب |كتابه )?' + QT + '\\s*(?:جمله |كتاب )?(?:ال)?ضعفاء(?: والمتروكين)?\\s*' + QT,
     'ذكره (?<cr2>الفسوي|يعقوب بن سفيان(?: الفسوي)?|يعقوب) في ' + QT + '\\s*باب من يرغب عن الروايه عنهم'], { nt: 'Kitaba alma zımnî cerhtir; ölçü müellifin kitabının şartına bağlıdır.' });
   add('T', 2, 'zimni', 'Sahîhinde hadisini tahrîc etti (zımnî tevsik)', 0.7, ['(?:خرج|اخرج|روي) (?<cr>(?:\\S+ ){0,3}?\\S+) (?:حديثه|له) في ' + QT + '\\s*(?:صحيحه|الصحيح|مستدركه|المستدرك)\\s*' + QT,
@@ -7169,8 +7200,8 @@ const RAPOR = (() => {
   add('T', 1, 'itibar', 'Ondan yazınız', 0.7, ['اكتبوا عنه', 'اكتب عنه']);
   add('T', 3, 'zimni', 'es-Sikât’ta zikretti (zımnî tevsik)', 0.75, ['(?<cr>(?:\\S+ ){0,2}?\\S+) (?:ذكره |ذكرها )?في (?:كتاب )?' + QT + '\\s*(?:جمله )?' + SIKAT + '\\s*' + QT], { crReq: true, lvBy: { 'ابن حبان': 1 }, nt: SIKAT_NT });
   add('T', 3, 'zimni', 'Tevsîkini nakletti', 0.7, ['نقل (?<cr>(?:\\S+ ){0,2}?\\S+) توثيقه'], { crReq: true });
-  add('T', 6, 'sahabe', 'Bedir’e katılanlar arasında saydı', 0.8, ['فيمن شهد (?:العقبه وبدرا|بدرا|احدا|العقبه)', 'في (?:كتاب )?' + QT + '\\s*الصحابه\\s*' + QT], { nt: 'İbn Hacer, Takrîb mukaddimesinde birinci mertebeyi sahâbîlere ayırır.' });
-  add('T', 6, 'sahabe', 'Sahâbî', 0.7, ['الصحابي'], { solo: true });
+  add('T', 6, 'sahabe', 'Bedir’e katılanlar arasında saydı', 0.8, ['فيمن شهد (?:العقبه وبدرا|بدرا|احدا|العقبه)', 'في (?:كتاب )?' + QT + '\\s*الصحابه\\s*' + QT], { nt: 'İbn Hacer, Takrîb mukaddimesinde birinci mertebeyi sahâbîlere ayırır. ' + SAHABE_NT });
+  add('T', 6, 'sahabe', 'Sahâbî', 0.7, ['الصحابي'], { solo: true, nt: SAHABE_NT });
   add('T', 3, 'zimni', 'Zehebî’nin «صح» işareti (tevsîkle amel edilir)', 0.7, ['صح'], { solo: true, nt: 'Zehebî Mîzân’da «صح» ile hakkındaki tevsîkin muteber olduğunu işaret eder.' });
   add('T', 4, 'tevsik', 'İmam (sıfat)', 0.6, ['الامام'], { solo: true });
   add('T', 2, 'sidk', 'Sâlih (memleketiyle)', 0.75, ['(?:بصري|كوفي|مدني|شامي|مكي|واسطي|مصري|بغدادي|حمصي|يماني) صالح']);
