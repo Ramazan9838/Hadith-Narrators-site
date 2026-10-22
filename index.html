@@ -1200,6 +1200,10 @@ tr.mf-on td { background: color-mix(in srgb, #c0392b 6%, transparent); }
 .dn.ic-ok { color: var(--ink-3, #777); border-color: var(--line-2, #ddd); background: transparent; font-weight: 500; }
 :root[data-theme="dark"] .dn.ic { background: #2c2440; color: #cdb8f5; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .dn.ic { background: #2c2440; color: #cdb8f5; } }
+/* Geri dönüş düğmesi (Münekkitler vb. sayfadan râviye geçince) */
+.donus-row { margin: 0 0 6px; }
+.donus-btn { background: var(--accent-soft, #e6f1ec); border-color: var(--accent, #1f6b52); color: var(--accent, #1f6b52); font-weight: 600; }
+.donus-btn:hover { background: var(--accent, #1f6b52); color: #fff; }
 
 </style>
 </head>
@@ -3725,6 +3729,27 @@ function homeResume() {
   if (h && readHash(h)) { S.view = 'desk'; renderAll(); writeHash(); railReveal(S.nid, 'center'); if (S.sel && S.sel.type === 'st') openInspector(); }
   else setView('desk');
 }
+/* ---------- Geri dönüş: Münekkitler, Teâruz, Lafız dizini ya da rapordan “Detaya git” ile râviye geçince ----------
+   Çıkılan görünüm (münekkit, sekme, açık lafız, kaydırma yeri) saklanır; râvi başlığının üstündeki düğme oraya geri götürür. */
+const DONUS_TR = { critics: 'Münekkitler', conflicts: 'Teâruz', lex: 'Lafız dizini', report: 'Tespit raporu', packages: 'Ciltler', analyze: 'Metin çözümle', method: 'Yöntem' };
+function donusKaydet() {
+  const kay = {}; for (const id of ['critics-scroll', 'view-' + S.view]) { const el = $(id); if (el) kay[id] = el.scrollTop; }
+  kay.doc = (document.scrollingElement || document.documentElement).scrollTop;
+  S.donus = { view: S.view, critSel: S.critSel, critTab: S.critTab, critPh: S.critPh, critAll: S.critAll, lexSel: S.lexSel, kay };
+}
+function donusDugmesi() {
+  const d = S.donus; if (!d || S.view !== 'desk') return '';
+  const ad = d.view === 'critics' && d.critSel ? (CTX.critic(d.critSel) || {}).tr || d.critSel : '';
+  return '<div class="donus-row"><button class="btn sm donus-btn" type="button" data-donus title="Geldiğiniz sayfaya, bıraktığınız yere dön">← ' + esc(DONUS_TR[d.view] || 'Önceki sayfa') + (ad ? ': ' + esc(ad) : '') + ' sayfasına dön</button></div>';
+}
+function donusDon() {
+  const d = S.donus; if (!d) return;
+  S.donus = null;
+  Object.assign(S, { critSel: d.critSel, critTab: d.critTab, critPh: d.critPh, critAll: d.critAll, lexSel: d.lexSel });
+  setView(d.view);
+  const yer = () => { for (const [id, v] of Object.entries(d.kay)) { if (id === 'doc') (document.scrollingElement || document.documentElement).scrollTop = v; else { const el = $(id); if (el) el.scrollTop = v; } } };
+  requestAnimationFrame(yer); setTimeout(yer, 300); setTimeout(yer, 900);   // görünüm parça parça çizilebilir
+}
 function setView(v, push = true) {
   S.view = v; document.body.dataset.view = v;
   for (const b of document.querySelectorAll('.views [data-view]')) b.setAttribute('aria-selected', b.dataset.view === v ? 'true' : 'false');
@@ -3944,7 +3969,7 @@ function renderHead() {
   const nn = narrNoteCount(n);
   // Tek satır: solda râvi değiştiren oklar, sağda ad ve hemen yanında sıra no; durum/onay ve notlar kendi sekmelerinde
   $('nhead').innerHTML =
-    '<div class="nh-row"><span class="nav-arrows"><button class="btn ghost sm icon" data-act="prev" aria-label="Önceki râvi" title="Önceki râvi (K)">↑</button><button class="btn ghost sm icon" data-act="next" aria-label="Sonraki râvi" title="Sonraki râvi (J)">↓</button></span>' +
+    donusDugmesi() + '<div class="nh-row"><span class="nav-arrows"><button class="btn ghost sm icon" data-act="prev" aria-label="Önceki râvi" title="Önceki râvi (K)">↑</button><button class="btn ghost sm icon" data-act="next" aria-label="Sonraki râvi" title="Sonraki râvi (J)">↓</button></span>' +
     '<span class="nh-name"><span class="nh-no" title="Râvi sıra numarası"><span class="sr-only">Râvi </span>' + ravNo(n) + '</span><h2>' + esc(fieldVal(n, 'isim')) + '</h2></span></div>' + idLine(n) +
     '<div class="subtabs" role="tablist">' + deskTabs().map(([k, l], i) => {
       const cnt = k === 'kaynak' ? (isHHn(n) ? ((disVeri(n) || { hh: {} }).hh.tercemeler || []).length : n.blocks.length) : k === 'hukum' ? a.sts.length : k === 'notlar' ? (nn || '') : '';
@@ -6601,6 +6626,8 @@ document.addEventListener('click', e => {
   const cleg = t.closest('[data-cleg]'); if (cleg) { const k = cleg.dataset.cleg, H = UI.critHidden || []; UI.critHidden = H.includes(k) ? H.filter(x => x !== k) : H.concat(k); S.critAll = false; saveUI(); renderCritics(); return; }
   const leg = t.closest('[data-leg]'); if (leg) { const k = leg.dataset.leg; UI.hidden = UI.hidden.includes(k) ? UI.hidden.filter(x => x !== k) : UI.hidden.concat(k); saveUI(); renderCenter(); return; }
   const sb = t.closest('[data-scope]'); if (sb) { S.scope = UI.scope = sb.dataset.scope; saveUI(); S.critSel = ''; S.lexSel = ''; setView(S.view, false); return; }
+  const gx = t.closest('[data-goto], [data-gonarr], [data-govol], [data-nid]'); if (gx && S.view !== 'desk' && S.view !== 'home') donusKaydet();   // başka görünümden râviye geçiş: geri dönüş noktası
+  if (t.closest('[data-donus]')) { donusDon(); return; }
   const ga = t.closest('[data-goto^="arch:"]');
   if (ga) {
     // arch:<dilim>:<sıra>:<hüküm> — başka dilimdeki kayıt; râvi sıra numarasıyla bulunur
