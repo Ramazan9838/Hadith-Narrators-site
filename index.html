@@ -6,7 +6,7 @@
 <title>Cerh-Taʿdîl · Kaynak Kontrolü</title>
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self' https://api.github.com https://generativelanguage.googleapis.com; img-src data:; base-uri 'none'; form-action 'none'">
 <meta name="generator" content="cerh-tadil/build.py CTX 2.0.0">
-<meta name="cerh-motor" content="bce592f7bc98421d">
+<meta name="cerh-motor" content="25964c732c7fc171">
 <style>
 /* =========================================================
    Cerh-Ta‘dîl · Kaynak Kontrolü — arayüz stilleri
@@ -3031,6 +3031,8 @@ function denetimRaporHTML() {
     '<div class="cards compact">' + card('✓ HH ile doğrulandı', fmt(o.tutar), pc(o.tutar) + ' (denetlenebilen hükümler içinde)') + card('⚠ Tür farkı', fmt(o.tur), pc(o.tur)) + card('⚠ Münekkit farkı', fmt(o.munekkit), pc(o.munekkit)) +
     card('Kaçırılan', fmt(o.kac), 'HH’nin ta‘dîl/cerh saydığı, motorun bulmadığı söz') + card('HH’de karşılığı yok', fmt(o.hhsiz), 'denetlenemedi') + '</div>' +
     '<p class="hint">Ölçüt: HH’nin her söz için kişi numarasıyla belirlediği söyleyen ve sözün sınıfı (ta‘dîl / cerh / muhtelif). Sözün metni el-Câmi‘de geçiyorsa o metindeki hükümler karşılaştırılır; aynı münekkitin aynı görüşü HH’de başka nakille geçiyorsa da doğrulanmış sayılır. Tür farkı yalnız açık çelişkide (güçlü ta‘dîl ↔ cerh) yazılır; HH sınıfı sözün bütününe aittir («صدوق إلا أنه …» cerh sınıfında olabilir). Zehebî’nin atıfsız «mechûl»ü (Ebû Hâtim) uyuşmazlık sayılmaz. Kayıtlar Kaynak metinde ✓/✗/✎ ile karara bağlanır.</p>' +
+    '<div class="note info" style="margin:8px 0">' + kodlar(['HH']) + ' <b>HH esas ile çözüldü:</b> aşağıdaki ' + fmt(v.kuyruk.length) + ' kaydın ' + fmt(v.kuyruk.filter(r => r[13]).length) + '’inde sitede HH’nin kaydı sayılıyor (tür ve münekkit farkında el-Câmi‘ hükmü sayılmaz; kaçırılan söz HH’den, münekkidin adı altında sayılır). Liste arşiv olarak saklanır; yapılacak iş kalmadı.</div>' +
+    fold('dn-arsiv', 'Arşiv: HH esas ile çözülen kayıtlar', '' +
     fold('dn-mun', 'Münekkite göre uyuşmazlık', '<div class="wrap"><table class="tbl" data-tid="dn-mun"><thead><tr><th data-sk="t">Münekkit (motor)</th><th data-sk="n" class="num">Tür farkı</th><th data-sk="n" class="num">Münekkit farkı</th></tr></thead><tbody>' +
       Object.entries(crit).sort((a, b) => (b[1].tur + b[1].munekkit) - (a[1].tur + a[1].munekkit)).slice(0, 60).map(([c, x]) => '<tr style="cursor:default"><td>' + esc(crName(c, c)) + '</td><td class="num">' + x.tur + '</td><td class="num">' + x.munekkit + '</td></tr>').join('') + '</tbody></table></div>', false, Object.keys(crit).length + ' münekkit') +
     '<div class="row" style="margin:8px 0"><span class="seg" role="group" aria-label="Uyuşmazlık türü">' + [['', 'Tümü', v.kuyruk.length]].concat(Object.keys(tip).map(k => [k, tip[k], v.kuyruk.filter(r => r[2] === k).length])).map(([k, l, c]) => '<button type="button" data-dntip="' + k + '" aria-pressed="' + (sec === k) + '">' + esc(l) + ' · ' + fmt(c) + '</button>').join('') + '</span></div>' +
@@ -3039,7 +3041,7 @@ function denetimRaporHTML() {
     '<div class="wrap"><table class="tbl" data-tid="dn-kuyruk"><thead><tr><th data-sk="n">Râvi</th><th data-sk="t">Tür</th><th data-sk="t">Motor</th><th data-sk="t">HH</th><th data-sk="t">Lafız / söz</th><th data-sk="t">Olası sebep</th><th data-sk="t">İnceleme</th><th data-sk="t" title="HH esas (21.10.2026): bu sözün sitede sayılan HH kaydı">Sayılan (HH esas)</th></tr></thead><tbody>' +
     L.slice(0, MAX).map(r => '<tr data-goto="arch:d:' + r[1] + ':' + (r[3] ? encodeURIComponent('dn:' + r[3]) : '') + '" title="Râviyi aç"><td data-v="' + (r[0] * 100000 + r[1]) + '"><b>#' + r[1] + '</b> <span class="small muted">c. ' + r[0] + '</span></td><td>' + esc(tip[r[2]]) + '</td>' +
       '<td class="small">' + (r[5] ? esc(crName(r[5], r[5])) + ' · ' + esc(KNAME[r[7]] || r[7]) : '<span class="muted">hüküm yok</span>') + '</td><td class="small">' + esc(r[6] ? r[6].split('، ').map(c => crName(c, c)).join(', ') : '—') + ' · ' + esc(HH_SINIF[r[8]] || '') + '</td><td class="ar small">' + esc(r[9]) + '</td><td class="small" title="' + esc(r[2] === 'kac' ? '' : (DN_SEBEP[r[10] || ''] || DN_SEBEP[''])[1]) + '">' + (r[2] === 'kac' ? '' : esc((DN_SEBEP[r[10] || ''] || DN_SEBEP[''])[0])) + '</td><td class="small dn-inc">' + (r[11] ? '<b title="' + esc((IK[r[11]] || [])[1] || '') + '">' + esc((IK[r[11]] || [r[11]])[0]) + '</b>' + (r[12] ? '<div class="muted">' + esc(r[12]) + '</div>' : '') : '<span class="muted">—</span>') + '</td><td class="small">' + (r[13] ? '<span class="dn ok">✓</span> ' + esc(r[13].split('، ').map(x => { const [c, k] = x.split(' · '); return crName(c, c) + ' · ' + (KNAME[k] || k); }).join('; ')) : '<span class="muted">—</span>') + '</td></tr>').join('') +
-    '</tbody></table></div>' + (L.length > MAX ? '<p class="small muted">İlk ' + MAX + ' kayıt gösteriliyor (' + fmt(L.length) + ').</p>' : '') + '<p class="hint">Satıra basınca râvi açılır (cildi yüklüyse); uyuşmazlık olan hüküm Kaynak metinde seçili gelir. <b>HH esas</b> (21.10.2026): tür ve münekkit farkında el-Câmi‘ hükmü sayılmaz, aynı sözün HH’deki kaydı (HH’nin söyleyeni ve sınıfıyla) sayılır; kaçırılan sözler HH’den, ilgili münekkidin adı altında sayılır. Son sütun sayılan HH kaydıdır.</p>';
+    '</tbody></table></div>' + (L.length > MAX ? '<p class="small muted">İlk ' + MAX + ' kayıt gösteriliyor (' + fmt(L.length) + ').</p>' : '') + '<p class="hint">Satıra basınca râvi açılır (cildi yüklüyse); uyuşmazlık olan hüküm Kaynak metinde seçili gelir. <b>HH esas</b> (21.10.2026): tür ve münekkit farkında el-Câmi‘ hükmü sayılmaz, aynı sözün HH’deki kaydı (HH’nin söyleyeni ve sınıfıyla) sayılır; kaçırılan sözler HH’den, ilgili münekkidin adı altında sayılır. Son sütun sayılan HH kaydıdır.</p>', false, fmt(v.kuyruk.length) + ' kayıt · ' + fmt(v.kuyruk.filter(r => r[13]).length) + ' HH kaydıyla sayılıyor');
 }
 const metinDenetimGecerli = () => { const D = (DIS.dizin || {}).metinDenetim; return D && D.sozluk === CTX.LEXICON.length && D.modul === CTM.VERSION ? D : null; };
 // Tespit raporu: Kaynak metin denetimi (tools/metin-denetim-hazirla.js → kaynak/dis/metin-denetim.json; özgün metinle)
@@ -7478,11 +7480,36 @@ const RAPOR = (() => {
     ['عثمان بن أبي شيبة', 'Osmân b. Ebî Şeybe', 239, '', ['عثمان بن ابي شيبه', 'عثمان بن محمد بن ابي شيبه'], ''],
     ['أبو مسهر', 'Ebû Müshir el-Gassânî', 218, '', ['ابو مسهر', 'ابا مسهر', 'عبد الاعلي بن مسهر'], 'Şamlıların cerh–ta‘dîlinde sözü kabul edilir (İbn Hibbân; Cüdey‘, Tahrîr I, 226).'],
     ['إسحاق بن راهويه', 'İshâk b. Râhûye', 238, '', ['اسحاق بن راهويه', 'ابن راهويه', 'اسحاق بن ابراهيم الحنظلي'], ''],
-    ['إبراهيم الحربي', 'İbrâhîm el-Harbî', 285, '', ['ابراهيم الحربي', 'ابراهيم بن اسحاق الحربي', 'ابو اسحاق الحربي'], ''],
+    ['إبراهيم الحربي', 'İbrâhîm el-Harbî', 285, '', ['ابراهيم الحربي', 'ابراهيم بن اسحاق الحربي', 'ابو اسحاق الحربي', 'الحربي'], ''],
     ['علي بن الحسين بن الجنيد', 'Ali b. el-Hüseyn b. el-Cüneyd er-Râzî', 291, '', ['علي بن الحسين بن الجنيد', 'علي بن الجنيد'], 'Yalın «ابن الجنيد» (İbn Maîn’e soran İbrâhîm b. Abdullah el-Huttalî olabilir) bu kayda bağlanmaz.'],
     ['موسى بن هارون الحمال', 'Mûsâ b. Hârûn el-Hammâl', 294, '', ['موسي بن هارون الحمال', 'موسي بن هارون'], ''],
     ['مطين', 'Mutayyen (Muhammed b. Abdullah el-Hadramî)', 297, '', ['مطين', 'محمد بن عبد الله الحضرمي'], ''],
     ['مالك بن أنس', 'Mâlik b. Enes', 179, '', ['مالك بن انس', 'الامام مالك'], 'Yalın «مالك» bağlanmaz (Mâlik b. Dînâr, Ebû Mâlik … ile karışır). Rivayet ettiği râvi sika sayılır; “leyse bi-sika”sı bazen sadûk ve i‘tibâr ehli içindir (sitede −1) (Cüdey‘, Tahrîr I, 223, 623–624).'],
+    // 22.10.2026: iç denetimde “münekkit listede yok” çıkan, kimliği açık söz sahipleri
+    ['عبدان الأهوازي', 'Abdân el-Ahvâzî (Abdullah b. Ahmed b. Mûsâ)', 306, '', ['عبدان الاهوازي', 'عبدان بن احمد', 'عبدان'], 'İbn Adî’nin hocası; el-Kâmil’de sık nakledilir.'],
+    ['أبو سعيد النقاش', 'Ebû Saîd en-Nakkâş el-Isfahânî', 414, '', ['ابو سعيد النقاش', 'ابو سعيد محمد بن علي النقاش', 'النقاش'], ''],
+    ['ابن صاعد', 'Yahyâ b. Muhammed b. Sâid', 318, '', ['ابن صاعد', 'يحيي بن محمد بن صاعد'], ''],
+    ['أبو القاسم البغوي', 'Ebü’l-Kâsım el-Begavî', 317, '', ['ابو القاسم البغوي', 'عبد الله بن محمد البغوي', 'البغوي'], 'Yalın «البغوي» bu eserlerde Ebü’l-Kâsım’dır (Muhyissünne el-Begavî değil).'],
+    ['أبو يعلى الموصلي', 'Ebû Ya‘lâ el-Mevsılî', 307, '', ['ابو يعلي الموصلي', 'ابو يعلي'], ''],
+    ['أحمد بن كامل', 'Ahmed b. Kâmil el-Kâdî', 350, '', ['احمد بن كامل'], ''],
+    ['الطبراني', 'et-Taberânî', 360, '', ['الطبراني', 'سليمان بن احمد الطبراني'], ''],
+    ['ابن الفرات', 'Ebü’l-Hasan İbnü’l-Furât', 384, '', ['ابو الحسن بن الفرات', 'ابن الفرات'], ''],
+    ['ابن الفرضي', 'İbnü’l-Faradî', 403, '', ['ابن الفرضي'], ''],
+    ['عبد الغني بن سعيد', 'Abdülganî b. Saîd el-Ezdî', 409, '', ['عبد الغني بن سعيد'], ''],
+    ['اللالكائي', 'el-Lâlekâî', 418, '', ['اللالكائي'], ''],
+    ['أبو نعيم الأصبهاني', 'Ebû Nuaym el-Isfahânî', 430, '', ['ابو نعيم الاصبهاني', 'ابو نعيم الحافظ', 'ابو نعيم احمد بن عبد الله'], 'Yalın «أبو نعيم» bağlanmaz (el-Fadl b. Dükeyn ile karışır).'],
+    ['أبو عمرو الداني', 'Ebû Amr ed-Dânî', 444, '', ['ابو عمرو الداني'], ''],
+    ['ابن خيرون', 'İbn Hayrûn', 488, '', ['ابن خيرون'], ''],
+    ['شيرويه', 'Şîrûye b. Şehrdâr ed-Deylemî', 509, '', ['شيرويه'], ''],
+    ['الجوزقاني', 'el-Cevzekânî', 543, '', ['الجوزقاني'], ''],
+    ['ابن بشكوال', 'İbn Beşkuvâl', 578, '', ['ابن بشكوال'], ''],
+    ['ابن الأخضر', 'İbnü’l-Ahdar', 611, '', ['ابن الاخضر'], ''],
+    ['ابن الأنماطي', 'İbnü’l-Enmâtî', 619, '', ['ابن الانماطي'], ''],
+    ['ابن نقطة', 'İbn Nokta', 629, '', ['ابن نقطه'], ''],
+    ['ابن الصلاح', 'İbnü’s-Salâh', 643, '', ['ابن الصلاح'], ''],
+    ['العلائي', 'el-Alâî', 761, '', ['العلائي'], ''],
+    ['الحسيني', 'el-Hüseynî (el-İkmâl)', 765, '', ['الحسيني'], ''],
+    ['الشافعي', 'eş-Şâfiî', 204, '', ['الشافعي', 'الامام الشافعي'], ''],
     ['أبو علي النيسابوري', 'Ebû Ali en-Nîsâbûrî', 349, '', ['ابو علي النيسابوري', 'ابو علي الحافظ'], 'el-Hâkim’in hocası; el-Hâkim’de «أبو علي الحافظ» odur.'],
   ];
   // Söz işaretinin yalnız kalıbını bildiren “via” değerleri (aracı kişi değildir)
@@ -7527,6 +7554,7 @@ const RAPOR = (() => {
     ['بعضهم', 'Bazıları (müphem)', ['بعضهم']],
     ['الناس', 'Cumhur / âlimler (müphem)', ['الناس']],
     ['جماعة', 'Bir cemaat (müphem)', ['جماعه']],
+    ['آخر', 'Bir başkası (müphem; «وقال آخر»)', ['اخر', 'اخرون']],
   ];
 
   // Şiî (İmâmî) ricâl müellifleri: değerlendirmeleri “Şiî tevsîki / Şiî cerhi” olarak ayrı gösterilir,
@@ -7574,7 +7602,7 @@ const RAPOR = (() => {
     { m: 'للدارقطني', c: 'الدارقطني', incl: true },
     { m: 'للنسائي', c: 'النسائي', incl: true },
     { m: 'الضعفاء للبخاري', c: 'البخاري', incl: true },
-    { m: 'لابن الجوزي', c: 'ابن الجوزي', comp: true },
+    { m: 'لابن الجوزي', c: 'ابن الجوزي', comp: true, extra: { 'الرازي': 'أبو حاتم الرازي' } },   // kullanıcı kararı 22.10.2026: İbnü’l-Cevzî, İbn Ebî Hâtim’den aktarır
     { m: 'اسامي الضعفاء', c: 'أبو زرعة الرازي', incl: true },
     { m: 'سؤالات البرذعي', c: 'أبو زرعة الرازي', asked: true },
     { m: 'احوال الرجال', c: 'الجوزجاني' },
@@ -8196,6 +8224,8 @@ const RAPOR = (() => {
       const a = nz(k);
       if (tail.startsWith(a) && !isAL(tail[a.length])) return { canon: extra[k], len: a.length, written: n.slice(pos, pos + a.length) };
     }
+    // Rumuzlar («وقال خ:», «قال س في سننه:»): yalnız «قال» işaretinden sonra, tek harf
+    const rz = /^([خس])(?=\s*(?::|في\s))/.exec(tail); if (rz) return { canon: rz[1] === 'خ' ? 'البخاري' : 'النسائي', len: 1, written: rz[1] };
     for (const x of ALIASES) {
       if (!tail.startsWith(x.a) || isAL(tail[x.a.length])) continue;
       const after = tail.slice(x.a.length);
@@ -8371,7 +8401,8 @@ const RAPOR = (() => {
           else out.push(Object.assign(base, { type: 'anon', end: n.indexOf(':', p) + 1 }));
           continue;
         }
-        if (/^\s*(?:مره|ايضا)\s*:/.test(n.slice(p, p + 10))) { out.push(Object.assign(base, { type: 'again', end: n.indexOf(':', p) + 1 })); continue; }
+        // «قال مرة / مرة أخرى / أيضا / في موضع آخر / في رواية (أخرى) / في العلل / في ترجمته:» → önceki münekkit
+        if (/^\s*(?:مره(?: اخري)?|ايضا|في (?:موضع|مكان) اخر|في روايه(?: اخري)?|في العلل|في ترجمته|في الاول)\s*:/.test(n.slice(p, p + 22))) { out.push(Object.assign(base, { type: 'again', end: n.indexOf(':', p) + 1 })); continue; }
         const u = unknownName(n, p, verb);
         if (u && u.written === 'ابي') { const c = fatherOf(n, m.index); if (c) { out.push(Object.assign(base, { type: 'named', names: [{ canon: c, written: 'أبي' }], end: u.end, via: 'قال أبي' })); continue; } }
         const ua = u && u.via ? parseNames(n, u.lastStart, conv, 1) : null;   // “قال عباس الدوري عن ابن معين:” → söz sahibi İbn Maîn
