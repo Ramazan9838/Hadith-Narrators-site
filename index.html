@@ -6,7 +6,7 @@
 <title>Cerh-Taʿdîl · Kaynak Kontrolü</title>
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self' https://api.github.com https://generativelanguage.googleapis.com; img-src data:; base-uri 'none'; form-action 'none'">
 <meta name="generator" content="cerh-tadil/build.py CTX 2.0.0">
-<meta name="cerh-motor" content="90611962b19df746">
+<meta name="cerh-motor" content="128d5b9db20f2d96">
 <style>
 /* =========================================================
    Cerh-Ta‘dîl · Kaynak Kontrolü — arayüz stilleri
@@ -1387,7 +1387,7 @@ const KSTACK = ['T', 'N', 'K', 'B', 'J', 'C'];                        // doğrul
 const KNAME = { T: 'Ta‘dîl', N: 'Cerhin reddi', K: 'Karma', B: 'Mezhep / bid‘at', J: 'Cehâlet', C: 'Cerh', R: 'Rivâyet hükmü', V: 'Rivayet tavrı', P: 'Tercih', D: 'Diyânet', S: 'Sükût', M: 'Münekkit tenkidi' };
 const KDESC = { T: 'Râviyi güvenilir kılan ifade', N: 'Bir cerhin reddi veya hafifletilmesi', K: 'Ta‘dîl + kayıt (mukayyed) bir arada', B: 'Mezhep/bid‘at nitelemesi (ta‘n sebebi)', J: 'Tanınmama (cehâlet)', C: 'Adâlet veya zabta yönelik cerh', R: 'Hüküm râviye değil rivayete (hadise) ait', V: 'Bir kimsenin ondan rivayet edip etmemesi (olumlu/olumsuz tavır); ta‘dîl–cerh toplamına girmez, Münekkitler’de ayrı sayılır. “Ondan yazmayın” gibi başkalarına tavsiye cerhtir', P: 'Tercih (mukayeseli ta‘dîl): râviyi bir başkasından üstün ya da aşağı tutma (lehine/aleyhine); ta‘dîl–cerh toplamına girmez, Münekkitler’de ayrı sayılır', D: 'Diyânet/zühd övgüsü (rivayet ta‘dîli değil)', S: 'Cerh ve ta‘dîl zikredilmemiş', M: 'Münekkidin kendisi hakkında değerlendirme' };
 const kc = k => 'k-' + String(k || 'd').toLowerCase();
-const FLAGTXT = { mezhep: 'Mezhep / bid‘at notu (cerh sayılmaz)', 'şiî-ricâl': 'Şiî ricâl (Sünnî sayıma girmez)', 'hedef-şüpheli': 'Başka kişi hakkında olabilir', soru: 'Soru cümlesi', 'soru-teyit': 'Soru–cevapla teyit', 'söz-sahibi-belirsiz': 'Söz sahibi belirsiz', 'isnad-içi': 'Senet içinde', derleme: 'Derleme eser', zeame: 'Za‘ame (nakleden katılmıyor)', 'istilah-zehebi': 'Atıfsız «mechûl» Ebû Hâtim’e yazıldı (râvinin kayıtlarında Ebû Hâtim’e atıf var; Zehebî ıstılahı)', 'istilah-aday': 'Atıfsız «mechûl»: ez-Zehebî’nin kendi sözü (Ebû Hâtim’e atıf bulunmadı)', 'mizan-nakli': 'Lisân’da “intehâ”ya kadarki Mîzân nakli', 'mizan-tekrar': 'Lisân’daki Mîzân nakli: aynı söz Mîzân’ın kendisinden sayılır (burada sayılmaz)', rüya: 'Rüyaya dayalı', şartlı: 'Şartlı hüküm', zımnî: 'Zımnî (kitaba alma)', olumsuz: 'Olumsuzlanmış lafız (tersine çevrildi)', itiraz: 'Ardından itiraz var (atıf ya da hüküm tartışmalı)', mukayyed: 'Kayıtlı (mukayyed) cerh: belirli bir hocadan rivayetine mahsus; genel cerh sayılmaz', 'mukayyed-t': 'Kayıtlı (mukayyed) ta‘dîl: belirli bir hocadan rivayetine mahsus', elle: 'Elle düzeltme (HH denetiminde tek tek okunarak düzeltildi ya da eklendi)', 'hh-sinif': 'HH’nin sınıfından (motor lafzı okuyamadı ya da türü HH’ye göre alındı)', 'hh-esas': 'HH’nin kaydına göre sayıldı (motorun hedef/söz sahibi şüphesi yok sayıldı)' };
+const FLAGTXT = { mezhep: 'Mezhep / bid‘at notu (cerh sayılmaz)', 'şiî-ricâl': 'Şiî ricâl (Sünnî sayıma girmez)', 'hedef-şüpheli': 'Başka kişi hakkında olabilir', soru: 'Soru cümlesi', 'soru-teyit': 'Soru–cevapla teyit', 'söz-sahibi-belirsiz': 'Söz sahibi belirsiz', 'isnad-içi': 'Senet içinde', derleme: 'Derleme eser', zeame: 'Za‘ame (nakleden katılmıyor)', 'istilah-zehebi': 'Atıfsız «mechûl» Ebû Hâtim’e yazıldı (râvinin kayıtlarında Ebû Hâtim’e atıf var; Zehebî ıstılahı)', 'istilah-aday': 'Atıfsız «mechûl»: ez-Zehebî’nin kendi sözü (Ebû Hâtim’e atıf bulunmadı)', kronoloji: 'Kronoloji: münekkit eser müellifinden sonra ölmüş; söz ona ait olmayabilir', 'mizan-nakli': 'Lisân’da “intehâ”ya kadarki Mîzân nakli', 'mizan-tekrar': 'Lisân’daki Mîzân nakli: aynı söz Mîzân’ın kendisinden sayılır (burada sayılmaz)', rüya: 'Rüyaya dayalı', şartlı: 'Şartlı hüküm', zımnî: 'Zımnî (kitaba alma)', olumsuz: 'Olumsuzlanmış lafız (tersine çevrildi)', itiraz: 'Ardından itiraz var (atıf ya da hüküm tartışmalı)', mukayyed: 'Kayıtlı (mukayyed) cerh: belirli bir hocadan rivayetine mahsus; genel cerh sayılmaz', 'mukayyed-t': 'Kayıtlı (mukayyed) ta‘dîl: belirli bir hocadan rivayetine mahsus', elle: 'Elle düzeltme (HH denetiminde tek tek okunarak düzeltildi ya da eklendi)', 'hh-sinif': 'HH’nin sınıfından (motor lafzı okuyamadı ya da türü HH’ye göre alındı)', 'hh-esas': 'HH’nin kaydına göre sayıldı (motorun hedef/söz sahibi şüphesi yok sayıldı)' };
 
 /* ---------- Yerel depolama: KASA’nın şifreli deposu (bellekte çözülmüş, diske AES-256-GCM ile) ---------- */
 const store = KASA.store;
@@ -2940,7 +2940,7 @@ function icDenetim(s) {
     const sts = stOf(n), key = sts.length + '|' + sts.filter(eCounts).length + '|' + (CONFC[n.id] ? 1 : 0);
     if (!n._ic || n._ic.key !== key) {
       const nk = new Map(); for (const c of narrConflicts(n)) if (c.type === 'nakil') for (const x of c.nakil.q.sts) nk.set(x.uid, { level: c.level, not: c.title });
-      n._ic = { key, m: CTI.denetle(sts.map(icDuz), { metin: x => (STBY[x.uid] && STBY[x.uid].b && STBY[x.uid].b._text) || '', nakil: x => nk.get(x.uid) }) };
+      n._ic = { key, m: CTI.denetle(sts.map(icDuz), { metin: x => (STBY[x.uid] && STBY[x.uid].b && STBY[x.uid].b._text) || '', nakil: x => nk.get(x.uid), vefat: raviVefatYili(n) }) };
     }
     return n._ic.m[s.uid] || [];
   }
@@ -7412,7 +7412,6 @@ const RAPOR = (() => {
     ['ابن خلفون', 'İbn Halfûn', 636, '', ['ابن خلفون', 'ابو بكر بن خلفون'], 'el-Mu‘lim bi-şuyûhi’l-Buhârî ve Müslim ile es-Sikât’ın müellifi; Muğlatay’ın İkmâl’i onun naklini çok aktarır.'],
     ['الحاكم', 'el-Hâkim en-Nîsâbûrî', 405, 'mütesâhil', ['ابو عبد الله الحاكم', 'الحاكم'], 'Râviler hakkındaki açık sözü hüccettir; tesâhül Müstedrek’teki tashîhindedir. Cehâleti iki râvinin rivayetiyle kalkmış sayar (Cüdey‘, Tahrîr I, 334–337).'],
     ['حمزة السهمي', 'Hamza es-Sehmî', 427, '', ['حمزه السهمي', 'السهمي'], ''],
-    ['أبو نعيم الأصبهاني', 'Ebû Nuaym el-İsfahânî', 430, '', ['ابو نعيم الاصبهاني', 'ابونعيم'], ''],
     ['النجاشي', 'en-Necâşî', 450, '', ['ابن النجاشي', 'النجاشي'], 'İmâmî ricâl âlimi.'],
     ['ابن حزم', 'İbn Hazm', 456, '', ['ابن حزم', 'ابو محمد بن حزم'], 'Râvileri mechûl saymakta aşırı gider (İbn Hacer); ayrıca her cerhte tefsîr şart koşar (Cüdey‘, Tahrîr I, 471, 503–504).'],
     ['ابن أبي الفوارس', 'İbn Ebi’l-Fevâris', 412, '', ['ابن ابي الفوارس', 'بن ابي الفوارس'], ''],
@@ -7499,7 +7498,7 @@ const RAPOR = (() => {
     ['ابن الفرضي', 'İbnü’l-Faradî', 403, '', ['ابن الفرضي'], ''],
     ['عبد الغني بن سعيد', 'Abdülganî b. Saîd el-Ezdî', 409, '', ['عبد الغني بن سعيد'], ''],
     ['اللالكائي', 'el-Lâlekâî', 418, '', ['اللالكائي'], ''],
-    ['أبو نعيم الأصبهاني', 'Ebû Nuaym el-Isfahânî', 430, '', ['ابو نعيم الاصبهاني', 'ابو نعيم الحافظ', 'ابو نعيم احمد بن عبد الله'], 'Yalın «أبو نعيم» bağlanmaz (el-Fadl b. Dükeyn ile karışır).'],
+    ['أبو نعيم الأصبهاني', 'Ebû Nuaym el-İsfahânî', 430, '', ['ابو نعيم الاصبهاني', 'ابونعيم', 'ابو نعيم الحافظ', 'ابو نعيم احمد بن عبد الله'], 'Yalın «أبو نعيم» bağlanmaz (el-Fadl b. Dükeyn ile karışır).'],
     ['أبو عمرو الداني', 'Ebû Amr ed-Dânî', 444, '', ['ابو عمرو الداني'], ''],
     ['ابن خيرون', 'İbn Hayrûn', 488, '', ['ابن خيرون'], ''],
     ['شيرويه', 'Şîrûye b. Şehrdâr ed-Deylemî', 509, '', ['شيرويه'], ''],
@@ -7585,6 +7584,50 @@ const RAPOR = (() => {
   const ADAS = { 'أبو زرعة الرازي': ['الدمشقي', 'العراقي'], 'أبو داود': ['الطيالسي', 'الحراني'], 'أبو عوانة': ['الاسفراييني', 'الاسفرايني'],
     'يحيى بن سعيد القطان': ['الانصاري', 'الاموي'], 'أبو حاتم الرازي': ['البستي'] };
   const ADASN = Object.fromEntries(Object.entries(ADAS).map(([c, L]) => [c, new Set(L.map(nz))]));
+  /* Ad sınırı (22.10.2026; bir kullanıcının dönütü: Yahyâ el-Kattân / Yahyâ b. Maîn / İbnü’l-Kattân karışması). Kısa ad (künye, ilk ad,
+     «ابن X») uzun bir adın parçası olabilir; o zaman münekkit değil başka kişidir:
+       ardından başka nisbe ya da lakap   «يحيى الطحان», «يحيى بن سعيد العطار», «أبو داود النخعي», «عبد الرحمن الأنماطي»
+       künyenin ardından başka bir ism    «أبو زرعة محمد بن يوسف الجرجاني», «أبا زرعة أحمد بن الحسين الرازي»
+       önünde «فلان بن فلان»              «عكرمة بن إبراهيم الأزدي، قال», «محمد بن معاوية أبو علي النيسابوري»
+     Münekkitin kendi nisbeleri (adlarından ve NISBE’den) ve unvanlar (الحافظ، الإمام…) engel değildir. */
+  const NISBE = { 'ابن حبان': 'البستي التميمي', 'أبو داود': 'السجستاني السجزي', 'عمرو بن علي الفلاس': 'الصيرفي الباهلي', 'عبدان الأهوازي': 'الجواليقي',
+    'صالح جزرة': 'الاسدي البغدادي', 'مسلمة بن قاسم': 'الاندلسي القرطبي', 'ابن عدي': 'الجرجاني', 'ابن حزم': 'الظاهري الاندلسي القرطبي', 'أبو العرب': 'القيرواني القيراوني التميمي الصقلي',
+    'ياقوت الحموي': 'الرومي', 'شيرويه': 'الديلمي الهمذاني', 'الحاكم': 'النيسابوري', 'أبو علي النيسابوري': 'الحافظ', 'أبو نعيم الأصبهاني': 'الاصبهاني الاصفهاني',
+    'أبو الشيخ الأصبهاني': 'الاصبهاني الاصفهاني', 'أبو سعيد النقاش': 'الاصبهاني الاصفهاني', 'ابن يونس': 'المصري الصدفي', 'عبد الغني بن سعيد': 'المصري الازدي',
+    'يعقوب بن سفيان الفسوي': 'الفارسي', 'أبو مسهر': 'الغساني الدمشقي', 'ابن الجنيد': 'الختلي', 'علي بن الحسين بن الجنيد': 'الرازي', 'ابن أبي حاتم': 'الرازي',
+    'عبد الحق الإشبيلي': 'الازدي الاشبيلي', 'ابن عمار الموصلي': 'الموصلي', 'عبد الرحمن بن مهدي': 'العنبري البصري', 'يحيى بن معين': 'المري البغدادي',
+    'يحيى بن سعيد القطان': 'القطان البصري التميمي', 'ابن القطان الفاسي': 'الفاسي الكتامي', 'أحمد بن حنبل': 'الشيباني المروزي البغدادي', 'البخاري': 'الجعفي',
+    'النسائي': 'الخراساني', 'الدارقطني': 'البغدادي', 'العقيلي': 'المكي', 'ابن عيينة': 'الهلالي المكي', 'سفيان بن عيينة': 'الهلالي المكي', 'سفيان الثوري': 'الكوفي',
+    'شعبة بن الحجاج': 'العتكي البصري', 'الخطيب البغدادي': 'البغدادي', 'ابن سعد': 'الهاشمي البصري', 'زكريا الساجي': 'البصري', 'موسى بن هارون الحمال': 'الحمال الجمال البغدادي',
+    'العجلي': 'الكوفي', 'ابن طاهر المقدسي': 'المقدسي القيسراني', 'ابن القيسراني': 'المقدسي', 'الذهبي': 'التركماني الدمشقي', 'ابن حجر العسقلاني': 'العسقلاني المصري' };
+  const UNVAN = new Set('الحافظ الامام القاضي الشيخ الفقيه المحدث العلامه الناقد الكبير الاكبر الاصغر الصغير المصنف المؤلف الاتي المذكور المتقدم الماضي السابق'.split(' ').map(nz));
+  const KUNYE_ISM = { 'أبو زرعة الرازي': 'عبيد الله', 'أبو حاتم الرازي': 'محمد', 'أبو داود': 'سليمان', 'أبو أحمد الحاكم': 'محمد', 'أبو علي النيسابوري': 'الحسين',
+    'أبو مسهر': 'عبد الاعلي', 'أبو العرب': 'محمد', 'أبو عروبة الحراني': 'الحسين', 'أبو الشيخ الأصبهاني': 'عبد الله', 'أبو يعلى الموصلي': 'احمد', 'أبو نعيم الأصبهاني': 'احمد',
+    'أبو الفتح الأزدي': 'محمد', 'أبو عوانة': 'الوضاح', 'أبو إسحاق السبيعي': 'عمرو', 'أبو سعيد النقاش': 'محمد', 'أبو القاسم البغوي': 'عبد الله' };
+  const KENDI = {};   // münekkit → kendi nisbe ve ad sözcükleri
+  const kendi = canon => KENDI[canon] || (KENDI[canon] = new Set([...nz(canon).split(/\s+/), ...ALIASES.filter(x => x.canon === canon).flatMap(x => x.a.split(/\s+/)), ...nz(NISBE[canon] || '').split(/\s+/)].filter(w => /^ال/.test(w))));
+  // ardından gelen sözcük başka kişinin nisbesi/lakabı mı? (ال… ي nisbe, «فعّال» kalıbında meslek lakabı)
+  let RAVI_AD = new Set();   // çözümlenen bloğun râvisinin ad sözcükleri (analyze başında): «ضعّف يحيى بن سعيد الإفريقيَّ» → nisbe değil, nesne
+  function yabanciNisbe(canon, w) {
+    if (!w || !/^ال/.test(w) || UNVAN.has(w) || RAVI_AD.has(w)) return false;
+    if (!(w.length >= 5 && /ي$/.test(w)) && !/^ال[\u0621-\u064A]{2}ا[\u0621-\u064A]$/.test(w)) return false;
+    return !kendi(canon).has(w);
+  }
+  // önünde «فلان بن فلان» (ya da «ابن فلان») var mı: kısa ad uzun bir adın nisbesi/künyesidir. Münekkitin kendi «ism b. baba» adı
+  // (KENDI_NESEP) engel değildir: «أحمد بن شعيب النسائي», «زكريا بن يحيى الساجي».
+  const ONCEKI_AD_RE = /(?:^|[\s،,])((?:(?:عبد|عبيد)\s+)?[\u0621-\u064A]+\s+)?(?:بن|ابن|بنت)\s+((?:(?:ابي|ابو|عبد)\s+)?[\u0621-\u064A]+)\s+$/;
+  const KENDI_NESEP = { 'النسائي': 'احمد بن شعيب', 'الشافعي': 'محمد بن ادريس', 'زكريا الساجي': 'زكريا بن يحيي', 'الترمذي': 'محمد بن عيسي', 'حمزة السهمي': 'حمزه بن يوسف',
+    'البخاري': 'محمد بن اسماعيل', 'الجوزجاني': 'ابراهيم بن يعقوب', 'أبو الفتح الأزدي': 'محمد بن الحسين', 'العجلي': 'احمد بن عبد الله', 'الدولابي': 'محمد بن احمد',
+    'البزار': 'احمد بن عمرو', 'أبو القاسم البغوي': 'عبد الله بن محمد', 'ابن عدي': 'عبد الله بن عدي', 'العقيلي': 'محمد بن عمرو', 'يعقوب بن سفيان الفسوي': 'يعقوب بن سفيان',
+    'الطبراني': 'سليمان بن احمد', 'ابن حبان': 'محمد بن حبان', 'الدارقطني': 'علي بن عمر', 'يحيى بن سعيد القطان': 'يحيي بن سعيد', 'عمرو بن علي الفلاس': 'عمرو بن علي',
+    'السلفي': 'احمد بن محمد', 'الحاكم': 'محمد بن عبد الله', 'أبو داود': 'سليمان بن الاشعث', 'أبو حاتم الرازي': 'محمد بن ادريس', 'أبو زرعة الرازي': 'عبيد الله بن عبد الكريم',
+    'مسلم': 'مسلم بن الحجاج', 'ابن ماجه': 'محمد بن يزيد', 'الخطيب البغدادي': 'احمد بن علي', 'البيهقي': 'احمد بن الحسين', 'الذهبي': 'محمد بن احمد', 'ابن خزيمة': 'محمد بن اسحاق' };
+  function oncekiAd(back, canon) {
+    const m = ONCEKI_AD_RE.exec(back); if (!m) return false;
+    const k = KENDI_NESEP[canon]; if (!k) return true;
+    const [ism, baba] = nz(k).split(' بن ');
+    return !(nz(m[2]) === baba && (!m[1] || nz(m[1]).trim() === ism));
+  }
 
   /* ---------- 4. Kaynak eser gelenekleri (atıfsız hükmün sahibi) ---------- */
   // m: eser adındaki ayırt edici parça · c: öntanımlı söz sahibi · comp: derleme eser (atıfsız hüküm başkasından olabilir)
@@ -8235,6 +8278,14 @@ const RAPOR = (() => {
       const nx = (/^\s+([\u0621-\u064A]+)/.exec(after) || [])[1];
       if (nx && ADASN[x.canon] && ADASN[x.canon].has(nx)) return null;
       if (nx && !x.a.includes(' ') && FIRSTNAMES.has(x.a) && /^ال[\u0621-\u064A]+ي$/.test(nx)) return null;
+      if (!CR[x.canon].group) {
+        if (yabanciNisbe(x.canon, nx)) return null;                                                   // «أبو داود النخعي», «يحيى بن سعيد العطار»
+        const ki = /^(?:ابو|ابي|ابا) \S+$/.test(x.a) && KUNYE_ISM[x.canon] && /^\s+(?!و|عن\s|في\s|من\s|الي\s|علي\s|قال)((?:عبد|عبيد) \S+|\S+)\s+(?:بن|ابن)\s/.exec(after);
+        if (ki && nz(ki[1]) !== nz(KUNYE_ISM[x.canon])) return null;                                  // «أبو زرعة محمد بن يوسف»
+        if ((!x.a.includes(' ') || /^(?:ابو|ابي|ابا|ابن) /.test(x.a)) && oncekiAd(n.slice(Math.max(0, pos - 40), pos), x.canon)) return null;   // tek kelimelik nisbe, künye ya da «ابن X» (tam ad «سفيان الثوري» değil)                        // «محمد بن معاوية أبو علي النيسابوري»
+        const ow = (/(?:^|[\s،,])(ال[\u0621-\u064A]+)\s+$/.exec(n.slice(Math.max(0, pos - 20), pos)) || [])[1];
+        if (ow && !x.a.includes(' ') && /^ال/.test(x.a) && !UNVAN.has(ow) && !STOP.has(ow)) return null;               // «المؤتمن الساجي»: nisbe önündeki lakabın sahibine aittir
+      }
       return { canon: x.canon, len: x.a.length, written: n.slice(pos, pos + x.a.length) };
     }
     return null;
@@ -8267,20 +8318,47 @@ const RAPOR = (() => {
     if (yakin(t)) return 'سفيان الثوري';
     return '';
   }
+  // Kişi adının tamamı bir münekkite mi uyuyor? (içinde bir münekkit adı geçmesi yetmez: «المؤتمن الساجي» ≠ Zekeriyyâ es-Sâcî).
+  // Baştaki unvan atılır; addan sonra yalnız münekkitin kendi nisbeleri ve unvanlar kalabilir.
+  // Ad metnin ortasından da başlayabilir («ذكر بشرا ابن حبان», «أما ابن حبان»): önündeki kelime ad parçası («بن فلان», lakap) olmamalı.
+  function adTam(txt, bas) {
+    const P = nz(txt || '').split(/\s*[،,]\s*|\s+(?=و[\u0621-\u064A])/);   // «وكيع» gibi و ile başlayan adlar bozulmasın: önce olduğu gibi, sonra bağlaçsız
+    if (P.length > 1) { for (const x of P) { const c = adTam1(x, bas) || (/^و[\u0621-\u064A]/.test(x) ? adTam1(x.slice(1), bas) : ''); if (c) return c; } return ''; }
+    return adTam1(txt, bas);
+  }
+  // Yazılan ad bir münekkit adıyla başlayıp başka nisbe/isimle sürüyor mu? («أبو زرعة النصري», «يحيى الطحان»): münekkitin adaşı
+  function adasYabanci(w) { const t = nz(w || '').trim(); return !!t && !adTam(t) && (ALIASES.some(x => !CR[x.canon].group && t.startsWith(x.a + ' ') && !/^\s*(?:بن|ابن)\s/.test(t.slice(x.a.length))) || /^(?:يحيي|سفيان|عبد الرحمن) ال/.test(t)); }
+  function adTam1(txt, bas) {
+    const t = nz(txt || '').replace(/\s+/g, ' ').trim(), W = t.split(' ');
+    for (let i = 0, p = 0; i < W.length; p += W[i].length + 1, i++) {
+      if (UNVAN.has(W[i])) continue;
+      const m = matchAlias(t, p); if (!m || CR[m.canon].group) continue;
+      const rest = t.slice(p + m.len).trim();
+      if (rest && !rest.split(' ').every(w => UNVAN.has(w) || kendi(m.canon).has(w))) continue;
+      const on = W[i - 1] || '';
+      if (/^ال/.test(on) && !UNVAN.has(on) && !STOP.has(on) && /^ال/.test(W[i]) && !t.slice(p, p + m.len).includes(' ')) return '';
+      if (bas && i > 0 && !(KENDI_NESEP[m.canon] && t.slice(0, p).trim().endsWith(nz(KENDI_NESEP[m.canon])))) return '';   // tanınmayan adın ortasında münekkit adı: yalnız kendi «ism b. baba»sıyla   // «المؤتمن الساجي»: tek kelimelik nisbe, önündeki lakabın sahibinindir
+      if (oncekiAd(t.slice(0, p), m.canon)) return '';                                                                      // «… بن فلان الساجي»
+      return m.canon;
+    }
+    return '';
+  }
   function parseNames(n, pos, conv, maxNames) {
     // pos’tan itibaren “X وY وZ” biçimindeki münekkit dizisini ayrıştırır
     const names = []; let p = pos; const lim = maxNames || 6;
     while (names.length < lim) {
       let q = p; while (q < n.length && /[\s،,]/.test(n[q])) q++;
       if (names.length && n.startsWith('و', q) && isAL(n[q + 1])) q++;
+      const uv = /^(ال[\u0621-\u064A]+)\s+/.exec(n.slice(q, q + 14)); if (uv && UNVAN.has(uv[1]) && !matchAlias(n, q, conv && conv.extra)) q += uv[0].length;   // «قال الحافظ أبو زرعة»
       let m = matchAlias(n, q, conv && conv.extra);
-      if (!m && n.startsWith(YAHYA, q) && !isAL(n[q + YAHYA.length]) && !/^\s+(?:بن|ابن)\s/.test(n.slice(q + YAHYA.length, q + YAHYA.length + 6))) {
+      const yalinNisbe = L => { const w = (/^\s+([\u0621-\u064A]+)/.exec(n.slice(q + L, q + L + 20)) || [])[1]; return !!w && /^ال/.test(w) && w.length >= 4 && !UNVAN.has(w) && !RAVI_AD.has(w); };   // «يحيى الطحان», «يحيى الحماني», «عبد الرحمن الأنماطي»: başka kişi
+      if (!m && n.startsWith(YAHYA, q) && !isAL(n[q + YAHYA.length]) && !/^\s+(?:بن|ابن)\s/.test(n.slice(q + YAHYA.length, q + YAHYA.length + 6)) && !yalinNisbe(YAHYA.length) && !ONCEKI_AD_RE.test(n.slice(Math.max(0, q - 40), q))) {
         const c = resolveYahya(n, q); m = { canon: c.replace('?', ''), amb: c.endsWith('?'), len: YAHYA.length, written: 'يحيى' };
       }
-      if (!m && n.startsWith(SUFYAN, q) && !isAL(n[q + SUFYAN.length]) && !/^\s+(?:بن|ابن)\s/.test(n.slice(q + SUFYAN.length, q + SUFYAN.length + 6))) {
+      if (!m && n.startsWith(SUFYAN, q) && !isAL(n[q + SUFYAN.length]) && !/^\s+(?:بن|ابن)\s/.test(n.slice(q + SUFYAN.length, q + SUFYAN.length + 6)) && !yalinNisbe(SUFYAN.length) && !ONCEKI_AD_RE.test(n.slice(Math.max(0, q - 40), q))) {
         const c = resolveSufyan(n, q); if (c) m = { canon: c, len: SUFYAN.length, written: 'سفيان' };
       }
-      if (!m && /^عبد الرحمن(?![\u0621-\u064A])/.test(n.slice(q, q + 12)) && !/^\s+(?:بن|ابن)\s/.test(n.slice(q + 10, q + 16))) m = { canon: 'عبد الرحمن بن مهدي', amb: true, len: 10, written: 'عبد الرحمن' };
+      if (!m && /^عبد الرحمن(?![\u0621-\u064A])/.test(n.slice(q, q + 12)) && !/^\s+(?:بن|ابن)\s/.test(n.slice(q + 10, q + 16)) && !yalinNisbe(10) && !ONCEKI_AD_RE.test(n.slice(Math.max(0, q - 40), q))) m = { canon: 'عبد الرحمن بن مهدي', amb: true, len: 10, written: 'عبد الرحمن' };
       if (!m) break;
       names.push({ canon: m.canon, written: m.written, amb: !!m.amb, start: q, end: q + m.len });
       p = q + m.len;
@@ -8290,7 +8368,7 @@ const RAPOR = (() => {
   }
 
   /* ---------- 8. Söz sahibi işaretleri ---------- */
-  const MARK = new RegExp('(?<![' + AL + '])(?:و|ف)?(قال|قالا|قالوا|يقول|سمعت|سالت|سالته|قاله|زعم|قلت|حدثنا|حدثني|اخبرنا|اخبرني|ثنا|انبانا|ذكره|اورده|ان|انه|نقل|نقله|شهدت|عن)(?![' + AL + '])', 'g');
+  const MARK = new RegExp('(?<![' + AL + '])(?:و|ف)?(قال|قالا|قالوا|يقول|سمعت|سالت|سالته|سئل|قاله|زعم|قلت|حدثنا|حدثني|اخبرنا|اخبرني|ثنا|انبانا|ذكره|اورده|ان|انه|نقل|نقله|شهدت|عن)(?![' + AL + '])', 'g');
   const FATHER = [[nz('ابن ابي حاتم'), 'أبو حاتم الرازي'], [nz('بن ابي حاتم'), 'أبو حاتم الرازي'], [nz('عبد الله بن احمد'), 'أحمد بن حنبل'], [nz('صالح بن احمد'), 'أحمد بن حنبل'], [nz('عبد الله'), 'أحمد بن حنبل']];
   const NOT_PERSON = /رسول|النبي|صلي الله|الله عز|الله جل|الله تعالي|جبري?ل|حدثنا|ثنا|اخبرنا|سمعت|عن ابيه|في خطبته|في اخره|للنبي|للحجام|الرجل|رجل/;
   function fatherOf(n, pos) {
@@ -8303,7 +8381,7 @@ const RAPOR = (() => {
   function unknownName(n, p, verb) {
     const rest = n.slice(p, p + 70).replace(/[،,](?=\s*عن\s)/g, ' ');   // “قال إسحاق بن منصور، عن يحيى بن معين:” (uzunluk korunur)
     const m = verb === 'سمعت' ? /^\s*((?:[\u0621-\u064A]+\s+){0,6}?[\u0621-\u064A]+)\s*[،,]?\s*(?:يقول|قال|يذكر)(?![\u0621-\u064A])\s*:?/.exec(rest)
-      : /^\s*((?:[\u0621-\u064A]+\s+){0,8}?[\u0621-\u064A]+)\s*:/.exec(rest);
+      : /^\s*((?:[\u0621-\u064A]+\s+){0,8}?[\u0621-\u064A]+)(?:\s+في\s+[^:.\n]{1,30})?\s*:/.exec(rest);   // «قال أبو زرعة النصري في «تاريخه»:»
     if (!m || NOT_PERSON.test(m[1])) return null;
     const w = m[1].replace(/\s+في\s+[\s\S]*$/, '');
     const parts = w.split(/\s+عن\s+/);          // “حمزة عن الحسن بن علي” → söz sahibi ikinci kişi
@@ -8315,7 +8393,10 @@ const RAPOR = (() => {
     const back = n.slice(Math.max(0, pos - 60), pos).replace(/[\s،,]+$/, '');
     const ex = conv && conv.extra ? Object.keys(conv.extra).map(k => ({ a: nz(k), canon: conv.extra[k] })) : [];
     for (const x of ex.concat(ALIASES)) {
-      if (back.endsWith(x.a) && !isAL(back[back.length - x.a.length - 1]) && !CR[x.canon].group) return { canon: x.canon, written: x.a };
+      if (back.endsWith(x.a) && !isAL(back[back.length - x.a.length - 1]) && !CR[x.canon].group) {
+        if ((!x.a.includes(' ') || /^(?:ابو|ابي|ابا|ابن) /.test(x.a)) && oncekiAd(back.slice(0, back.length - x.a.length), x.canon)) return null;   // «عكرمة بن إبراهيم الأزدي، قال:» → nisbe, münekkit değil
+        return { canon: x.canon, written: x.a };
+      }
     }
     return null;
   }
@@ -8366,9 +8447,11 @@ const RAPOR = (() => {
       }
       // قال / سمعت / سالت / زعم / يقول
       const lm = /^\s*(?:لي|لنا|له|فيه|فيها)\s*(?=[\u0621-\u064A:])/.exec(n.slice(p, p + 8)); if (lm) p += lm[0].length;
-      if (verb === 'سالت' || verb === 'سالته') {
+      if (verb === 'سالت' || verb === 'سالته' || verb === 'سئل') {   // «سُئل يحيى بن معين عن فلان فقال:» → cevap verilen kişinin
         if (/^\s*ابي(?![\u0621-\u064A])/.test(n.slice(p, p + 6))) { const c = fatherOf(n, m.index); if (c) out.push(Object.assign(base, { type: 'named', names: [{ canon: c, written: 'أبي', start: p, end: p + 4 }], via: 'سألت أبي' })); continue; }
-        const r = parseNames(n, p, conv, 1); if (r.names.length) out.push(Object.assign(base, { type: 'named', names: r.names, via: 'سألت' })); continue;
+        const r = parseNames(n, p, conv, 1); if (r.names.length) out.push(Object.assign(base, { type: 'named', names: r.names, via: 'سألت' }));
+        else { const u = /^\s*((?:ابا|ابو|ابي)\s+[\u0621-\u064A]+(?:\s+(?!عن\s)[\u0621-\u064A]+){1,7}?)\s+عن(?:ه|ها)?(?![\u0621-\u064A])/.exec(n.slice(p, p + 90)); if (u && /\s(?:بن|ابن)\s/.test(u[1])) out.push(Object.assign(base, { type: 'named', names: [{ canon: '', written: u[1] }], via: 'سألت' })); }   // listede olmayan kişi: «سألت أبا زرعة أحمد بن الحسين عنه»
+        continue;
       }
       if (verb === 'سمعت' && /^\s*ابي(?![\u0621-\u064A])/.test(n.slice(p, p + 6))) { const c = fatherOf(n, m.index); if (c) out.push(Object.assign(base, { type: 'named', names: [{ canon: c, written: 'أبي', start: p, end: p + 4 }], via: 'سمعت أبي' })); continue; }
       const r = parseNames(n, p, conv);
@@ -8414,7 +8497,7 @@ const RAPOR = (() => {
           const tok = u.written.split(/\s+/)[0];
           const prev = [...out].reverse().find(x => x.names && x.names.some(y => y.canon && nz(y.written || '').startsWith(tok)));
           const nm = prev && u.written.split(/\s+/).length === 1 ? prev.names.find(y => nz(y.written || '').startsWith(tok)) : null;
-          out.push(Object.assign(base, { type: 'named', names: [nm ? { canon: nm.canon, written: u.written } : { canon: '', written: u.written, start: u.start, end: u.end }], end: u.end, via: u.via }));
+          out.push(Object.assign(base, { type: 'named', names: [nm ? { canon: nm.canon, written: u.written } : { canon: adTam(u.written, true), written: u.written, start: u.start, end: u.end }], end: u.end, via: u.via }));   // «سمعت أحمد بن شعيب النسائي يقول» → en-Nesâî
         }
       }
     }
@@ -8536,6 +8619,7 @@ const RAPOR = (() => {
     const conv = convention(opts.sourceName || '', opts.sourceAuthor || '');
     const defaultCanon = conv.c || resolveAliasText(opts.sourceAuthor) || '';
     const ntok = nameTokens(opts.narratorNames);
+    RAVI_AD = new Set([...nameTokens(opts.narratorNames || [])].filter(w => /^ال/.test(w)));
     const rtok = nameTokens(opts.ravi || opts.narratorNames);   // tavır/tercihin yönü için râvinin adları (HH sözlerinde yalnız bu verilir)
     const paras = paraBounds(n);
     const paraOf = pos => { let i = 0; while (i + 1 < paras.length && paras[i + 1] <= pos) i++; return i; };
@@ -8638,7 +8722,7 @@ const RAPOR = (() => {
     }
     function lastNamed(pos, ps) {
       let r = null;
-      for (const mk of markers) { if (mk.pos >= pos) break; if (mk.pos >= ps && (mk.type === 'named' || mk.type === 'mention' || mk.type === 'zaama' || mk.type === 'ask') && mk.names && mk.names.some(x => x.canon)) r = mk; }
+      for (const mk of markers) { if (mk.pos >= pos) break; if (mk.pos >= ps && (mk.type === 'named' || mk.type === 'mention' || mk.type === 'zaama' || mk.type === 'ask') && mk.names && mk.names.some(x => x.canon || adasYabanci(x.written) || (mk.via === 'سألت' && /\s(?:بن|ابن)\s/.test(nz(x.written || ''))))) r = mk; }   // münekkitin adaşı («أبو زرعة النصري») ya da tam adıyla sorulan kişi de söyleyendir: söz önceki münekkite kaymaz (münekkit boş kalır)   // «سألت أبا زرعة أحمد بن الحسين» gibi listede olmayan sorulan kişi de cevap verendir (münekkit boş kalır)
       return r;
     }
 
@@ -8661,13 +8745,13 @@ const RAPOR = (() => {
         if (c.groups.cr || c.groups.cr2 || c.groups.cr3) {
           const w = c.groups.cr || c.groups.cr2 || c.groups.cr3; const i = n.indexOf(w, c.start);
           const r = parseNames(n, i, conv, e.many ? 16 : 6); names = r.names;
-          if (!names.length && !e.crReq) { const a = resolveAliasText(w); names = [{ canon: a || '', written: w }]; }
+          if (!names.length && !e.crReq) { const a = adTam(w); names = [{ canon: a || '', written: w }]; }
         } else {
           const r = parseNames(n, c.end, conv);
           names = r.names; if (names.length) c.end = r.end;
           if (!names.length && e.v) {   // «وضعفه أبو نعيم», «لينه الحافظ عبد الغني بن سعيد»: özne adı belirsiz ya da kayıtsız
             const m2 = /^\s*(?:الحافظ\s+|الامام\s+|الشيخ\s+)?((?:ابو|ابي|ابن|ام)\s+[\u0621-\u064A]+(?:\s+(?:بن|ابن)\s+[\u0621-\u064A]+)*(?:\s+ال[\u0621-\u064A]{3,})?|(?:عبد\s+)?[\u0621-\u064A]{3,}\s+(?:بن|ابن)\s+[\u0621-\u064A]+(?:\s+(?:بن|ابن)\s+[\u0621-\u064A]+)*)/.exec(n.slice(c.end, c.end + 60));
-            if (m2 && !STOP.has(m2[1].split(/\s+/)[0])) { names = [{ canon: resolveAliasText(m2[1]) || '', written: m2[1], amb: true }]; }
+            if (m2 && !STOP.has(m2[1].split(/\s+/)[0])) { names = [{ canon: adTam(m2[1]) || '', written: m2[1], amb: true }]; }
           }
         }
         if (names.length) { res.critics = names; res.basis = 'fiil'; t.reasons.push('Söz sahibi fiilin öznesinden alındı (' + names.map(x => x.written).join('، ') + ').'); }
@@ -8680,7 +8764,7 @@ const RAPOR = (() => {
       // «كتب عنه أبو حاتم ثم ضرب على حديثه»: özne önceki cümlecikten taşınır
       if (!res.critics.length) {
         const km = /(?:كتب عنه|سمع منه|روي عنه|حدث عنه|اخذ عنه|جالسه|لقيه)\s+((?:ابو|ابن)?\s*[\u0621-\u064A]+(?:\s+(?:بن|ابن|الرازي|حاتم|زرعه)\s*[\u0621-\u064A]*)?)\s+(?:ثم|و|ف)\s*$/.exec(n.slice(Math.max(0, c.start - 50), c.start));
-        const a = km && resolveAliasText(km[1].trim());
+        const a = km && adTam(km[1].trim());
         if (a) { res.critics = [{ canon: a, written: km[1].trim() }]; res.basis = 'fiil'; t.reasons.push('Özne önceki cümlecikten (' + km[1].trim() + ').'); }
       }
       if (e.kanaPlain && !res.critics.length) {   // “… أحمد بن حنبل كان يتكلم فيه”: ad “kâne”den hemen önce
@@ -8873,7 +8957,12 @@ const RAPOR = (() => {
       const causal = /لانه|لان |لاجل|وذلك ان/.test(n.slice(st.start, Math.min(ctxE, st.end + 60)));
       const mufassar = hasC ? (cSebebs.some(s => MUFASSAR_SB.has(s)) || causal ? 'müfesser' : cSebebs.includes('muhalefe') ? 'kısmen' : 'mübhem') : '';
 
-      for (const cr of critics) {
+      for (const cr0 of critics) {
+        // Kronoloji (22.10.2026): münekkit eser müellifinden belirgin biçimde (15 yıldan çok) sonra ölmüşse söz ona ait olamaz.
+        // «ابن القطان / القطان» yazımında el-Fâsî (ö. 628) imkânsızsa Yahyâ el-Kattân (ö. 198; «ابن القطان» tashîfi); öteki durumlarda
+        // işaret kalır (muhakkik notu ya da yanlış tanıma; okunarak karar verilir).
+        let cr = cr0; const AD = !conv.asked && critic(defaultCanon), CD = critic(cr.canon), kronoloji = AD && AD.death && CD && CD.death && CD.death > AD.death + 15;
+        if (kronoloji && cr.canon === 'ابن القطان الفاسي' && /القطان/.test(nz(cr.written || ''))) cr = { canon: 'يحيى بن سعيد القطان', written: cr.written, amb: true };
         const { tMax, cMax, notes } = levels(cr.canon);
         let conf = Math.max(...items.map(x => x.e.w));
         if (t0.res.basis === 'işaret' || t0.res.basis === 'fiil' || t0.res.basis === 'sonra-atıf') conf += 0.05;
@@ -8890,7 +8979,8 @@ const RAPOR = (() => {
         const C = critic(cr.canon);
         // Şiî ricâl müellifinin değerlendirmesi ya da İmâmî ricâl kaydı: ayrı tür, Sünnî cerh–ta‘dîl sayımına girmez
         const shii = imami || !!(C && C.shii);
-        const fl = shii ? flags.concat('şiî-ricâl') : flags;
+        const fl = (shii ? flags.concat('şiî-ricâl') : flags).concat(kronoloji ? ['kronoloji'] : []);
+        const krR = !kronoloji ? [] : ['Kronoloji: ' + (CD.tr || cr0.canon) + ' (ö. ' + CD.death + ') eser müellifinden (' + (AD.tr || defaultCanon) + ', ö. ' + AD.death + ') sonra ölmüştür' + (cr !== cr0 ? '; «' + cr0.written + '» Yahyâ el-Kattân sayıldı (tashîf ihtimali).' : '; muhakkik notu ya da yanlış tanıma olabilir.')];
         const typ = !shii ? type : main === 'B' || (imami && !'TNKCJ'.includes(main)) ? 'İmâmî ricâl kaydı' : 'TNK'.includes(main) ? 'Şiî tevsîki' : 'CJ'.includes(main) ? 'Şiî cerhi' : 'İmâmî ricâl kaydı';
         const direct = cr.canon && cr.canon === defaultCanon && !t0.res.via;
         // “via” ya aracı kişidir (ör. İbn Ebî Hâtim → Ebû Hâtim) ya da yalnız nakil kalıbıdır (“X قال”, “سألت” …); kalıp aktaran sayılmaz
@@ -8917,7 +9007,7 @@ const RAPOR = (() => {
           critic_info: C ? { tr: C.tr, death: C.death, approach: C.approach, note: C.note, group: C.group, shii: !!C.shii } : null,
           basis: t0.res.basis, transmission: cr.canon ? (direct ? 'Doğrudan' : 'Naklen') : 'Bilinmiyor',
           transmitter, formula: viaFormula ? t0.res.via : '', chain: t0.res.chain || '', target: t0.target.t, target_who: (yon && yon.baska && yon.who) || t0.target.who || '',
-          flags: fl, question, confidence: conf, reasons, notes: notes.filter(Boolean),
+          flags: fl, question, confidence: conf, reasons: reasons.concat(krR), notes: notes.filter(Boolean),
           terms: items.map(x => ({ id: x.e.id, k: x.e.k, lv: x.e.lv, sb: x.e.sb, tr: x.e.tr, start: map[x.c.start], end: map[x.c.end], text: text.slice(map[x.c.start], map[x.c.end]) })),
           counts: !shii && !question && conf >= 0.5 && !flags.includes('hedef-şüpheli') && !flags.includes('rüya') && !(mkyC && main === 'C') && 'TCJKN'.includes(main)
         });
@@ -10300,6 +10390,7 @@ const RAPOR = (() => {
                       «روى عن فلان وهو متروك» (zamir hocaya dönebilir); «عن شيخ له مجهول»
      guven            motorun güveni düşük (< 0,7); müellifin kendi eserindeki atıfsız hüküm hariç (derleme eserde uyarı kalır)
      isnad            söz isnadın içinde geçiyor (ravinin değil, senetteki birinin vasfı olabilir)
+     kronoloji        münekkit eser müellifinden sonra ölmüş (motorun işareti) ya da râvi münekkitten 60 yıldan çok sonra ölmüş (22.10.2026)
      nakil            aynı münekkitin sözü başka kaynakta ta‘dîl ↔ cerh farkıyla nakledilmiş (CTN; tespit hatası ya da nakil farkı)
    Münekkitin kendi ihtilâfı (ihtilâfü’l-kavl) bilginin özelliğidir, güvenilirlik uyarısı değildir: Teâruz’da gösterilir.
    Girdi düz nesnelerdir; Node ve tarayıcıda çalışır (UMD).
@@ -10317,6 +10408,7 @@ const RAPOR = (() => {
     hedef: ['hedef?', 'Hüküm başka bir kişi hakkında olabilir'],
     guven: ['düşük güven', 'Motorun güveni düşük (< %70): lafız ya da bağlam belirsiz (zımnî hükümler ve müellifin kendi eserindeki atıfsız hükümler hariç).'],
     isnad: ['isnad içi', 'Söz isnadın içinde geçiyor; senetteki başka bir râvinin vasfı olabilir.'],
+    kronoloji: ['kronoloji', 'Münekkit eser müellifinden sonra ölmüş ya da râvi münekkitin vefatından 60 yıldan çok sonra ölmüş: söz bu münekkite ait olmayabilir (adaş, tashîf, muhakkik notu).'],
     nakil: ['nakil farkı', 'Aynı münekkitin sözü başka bir kaynakta ta‘dîl ↔ cerh farkıyla nakledilmiş: tespit hatası ya da nakil farkı'],
   };
   const SIRA = Object.keys(KOD);
@@ -10337,7 +10429,7 @@ const RAPOR = (() => {
     return '';
   }
   /**
-   * denetle(sts, { metin(s) → bloğun metni, nakil(s) → CTN nakil kaydı { level, not }|null })
+   * denetle(sts, { metin(s) → bloğun metni, nakil(s) → CTN nakil kaydı { level, not }|null, vefat: râvinin vefat yılı })
    *  sts: [{ uid, critic, critic_ambiguous, flags, basis, confidence, start, counts, reasons }]
    * → { uid: [{ k, not }] }  (yalnız sayılan hükümler; sırası KOD sırası)
    */
@@ -10359,6 +10451,9 @@ const RAPOR = (() => {
       const muellif = fl.includes('atifsiz') && !fl.includes('derleme');
       if (s.confidence != null && s.confidence < 0.7 && s.basis !== 'zımnî' && !s.implicit && !muellif) L.push({ k: 'guven', not: '%' + Math.round(s.confidence * 100) });
       if (fl.includes('isnad-içi')) L.push({ k: 'isnad' });
+      const CD = s.critic && CTX.critic(s.critic), vf = opt.vefat;
+      if (fl.includes('kronoloji')) L.push({ k: 'kronoloji', not: 'eser müellifinden sonra' });
+      else if (vf && CD && CD.death && vf - CD.death > 60) L.push({ k: 'kronoloji', not: 'râvi ö. ' + vf + ', münekkit ö. ' + CD.death });
       const nk = opt.nakil && opt.nakil(s);
       if (nk && nk.level === 'hüküm') L.push({ k: 'nakil', not: nk.not || '' });
       if (L.length) out[s.uid] = L;
