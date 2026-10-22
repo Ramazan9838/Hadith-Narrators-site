@@ -858,6 +858,7 @@ body.resizing { user-select: none; } body.resizing-x, body.resizing-x * { cursor
 .note.uyari .btn { margin-inline-start: 4px; }
 .tbl tr.gsep td { background: var(--paper-2); padding-top: 4px; padding-bottom: 4px; border-top: 2px solid var(--line); }
 .tbl td.lafiz { min-width: 170px; font-size: calc(16px * var(--yb)); }
+.lafiz-ek { color: var(--ink-2); font-weight: normal; }
 .tag.rumuz { font-family: var(--ar); font-size: calc(13px * var(--yb)); padding: 0 5px; margin-inline-end: 2px; }
 
 /* Yapay zekâ (Gemini) paneli */
@@ -4180,11 +4181,21 @@ function renderSourceTab(n) {
 }
 // Blok altındaki hüküm düğmeleri lafzın metindeki yerine göre sıralanır; yeri olmayan (zımnî) kayıtlar sona kalır
 function metinSirasi(sts) { const yer = s => s.end > s.start ? s.start : Infinity; return sts.slice().sort((a, b) => yer(a) - yer(b)); }
+// Yarım kalan lafız (sözlük kalıbı edatla biter: «لولا الحياء من الناس ما صليت على», «أحب إلي من»): gösterimde cümlenin devamı eklenir.
+// Hükmün sınırı (start/end), kimliği ve sayımı değişmez; devam soluk yazılır.
+const LAFIZ_SARKIK = /(?:^|\s)(?:علي|عن|من|الي|في|مع|عند|حتي|غير|مثل|دون|ان)$/;
+function lafizEk(s) {
+  if (!s || !s.phrase || !s.b || s.b._text == null || s.end == null) return '';
+  if (!LAFIZ_SARKIK.test(nz(s.phrase).replace(/[^ء-ي\s]/g, ' ').trim())) return '';
+  const m = /^\s*([^.،,؛;:؟?!\n«»\[\]()]{1,90})/.exec(s.b._text.slice(s.end, s.end + 120).replace(/\s*\n(?![\s\n]*\n)\s*/g, ' '));   // tek satır sonu cümleyi bölmez if (!m || !/^[\u0621-\u064A]/.test(m[1].trim())) return '';
+  return m[1].trim().split(/\s+/).slice(0, 8).join(' ');
+}
+function lafizHTML(s) { const ek = lafizEk(s); return esc(s.phrase || '') + (ek ? ' <span class="lafiz-ek" title="Lafzın cümledeki devamı (metinden; hükmün sınırı değişmez)">' + esc(ek) + '</span>' : ''); }
 function stChip(s) {
   const k = eKind(s); const cur = S.sel && S.sel.type === 'st' && S.sel.id === s.uid;
   const who = eCritic(s) ? crName(eCritic(s), s.critic_written) : (s.critic_written || '?');
   return '<button class="stchip ' + kc(k) + (eCounts(s) ? '' : ' dim') + '" data-st="' + esc(s.uid) + '" aria-current="' + cur + '" title="' + esc(eType(s) + ' · ' + (s.grade || '') + (s.flags.length ? ' · ' + s.flags.map(flagTr).join(', ') : '')) + '">' +
-    '<span class="sw"></span>' + (s.phrase ? '<span class="ph">' + esc(s.phrase) + '</span>' : '<span class="who muted">zımnî</span>') + '<span class="who">' + esc(who) + '</span>' + ((s.flags || []).includes('olumsuz') ? '<span class="bg-ic" aria-label="olumsuzlanmış">¬</span>' : '') + ((s.flags || []).includes('itiraz') ? '<span class="bg-ic bad" aria-label="itiraz edilmiş">⚑</span>' : '') + revMark(s) + noteBadge('s:' + s.uid) + '</button>';
+    '<span class="sw"></span>' + (s.phrase ? '<span class="ph">' + lafizHTML(s) + '</span>' : '<span class="who muted">zımnî</span>') + '<span class="who">' + esc(who) + '</span>' + ((s.flags || []).includes('olumsuz') ? '<span class="bg-ic" aria-label="olumsuzlanmış">¬</span>' : '') + ((s.flags || []).includes('itiraz') ? '<span class="bg-ic bad" aria-label="itiraz edilmiş">⚑</span>' : '') + revMark(s) + noteBadge('s:' + s.uid) + '</button>';
 }
 function renderRulingsTab(n) {
   hhStsOf(n);   // el-Câmi‘ hükümlerine “HH’de de” işareti (çiftler ayrı satır olmaz)
@@ -4198,7 +4209,7 @@ function renderRulingsTab(n) {
   const row = (s, grouped) => '<tr data-st="' + esc(s.uid) + '" aria-current="' + (S.sel && S.sel.id === s.uid) + '" class="' + (eCounts(s) ? '' : 'dim') + '">' +
     '<td class="num">' + s.b.block_order + '</td><td><div class="ar" style="font-size:calc(15px * var(--yb))">' + esc(srcShort(s.b)) + '</div><div class="small muted">' + esc(s.b.effective.source_locator || '') + '</div>' + hhAyniRozet(s) + '</td>' +
     (grouped ? '' : '<td><div>' + esc(crLabel(s)) + '</div>' + (s.critic_written && s.critic_written !== 'قلت' ? '<div class="ar small muted" style="font-size:calc(14px * var(--yb))">' + esc(s.critic_written) + '</div>' : '') + gorusRozet(s) + '</td>') +
-    '<td class="ar lafiz">' + (s.phrase ? esc(s.phrase) : '<span class="muted small">(zımnî)</span>') + '</td>' +
+    '<td class="ar lafiz">' + (s.phrase ? lafizHTML(s) : '<span class="muted small">(zımnî)</span>') + '</td>' +
     '<td>' + kindTag(eKind(s), eType(s).replace(' / İnsan kontrolü gerekli', '')) + (baglamRozet(s) ? '<div>' + baglamRozet(s) + '</div>' : '') + '</td><td data-v="' + (eKind(s) === 'K' ? eTMax(s) - eCMax(s) : eSev(s)) + '">' + sevScale(s) + '</td>' +
     '<td class="small">' + esc((s.sebebs || []).map(x => CTX.SEBEB[x]).join(', ')) + (s.mufassar ? '<div class="muted">' + esc(s.mufassar) + '</div>' : '') + '</td>' +
     '<td class="small">' + esc(s.transmission) + (s.transmitter ? '<div class="muted">aktaran: ' + esc(crName(s.transmitter, s.transmitter)) + '</div>' : '') + '</td>' +
@@ -4221,7 +4232,7 @@ function renderRulingsTab(n) {
       const scN = (groups[k] || []).length;
       out += '<h3 class="panel-title">' + esc(crName(k, k)) + ' <span class="muted">' + (olum(k) < 9999 ? 'ö. ' + olum(k) + ' · ' : '') + gs.length + ' görüş · ' + (scN + H.length) + ' nakil' + (scN || isHHn(n) ? '' : ' · el-Câmi‘de hükmü yok') + (H.length ? ' · bunların ' + H.length + '’i ' + kod('HH') + ' (sayıma girer)' : '') + (hhAyniSay[k] ? ' · ' + hhAyniSay[k] + ' HH sözü el-Câmi‘deki hükümle aynı (o satırda ' + kodlar(['SC', 'HH']) + ')' : '') + '</span></h3><table class="tbl" data-tid="rulings-g">' + hb + '<tbody>' +
         gs.map(g => { const nN = g.rows.length, hN = g.rows.filter(r => r.h).length;
-          return (nN > 1 ? '<tr class="gsep"><td colspan="9"><span class="ar" style="font-size:calc(15px * var(--yb))">' + esc((g.rep && g.rep.phrase) || '(zımnî)') + '</span> <span class="small muted">· aynı görüş, ' + nN + ' nakil' + (hN ? ' (' + hN + ' ' + kod('HH') + ')' : '') + '</span> ' + gorusEtiket(g) + '</td></tr>' : '') +
+          return (nN > 1 ? '<tr class="gsep"><td colspan="9"><span class="ar" style="font-size:calc(15px * var(--yb))">' + ((g.rep && g.rep.phrase) ? lafizHTML(g.rep) : '(zımnî)') + '</span> <span class="small muted">· aynı görüş, ' + nN + ' nakil' + (hN ? ' (' + hN + ' ' + kod('HH') + ')' : '') + '</span> ' + gorusEtiket(g) + '</td></tr>' : '') +
             g.rows.map(r => r.h ? hhHukumSatiri(r.h) : row(r.s, true)).join(''); }).join('') + '</tbody></table>';
     }
   } else {
@@ -4783,7 +4794,7 @@ function inspStatement(s) {
   const olds = s.b.evaluations.filter(ev => s.start < ev.evidence_end && s.end > ev.evidence_start);
   const same = stOfBlock(s.b).filter(x => x !== s && x.start === s.start && x.end === s.end);
   let out = '<div class="kicker">Blok ' + s.b.block_order + ' · ' + esc(authorTr(s.b)) + '</div>' +
-    '<div class="phrase ' + kc(k) + '">' + (s.phrase ? esc(s.phrase) : '<span style="font-family:var(--ui);font-size:calc(14px * var(--yb))">(Zımnî: du‘afâ kitabında zikir)</span>') + '</div>' +
+    '<div class="phrase ' + kc(k) + '">' + (s.phrase ? lafizHTML(s) : '<span style="font-family:var(--ui);font-size:calc(14px * var(--yb))">(Zımnî: du‘afâ kitabında zikir)</span>') + '</div>' +
     '<div class="badges">' + kindTag(k, eType(s).replace(' / İnsan kontrolü gerekli', ' (insan kontrolü)')) + denetimRozet(s) + baglamRozet(s) + '<span class="tag">' + sevScale(s) + ' ' + (k === 'K' ? '−' + eCMax(s) + ' / +' + Math.floor(eTMax(s)) : (eSev(s) > 0 ? '+' : '') + eSev(s)) + '</span>' +
     (s.mufassar ? '<span class="tag">' + esc(s.mufassar) + '</span>' : '') + '<span class="tag">güven ' + s.confidence + '</span>' + (eCounts(s) ? '' : '<span class="tag warn">sayılmıyor</span>') + s.flags.filter(f => f !== 'elle').map(f => '<span class="tag warn">' + esc(flagTr(f)) + '</span>').join('') + '</div>';
   const inceleme = '<div class="sec rev-sec"><h4>İnceleme</h4>' + (r.v ? '<div class="hint" style="margin-bottom:6px">Son karar: <b>' + ({ ok: '✓ Doğru', no: '✗ Yanlış', fix: '✎ Düzeltildi' }[r.v] || r.v) + '</b>' + (r.at ? ' · ' + whoWhen(r) : '') + '</div>' : '') + '<div class="review-row req-edit">' +
@@ -5386,7 +5397,7 @@ function critPopHTML(s) {
   const k = eKind(s), C = CTX.critic(eCritic(s)); let ctx = ''; try { ctx = ctxHTML(s); } catch (e) { ctx = esc(s.phrase || ''); }
   return '<div class="kicker">Râvi #' + s.n.source_sequence + ' · blok ' + s.b.block_order + ' · ' + esc(authorTr(s.b)) + '</div>' +
     '<h3 class="ar" style="margin:4px 0 8px;font-size:calc(24px * var(--yb))">' + esc(s.n.effective.canonical_name) + '</h3>' +
-    '<div class="insp"><div class="phrase ' + kc(k) + '">' + (s.phrase ? esc(s.phrase) : '(Zımnî: du‘afâ kitabında zikir)') + '</div></div>' +
+    '<div class="insp"><div class="phrase ' + kc(k) + '">' + (s.phrase ? lafizHTML(s) : '(Zımnî: du‘afâ kitabında zikir)') + '</div></div>' +
     '<div class="badges">' + kindTag(k, eType(s).replace(' / İnsan kontrolü gerekli', ' (insan kontrolü)')) + '<span class="tag">' + sevText(s) + '</span>' + denetimRozet(s) + baglamRozet(s) + (s.mufassar ? '<span class="tag">' + esc(s.mufassar) + '</span>' : '') + (eCounts(s) ? '' : '<span class="tag warn">sayılmıyor</span>') + '</div>' +
     (eCounts(s) ? '' : '<div class="note" style="margin-top:6px">Sayıma girmez: ' + esc(sayilmamaSebebi(s)) + '.</div>') +
     '<dl class="kv" style="margin-top:10px"><dt>Münekkit</dt><dd>' + esc(C ? C.tr : (eCritic(s) || s.critic_written || '—')) + (C && C.death ? ' · ö. ' + C.death : '') + (eCritic(s) || s.critic_written ? ' <span class="ar">' + esc(eCritic(s) || s.critic_written) + '</span>' : '') + '</dd>' +
