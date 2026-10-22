@@ -2296,7 +2296,7 @@ function cevMetin(key) {
    Bilgiler ayrı sekmede değil, ilgili sekmelerde gösterilir; her bilginin yanında kaynak kodu vardır: SC (el-Câmi‘, sitenin
    kaynak metni), CK (Cevâmi‘u’l-Kelim), HH, UD — aynı bilgi birden çok kaynakta geçiyorsa kodlar yan yana yazılır. HH’deki cerh–ta‘dîl sözleri
    (kaynak/dis/hukum) kullanıcı kararıyla hüküm sayılarına girer; öteki dış kaynak bilgileri girmez. */
-const DIS = { dizin: null, dsha: null, kis: null, kisSha: null, r: {}, m: {}, kart: {}, huk: {}, den: {}, md: {}, ic: {}, hl: {}, hhh: {}, busy: {}, err: {}, at: 0, idx: null, bel: null, q: '', sinif: '', on: 'dis:', yol: 'kaynak/dis/dizin.json' };
+const DIS = { dizin: null, dsha: null, kis: null, kisSha: null, r: {}, m: {}, kart: {}, huk: {}, den: {}, md: {}, ic: {}, hl: {}, hhh: {}, hht: {}, busy: {}, err: {}, at: 0, idx: null, bel: null, q: '', sinif: '', on: 'dis:', yol: 'kaynak/dis/dizin.json' };
 // Cevâmi‘u’l-Kelim (CK): tools/ck-hazirla.py → kaynak/dis/ck/ (dizin, kisiler, r/c<cilt>-<sıra>.json); aynı yükleyici, “ck:” önekiyle
 const CKD = { dizin: null, dsha: null, kis: null, kisSha: null, r: {}, busy: {}, err: {}, at: 0, idx: null, on: 'ck:', yol: 'kaynak/dis/ck/dizin.json' };
 const KOD_AD = { SC: 'el-Câmi‘ li-kütübi’d-du‘afâ (Şâdî Âl-i Nu‘mân) — sitenin kaynak metni', CK: 'Cevâmi‘u’l-Kelim 4.5 (Offok / İslâmweb) veritabanı', HH: 'Câmiu Hâdimi’l-Haremeyn li’s-Sünneti’n-Nebeviyye (Harf, 2014) veritabanı', UD: 'UD veri kümesi (râvi kimlik alanları)' };
@@ -3054,11 +3054,36 @@ function metinRaporHTML() {
       v.kuyruk.slice(0, MAX).map(r => '<tr data-goto="arch:d:' + r[1] + ':blk:' + r[2] + '" title="Râvinin Kaynak metnini aç"><td data-v="' + (r[0] * 100000 + r[1]) + '"><b>#' + r[1] + '</b> <span class="small muted">c. ' + r[0] + '</span></td><td class="num">' + r[2] + '</td><td class="small">' + esc(TUR[r[4]]) + ' <span class="muted ar">' + esc(kitapKisa(r[3]).split(' ')[0]) + '</span></td><td class="ar small">' + esc(r[5] || '—') + '</td><td class="ar small">' + esc(r[6] || '—') + '</td><td class="small">' + (r[7] ? '<span class="ar">' + esc(r[7]) + '</span> · ' + esc(crName(r[8], r[8])) + (r[9] === 'munekkit' ? ' <span class="muted">(münekkit adında)</span>' : '') : '') + '</td></tr>').join('') +
       '</tbody></table></div>' + (v.kuyruk.length > MAX ? '<p class="small muted">İlk ' + MAX + ' kayıt (' + fmt(v.kuyruk.length) + ').</p>' : ''), false, fmt(v.kuyruk.length) + ' kayıt');
 }
+// HH sözünün tam metni (Hükümler sekmesindeki gibi lafzın altında soluk): kaynak/dis/hukum/t*.json ve hh/hukum/t*.json, ilk gerekince bir kez iner
+const HHMETIN = new Map(); let hhMetinIs = null;
+function hhMetinEksik() {
+  const L = [], H = hhHukumGecerli(), R = (DIS.dizin && DIS.dizin.hhRavi || {}).hukum;
+  if (H && H.metin) L.push(...Object.values(H.metin.bloblar));
+  if (R && R.metin && modu() !== 'sc') L.push(...Object.values(R.metin.bloblar));
+  return L.filter(sha => !DIS.hht[sha] && !DIS.err['dis:hht:' + sha]);
+}
+function hhMetinYukle() {
+  if (hhMetinIs) return hhMetinIs;
+  const L = hhMetinEksik(); if (!L.length) return Promise.resolve();
+  hhMetinIs = Promise.all(L.map(sha => disGetir('hht', sha).then(d => { if (d && d.t) for (const [k, v] of Object.entries(d.t)) HHMETIN.set(+k, v); }))).then(() => {
+    hhMetinIs = null; if (S.view === 'critics') { const D = critData(); if (D) renderCritCenter(D); }
+  });
+  return hhMetinIs;
+}
+function hhSozMetni(s) {
+  if (!s || s.origin !== 'HH' || s.hhSoz == null) return '';
+  const t = HHMETIN.get(s.hhSoz); if (t == null && !hhMetinIs && hhMetinEksik().length) setTimeout(hhMetinYukle, 0);
+  return t || '';
+}
+function hhTamMetin(s) {
+  const t = hhSozMetni(s), p = (s.phrase || '').trim(); if (!t || t.trim() === p) return '';
+  return '<div class="small muted ar" style="font-size:calc(14px * var(--yb));margin-top:2px">' + esc(t.length > 240 ? t.slice(0, 240) + '…' : t) + '</div>';
+}
 function hhPopHTML(s) {
   const C = CTX.critic(eCritic(s)), k = eKind(s);
   return '<div class="kicker">Râvi ' + ravNo(s.n) + ' · ' + kod('HH') + ' Câmiu Hâdimi’l-Haremeyn</div>' +
     '<h3 class="ar" style="margin:4px 0 8px;font-size:calc(24px * var(--yb))">' + esc(s.n.effective.canonical_name) + '</h3>' +
-    '<div class="insp"><div class="phrase ' + kc(k) + '">' + esc(s.phrase || '') + '</div></div>' +
+    '<div class="insp"><div class="phrase ' + kc(k) + '">' + esc(s.phrase || '') + '</div>' + (hhSozMetni(s) && hhSozMetni(s).trim() !== (s.phrase || '').trim() ? '<div class="hint" style="margin-top:8px">Sözün HH’deki tam metni</div><div class="ctx ar">' + esc(hhSozMetni(s)) + '</div>' : '') + '</div>' +
     '<div class="badges">' + kindTag(k, s.type) + '<span class="tag">' + sevText(s) + '</span>' + (s.mufassar ? '<span class="tag">' + esc(s.mufassar) + '</span>' : '') + (eCounts(s) ? '' : '<span class="tag warn">sayılmaz</span>') + '</div>' +
     (eCounts(s) ? '' : '<div class="note" style="margin-top:6px">Sayıma girmez: ' + esc(sayilmamaSebebi(s)) + '.</div>') +
     '<dl class="kv" style="margin-top:10px"><dt>Münekkit</dt><dd>' + esc(C ? C.tr : (s.critic_written || '—')) + (C && C.death ? ' · ö. ' + C.death : '') + ' <span class="ar">' + esc(s.critic_written || '') + '</span></dd>' +
@@ -5624,7 +5649,7 @@ function critDetail(m) {
   return critLegend(m.st) + (dn ? '<div class="hint" style="margin:0 0 6px">' + kodlar(['HH']) + ' HH ile denetim: <span class="dn ok">✓ ' + dn.tutar + ' doğrulandı</span> ' + (dn.tur ? '<span class="dn warn">⚠ ' + dn.tur + ' tür farkı</span> ' : '') + (dn.munekkit ? '<span class="dn bad">⚠ ' + dn.munekkit + ' münekkit farkı</span> ' : '') + '<span class="muted">· ' + dn.yok + ' HH’de yok</span></div>' : '') +
     '<div class="hint" style="margin:0 0 6px">' + all.length + ' kayıt · ' + direct + ' müellifin kendi hükmü · ' + chained + ' senedli nakil · ' + (all.length - direct - chained) + ' senedsiz nakil · satıra tıklayınca metindeki yeri açılır</div>' +
     '<div class="wrap"><table class="tbl sub-tbl" data-tid="crit-st"><thead><tr><th data-sk="n">Râvi</th><th data-sk="t">Lafız</th><th data-sk="t">Tür</th><th data-sk="n" class="num">Şiddet</th><th data-sk="t">Kaynak</th><th data-sk="t">Sened / nakil yolu</th></tr></thead><tbody>' +
-    sts.map(s => (CPOP.set(gotoAttr(s), s), '<tr data-cpop="' + esc(gotoAttr(s)) + '"' + grup(s) + ' title="' + esc(eCounts(s) ? 'Hükmün ayrıntısı ve metni' : ayriSayilir(s) ? 'Ayrı sayılır (' + KNAME[eKind(s)] + '); ta‘dîl–cerh toplamına girmez' : 'Soluk: sayıma girmez — ' + sayilmamaSebebi(s)) + '" class="kodsatir' + (eCounts(s) || ayriSayilir(s) ? '' : ' dim') + '"><td data-v="' + seqKey(s) + '"><b>' + ravNo(s.n) + '</b><div class="ar small" style="font-size:calc(14px * var(--yb))">' + esc(s.n.effective.canonical_name) + '</div></td><td class="ar">' + esc(s.phrase || '(zımnî)') + '</td><td>' + kindTag(eKind(s), eType(s).split(' /')[0]) + (baglamRozet(s) ? '<div>' + baglamRozet(s) + '</div>' : '') + '</td><td class="num" data-v="' + (eKind(s) === 'K' ? eTMax(s) - eCMax(s) : eSev(s)) + '">' + sevText(s) + '</td><td class="ar small" style="font-size:calc(14px * var(--yb))">' + esc(srcShort(s.b)) + (s.origin === 'HH' ? ' ' + kodlar(['HH']) : hhAyniRozet(s)) + ' ' + denetimRozet(s) + '</td><td>' + senedHTML(s) + '</td></tr>')).join('') + '</tbody></table></div>' +
+    sts.map(s => (CPOP.set(gotoAttr(s), s), '<tr data-cpop="' + esc(gotoAttr(s)) + '"' + grup(s) + ' title="' + esc(eCounts(s) ? 'Hükmün ayrıntısı ve metni' : ayriSayilir(s) ? 'Ayrı sayılır (' + KNAME[eKind(s)] + '); ta‘dîl–cerh toplamına girmez' : 'Soluk: sayıma girmez — ' + sayilmamaSebebi(s)) + '" class="kodsatir' + (eCounts(s) || ayriSayilir(s) ? '' : ' dim') + '"><td data-v="' + seqKey(s) + '"><b>' + ravNo(s.n) + '</b><div class="ar small" style="font-size:calc(14px * var(--yb))">' + esc(s.n.effective.canonical_name) + '</div></td><td class="ar">' + esc(s.phrase || '(zımnî)') + hhTamMetin(s) + '</td><td>' + kindTag(eKind(s), eType(s).split(' /')[0]) + (baglamRozet(s) ? '<div>' + baglamRozet(s) + '</div>' : '') + '</td><td class="num" data-v="' + (eKind(s) === 'K' ? eTMax(s) - eCMax(s) : eSev(s)) + '">' + sevText(s) + '</td><td class="ar small" style="font-size:calc(14px * var(--yb))">' + esc(srcShort(s.b)) + (s.origin === 'HH' ? ' ' + kodlar(['HH']) : hhAyniRozet(s)) + ' ' + denetimRozet(s) + '</td><td>' + senedHTML(s) + '</td></tr>')).join('') + '</tbody></table></div>' +
     (sts.length < all.length ? '<div class="row" style="margin-top:8px"><button class="btn sm" data-critall>Tümünü göster (' + fmt(all.length) + ' kayıt)</button> <span class="hint">İlk ' + sts.length + ' kayıt gösteriliyor.</span></div>' : '');
 }
 
