@@ -6,7 +6,7 @@
 <title>Cerh-Taʿdîl · Kaynak Kontrolü</title>
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self' https://api.github.com https://generativelanguage.googleapis.com; img-src data:; base-uri 'none'; form-action 'none'">
 <meta name="generator" content="cerh-tadil/build.py CTX 2.0.0">
-<meta name="cerh-motor" content="25964c732c7fc171">
+<meta name="cerh-motor" content="90611962b19df746">
 <style>
 /* =========================================================
    Cerh-Ta‘dîl · Kaynak Kontrolü — arayüz stilleri
@@ -1387,7 +1387,7 @@ const KSTACK = ['T', 'N', 'K', 'B', 'J', 'C'];                        // doğrul
 const KNAME = { T: 'Ta‘dîl', N: 'Cerhin reddi', K: 'Karma', B: 'Mezhep / bid‘at', J: 'Cehâlet', C: 'Cerh', R: 'Rivâyet hükmü', V: 'Rivayet tavrı', P: 'Tercih', D: 'Diyânet', S: 'Sükût', M: 'Münekkit tenkidi' };
 const KDESC = { T: 'Râviyi güvenilir kılan ifade', N: 'Bir cerhin reddi veya hafifletilmesi', K: 'Ta‘dîl + kayıt (mukayyed) bir arada', B: 'Mezhep/bid‘at nitelemesi (ta‘n sebebi)', J: 'Tanınmama (cehâlet)', C: 'Adâlet veya zabta yönelik cerh', R: 'Hüküm râviye değil rivayete (hadise) ait', V: 'Bir kimsenin ondan rivayet edip etmemesi (olumlu/olumsuz tavır); ta‘dîl–cerh toplamına girmez, Münekkitler’de ayrı sayılır. “Ondan yazmayın” gibi başkalarına tavsiye cerhtir', P: 'Tercih (mukayeseli ta‘dîl): râviyi bir başkasından üstün ya da aşağı tutma (lehine/aleyhine); ta‘dîl–cerh toplamına girmez, Münekkitler’de ayrı sayılır', D: 'Diyânet/zühd övgüsü (rivayet ta‘dîli değil)', S: 'Cerh ve ta‘dîl zikredilmemiş', M: 'Münekkidin kendisi hakkında değerlendirme' };
 const kc = k => 'k-' + String(k || 'd').toLowerCase();
-const FLAGTXT = { mezhep: 'Mezhep / bid‘at notu (cerh sayılmaz)', 'şiî-ricâl': 'Şiî ricâl (Sünnî sayıma girmez)', 'hedef-şüpheli': 'Başka kişi hakkında olabilir', soru: 'Soru cümlesi', 'soru-teyit': 'Soru–cevapla teyit', 'söz-sahibi-belirsiz': 'Söz sahibi belirsiz', 'isnad-içi': 'Senet içinde', derleme: 'Derleme eser', zeame: 'Za‘ame (nakleden katılmıyor)', 'istilah-zehebi': 'Zehebî ıstılahı', rüya: 'Rüyaya dayalı', şartlı: 'Şartlı hüküm', zımnî: 'Zımnî (kitaba alma)', olumsuz: 'Olumsuzlanmış lafız (tersine çevrildi)', itiraz: 'Ardından itiraz var (atıf ya da hüküm tartışmalı)', mukayyed: 'Kayıtlı (mukayyed) cerh: belirli bir hocadan rivayetine mahsus; genel cerh sayılmaz', 'mukayyed-t': 'Kayıtlı (mukayyed) ta‘dîl: belirli bir hocadan rivayetine mahsus', elle: 'Elle düzeltme (HH denetiminde tek tek okunarak düzeltildi ya da eklendi)', 'hh-sinif': 'HH’nin sınıfından (motor lafzı okuyamadı ya da türü HH’ye göre alındı)', 'hh-esas': 'HH’nin kaydına göre sayıldı (motorun hedef/söz sahibi şüphesi yok sayıldı)' };
+const FLAGTXT = { mezhep: 'Mezhep / bid‘at notu (cerh sayılmaz)', 'şiî-ricâl': 'Şiî ricâl (Sünnî sayıma girmez)', 'hedef-şüpheli': 'Başka kişi hakkında olabilir', soru: 'Soru cümlesi', 'soru-teyit': 'Soru–cevapla teyit', 'söz-sahibi-belirsiz': 'Söz sahibi belirsiz', 'isnad-içi': 'Senet içinde', derleme: 'Derleme eser', zeame: 'Za‘ame (nakleden katılmıyor)', 'istilah-zehebi': 'Atıfsız «mechûl» Ebû Hâtim’e yazıldı (râvinin kayıtlarında Ebû Hâtim’e atıf var; Zehebî ıstılahı)', 'istilah-aday': 'Atıfsız «mechûl»: ez-Zehebî’nin kendi sözü (Ebû Hâtim’e atıf bulunmadı)', 'mizan-nakli': 'Lisân’da “intehâ”ya kadarki Mîzân nakli', 'mizan-tekrar': 'Lisân’daki Mîzân nakli: aynı söz Mîzân’ın kendisinden sayılır (burada sayılmaz)', rüya: 'Rüyaya dayalı', şartlı: 'Şartlı hüküm', zımnî: 'Zımnî (kitaba alma)', olumsuz: 'Olumsuzlanmış lafız (tersine çevrildi)', itiraz: 'Ardından itiraz var (atıf ya da hüküm tartışmalı)', mukayyed: 'Kayıtlı (mukayyed) cerh: belirli bir hocadan rivayetine mahsus; genel cerh sayılmaz', 'mukayyed-t': 'Kayıtlı (mukayyed) ta‘dîl: belirli bir hocadan rivayetine mahsus', elle: 'Elle düzeltme (HH denetiminde tek tek okunarak düzeltildi ya da eklendi)', 'hh-sinif': 'HH’nin sınıfından (motor lafzı okuyamadı ya da türü HH’ye göre alındı)', 'hh-esas': 'HH’nin kaydına göre sayıldı (motorun hedef/söz sahibi şüphesi yok sayıldı)' };
 
 /* ---------- Yerel depolama: KASA’nın şifreli deposu (bellekte çözülmüş, diske AES-256-GCM ile) ---------- */
 const store = KASA.store;
@@ -4885,7 +4885,9 @@ function blockChanged(id, before, after) {
    yerinde bağlanır (eşleşmeyen kayıt silinmez; metin geri alınırsa yeniden bağlanır). */
 function remapBlockText(b, oldText, newText) {
   const olds = b._st.concat(b._del || []);
-  const news = CTX.analyze(newText, blockOpts(b, b._n)).statements.map(s => ({ uid: stUid(b, s), s }));
+  const nsts = CTX.analyze(newText, blockOpts(b, b._n)).statements;
+  CTKR.raviSonrasi(b._n.blocks.map(x => ({ src: x.effective.source_name || '', sts: x === b ? nsts : (x._st || []).map(s => Object.assign({}, s)) })));   // râvi düzeyinde son geçiş (analiz ile aynı)
+  const news = nsts.map(s => ({ uid: stUid(b, s), s }));
   const L0 = oldText.length, L1 = newText.length; let p = 0, q = 0;
   while (p < L0 && p < L1 && oldText[p] === newText[p]) p++;
   while (q < L0 - p && q < L1 - p && oldText[L0 - 1 - q] === newText[L1 - 1 - q]) q++;
@@ -6061,7 +6063,7 @@ function renderMethod() {
     crit.map(c => '<tr style="cursor:default"><td data-v="' + esc(c.tr) + '">' + esc(c.tr) + (c.shii ? ' <span class="tag">Şiî ricâl</span>' : '') + '<div class="ar small muted" style="font-size:calc(14px * var(--yb))">' + esc(c.canon) + '</div></td><td class="num">' + (c.death || '') + '</td><td class="small" data-v="' + esc(c.region + ' ' + c.city) + '">' + esc(c.city) + '<div class="muted">' + esc(c.region) + '</div></td><td class="small">' + esc(c.approach) + '</td><td class="small">' + esc(c.note) + '</td></tr>').join('') + '</tbody></table></div>' +
 
     '<h3>10. Kaynak eser gelenekleri</h3><div class="wrap"><table class="tbl"><thead><tr><th>Eser (ayırt edici ad)</th><th>Atıfsız hükmün sahibi</th><th>Kural</th></tr></thead><tbody>' +
-    CTX.CONVENTIONS.map(c => '<tr style="cursor:default"><td class="ar" style="font-size:calc(15px * var(--yb))">' + esc(c.m) + '</td><td>' + esc(crName(c.c, c.c)) + '</td><td class="small">' + esc([c.majhul ? 'atıfsız “mechûl” → Ebû Hâtim' + (c.majhul === 'olası' ? ' (olası)' : '') : '', c.lisan ? '“intehâ”ya kadar Mîzân nakli; (ز) İbn Hacer' : '', c.comp ? 'derleme/ihtisar' : '', c.asked ? 'suâlât: sorulan münekkit' : '', c.incl ? 'zımnî cerh (kitaba alma)' : '', c.extra ? 'takma ad: ' + Object.keys(c.extra).join(', ') : ''].filter(Boolean).join(' · ')) + '</td></tr>').join('') + '</tbody></table></div>' +
+    CTX.CONVENTIONS.map(c => '<tr style="cursor:default"><td class="ar" style="font-size:calc(15px * var(--yb))">' + esc(c.m) + '</td><td>' + esc(crName(c.c, c.c)) + '</td><td class="small">' + esc([c.majhul ? 'atıfsız “mechûl” → ez-Zehebî; râvinin kayıtlarında Ebû Hâtim’e atıf varsa Ebû Hâtim' : '', c.lisan ? '“intehâ”ya kadar Mîzân nakli (ez-Zehebî; Mîzân kaydı varsa oradan sayılır), sonrası ve (ز) İbn Hacer' : '', c.comp ? 'derleme/ihtisar' : '', c.asked ? 'suâlât: sorulan münekkit' : '', c.incl ? 'zımnî cerh (kitaba alma)' : '', c.extra ? 'takma ad: ' + Object.keys(c.extra).join(', ') : ''].filter(Boolean).join(' · ')) + '</td></tr>').join('') + '</tbody></table></div>' +
 
     '<h3>11. Sınırlar</h3><ul>' +
     '<li>Kural tabanlı sistem sözlükte bulunmayan, alışılmadık ya da kinayeli ifadeleri kaçırabilir; aynı lafız münekkite ve bağlama göre farklı anlam taşıyabilir (Lisânü’l-Muhaddisîn’in sık uyarısı). Bu yüzden her kayıt incelemeye açıktır.</li>' +
@@ -8058,7 +8060,7 @@ const RAPOR = (() => {
   add('C', 4, 'tuhmet', 'Sirkat (ikil)', 0.85, ['يسرقان الحديث'], { nt: KC2 });
   add('C', 1, 'zimni', 'Du‘afâ kitabına aldı', 0.75, ['ادخله (?<cr>(?:' + TKR + ' ){0,2}?\\S+) في كتاب (?:ال)?ضعفائه']);
   add('J', 2, 'cehalet', 'Tanınmıyor (2)', 0.8, ['(?:لا|ما) (?:اعرف|ادري) من (?:ذا|هو)', 'لست ادري من هو', 'لا تعرف حالته', 'لا نعرف عنه راويا سوي \\S+']);
-  add('J', 2, 'cehalet', 'İkisi meçhul (tek başına)', 0.7, ['مجهولان'], { solo: true });
+  add('J', 2, 'cehalet', 'İkisi meçhul (tek başına)', 0.8, ['مجهولان'], { solo: true });
   add('C', 2, 'muhalefe', 'Münker / mahfûz olmayan (3)', 0.8, ['مقدار ما يرويه (?:من الحديث )?(?:منكر|مناكير)', 'ما انكر ما يجيء به', 'عنده (?:معاضيل|مناكير)(?: ومناكير)?(?: كثيره)?', 'حدث (?:عن (?:' + TKR + ' ){1,4}?)?باحاديث (?:لم|لا) يتابع(?:ه احد)? عليها', 'يحدث عن (?:' + TKR + ' ){0,8}?باحاديث لا يتابعه احد عليها', 'احاديث لم يتابعه احد عليها', 'ينفرد عن (?:المشاهير|الثقات) بالمناكير', 'لا يتابع علي (?:ما يرويه|غير شيء من حديثه)', '(?:يحدث|روي) (?:باحاديث|احاديث) سوء', 'احاديث \\S+(?: بن \\S+)? عن \\S+(?: \\S+)? مقلوبه', 'احاديثه عن \\S+ مقلوبه', 'احاديثه واهيه', 'لا تشبه احاديث الناس', 'الغالب علي (?:احاديثه|رواياته) المناكير(?: والموضوعات)?', 'حديثه خاصه عن \\S+ مناكير', 'روي عن ابيه اشياء لم يروها غيره', 'منكر الاسناد والمتن', 'نسخه باطله', 'مما انكرت عليه', 'له اشياء مناكير', 'عامتها غير محفوظات'], { nt: KC2 });
   add('C', 1, 'mubhem', 'Hafif tenkit (3)', 0.75, ['(?:كان \\S+ )?لا يحفظ الحديث', 'طعنوا عليه', 'نبرا من عهدته', 'احاديث \\S+ (?:عن (?:' + TKR + ' ){0,6}?)?فيها ضعف', 'لا يقوي حديثه', 'يتكلمون في (?!ال)\\S+', 'حديثه ليس بالمضيء', 'ليس حديثهم بالقوي', 'يخلط الحديث', 'يوهنون حديثه', 'يحدث حفظا فيغلط', 'منسوب الي (?:الغفله|' + SAYYI + ' الحفظ)', 'لا يضبط', 'يوهنه قليلا', 'كان شعبه يقع فيه', 'يقع فيه', 'جرحوه', 'ليس بمستقيم(?: الحديث)?', 'خولط', '(?:كان )?ربما لقن', 'لا يحمد حفظه', 'لا اعلم (?:له )?(?:احدا )?موثقا'], { nt: KC2 });
   add('C', 2, 'mubhem', 'Mu‘temed değil (3)', 0.8, ['ليس له روايه يعتمد عليها', 'لا يعتمد علي (?:روايته|حديثه|حديثهم)', 'حديثهم ليس بالحجج', 'معروفا بالضعف', 'كان عندهم ضعيفا(?: في الحديث)?', '(?:كاد ان )?(?:يغلب|غلب) علي حديثه الوهم', 'لا يغتر به', 'لا يوقف علي حديثه', 'لا تشتغل به', 'ما كان يدري اي شيء يقول', 'يكنيه لضعفه', 'تكذيب الحفاظ له'], { nt: KC2 });
@@ -8732,15 +8734,20 @@ const RAPOR = (() => {
           res.basis = 'belirsiz'; t.flags.push('isnad-içi'); t.reasons.push('Senedli bir haberin içinde; söz sahibi belirtilmemiş.');
         } else {
           // Atıfsız: eser müellifinin kendi hükmü (veya eser geleneği)
+          // Kullanıcı kararı (22.10.2026): atıfsız “mechûl” Zehebî’nin kendi sözüdür; râvinin başka bir kaydında Ebû Hâtim’e
+          // atıf bulunursa Ebû Hâtim’e yazılır (râvi düzeyinde, CTKR.raviSonrasi). Burada yalnız aday işaretlenir.
           let canon = defaultCanon, why = 'Atıfsız hüküm → eser müellifi.';
+          t.flags.push('atifsiz');
           if (conv.lisan && !zAdd && (intahaPos < 0 || c.start < intahaPos)) { canon = 'الذهبي'; why = 'Lisân: “intehâ”ya kadar Mîzân’dan nakil → ez-Zehebî.'; res.via = 'ابن حجر العسقلاني'; }
-          if ((conv.majhul || (conv.lisan && canon === 'الذهبي')) && e.k === 'J' && /مجهول/.test(n.slice(c.start, c.end))) { canon = 'أبو حاتم الرازي'; why = 'Zehebî’nin ıstılahı: atıfsız “mechûl” Ebû Hâtim’in sözüdür' + (conv.majhul === 'olası' ? ' (bu eser için olası).' : '.'); res.via = 'الذهبي'; t.flags.push('istilah-zehebi'); }
+          if ((conv.majhul || (conv.lisan && canon === 'الذهبي')) && e.k === 'J' && /مجهول/.test(n.slice(c.start, c.end))) { canon = 'الذهبي'; why = 'Atıfsız “mechûl”: ez-Zehebî’nin kendi sözü (râvinin kayıtlarında Ebû Hâtim’e atıf yok).'; t.flags.push('istilah-aday'); }
           if (canon) res.critics = [{ canon, written: '' }];
           res.basis = 'müellif';
           if (conv.comp) { t.flags.push('derleme'); why += ' Derleme/ihtisar eser: hükmün asıl sahibi başkası olabilir' + (typeof conv.comp === 'string' ? ' (muhtemelen ' + conv.comp + ').' : '.'); }
           t.reasons.push(why);
         }
       }
+      // Lisân’ın “intehâ”ya kadarki kısmı Mîzân’ın metnidir: râvinin Mîzân kaydı varsa söz oradan sayılır (CTKR.raviSonrasi)
+      if (conv.lisan && !zAdd && (intahaPos >= 0 ? c.start < intahaPos : t.flags.includes('atifsiz'))) t.flags.push('mizan-nakli');
       // İsnad zinciri: cümle başından işarete kadar “حدثنا … سمعت” dizisi
       if (sc.mk && (sc.mk.type === 'named') && sc.mk.verb && /سمعت|قال|يقول/.test(sc.mk.verb)) {
         const ss = sentenceStart(n, sc.mk.pos); const seg = n.slice(ss, sc.mk.pos);
@@ -9701,6 +9708,44 @@ const RAPOR = (() => {
     }
     return out.sort((p, q) => p.start - q.start);
   }
+  /* Râvi düzeyinde son geçiş (kullanıcı kararı 22.10.2026); bütün blokların hükümleri çözümlendikten sonra, uid verilmeden önce:
+     1) Atıfsız «مجهول» (Mîzân, Muğnî, Dîvân, Lisân’ın Mîzân kısmı) motor tarafından ez-Zehebî’ye verilir ('istilah-aday').
+        Râvinin başka bir kaydında Ebû Hâtim’in «mechûl» sözü varsa (İbn Ebî Hâtim, Tehzîb vb.) söz Ebû Hâtim’e yazılır.
+     2) Lisân’ın “intehâ”ya kadarki kısmı Mîzân’ın metnidir ('mizan-nakli'): râvinin Mîzân kaydında aynı münekkitin aynı
+        yöndeki hükmü varsa söz Mîzân’ın kendisinden sayılır, Lisân’daki tekrar sayılmaz ('mizan-tekrar').
+     B: [{ src: eser adı, sts: [hüküm] }] (yerinde değiştirilir) */
+  const MIZAN = CTX.nz('ميزان الاعتدال'), EBU_HATIM = 'أبو حاتم الرازي';
+  const yon = k => 'TN'.includes(k) ? 't' : 'CJ'.includes(k) ? 'c' : k;
+  function raviSonrasi(B) {
+    const all = B.flatMap(x => x.sts), fl = s => s.flags || [];
+    const ebuHatim = all.some(s => s.critic === EBU_HATIM && !fl(s).includes('istilah-aday') && /مجهول/.test(CTX.nz(s.phrase || '')));
+    if (ebuHatim) for (const s of all) {
+      if (!fl(s).includes('istilah-aday') || fl(s).includes('elle')) continue;
+      elleMunekkit(s, EBU_HATIM);
+      s.transmission = 'Naklen'; s.transmitter = 'الذهبي';
+      s.flags = fl(s).filter(f => f !== 'istilah-aday').concat('istilah-zehebi');
+      s.reasons = (s.reasons || []).filter(r => !/^Atıfsız “mechûl”/.test(r)).concat('Zehebî’nin ıstılahı: atıfsız “mechûl” Ebû Hâtim’in sözüdür; râvinin kayıtlarında Ebû Hâtim’in “mechûl” sözü var.');
+    }
+    const miz = B.filter(x => CTX.nz(x.src || '').includes(MIZAN) && !CTX.nz(x.src || '').includes(CTX.nz('ذيل'))).flatMap(x => x.sts.filter(s => s.counts && s.critic));
+    if (miz.length) for (const s of all) {
+      if (!s.counts || !fl(s).includes('mizan-nakli') || fl(s).includes('elle')) continue;
+      if (!miz.some(m => m.critic === s.critic && yon(m.kind) === yon(s.kind))) continue;
+      s.counts = false; s.flags = fl(s).concat('mizan-tekrar');
+      s.reasons = (s.reasons || []).concat('Lisân’daki Mîzân nakli: aynı söz râvinin Mîzân kaydında var; Mîzân’ın kendisinden sayılır.');
+    }
+    return B;
+  }
+  // Bir râvinin bütün bloklarını çözümler (motor + elle düzeltme + râvi düzeyinde son geçiş). metin(b): çözümlenecek metin.
+  // → [{ b, t, sts }] (uid verilmemiş)
+  function bloklariCozumle(n, vol, metin) {
+    if (!n._names) n._names = [n.effective.canonical_name, ...(n.effective.name_variants || [])];
+    const B = n.blocks.map(b => {
+      const t = metin(b);
+      return { b, t, src: b.effective.source_name || '', sts: elleUygula(CTX.analyze(t, blockOpts(b, n)).statements, vol, n.source_sequence, b.block_order, t, { blockId: b.id, narratorId: n.id }) };
+    });
+    raviSonrasi(B);
+    return B;
+  }
   function blockOpts(b, n) { return { sourceName: b.effective.source_name, sourceAuthor: b.effective.source_author, narratorNames: n._names, blockId: b.id, narratorId: n.id }; }
   // Kaynak bloğu künyesi düzeltmesi (eser, müellif, yer); çözümleme bu değerlerle yapılır
   function applyBlockFix(b, R) {
@@ -9714,6 +9759,7 @@ const RAPOR = (() => {
     R = R || {};
     n._names = [n.effective.canonical_name, ...(n.effective.name_variants || [])];
     n._st = []; n._kim = null; n._merv = null;
+    const B = [];
     for (const b of n.blocks) {
       applyBlockFix(b, R);
       b._n = n;
@@ -9724,7 +9770,11 @@ const RAPOR = (() => {
       const r = CTX.analyze(b._text, blockOpts(b, n));
       r.statements = elleUygula(r.statements, n.volume_id || Math.floor(n.id / 100000) || 1, n.source_sequence, b.block_order, b._text, { blockId: b.id, narratorId: n.id });
       b._notes = r.notes; b._markers = r.markers;
-      const all = r.statements.map(s => { s.uid = stUid(b, s); s.b = b; s.n = n; s.origin = 'CTX'; return s; });
+      B.push({ b, src: b.effective.source_name || '', sts: r.statements });
+    }
+    raviSonrasi(B);
+    for (const { b, sts } of B) {
+      const all = sts.map(s => { s.uid = stUid(b, s); s.b = b; s.n = n; s.origin = 'CTX'; return s; });
       const gone = s => !!(R.st && R.st[s.uid] && R.st[s.uid].v === 'del');       // kaldırılan hüküm: listelerden ve sayımdan çıkar
       b._st = all.filter(s => !gone(s)); b._del = all.filter(gone);
       // Kaynak künyesi (son köşeli parantez) — görüntüde soluk
@@ -9782,7 +9832,7 @@ const RAPOR = (() => {
     const sts = rec.sts.filter(x => !del.has(x.uid)), bh = new Set(sts.map(x => x.bid));
     return Object.assign({}, rec, { sts, hit: bh.size });
   }
-  return { setElle, elleUygula, BICIM, HOW_TR, uniq, yearText, stUid, blockOpts, applyBlockFix, analiz, kim, alan, ozet, hazirUygun, kaldirileniAyikla };
+  return { setElle, elleUygula, raviSonrasi, bloklariCozumle, BICIM, HOW_TR, uniq, yearText, stUid, blockOpts, applyBlockFix, analiz, kim, alan, ozet, hazirUygun, kaldirileniAyikla };
 });
 
 </script>
@@ -10248,7 +10298,7 @@ const RAPOR = (() => {
      munekkit-belirsiz münekkit adı birden çok kişiye uyuyor ya da söz sahibi işareti belirsiz
      hedef            hüküm başka bir kişi hakkında olabilir: motorun “hedef şüpheli” işareti; «وأبوه ضعيف» gibi akraba öznesi;
                       «روى عن فلان وهو متروك» (zamir hocaya dönebilir); «عن شيخ له مجهول»
-     guven            motorun güveni düşük (< 0,7)
+     guven            motorun güveni düşük (< 0,7); müellifin kendi eserindeki atıfsız hüküm hariç (derleme eserde uyarı kalır)
      isnad            söz isnadın içinde geçiyor (ravinin değil, senetteki birinin vasfı olabilir)
      nakil            aynı münekkitin sözü başka kaynakta ta‘dîl ↔ cerh farkıyla nakledilmiş (CTN; tespit hatası ya da nakil farkı)
    Münekkitin kendi ihtilâfı (ihtilâfü’l-kavl) bilginin özelliğidir, güvenilirlik uyarısı değildir: Teâruz’da gösterilir.
@@ -10265,7 +10315,7 @@ const RAPOR = (() => {
     'munekkit-liste': ['münekkit listede yok', 'Söyleyenin adı metinde geçiyor, ama sitenin münekkit listesinde değil; kimliği doğrulanmadı'],
     'munekkit-belirsiz': ['münekkit?', 'Münekkit belirsiz: ad birden çok kişiye uyuyor ya da söz sahibi işareti açık değil.'],
     hedef: ['hedef?', 'Hüküm başka bir kişi hakkında olabilir'],
-    guven: ['düşük güven', 'Motorun güveni düşük (< %70): lafız ya da bağlam belirsiz (kitaba alınmadan çıkan zımnî hükümler hariç).'],
+    guven: ['düşük güven', 'Motorun güveni düşük (< %70): lafız ya da bağlam belirsiz (zımnî hükümler ve müellifin kendi eserindeki atıfsız hükümler hariç).'],
     isnad: ['isnad içi', 'Söz isnadın içinde geçiyor; senetteki başka bir râvinin vasfı olabilir.'],
     nakil: ['nakil farkı', 'Aynı münekkitin sözü başka bir kaynakta ta‘dîl ↔ cerh farkıyla nakledilmiş: tespit hatası ya da nakil farkı'],
   };
@@ -10304,7 +10354,10 @@ const RAPOR = (() => {
       if (fl.includes('hedef-şüpheli')) h = ((s.reasons || []).find(r => /başka bir kişi/.test(r)) || 'motorun hedef işareti').replace(/^Hüküm başka bir kişi hakkında olabilir: /, '');
       else if (s.basis !== 'zımnî' && opt.metin) h = hedefNedeni(opt.metin(s), s.start);
       if (h) L.push({ k: 'hedef', not: h });
-      if (s.confidence != null && s.confidence < 0.7 && s.basis !== 'zımnî' && !s.implicit) L.push({ k: 'guven', not: '%' + Math.round(s.confidence * 100) });
+      // Kullanıcı kararı (22.10.2026): müellifin kendi eserindeki atıfsız hüküm (Lisân’ın Mîzân kısmı ve atıfsız «mechûl» dahil)
+      // düşük güven sayılmaz; derleme/ihtisar eserlerde uyarı kalır.
+      const muellif = fl.includes('atifsiz') && !fl.includes('derleme');
+      if (s.confidence != null && s.confidence < 0.7 && s.basis !== 'zımnî' && !s.implicit && !muellif) L.push({ k: 'guven', not: '%' + Math.round(s.confidence * 100) });
       if (fl.includes('isnad-içi')) L.push({ k: 'isnad' });
       const nk = opt.nakil && opt.nakil(s);
       if (nk && nk.level === 'hüküm') L.push({ k: 'nakil', not: nk.not || '' });
