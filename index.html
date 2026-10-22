@@ -1204,6 +1204,9 @@ tr.mf-on td { background: color-mix(in srgb, #c0392b 6%, transparent); }
 .donus-row { margin: 0 0 6px; }
 .donus-btn { background: var(--accent-soft, #e6f1ec); border-color: var(--accent, #1f6b52); color: var(--accent, #1f6b52); font-weight: 600; }
 .donus-btn:hover { background: var(--accent, #1f6b52); color: #fff; }
+/* Teâruz: değerlendirmeye basınca hüküm penceresi */
+.conf-ph { font-size: inherit; color: inherit; text-decoration: underline dotted; text-underline-offset: 3px; padding: 0; }
+.conf-ph:hover { color: var(--accent, #1f6b52); text-decoration-style: solid; }
 
 </style>
 </head>
@@ -5691,7 +5694,9 @@ const CFF = Object.assign({ type: '', zeh: false, durum: '', oneri: '', q: '' },
 function confState(c) { const C = c.R.conf || {}; return C[c.key] || C[c.pkg + ':' + c.seq + '|' + c.id] || {}; }
 function sideHTML(list, cls) {
   const by = {}; for (const x of list) (by[x.critic] = by[x.critic] || []).push(x);
-  return Object.entries(by).map(([c, xs]) => '<div class="side ' + cls + '"><b>' + esc(crName(c, c)) + '</b> ' + xs.slice(0, 3).map(x => '<span class="ar">' + esc(x.phrase) + '</span>').join(' ، ') + (xs.length > 3 ? ' <span class="muted small">+' + (xs.length - 3) + '</span>' : '') + '</div>').join('');
+  // Değerlendirmeye basınca hüküm açılır pencerede (Münekkitler’deki gibi); pencereden “Detaya git” râvinin sayfasına, oradan “Teâruz sayfasına dön”
+  const ph = x => { const s0 = x._s; if (!s0) return '<span class="ar">' + esc(x.phrase) + '</span>'; const k = gotoAttr(s0); CPOP.set(k, s0); return '<button type="button" class="linkbtn ar conf-ph" data-cpop="' + esc(k) + '" title="Hükmün ayrıntısı ve metni">' + esc(x.phrase || '(zımnî)') + '</button>'; };
+  return Object.entries(by).map(([c, xs]) => '<div class="side ' + cls + '"><b>' + esc(crName(c, c)) + '</b> ' + xs.slice(0, 3).map(ph).join(' ، ') + (xs.length > 3 ? ' <span class="muted small" title="' + esc(xs.slice(3).map(x => x.phrase).join(' ، ')) + '">+' + (xs.length - 3) + '</span>' : '') + '</div>').join('');
 }
 function confGoto(c, x) { const s = x._s; return s ? gotoAttr(s) : ''; }
 function renderConflicts() {
@@ -5720,7 +5725,7 @@ function renderConflicts() {
   for (const c of list.slice(0, limit)) {
     const st = confState(c); const open = S.confOpen === c.key;
     const body = c.type === 'nakil' ? '<details class="cdiff"' + (open ? ' open' : '') + '><summary><b>' + esc(crName(c.critic, c.critic)) + '</b> · ' + esc(c.title) + ' <span class="muted">· ' + esc(c.nakil.q.source || '') + '</span></summary>' + diffHTML(c.nakil) + '</details>' : '<div class="sides">' + sideHTML(c.tSide, 't') + sideHTML(c.cSide, 'c') + '</div>' + (c.type === 'içi' ? '<div class="small muted">' + esc(c.title) + '</div>' : '');
-    out += '<tr style="cursor:default"' + (open ? ' aria-current="true"' : '') + '><td data-v="' + (+((/^c(\d+)/.exec(c.pkg) || [0, 0])[1]) * 100000 + c.seq) + '"><button class="linkbtn gonarr" data-gonarr="' + esc(c.pkg + '|' + c.seq) + '" title="Bu râviyi çalışma masasında aç"><b>' + '#' + c.seq + '</b><span class="ar" style="display:block;font-size:calc(15px * var(--yb))">' + esc(c.name) + '</span></button></td><td class="small">' + esc(TYPE_TR[c.type]) + (c.zehebi ? '<div><span class="tag zeh">ez-Zehebî</span></div>' : '') + '</td><td>' + body + '</td><td class="small" data-v="' + esc(c.oneri) + '">' + esc(KARAR_TR[c.oneri] || '') + '</td><td class="small" data-v="' + esc((st.durum || '') + (st.karar || '')) + '">' + (st.karar ? '<b>' + esc(KARAR_TR[st.karar]) + '</b><br>' : '') + '<span class="tag' + (st.durum === 'cozuldu' ? ' ok' : '') + '">' + esc(DURUM_TR[st.durum || '']) + '</span>' + (st.at ? '<div class="muted">' + whoWhen(st) + '</div>' : '') + '</td><td><button class="btn sm" data-confopen="' + esc(c.key) + '">' + (open ? 'Kapat' : 'İşle') + '</button></td></tr>';
+    out += '<tr style="cursor:default"' + (open ? ' aria-current="true"' : '') + '><td data-v="' + (+((/^c(\d+)/.exec(c.pkg) || [0, 0])[1]) * 100000 + c.seq) + '"><button class="linkbtn gonarr" data-gonarr="' + esc(c.pkg + '|' + c.seq) + '" title="Bu râviyi çalışma masasında aç"><b>' + (c.seq >= HSEQ0 ? seqEt(c.seq) : '#' + c.seq) + '</b><span class="ar" style="display:block;font-size:calc(15px * var(--yb))">' + esc(c.name) + '</span></button></td><td class="small">' + esc(TYPE_TR[c.type]) + (c.zehebi ? '<div><span class="tag zeh">ez-Zehebî</span></div>' : '') + '</td><td>' + body + '</td><td class="small" data-v="' + esc(c.oneri) + '">' + esc(KARAR_TR[c.oneri] || '') + '</td><td class="small" data-v="' + esc((st.durum || '') + (st.karar || '')) + '">' + (st.karar ? '<b>' + esc(KARAR_TR[st.karar]) + '</b><br>' : '') + '<span class="tag' + (st.durum === 'cozuldu' ? ' ok' : '') + '">' + esc(DURUM_TR[st.durum || '']) + '</span>' + (st.at ? '<div class="muted">' + whoWhen(st) + '</div>' : '') + '</td><td><button class="btn sm" data-confopen="' + esc(c.key) + '">' + (open ? 'Kapat' : 'İşle') + '</button></td></tr>';
     if (open) out += '<tr class="sub"><td colspan="6">' + confEditor(c) + '</td></tr>';
   }
   out += (list.length ? '' : '<tr><td colspan="6" class="empty-state">Bu süzgeçte kayıt yok.</td></tr>') + '</tbody></table></div>';
