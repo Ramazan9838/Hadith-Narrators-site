@@ -1465,7 +1465,9 @@ const saveUI = () => store.set(UKEY, UI);
 
 /* ---------- Veriyi hazırla: açık dilimin bütün bloklarını çözümle ---------- */
 let NARR = [], NBYID = {}, BLK = {}, ALL = [], STBY = {}, ANALYSIS_MS = 0;
-function prepare(data) {
+// yalniz: verilirse (aynı dilim) yalnız bu râviler yeniden çözümlenir, ötekilerin hükümleri olduğu gibi kalır
+function prepare(data, yalniz) {
+if (data !== SNAP) yalniz = null;
 SNAP = data;
 NARR = Object.values(SNAP.narrators).sort((a, b) => a.source_sequence - b.source_sequence);
 NBYID = {}; BLK = {}; ALL = []; STBY = {};
@@ -1473,7 +1475,7 @@ const t0 = performance.now();
 loadRev();
 for (const n of NARR) {
   NBYID[n.id] = n;
-  analyzeNarrator(n);
+  if (!yalniz || yalniz.has(n.id) || !n._st) analyzeNarrator(n);
   for (const b of n.blocks) BLK[b.id] = b;
   ALL.push(...n._st);
 }
@@ -1554,8 +1556,10 @@ function crLabel(s) { const c = eCritic(s); const C = CTX.critic(c); return C ? 
    görüş sayılır, nakiller ayrıca “rivayet” olarak gösterilir; aynı münekkitin farklı hükmü ayrı görüştür. Lafız takımı
    biri ötekini kapsıyorsa kısa olan ihtisârdır; takım aynı, ifade farklıysa ihtilâf (lafız farkı) işaretlenir.
    Münekkiti belirsiz ve zımnî hükümler birleştirilmez. */
-const phKey = s => nz(s.phrase || '').replace(/[^ء-ي ]/g, ' ').replace(/\s+/g, ' ').trim();
-const termSet = s => new Set((s.terms || []).map(t => t.id));
+// Sık çağrılır (özet, ayıklama): lafız anahtarı metne göre, lafız takımı dizinin kendisine göre önbellekte
+const PHK = new Map(), TSET = new WeakMap(), BOS_T = new Set();
+const phKey = s => { const p = s.phrase || ''; let k = PHK.get(p); if (k === undefined) { k = nz(p).replace(/[^ء-ي ]/g, ' ').replace(/\s+/g, ' ').trim(); if (PHK.size > 200000) PHK.clear(); PHK.set(p, k); } return k; };
+const termSet = s => { const t = s.terms; if (!t || !t.length) return BOS_T; let c = TSET.get(t); if (!c || c.n !== t.length) { c = { n: t.length, s: new Set(t.map(x => x.id)) }; TSET.set(t, c); } return c.s; };
 const subOf = (a, b) => [...a].every(x => b.has(x));
 function gorusler(sts) {
   const out = [], by = {};
@@ -2888,8 +2892,11 @@ async function tabloMdIndir(t) {
   const dosya = (t.dataset.tid || 'tablo') + (n ? '-' + ravNo(n).replace(/\s+/g, '') : '') + '.md';
   download(dosya, md, 'text/markdown;charset=utf-8'); logAct('dışa-aktarım', dosya, {});
 }
+const TABLOLAR = document.getElementsByTagName('table');   // canlı liste: her değişiklikte bütün belgeyi seçiciyle taramaktan çok ucuz
 function mdDugmeEkle() {
-  for (const t of document.querySelectorAll('main table.tbl[data-tid], #app table.tbl[data-tid], .view table.tbl[data-tid]')) {
+  for (const t of TABLOLAR) {
+    if (t.dataset.md || !t.dataset.tid || !t.classList.contains('tbl') || !t.closest('main, #app, .view')) continue;
+    t.dataset.md = '1';
     const w = t.closest('.wrap') || t; if (w.previousElementSibling && w.previousElementSibling.classList.contains('md-dugme')) continue;
     w.insertAdjacentHTML('beforebegin', '<div class="md-dugme"><button class="linkbtn small" data-mdtablo title="Bu tabloyu Markdown dosyası olarak indir">⇩ Markdown</button></div>');
   }
@@ -3063,6 +3070,7 @@ function hhHukumHazir() {
   HHST.clear(); HYD.clear(); SUMC.clear(); LSTC.clear(); LEXC = CRITC = CRITF = null; for (const d of Object.values(DIS.r)) if (d) delete d._hk; recomputeAgg();
   if (!STARTED) return;
   renderRail(); renderHead(); if (S.view === 'desk') renderCenter(); else setView(S.view, false);
+  kickIndex(1500);   // satır özetleri HH ile yeniden ısıtılır
 }
 const HH_TUR = { T: 'Taʿdîl', N: 'Taʿdîl', C: 'Cerh', J: 'Cerh', K: 'Karma / Mukayyed', B: 'Bid‘at / mezhep kaydı', V: 'Rivayet tavrı', P: 'Tercih', L: 'Tabaka / biyografi', R: 'Rivâyet hükmü', D: 'Diyânet övgüsü' };
 const tavirTur = sb => 'Rivayet tavrı (' + ((sb || []).includes('tavir-') ? 'olumsuz' : 'olumlu') + ')';
@@ -3097,12 +3105,19 @@ function hhSts(vol, seq, n, pkg) {
 function hhAyikla(sc, hh) {
   if (!hh.length) return hh;
   const out = [];
+  // el-Câmi‘ adayları bir kez hazırlanır: «hhs:» işaretli elle kayıtlar (söz → ilk uygun kayıt) ve münekkite göre HH-esas dışı olmayanlar
+  const elleBy = new Map(), byC = new Map();
+  for (const x of sc) {
+    if (x.origin === 'HH') continue;
+    for (const f of x.flags || []) if (f.startsWith('hhs:') && !elleBy.has(f) && rv(x)?.v !== 'no' && rv(x)?.v !== 'del') elleBy.set(f, x);
+    if (!hhEsasDisi(x)) { const k = eCritic(x); let l = byC.get(k); if (!l) byC.set(k, l = []); l.push(x); }
+  }
   for (const h of hh) {
     const c = h.critic, T = termSet(h), pk = phKey(h);
     const ayni = x => eCritic(x) === c && eKind(x) === h.kind && ((T.size && termSet(x).size && (subOf(T, termSet(x)) || subOf(termSet(x), T))) || (pk && phKey(x) === pk));
     // Elle düzeltme kaydı (kaynak/elle) bu HH sözünden okunmuşsa («hhs:» işareti) aynı söz sayılır: elle okunan el-Câmi‘ hükmü sayılır, HH kopyası ayıklanır
-    const elle = sc.find(x => x.origin !== 'HH' && (x.flags || []).includes('hhs:' + h.hhSoz) && rv(x)?.v !== 'no' && rv(x)?.v !== 'del');
-    const m = elle || (c ? sc.find(x => x.origin !== 'HH' && !hhEsasDisi(x) && ayni(x)) || out.find(ayni) : null);   // önce el-Câmi‘, sonra HH’nin kendi tekrarları
+    const elle = elleBy.get('hhs:' + h.hhSoz);
+    const m = elle || (c ? (byC.get(c) || []).find(ayni) || out.find(ayni) : null);   // önce el-Câmi‘, sonra HH’nin kendi tekrarları
     if (m) { m.hhAyni = m.hhAyni || []; if (!m.hhAyni.includes(h.hhSoz)) m.hhAyni.push(h.hhSoz); h.ayni = m.uid; h.ayniHH = m.origin === 'HH'; } else { h.ayni = null; h.ayniHH = false; h.hhAyni = null; out.push(h); }
   }
   return out;
@@ -5611,8 +5626,11 @@ const ELLE_YOL = 'kaynak/elle/duzeltme.json';
 const ELLED = { sha: '', at: 0, err: '' };
 function elleUygula(d, sha) {
   if (sha === ELLED.sha) return;
-  CTKR.setElle(d); ELLED.sha = sha || '';
-  if (SNAP) { prepare(SNAP); renderAll(); }
+  // Açık dilim yalnız eski ya da yeni düzeltmelerden biri onun râvilerine dokunuyorsa yeniden çözümlenir (açılışta çift çözümleme olmasın)
+  const anah = n => (n.volume_id || Math.floor(n.id / 100000) || 1) + '-' + n.source_sequence;
+  const yeni = d && d.kayitlar ? d : null, yeniden = new Set(NARR.filter(n => [ELLED.d, yeni].some(D => D && D.kayitlar[anah(n)])).map(n => n.id));
+  CTKR.setElle(d); ELLED.sha = sha || ''; ELLED.d = yeni;
+  if (SNAP) { if (yeniden.size) prepare(SNAP, yeniden); renderAll(); }
 }
 async function elleGetir(zorla) {
   if (!ELLED.sha) { try { const r = await IDB.get('harf', 'elle'); if (r && r.data && r.sha) elleUygula(r.data, r.sha); } catch (e) { } }
@@ -5755,6 +5773,8 @@ async function runIndex() {
     await hafifHazirla(p);
     railDirty();
   }
+  // Satır özetleri (arama, süzgeç, sayılar) ve münekkit sayımının hükümleri boş zamanda önceden hesaplanır: ilk aramada takılma olmasın
+  for (const p of PKGS.slice()) { if (SATIR.again) return; while (KORPUS.busy || SATIR.hafifIs) await (KORPUS.busy || SATIR.hafifIs).catch(() => { }); if (p === PK || !PKGS.includes(p) || (SUMC.has(p.id) && LSTC.has(p.id))) continue; await idle(); if (p !== PK && PKGS.includes(p)) { chunkSums(p); lightSts(p); } }
 }
 // Dilimin hafif özeti: saklı olan (imzası yenilenebiliyorsa) → tam özetten → depodaki hafif özet → depodaki tam özet ya da tarayıcıda çözümleme
 async function hafifHazirla(p) {
@@ -5784,7 +5804,13 @@ function buildLight(scope, onStep) {
   })().finally(() => { SATIR.hafifIs = null; SATIR.sonDeneme = Date.now(); });
   return SATIR.hafifIs;
 }
-function keepLight(p, rec) { const L = lightOf(rec); SATIR.recs[p.id] = L; SUMC.delete(p.id); LSTC.delete(p.id); CRITC = null; IDB.put('dizin', L).catch(() => { }); }
+function keepLight(p, rec) { const L = lightOf(rec); SATIR.recs[p.id] = L; SUMC.delete(p.id); LSTC.delete(p.id); CRITC = null; sonraYaz('dizin', L); }
+// Tarayıcı kaydına yazma (JSON + sıkıştırma + şifreleme ana iş parçacığını yorar): özet kurulurken bekletilir, boş zamanda tek tek yazılır
+const YAZQ = []; let yazIs = null;
+function sonraYaz(n, rec) {
+  YAZQ.push([n, rec]); if (yazIs) return;
+  yazIs = (async () => { while (YAZQ.length) { while (KORPUS.busy || SATIR.hafifIs) await (KORPUS.busy || SATIR.hafifIs).catch(() => { }); await idle(); const [a, r] = YAZQ.shift(); try { await IDB.put(a, r); } catch (e) { } } })().finally(() => { yazIs = null; });
+}
 function scopePkgs(scope) { return scope === 'vol' ? PKGS.filter(p => p.vol === PK.vol) : PKGS; }
 function corpusReady(scope) { return scopePkgs(scope).every(p => p === PK || (KORPUS.recs[p.id] && KORPUS.recs[p.id].sig === corpusSig(p))); }
 function buildCorpus(scope, onStep) {
@@ -5797,8 +5823,8 @@ function buildCorpus(scope, onStep) {
       if (p === PK) { KORPUS.done++; continue; }   // beklerken açılmış olabilir: açık dilim canlı veriden okunur
       const sig = corpusSig(p);
       let rec = cache[p.id] && cache[p.id].sig === sig ? cache[p.id] : null;
-      if (!rec && cache[p.id]) { try { await korpusUygun(); } catch (e) { } if (ozetYenile(p, cache[p.id])) { rec = cache[p.id]; IDB.put('dizin', rec).catch(() => { }); } }   // içerik aynı: indirilmez, imzası yenilenir
-      if (!rec) { try { await korpusUygun(); } catch (e) { } rec = await hazirOzet(p) || compactPackage(p); IDB.put('dizin', rec).catch(() => { }); }   // yazma beklenmez (şifreleme arka planda)
+      if (!rec && cache[p.id]) { try { await korpusUygun(); } catch (e) { } if (ozetYenile(p, cache[p.id])) { rec = cache[p.id]; sonraYaz('dizin', rec); } }   // içerik aynı: indirilmez, imzası yenilenir
+      if (!rec) { try { await korpusUygun(); } catch (e) { } rec = await hazirOzet(p) || compactPackage(p); sonraYaz('dizin', rec); }   // yazma sonraya bırakılır (şifreleme boş zamanda)
       if (!(SATIR.recs[p.id] && SATIR.recs[p.id].sig === sig)) keepLight(p, rec);
       KORPUS.recs[p.id] = rec; KORPUS.done++; LEXC = CRITC = CRITF = null;
       if (onStep) onStep();
@@ -7025,7 +7051,7 @@ function sortClick(th) {
   sortTable(tbl);
   if (tid === 'conflicts' && $('conflicts-body').querySelector('[data-confmore]')) renderConflicts();   // kısaltılmış listede sıralama bütün kayıtlara uygulansın
 }
-new MutationObserver(() => { for (const tbl of document.querySelectorAll('table[data-tid]:not([data-sorted])')) { tbl.dataset.sorted = '1'; sortTable(tbl); } }).observe(document.body, { childList: true, subtree: true });
+new MutationObserver(() => { for (const tbl of TABLOLAR) if (tbl.dataset.tid && !tbl.dataset.sorted) { tbl.dataset.sorted = '1'; sortTable(tbl); } }).observe(document.body, { childList: true, subtree: true });
 
 /* ---------- Yeniden boyutlanan paneller ----------
    Dikey ayırıcılar: râvi listesi ↔ metin ↔ ayrıntı paneli (sağa-sola). Yatay ayırıcılar: râvi başlığı ↔ metin,
@@ -10885,12 +10911,15 @@ const RAPOR = (() => {
   const ADALET = new Set(['kizb', 'tuhmet', 'fisk', 'bidat', 'cehalet']);
   const REL_TR = { 'aynı': 'Birebir nakil', ihtisar: 'İhtisar (kısaltma)', ziyade: 'Ziyade (ekleme)', 'lafız': 'Lafız farkı (nakl bi’l-ma‘nâ)', fiil: 'Fiille hikâye (“da‘‘afehû …”)' };
 
-  const tokens = t => nz(t).replace(/[^ء-ي\s]/g, ' ').split(/\s+/).filter(w => w.length > 1 && !/^(و|ف|قال|وقال|فقال|هو|انه|كان|وكان)$/.test(w));
+  // Önbellekli (Teâruz sayfası aynı lafızları ve eserleri binlerce kez işler; 23.10.2026 hız iyileştirmesi)
+  const TOKC = new Map();
+  const tokens = t => { let r = TOKC.get(t); if (!r) { r = nz(t).replace(/[^ء-ي\s]/g, ' ').split(/\s+/).filter(w => w.length > 1 && !/^(و|ف|قال|وقال|فقال|هو|انه|كان|وكان)$/.test(w)); if (TOKC.size > 50000) TOKC.clear(); TOKC.set(t, r); } return r; };
   function isSubseq(a, b) { let i = 0; for (const w of b) if (i < a.length && a[i] === w) i++; return i === a.length; }
   // Sıradan bağımsız içerme (çoklu küme): a’nın bütün sözcükleri b’de var mı?
   function contains(b, a) { const B = new Map(); for (const w of b) B.set(w, (B.get(w) || 0) + 1); for (const w of a) { const k = B.get(w); if (!k) return false; B.set(w, k - 1); } return true; }
   function dice(a, b) { if (!a.length || !b.length) return 0; const B = new Map(); for (const w of b) B.set(w, (B.get(w) || 0) + 1); let c = 0; for (const w of a) { const k = B.get(w); if (k) { c++; B.set(w, k - 1); } } return 2 * c / (a.length + b.length); }
-  function authorOf(source, author) { const c = CTX.convention(source || '', author || '').c || author || ''; const C = CTX.critic(c); return { canon: c, death: C && C.death || null, tr: C ? C.tr : c }; }
+  const AUTC = new Map();
+  function authorOf(source, author) { const k = (source || '') + '|' + (author || ''); let r = AUTC.get(k); if (!r) { const c = CTX.convention(source || '', author || '').c || author || ''; const C = CTX.critic(c); r = { canon: c, death: C && C.death || null, tr: C ? C.tr : c }; AUTC.set(k, r); } return r; }
   const chainNames = ch => tokens(ch).filter(w => !/^(حدثنا|حدثني|اخبرنا|اخبرني|انبانا|سمعت|يقول|عن|ثنا|نا|بن|ابن|ابو|ابي)$/.test(w));
 
   // Söz birimleri: aynı blok + aynı münekkit + ardışık (ara ≤ 60 harf)
