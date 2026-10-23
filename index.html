@@ -4008,18 +4008,42 @@ function railList() {
 /* Sayıyla aramada öteki veri kümesindeki aynı numaralı râvi de listenin sonunda gösterilir (el-Câmi‘ sıra no ↔ HH no);
    basınca o kümenin moduna geçilip râvi açılır (23.10.2026) */
 function railOteki(Q) {
-  if (!Q || !Q.num || railVol()) return [];
-  const m = modu(), k = +Q.num, out = [];
-  if (m !== 'hh' && DIS.dizin && DIS.dizin.hhRavi && !IDXNID.has(HNID0 + k)) {
-    if (!hhListe()) { if (!RV.hhIstek) { RV.hhIstek = 1; hhListeYukle().then(v => { if (v) renderRail(); }); } }
-    else { const r = DIS.hhIx.get(k); if (r) out.push({ x: 'hh', seq: hhSeq(k), name: r[1] || 'HH #' + k }); }
-  }
+  if (!Q || railVol()) return [];
+  const m = modu(), out = [];
+  if (m !== 'hh' && DIS.dizin && DIS.dizin.hhRavi && !hhListe() && !RV.hhIstek) { RV.hhIstek = 1; hhListeYukle().then(v => { if (v) renderRail(); }); }
+  if (!Q.num) return m === 'karma' ? [] : otekiAd(m);   // karma modda iki küme zaten birlikte listelenir
+  const k = +Q.num;
+  if (m !== 'hh' && hhListe() && !IDXNID.has(HNID0 + k)) { const r = DIS.hhIx.get(k); if (r) out.push({ x: 'hh', seq: hhSeq(k), name: r[1] || 'HH #' + k }); }
   if (m === 'hh') {
     const sn = SNAP_SEQS.includes(k) && SNAP0.narrators[k];
     if (sn) out.push({ x: 'sc', vol: SNAP_VOL, seq: k, name: sn.effective.canonical_name });
     else for (const v of Object.keys(VOLS)) { const e = VOLS[v].sc.entries.find(x => x.seq === k); if (e) { out.push({ x: 'sc', vol: +v, seq: k, name: e.name }); break; } }
   }
   return out;
+}
+/* Adla aramada öteki veri kümesi (23.10.2026): el-Câmi‘ modunda HH’nin, HH modunda el-Câmi‘in bütün râvileri aynı yolla (aynen geçen ad,
+   sonra benzer ad) aranır; listede bulunmayanlar en çok 100 tanesi puan sırasıyla “Öteki veri kümesinde” başlığı altında gösterilir */
+const OTK = { k: '', L: [] };
+function otekiAday(m) {
+  const k = m === 'hh' ? 'sc:' + Object.keys(VOLS).join(',') : 'hh:' + (hhListe() ? hhListe().satirlar.length : 0);
+  if (OTK.k === k) return OTK.L;
+  const L = [];
+  if (m === 'hh') {
+    const vs = Object.keys(VOLS).map(Number);
+    if (!vs.includes(SNAP_VOL)) for (const n of Object.values(SNAP0.narrators)) L.push({ x: 'sc', vol: SNAP_VOL, seq: n.source_sequence, name: n.effective.canonical_name });
+    for (const v of vs) for (const e of VOLS[v].sc.entries) L.push({ x: 'sc', vol: v, seq: e.seq, name: e.name || '' });
+  } else if (hhListe()) for (const r of hhListe().satirlar) L.push({ x: 'hh', seq: hhSeq(r[0]), name: r[1] || 'HH #' + r[0], h: r[0] });
+  OTK.k = k; OTK.L = L; return L;
+}
+function otekiAd(m) {
+  const q = nz(S.q || ''), Qs = adSorgu(S.q || ''), bz = Qs.i.join('').length >= 3, out = [];
+  if (!q && !bz) return [];
+  for (const c of otekiAday(m)) {
+    if (c.x === 'hh' ? IDXNID.has(HNID0 + c.h) : m !== 'hh') continue;   // karma modda listede olan
+    const p = q && (c._nz || (c._nz = nz(c.name))).includes(q) ? 100 : bz ? adPuan(c, Qs) : 0;
+    if (p) out.push([p, c]);
+  }
+  return out.sort((a, b) => b[0] - a[0] || a[1].seq - b[1].seq).slice(0, 100).map(x => x[1]);
 }
 function otekiAc(x, seq, vol) {
   const ac = () => { const r = x === 'hh' ? IDXNID.get(HNID0 + seq - HSEQ0) : IDX.find(y => y.vol === vol && y.seq === seq); if (r) { if (r.p !== PK) activatePackage(r.p.id, { silent: true }); selectNarrator(r.nid); railReveal(r.nid, 'center'); } };
@@ -4058,7 +4082,7 @@ function renderRail() {
   renderNotches();
 }
 function railItemHTML(it, idx) {
-  if (it.head) return '<li class="nvol" role="presentation" data-idx="' + idx + '">' + (it.head === HHV ? 'HH · Câmiu Hâdimi’l-Haremeyn râvileri' : it.head === 'oteki' ? 'Öteki veri kümesinde aynı numara' : it.head === 'benzer' ? 'Benzer adlar (yarım ya da Latin harfle aranan ad)' : 'Cilt ' + it.head) + '</li>';
+  if (it.head) return '<li class="nvol" role="presentation" data-idx="' + idx + '">' + (it.head === HHV ? 'HH · Câmiu Hâdimi’l-Haremeyn râvileri' : it.head === 'oteki' ? (modu() === 'hh' ? 'Öteki veri kümesinde (el-Câmi‘)' : 'Öteki veri kümesinde (HH)') : it.head === 'benzer' ? 'Benzer adlar (yarım ya da Latin harfle aranan ad)' : 'Cilt ' + it.head) + '</li>';
   if (it.x) return '<li role="none"><button class="nitem nitem-oteki" data-xmod="' + it.x + '" data-xseq="' + it.seq + '"' + (it.vol ? ' data-xvol="' + it.vol + '"' : '') + ' data-idx="' + idx + '" title="' + (it.x === 'hh' ? 'HH moduna geçip bu râviyi açar' : 'el-Câmi‘ moduna geçip bu râviyi açar') + '">' +
     '<span class="nseq">' + seqEt(it.seq) + '</span><span class="nname" dir="rtl">' + esc(it.name || '') + '</span><span class="nmeta">' + (it.x === 'hh' ? 'HH râvisi' : 'el-Câmi‘ · Cilt ' + it.vol) + ' · açmak için basın</span></button></li>';
   const r = it, x = rowSum(r), st = rowStatus(r), cur = r.nid === S.nid;
