@@ -1256,6 +1256,9 @@ tr.mf-on td { background: color-mix(in srgb, #c0392b 6%, transparent); }
 .kunye-btn { display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; width: 20px; height: 20px; padding: 0; margin: 0 2px; border: 0; border-radius: 4px; background: transparent; color: #a3a8a6; cursor: pointer; }
 .kunye-btn:hover, .kunye-btn:focus-visible { color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); outline: none; }
 @media print { .kunye-btn { display: none; } }
+.hh-yer { margin-top: 3px; color: var(--ink-3); display: flex; align-items: center; gap: 2px; flex-wrap: wrap; }
+.hh-yer .linkbtn { font-size: 11px; }
+.hh-yer .ar { font-size: calc(13px * var(--yb)); }
 
 </style>
 </head>
@@ -3155,9 +3158,28 @@ function hhEsasDisi(s) {
 }
 const hhEsasNotu = D => 'HH esas alındı: HH bu sözü ' + (D.d === 'tur' ? HH_SINIF[(D.q || [])[8]] + ' sayıyor' : ((D.q || [])[6] ? (D.q[6]).split('، ').map(c => crName(c, c)).join(', ') + '’e nispet ediyor' : 'başka münekkite nispet ediyor')) + (D.soz ? ' (HH söz #' + D.soz + ')' : '') + '; HH’deki kayıt sayılır';
 function denetimRozet(s) {
-  const r = rv(s); if (r && (r.v === 'ok' || r.v === 'no' || r.v === 'fix')) return '';   // araştırmacı kararı önde (revMark)
+  const ek = hhDogrulamaKaynak(s), r = rv(s); if (r && (r.v === 'ok' || r.v === 'no' || r.v === 'fix')) return ek;   // araştırmacı kararı önde (revMark)
   const D = denetimDurumu(s);
-  return denetimRozet1(s) + metinRozet(s) + (D && D.d === 'tutar' ? '' : icRozet(s));
+  return denetimRozet1(s) + metinRozet(s) + (D && D.d === 'tutar' ? '' : icRozet(s)) + ek;
+}
+// HH ile denetlenen el-Câmi‘ hükmünün HH’deki yeri (23.10.2026): denetimde eşleşen HH sözünün eseri ve cilt/sayfası; el-Câmi‘deki künyeden
+// farklıysa (başka eser ya da başka cilt/sayfa) yazılır; yanında eserin künyesi ve «Kaynağı göster» (HH paragrafı)
+function hhDogYer(s) {
+  const D = s && s.origin !== 'HH' && denetimDurumu(s); if (!D || !D.soz) return null;
+  const V = disVeri(s.n), x = V && (V.hh.sozler || []).find(z => z.id === D.soz);
+  return x && Array.isArray(x.k) && x.k[0] != null ? { soz: D.soz, k: x.k, ad: disKitap(x.k[0]).ad } : null;
+}
+function hhYerFarkli(s, y) {
+  const ayniEser = (() => { const a = nz(srcShort(s.b)), b = nz(y.ad).split(' ').filter(w => w.length > 2).slice(0, 2); return b.length > 0 && b.every(w => a.includes(w)); })();
+  const loc = s.b.effective.source_locator || '', m = /(\d+)\s*\/\s*(\d+)/.exec(loc), m2 = /ص\s*(\d+)/.exec(loc);
+  const ayniYer = ayniEser && (m ? +m[1] === +y.k[1] && +m[2] === +y.k[2] : m2 ? +m2[1] === +y.k[2] : false);
+  return { ayniEser, ayniYer };
+}
+function hhDogrulamaKaynak(s) {
+  const y = hhDogYer(s); if (!y) return '';
+  const f = hhYerFarkli(s, y), id = 'dn:' + s.uid; HHK.set(id, { uid: id, n: s.n, hhSoz: y.soz, origin: 'HH' });
+  return '<div class="small hh-yer" title="Denetimde eşleşen HH sözü #' + y.soz + '">' + kod('HH') + ' ' + (f.ayniYer ? '' : '<span class="ar">' + (f.ayniEser ? '' : esc(y.ad) + ' ') + '</span>' + (y.k[1] != null ? 'c. ' + esc(y.k[1]) + ' s. ' + esc(y.k[2]) : '')) +
+    kunyeBtn(y.k[0]) + '<button type="button" class="linkbtn small" data-hhkaynak="' + esc(id) + '" title="HH’deki paragrafı aç (künyesiyle)">kaynağı göster</button></div>';
 }
 /* ---------- Denetim 3. adım: iç denetim (src/ctic.js) ----------
    HH ile doğrulanamayan (HH’de karşılığı olmayan) el-Câmi‘ hükümlerinde metne dayalı uyarılar: münekkit yok / listede yok / belirsiz,
@@ -7782,7 +7804,7 @@ const RAPOR = (() => {
         const sz = [f.mun ? 'münekkit: ' + crName(f.mun, f.mun) : '', f.tur ? 'tür: ' + TUR_AD[f.tur] : '', f.kaynak ? 'kaynak: ' + f.kaynak : '', f.sayilmayan ? 'sayılmayanlar dahil' : ''].filter(Boolean);
         if (d.kunye) L.forEach(s => { if (s.b.kitap != null) d.kunye.add(s.b.kitap); });
         d.push({ t: 'h1', text: 'Hükümler (' + L.length + (sz.length ? ' · ' + sz.join(' · ') : '') + ')' });
-        d.push({ t: 'table', head: ['Münekkit', 'Vefat', 'Lafız', 'Tür', 'Şiddet', 'Kaynak', 'Sened / nakil yolu'].concat(f.sayilmayan ? ['Sayılır mı'] : []), rows: L.map(s => { const C = CTX.critic(eCritic(s)) || {}; return [crName(eCritic(s), s.critic_written), C.death ? String(C.death) : '', s.phrase || '(zımnî)', typeShort(s), sevText(s), srcShort(s.b) + (s.b.effective.source_locator ? ' ' + s.b.effective.source_locator : ''), senedText(s)].concat(f.sayilmayan ? [eCounts(s) ? 'evet' : 'hayır — ' + strip(sayilmamaSebebi(s))] : []); }) });
+        d.push({ t: 'table', head: ['Münekkit', 'Vefat', 'Lafız', 'Tür', 'Şiddet', 'Kaynak', 'Sened / nakil yolu'].concat(f.sayilmayan ? ['Sayılır mı'] : []), rows: L.map(s => { const C = CTX.critic(eCritic(s)) || {}; return [crName(eCritic(s), s.critic_written), C.death ? String(C.death) : '', s.phrase || '(zımnî)', typeShort(s), sevText(s), kaynakYaz(s, d), senedText(s)].concat(f.sayilmayan ? [eCounts(s) ? 'evet' : 'hayır — ' + strip(sayilmamaSebebi(s))] : []); }) });
       } },
     { id: 'munekkit', ad: 'Münekkitlere göre görüşler', varmi: n => criticRows(n).length > 0, sec: () => [],
       yap(n, f, d) { d.push({ t: 'h1', text: 'Münekkitler ve görüşleri' }, { t: 'table', head: ['Münekkit', 'Vefat', 'Tavır', 'Görüşler (nakil sayısı)', 'Nakleden eserler'], rows: criticRows(n).map(r => { const C = CTX.critic(r.c) || {}; return [crName(r.c, r.c), C.death ? String(C.death) : '', C.approach || '', r.gorus.map(g => (g.rep.phrase || '(zımnî)') + ' ×' + g.sts.length).join(' ، '), [...new Set(Object.values(r.phr).flatMap(p => [...p.sources]))].join(' ، ')]; }) }); } },
@@ -7795,6 +7817,10 @@ const RAPOR = (() => {
   const KUR_VARSAYILAN = () => ({ sira: KUR.map(b => b.id), acik: ['kimlik', 'hoca', 'talebe', 'ozet', 'hukum', 'tearuz', 'notlar'], f: {} });
   const kurCfg = (c, B, acik) => { B = B || KUR; c = Object.assign({ sira: B.map(b => b.id), acik: acik || KUR_VARSAYILAN().acik, f: {} }, c || {}); c.sira = c.sira.filter(id => B.some(b => b.id === id)).concat(B.map(b => b.id).filter(id => !c.sira.includes(id))); c.f = c.f || {}; return c; };
   // Raporda geçen HH eserlerinin künyeleri (kitap işaretiyle kopyalanan künyenin aynısı; kaynak/dis/hh/kunye.json)
+  // Kaynak sütunu: el-Câmi‘ hükmü HH ile denetlendiyse HH’deki yeri (farklıysa eser/cilt/sayfa; aynıysa «HH ✓»); künyesi rapor sonuna
+  const kaynakYaz = (s, d) => { const k = srcShort(s.b) + (s.b.effective.source_locator ? ' ' + s.b.effective.source_locator : ''); if (s.b.kitap != null && d && d.kunye) d.kunye.add(s.b.kitap);
+    const y = typeof hhDogYer === 'function' && hhDogYer(s); if (!y) return k; if (d && d.kunye) d.kunye.add(y.k[0]);
+    const f = hhYerFarkli(s, y); return k + (f.ayniYer ? ' · HH ✓' : ' · HH: ' + (f.ayniEser ? '' : y.ad + ' ') + (y.k[1] != null ? y.k[1] + '/' + y.k[2] : '')); };
   async function kunyeBlok(d) {
     if (!d.kunye || !d.kunye.size) return;
     const K = await kunyeGetir(), L = [...d.kunye].map(Number).sort((a, b) => a - b);
@@ -7875,7 +7901,7 @@ const RAPOR = (() => {
         d.push({ t: 'h1', text: 'Râvi listesi (' + top + ' râvi' + (N && N < top ? ', ilk ' + N : '') + ')' }, { t: 'table', head: ['Râvi', 'Ad', 'Hükümler', 'En ağır / en yüksek'], rows: G.map(g => [seqEt(g.seq), g.name, g.sts.map(s => s.phrase || '(zımnî)').join(' ، '), g.mn != null ? g.mn + ' / ' + g.mx : '—']) }); } },
     { id: 'ayrinti', ad: 'Râviler: kimlik ve hükümler', varmi: () => true, sec: () => [{ k: 'alan', t: 'coklu', ad: 'Kimlik alanları', s: IDF }, { k: 'not', t: 'tek', ad: 'Araştırmacı notları', s: [['1', 'Dahil'], ['0', 'Dahil değil']] }],
       yap(x, cfg, d, layout) { const f = cfg.f.ayrinti || {}, al = f.alan && f.alan.length ? f.alan : IDF.map(i => i[0]), G = mGruplar(mSuz(x, cfg)), idt = g => { const id = x.idOf(g.pkg, g.seq); return IDF.filter(([k]) => al.includes(k) && id[k]).map(([k, l]) => [l, id[k]]); };
-        const kay = s => srcShort(s.b) + (s.b.effective.source_locator ? ' ' + s.b.effective.source_locator : '');
+        const kay = s => kaynakYaz(s, d);
         if (layout === 'table') { d.push({ t: 'h1', text: 'Râviler ve hükümler' }, { t: 'table', head: ['Râvi', 'Kimlik', 'Lafız', 'Tür', 'Şiddet', 'Kaynak', 'Sened / nakil yolu'], rows: G.flatMap(g => { const t = idt(g).map(([l, v]) => l + ': ' + v).join('\n'); return g.sts.map((s, i) => [i ? '' : seqEt(g.seq) + '\n' + g.name, i ? '' : t, s.phrase || '(zımnî)', typeShort(s), sevText(s), kay(s), senedText(s)]); }) }); return; }
         d.push({ t: 'h1', text: 'Râviler: kimlik ve hükümler' });
         for (const g of G) { d.push({ t: 'h2', text: seqEt(g.seq) + ' · ' + g.name }); const r = idt(g); if (r.length) d.push({ t: 'kv', rows: r });
