@@ -3989,6 +3989,14 @@ function railMatch(r, Q) {
   if (nzn.includes(Q.q)) return true;
   return !!x && (x.live ? x.live.sts.some(s => Q.crit(s.critic)) : x.crit.some(Q.crit));
 }
+// Asıl sonuçlarda olmayan benzer adlar (benzerlik puanına göre, en çok 300)
+function railBenzer(Q, base, list) {
+  if (!Q || Q.num) return [];
+  const Qs = adSorgu(S.q); if (Qs.i.join('').length < 3) return [];
+  const asil = new Set(list), out = [];
+  for (const r of base) { if (asil.has(r)) continue; const p = adPuan(r, Qs); if (p && railMatch(r, null)) out.push([p, r]); }
+  return out.sort((a, b) => b[0] - a[0] || a[1].i - b[1].i).slice(0, 300).map(x => x[1]);
+}
 function railList() {
   const Q = railQuery(), V = railVol(), base = V ? volRows(V) : IDX;
   const list = S.railFilter === 'all' && !Q ? base.slice() : base.filter(r => railMatch(r, Q));
@@ -4034,6 +4042,7 @@ function renderRail() {
   const heads = S.sort === 'seq' && IDX.length > 0 && IDX[0].vol !== IDX[IDX.length - 1].vol;
   const items = []; let pv = null;
   list.forEach((r, k) => { if (heads && r.vol !== pv) { items.push({ head: r.vol }); pv = r.vol; } r._pos = k + 1; items.push(r); });
+  const bz = railBenzer(railQuery(), V ? volRows(V) : IDX, list); if (bz.length) { items.push({ head: 'benzer' }); bz.forEach((r, k) => { r._pos = list.length + k + 1; items.push(r); }); }
   const ot = railOteki(railQuery()); if (ot.length) items.push({ head: 'oteki' }, ...ot);
   RV.items = items; RV.n = list.length; RV.tops = null;
   const key = S.railFilter + '|' + S.q + '|' + S.sort + '|' + V;
@@ -4041,7 +4050,7 @@ function renderRail() {
   if (RV.key !== undefined && RV.key !== key) $('nlist').scrollTop = 0;   // eski konum yeni listede boş kalmasın
   RV.key = key;
   const ix = indexProgress(), wait = (SUMF.has(S.railFilter) || S.sort !== 'seq') && ix.ready < ix.total;
-  $('rail-count').textContent = fmt(list.length) + ' / ' + fmt(V ? volRows(V).length : IDX.length) + ' râvi' + (V ? ' · Cilt ' + V : '') + (wait ? ' · özetler hazırlanıyor (%' + Math.floor(ix.ready / ix.total * 100) + ')' : '');
+  $('rail-count').textContent = fmt(list.length) + ' / ' + fmt(V ? volRows(V).length : IDX.length) + ' râvi' + (bz.length ? ' · ' + fmt(bz.length) + ' benzer ad' : '') + (V ? ' · Cilt ' + V : '') + (wait ? ' · özetler hazırlanıyor (%' + Math.floor(ix.ready / ix.total * 100) + ')' : '');
   paintRail(true);
   if (vchg) railReveal(S.nid, 'center');   // liste başka cilde geçti (ya da daraltma kalktı): açık râvi görünsün
   const W = workProgress();
@@ -4049,7 +4058,7 @@ function renderRail() {
   renderNotches();
 }
 function railItemHTML(it, idx) {
-  if (it.head) return '<li class="nvol" role="presentation" data-idx="' + idx + '">' + (it.head === HHV ? 'HH · Câmiu Hâdimi’l-Haremeyn râvileri' : it.head === 'oteki' ? 'Öteki veri kümesinde aynı numara' : 'Cilt ' + it.head) + '</li>';
+  if (it.head) return '<li class="nvol" role="presentation" data-idx="' + idx + '">' + (it.head === HHV ? 'HH · Câmiu Hâdimi’l-Haremeyn râvileri' : it.head === 'oteki' ? 'Öteki veri kümesinde aynı numara' : it.head === 'benzer' ? 'Benzer adlar (yarım ya da Latin harfle aranan ad)' : 'Cilt ' + it.head) + '</li>';
   if (it.x) return '<li role="none"><button class="nitem nitem-oteki" data-xmod="' + it.x + '" data-xseq="' + it.seq + '"' + (it.vol ? ' data-xvol="' + it.vol + '"' : '') + ' data-idx="' + idx + '" title="' + (it.x === 'hh' ? 'HH moduna geçip bu râviyi açar' : 'el-Câmi‘ moduna geçip bu râviyi açar') + '">' +
     '<span class="nseq">' + seqEt(it.seq) + '</span><span class="nname" dir="rtl">' + esc(it.name || '') + '</span><span class="nmeta">' + (it.x === 'hh' ? 'HH râvisi' : 'el-Câmi‘ · Cilt ' + it.vol) + ' · açmak için basın</span></button></li>';
   const r = it, x = rowSum(r), st = rowStatus(r), cur = r.nid === S.nid;
@@ -5335,6 +5344,70 @@ function trk(s) {
 }
 // Aranan her kelime metinde geçiyor mu? (kelime sırası ve aradaki «ed-», «b.» gibi ekler aramayı bozmaz)
 function trIcer(t, ql) { const T = trk(t), W = String(ql || '').trim().split(' ').filter(Boolean); return W.length > 0 && W.every(w => T.includes(w)); }
+/* Benzer ad araması (23.10.2026): ad yarım hatırlandığında ya da Latin harfle yazıldığında. Ad ve aranan, ünsüz iskeletine
+   indirilir (Arapçada uzun ünlüler, hemze, ayın, tâ-i merbûta; Latin yazıda ünlüler ve transkripsiyon işaretleri atılır; ث/ص → s,
+   ذ/ظ → z, ح/خ → h, ق/ك → k; ض = d ya da z); «بن، أبي، أبو، ibn, b., Ebû, el-» gibi ekler sayılmaz. Aranan her kelime adın bir kelimesinin
+   başıyla tutmalıdır; sıra serbesttir: «محمد زرعة», «Muhammed Züra», «ibn Ebi Züra» → محمد بن أبي زرعة */
+const ISK_AR = { 'ب': 'b', 'ت': 't', 'ث': 's', 'ج': 'c', 'ح': 'h', 'خ': 'h', 'د': 'd', 'ذ': 'z', 'ر': 'r', 'ز': 'z', 'س': 's', 'ش': 's', 'ص': 's', 'ض': 'D', 'ط': 't', 'ظ': 'z', 'غ': 'g', 'ف': 'f', 'ق': 'k', 'ك': 'k', 'ک': 'k', 'ل': 'l', 'م': 'm', 'ن': 'n', 'ه': 'h' };
+const ISK_LA = { j: 'c', q: 'k', p: 'b', x: 'ks' };
+const ISK_EK = new Set(['بن', 'ابن', 'ابي', 'ابو', 'ابا', 'بنت', 'ام', 'b', 'bn', 'bin', 'ibn', 'ibni', 'ibnu', 'ibnul', 'bint', 'binti', 'ebu', 'ebi', 'eba', 'ebul', 'abu', 'abi', 'aba', 'abul', 'um', 'umm', 'ummu', 'el', 'al', 'er', 'es', 'ed', 'en', 'et', 'ez', 'eş', 'ur', 'us', 'ul', 'ud', 'un']);
+function adIskelet(s) {
+  const out = []; let abd = false;
+  for (let w of String(s || '').replace(/[ً-ٰٟـ]/g, '').replace(/[أإآٱ]/g, 'ا').split(/[\s\-–—_.,;:()\[\]«»"'‘’ʿʾ`´]+/)) {
+    if (!w) continue;
+    let k = '';
+    if (/[؀-ۿ]/.test(w)) {
+      if (ISK_EK.has(w)) continue;
+      if (w.length > 3 && w.startsWith('ال')) w = w.slice(2); else if (w.length > 4 && /^[وف]ال/.test(w)) w = w.slice(3);
+      for (const c of w) k += ISK_AR[c] || '';
+    } else {
+      w = trk(w).replace(/\s/g, ''); if (ISK_EK.has(w)) continue;
+      w = w.replace(/^(el|al|er|es|ed|en|et|ez|us|ur|ul)(?=[a-z]{3})/, '');   // «ennasri» gibi bitişik yazılmış harf-i tarif
+      for (const c of w) k += /[aeiouyvw]/.test(c) ? '' : ISK_LA[c] || (/[a-z]/.test(c) ? c : '');
+    }
+    k = k.replace(/(.)\1+/g, '$1');
+    if (k && abd) out.push(('bd' + k).replace(/(.)\1+/g, '$1'));   // «عبد الله» = «Abdullah»
+    abd = w === 'عبد';
+    if (k) out.push(k);
+  }
+  return out;
+}
+// q iskeletinin her kelimesi adın bir kelimesinin başı mı (ض = d ya da z)
+const iskEs = (a, b) => a === b || (a === 'D' && (b === 'd' || b === 'z')) || (b === 'D' && (a === 'd' || a === 'z'));
+function iskBas(ad, q) { if (q.length > ad.length) return 0; for (let i = 0; i < q.length; i++) if (!iskEs(ad[i], q[i])) return 0; return q.length === ad.length ? 2 : 1; }
+/* Sıralama için gevşek okunuş: uzun ünlüler ve Latin ünlüleri (e→a, o→u, y→i, v/w→u) korunur; aranan kelime ile adın kelimeleri
+   arasında harf ikilisi (bigram) benzerliği. Örn. «Züra» زرعة’ye وزير’den yakındır. */
+const GEV_AR = Object.assign({}, ISK_AR, { 'ض': 'd', 'ا': 'a', 'ى': 'a', 'ة': 'a', 'و': 'u', 'ي': 'i' });
+function adGevsek(s) {
+  const out = [];
+  for (let w of String(s || '').replace(/[\u064B-\u065F\u0670\u0640]/g, '').replace(/[أإآٱ]/g, 'ا').split(/[\s\-–—_.,;:()\[\]«»"'‘’ʿʾ`´]+/)) {
+    if (!w) continue; let k = '';
+    if (/[\u0600-\u06FF]/.test(w)) { if (ISK_EK.has(w)) continue; if (w.length > 3 && w.startsWith('ال')) w = w.slice(2); for (const c of w) k += GEV_AR[c] || ''; }
+    else { w = trk(w).replace(/\s/g, ''); if (ISK_EK.has(w)) continue; w = w.replace(/^(el|al|er|es|ed|en|et|ez|us|ur|ul)(?=[a-z]{3})/, '');
+      for (const c of w) k += c === 'e' ? 'a' : c === 'o' ? 'u' : c === 'y' ? 'i' : c === 'w' || c === 'v' ? 'u' : /[a-z]/.test(c) ? c : ''; }
+    k = k.replace(/(.)\1+/g, '$1'); if (k) out.push(k);
+  }
+  return out;
+}
+function ikiliBenzer(a, b) {
+  const say = s => { const m = new Map(), t = '^' + s + '$'; for (let i = 0; i < t.length - 1; i++) { const g = t.slice(i, i + 2); m.set(g, (m.get(g) || 0) + 1); } return m; };
+  const A = say(a), B = say(b); let c = 0; for (const [g, v] of A) c += Math.min(v, B.get(g) || 0);
+  return 2 * c / (a.length + b.length + 2);
+}
+// Benzerlik puanı (0 = eşleşmez): iskelet tutması + gevşek okunuş yakınlığı + Arapça aranan kelimenin adda aynen geçmesi − fazla kelime
+function adPuan(r, Q) {
+  const A = r._isk || (r._isk = adIskelet(r.name)), p = adBenzer(A, Q.i); if (!p) return 0;
+  const G = r._gev || (r._gev = adGevsek(r.name)); let g = 0;
+  for (const q of Q.g) { let b = 0; for (const a of G) { const x = ikiliBenzer(a, q); if (x > b) b = x; } g += b; }
+  let ar = 0; if (Q.a.length) { const t = ' ' + (r._nz || (r._nz = nz(r.name))) + ' '; for (const w of Q.a) if (t.includes(' ' + w + ' ')) ar += 0.5; }
+  return p + 2 * g / Math.max(1, Q.g.length) + ar - 0.05 * Math.max(0, A.length - Q.i.length);
+}
+function adSorgu(q) { return { i: adIskelet(q), g: adGevsek(q), a: /[\u0600-\u06FF]/.test(q) ? nz(q).split(' ').filter(w => w && !ISK_EK.has(w)) : [] }; }
+function adBenzer(A, Q) {
+  if (!Q.length) return 0; let p = 0;
+  for (const q of Q) { let b = 0; for (const a of A) { const x = iskBas(a, q); if (x > b) b = x; if (b === 2) break; } if (!b) return 0; p += b; }
+  return p;
+}
 const LEXBYID = Object.fromEntries(CTX.LEXICON.map(e => [e.id, e]));
 // Motor özeti (build.py: ctlex, ctparse, ctkimlik, ctkorpus): sözlük ya da motor değişince bütün özetler yenilenir
 const MOTOR = (document.querySelector('meta[name="cerh-motor"]') || {}).content || CTX.VERSION;
@@ -6588,8 +6661,13 @@ function renderPalette() {
   let k = 0;
   for (const r of q ? IDX : IDX.slice(Math.max(0, at - 5), at + 25)) {
     if (q && String(r.seq) !== qd && !(r.p === PK && NBYID[r.nid] ? nz(NBYID[r.nid]._names.join(' ')) : (r._nz || (r._nz = nz(r.name)))).includes(qn)) continue;
-    items.push({ g: 'Râvi', l: '#' + r.seq, ar: rowName(r), go: () => { setView('desk'); selectNarrator(r.nid); if (DRW.mode.rail === 'overlay') closeDrawer('rail'); } });
+    items.push({ g: 'Râvi', l: '#' + r.seq, ar: rowName(r), r, go: () => { setView('desk'); selectNarrator(r.nid); if (DRW.mode.rail === 'overlay') closeDrawer('rail'); } });
     if (++k >= 40) break;
+  }
+  const Qs = q && !/^\d+$/.test(qd) && k < 40 ? adSorgu(q) : null;
+  if (Qs && Qs.i.join('').length >= 3) {   // benzer adlar
+    const bz = []; for (const r of IDX) { const p = adPuan(r, Qs); if (p && !items.some(it => it.r === r)) bz.push([p, r]); }
+    for (const [, r] of bz.sort((a, b) => b[0] - a[0] || a[1].i - b[1].i).slice(0, 40 - k)) items.push({ g: 'Benzer ad', l: '#' + seqEt(r.seq), ar: rowName(r), r, go: () => { setView('desk'); selectNarrator(r.nid); if (DRW.mode.rail === 'overlay') closeDrawer('rail'); } });
   }
   for (const c of Object.values(CTX.CRITICS)) if (q && !c.group && (nz(c.canon).includes(qn) || trIcer(c.tr, ql))) items.push({ g: 'Münekkit', l: c.tr, ar: c.canon, go: () => { S.critSel = c.canon; S.critQ = ''; setView('critics'); } });
   for (const [v, l] of [['home', 'Ana sayfa'], ['desk', 'Çalışma masası'], ['packages', 'Ciltler'], ['critics', 'Münekkitler'], ['conflicts', 'Teâruz'], ['lex', 'Lafız dizini'], ['report', 'Tespit raporu'], ['analyze', 'Metin çözümle'], ['method', 'Yöntem'], ['settings', 'Ayarlar · kullanıcılar · hareket kaydı']]) if (!q || trIcer(l, ql)) items.push({ g: 'Görünüm', l, ar: '', go: () => v === 'home' ? goHome() : setView(v) });
