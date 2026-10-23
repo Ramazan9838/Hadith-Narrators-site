@@ -3839,8 +3839,8 @@ function rowSum(r) {
 // Arama: sıra no (tam), ad ve ad varyantları, münekkit (Arapça ya da Türkçe ad)
 function railQuery() {
   const raw = (S.q || '').trim(); if (!raw) return null;
-  const q = nz(raw), ql = raw.toLocaleLowerCase('tr'), memo = new Map(), d = digitsTr(raw).replace(/^#/, '');
-  const crit = c => { if (!c) return false; let v = memo.get(c); if (v === undefined) { const C = CTX.critic(c); v = nz(c).includes(q) || !!(C && C.tr.toLocaleLowerCase('tr').includes(ql)); memo.set(c, v); } return v; };
+  const q = nz(raw), ql = trk(raw), memo = new Map(), d = digitsTr(raw).replace(/^#/, '');
+  const crit = c => { if (!c) return false; let v = memo.get(c); if (v === undefined) { const C = CTX.critic(c); v = nz(c).includes(q) || !!(C && trIcer(C.tr, ql)); memo.set(c, v); } return v; };
   return { q, num: /^\d+$/.test(d) ? String(+d) : null, crit };
 }
 function railMatch(r, Q) {
@@ -5174,6 +5174,14 @@ function openAdd(b, start, phrase, pre) {
 const KORPUS = { recs: {}, busy: null, done: 0, total: 0 };
 var LEXC = null, CRITC = null, CRITF = null;   // CRITC: münekkit listesi (hafif özetlerden), CRITF: münekkit sayfası (tam özetlerden)
 var LSTC = new Map();   // dilim → hafif özetten kurulan hüküm nesneleri (Münekkitler listesi)
+// Latin harfli aramalarda şapka, Türkçe harf ve transkripsiyon işaretleri yok sayılır (23.10.2026):
+// «yahya» = «Yahyâ», «ebu zura» = «Ebû Zür‘a», «ibnul cevzi» = «İbnü’l-Cevzî», «hakim» = «Hâkim»
+function trk(s) {
+  return String(s || '').toLocaleLowerCase('tr').replace(/ı/g, 'i').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[‘’ʿʾ'`´ʻʼ]/g, '').replace(/[-–—_.]+/g, ' ').replace(/\s+/g, ' ');
+}
+// Aranan her kelime metinde geçiyor mu? (kelime sırası ve aradaki «ed-», «b.» gibi ekler aramayı bozmaz)
+function trIcer(t, ql) { const T = trk(t), W = String(ql || '').trim().split(' ').filter(Boolean); return W.length > 0 && W.every(w => T.includes(w)); }
 const LEXBYID = Object.fromEntries(CTX.LEXICON.map(e => [e.id, e]));
 // Motor özeti (build.py: ctlex, ctparse, ctkimlik, ctkorpus): sözlük ya da motor değişince bütün özetler yenilenir
 const MOTOR = (document.querySelector('meta[name="cerh-motor"]') || {}).content || CTX.VERSION;
@@ -5595,10 +5603,10 @@ function eskiVarMi(scope) { return Date.now() - (SATIR.sonDeneme || 0) > 5000 &&
 function eskiyleGoster(fn) { SATIR.eski = true; try { return fn(); } finally { SATIR.eski = false; } }
 function guncellemeNotu() { return '<div class="note" id="guncel-not" style="margin-bottom:8px"><b>Veriler güncelleniyor…</b> Şimdilik bu tarayıcıda saklı önceki sürüm gösteriliyor; yeni sürüm inince sayfa kendiliğinden yenilenir.</div>'; }
 function critFiltered(D) {
-  const qn = nz(S.critQ), ql = S.critQ.toLocaleLowerCase('tr'), qk = /^#?(\d+)$/.exec(S.critQ.trim());
+  const qn = nz(S.critQ), ql = trk(S.critQ), qk = /^#?(\d+)$/.exec(S.critQ.trim());
   const sorts = { vefat: (a, b) => (a.C.death || 9999) - (b.C.death || 9999) || b.st.length - a.st.length, hukum: (a, b) => b.st.length - a.st.length, ravi: (a, b) => b.narr.size - a.narr.size || b.st.length - a.st.length,
     ad: (a, b) => (a.C.tr || critAd(a.c)).localeCompare(b.C.tr || critAd(b.c), 'tr'), cerh: (a, b) => critShare(b) - critShare(a) || b.st.length - a.st.length, tadil: (a, b) => critShare(a) - critShare(b) || b.st.length - a.st.length };
-  return D.all.filter(m => (!S.critQ || nz(m.c).includes(qn) || (qk && critKodu(m.c) === +qk[1]) || (m.C.tr || '').toLocaleLowerCase('tr').includes(ql) || (m.C.city || '').toLocaleLowerCase('tr').includes(ql) || (m.C.region || '').toLocaleLowerCase('tr').includes(ql)) &&
+  return D.all.filter(m => (!S.critQ || nz(m.c).includes(qn) || (qk && critKodu(m.c) === +qk[1]) || trIcer(m.C.tr, ql) || trIcer(m.C.city, ql) || trIcer(m.C.region, ql)) &&
     (!CF.region || m.C.region === CF.region) && (!CF.approach || (CF.approach === '-' ? !m.C.approach : m.C.approach === CF.approach)) && (!CF.century || centuryOf(m.C.death) === +CF.century) && (!CF.lean || m.lean === CF.lean) && m.st.length >= (+CF.min || 0))
     .sort(sorts[UI.csort] || sorts.vefat);
 }
@@ -5790,9 +5798,9 @@ function confGoto(c, x) { const s = x._s; return s ? gotoAttr(s) : ''; }
 function renderConflicts() {
   if (!ensureScope($('conflicts-body'), renderConflicts)) return;
   const all = scopeConflicts(S.scope);
-  const ql = CFF.q.trim().toLocaleLowerCase('tr'), qn = nz(CFF.q).trim();
+  const ql = trk(CFF.q.trim()), qn = nz(CFF.q).trim();
   const list = all.filter(c => (!CFF.type || c.type === CFF.type) && (!CFF.zeh || c.zehebi) && (!CFF.durum || (confState(c).durum || '') === (CFF.durum === 'acik' ? '' : CFF.durum)) && (!CFF.oneri || c.oneri === CFF.oneri) &&
-    (!ql || String(c.seq) === ql || nz(c.name).includes(qn) || (c.pairs || []).flat().concat(c.critic || []).some(x => nz(x).includes(qn) || (CTX.critic(x) || { tr: '' }).tr.toLocaleLowerCase('tr').includes(ql))));
+    (!ql || String(c.seq) === ql || nz(c.name).includes(qn) || (c.pairs || []).flat().concat(c.critic || []).some(x => nz(x).includes(qn) || trIcer((CTX.critic(x) || { tr: '' }).tr, ql))));
   const cnt = t => all.filter(c => c.type === t).length;
   const done = all.filter(c => confState(c).durum === 'cozuldu').length;
   const zehN = all.filter(c => c.zehebi).length, incN = all.filter(c => confState(c).durum === 'incelendi').length;
@@ -5896,7 +5904,7 @@ function renderLex() {
   }
   $('lex-body').innerHTML = out + '</div></div>';
   // Kalıp listesini yeniden çizmeden süzer
-  const f = $('lex-f'); f.oninput = () => { const q = f.value.trim(), qn = nz(q), ql = q.toLocaleLowerCase('tr'); for (const b of document.querySelectorAll('.lexlist [data-lex]')) b.hidden = !!q && !nz(b.textContent).includes(qn) && !b.textContent.toLocaleLowerCase('tr').includes(ql); };
+  const f = $('lex-f'); f.oninput = () => { const q = f.value.trim(), qn = nz(q), ql = trk(q); for (const b of document.querySelectorAll('.lexlist [data-lex]')) b.hidden = !!q && !nz(b.textContent).includes(qn) && !trIcer(b.textContent, ql); };
 }
 // Düzenli ifadeyi okunur örneklere açar: (?:a|b) → a · b, (…)? → isteğe bağlı, \S+ → …
 function expandPattern(p, max) {
@@ -6299,9 +6307,9 @@ function openVaultExport() {
   };
 }
 function logFilter(list) {
-  const q = LOGF.q.trim().toLocaleLowerCase('tr'), qn = nz(LOGF.q).trim();
+  const q = trk(LOGF.q.trim()), qn = nz(LOGF.q).trim();
   return list.filter(r => (!LOGF.user || r.user === LOGF.user) && (!LOGF.act || r.act === LOGF.act) && (!LOGF.from || (r.at || '') >= LOGF.from) && (!LOGF.to || (r.at || '').slice(0, 10) <= LOGF.to) &&
-    (!q || String(r.seq || '') === q || [r.summary, r.user, r.name, r.pkg, r.phrase, r.before, r.after].some(x => x && (String(x).toLocaleLowerCase('tr').includes(q) || (qn && nz(String(x)).includes(qn))))));
+    (!q || String(r.seq || '') === q || [r.summary, r.user, r.name, r.pkg, r.phrase, r.before, r.after].some(x => x && (trIcer(x, q) || (qn && nz(String(x)).includes(qn))))));
 }
 async function renderLog() {
   const all = await readLog(); const body = $('log-body'); if (!body) return;
@@ -6420,7 +6428,7 @@ $('import-file').onchange = async e => {
 let palItems = [], palIdx = 0;
 function openPalette() { $('palette-q').value = ''; renderPalette(); $('palette').showModal(); $('palette-q').focus(); }
 function renderPalette() {
-  const q = $('palette-q').value.trim(); const qn = nz(q), ql = q.toLocaleLowerCase('tr');
+  const q = $('palette-q').value.trim(); const qn = nz(q), ql = trk(q);
   const items = [];
   // Râviler: bütün eserde sıra no ya da ad; arama yoksa açık râvinin çevresi
   const qd = digitsTr(q).replace(/^#/, ''), near = IDXNID.get(S.nid), at = near ? near.i : 0;
@@ -6430,8 +6438,8 @@ function renderPalette() {
     items.push({ g: 'Râvi', l: '#' + r.seq, ar: rowName(r), go: () => { setView('desk'); selectNarrator(r.nid); if (DRW.mode.rail === 'overlay') closeDrawer('rail'); } });
     if (++k >= 40) break;
   }
-  for (const c of Object.values(CTX.CRITICS)) if (q && !c.group && (nz(c.canon).includes(qn) || c.tr.toLocaleLowerCase('tr').includes(ql))) items.push({ g: 'Münekkit', l: c.tr, ar: c.canon, go: () => { S.critSel = c.canon; S.critQ = ''; setView('critics'); } });
-  for (const [v, l] of [['home', 'Ana sayfa'], ['desk', 'Çalışma masası'], ['packages', 'Ciltler'], ['critics', 'Münekkitler'], ['conflicts', 'Teâruz'], ['lex', 'Lafız dizini'], ['report', 'Tespit raporu'], ['analyze', 'Metin çözümle'], ['method', 'Yöntem'], ['settings', 'Ayarlar · kullanıcılar · hareket kaydı']]) if (!q || l.toLocaleLowerCase('tr').includes(ql)) items.push({ g: 'Görünüm', l, ar: '', go: () => v === 'home' ? goHome() : setView(v) });
+  for (const c of Object.values(CTX.CRITICS)) if (q && !c.group && (nz(c.canon).includes(qn) || trIcer(c.tr, ql))) items.push({ g: 'Münekkit', l: c.tr, ar: c.canon, go: () => { S.critSel = c.canon; S.critQ = ''; setView('critics'); } });
+  for (const [v, l] of [['home', 'Ana sayfa'], ['desk', 'Çalışma masası'], ['packages', 'Ciltler'], ['critics', 'Münekkitler'], ['conflicts', 'Teâruz'], ['lex', 'Lafız dizini'], ['report', 'Tespit raporu'], ['analyze', 'Metin çözümle'], ['method', 'Yöntem'], ['settings', 'Ayarlar · kullanıcılar · hareket kaydı']]) if (!q || trIcer(l, ql)) items.push({ g: 'Görünüm', l, ar: '', go: () => v === 'home' ? goHome() : setView(v) });
   palItems = items.slice(0, 60); palIdx = 0;
   $('palette-list').innerHTML = palItems.map((it, i) => '<li><button data-pal="' + i + '" aria-selected="' + (i === 0) + '"><span class="grp">' + esc(it.g) + '</span><span>' + esc(it.l) + '</span><span class="ar">' + esc(it.ar) + '</span></button></li>').join('') || '<li class="empty-state">Sonuç yok.</li>';
 }
