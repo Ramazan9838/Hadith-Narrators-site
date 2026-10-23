@@ -1221,6 +1221,9 @@ tr.mf-on td { background: color-mix(in srgb, #c0392b 6%, transparent); }
 .md-dugme .linkbtn { font-size: 12px; color: var(--ink-3); }
 .md-dugme .linkbtn:hover { color: var(--accent); }
 @media print { .md-dugme { display: none; } }
+/* Sayıyla aramada öteki veri kümesindeki aynı numaralı râvi */
+.nitem-oteki { border: 1px dashed var(--line); opacity: .92; }
+.nitem-oteki .nmeta { font-size: 11px; color: var(--ink-3); }
 
 </style>
 </head>
@@ -3981,7 +3984,7 @@ function railMatch(r, Q) {
     case 'notes': if (!rowNotes(r)) return false; break;
   }
   if (!Q) return true;
-  if (Q.num) return String(r.seq) === Q.num;
+  if (Q.num) return String(r.seq >= HSEQ0 ? r.seq - HSEQ0 : r.seq) === Q.num;
   const nzn = x ? (x.live ? nz(x.n._names.join(' ')) : x.nzn) : (r._nz || (r._nz = nz(r.name)));
   if (nzn.includes(Q.q)) return true;
   return !!x && (x.live ? x.live.sts.some(s => Q.crit(s.critic)) : x.crit.some(Q.crit));
@@ -3993,6 +3996,27 @@ function railList() {
   if (!key) return list;
   const kv = new Map(list.map(r => { const x = rowSum(r); return [r, x ? key(x) : -1]; }));
   return list.sort((a, b) => kv.get(b) - kv.get(a) || a.i - b.i);
+}
+/* Sayıyla aramada öteki veri kümesindeki aynı numaralı râvi de listenin sonunda gösterilir (el-Câmi‘ sıra no ↔ HH no);
+   basınca o kümenin moduna geçilip râvi açılır (23.10.2026) */
+function railOteki(Q) {
+  if (!Q || !Q.num || railVol()) return [];
+  const m = modu(), k = +Q.num, out = [];
+  if (m !== 'hh' && DIS.dizin && DIS.dizin.hhRavi && !IDXNID.has(HNID0 + k)) {
+    if (!hhListe()) { if (!RV.hhIstek) { RV.hhIstek = 1; hhListeYukle().then(v => { if (v) renderRail(); }); } }
+    else { const r = DIS.hhIx.get(k); if (r) out.push({ x: 'hh', seq: hhSeq(k), name: r[1] || 'HH #' + k }); }
+  }
+  if (m === 'hh') {
+    const sn = SNAP_SEQS.includes(k) && SNAP0.narrators[k];
+    if (sn) out.push({ x: 'sc', vol: SNAP_VOL, seq: k, name: sn.effective.canonical_name });
+    else for (const v of Object.keys(VOLS)) { const e = VOLS[v].sc.entries.find(x => x.seq === k); if (e) { out.push({ x: 'sc', vol: +v, seq: k, name: e.name }); break; } }
+  }
+  return out;
+}
+function otekiAc(x, seq, vol) {
+  const ac = () => { const r = x === 'hh' ? IDXNID.get(HNID0 + seq - HSEQ0) : IDX.find(y => y.vol === vol && y.seq === seq); if (r) { if (r.p !== PK) activatePackage(r.p.id, { silent: true }); selectNarrator(r.nid); railReveal(r.nid, 'center'); } };
+  const m = x === 'hh' ? 'hh' : 'sc'; if (modu() === m) return ac();
+  modSec(m); if (modu() === m && (m === 'sc' || PKGS.some(p => p.kind === 'hh'))) ac(); else toast('Mod değişiyor…');
 }
 // Sanal kaydırma: RV.items = satırlar (+ sıra no düzeninde cilt ara başlıkları); RV.tops = satır üst konumları
 const RV = { items: [], tops: null, rh: 0, hh: 0, measured: false, a: -1, b: -1, raf: 0, n: 0 };
@@ -4010,6 +4034,7 @@ function renderRail() {
   const heads = S.sort === 'seq' && IDX.length > 0 && IDX[0].vol !== IDX[IDX.length - 1].vol;
   const items = []; let pv = null;
   list.forEach((r, k) => { if (heads && r.vol !== pv) { items.push({ head: r.vol }); pv = r.vol; } r._pos = k + 1; items.push(r); });
+  const ot = railOteki(railQuery()); if (ot.length) items.push({ head: 'oteki' }, ...ot);
   RV.items = items; RV.n = list.length; RV.tops = null;
   const key = S.railFilter + '|' + S.q + '|' + S.sort + '|' + V;
   const vchg = RV.key !== undefined && RV.key.split('|').pop() !== String(V);
@@ -4024,7 +4049,9 @@ function renderRail() {
   renderNotches();
 }
 function railItemHTML(it, idx) {
-  if (it.head) return '<li class="nvol" role="presentation" data-idx="' + idx + '">' + (it.head === HHV ? 'HH · Câmiu Hâdimi’l-Haremeyn râvileri' : 'Cilt ' + it.head) + '</li>';
+  if (it.head) return '<li class="nvol" role="presentation" data-idx="' + idx + '">' + (it.head === HHV ? 'HH · Câmiu Hâdimi’l-Haremeyn râvileri' : it.head === 'oteki' ? 'Öteki veri kümesinde aynı numara' : 'Cilt ' + it.head) + '</li>';
+  if (it.x) return '<li role="none"><button class="nitem nitem-oteki" data-xmod="' + it.x + '" data-xseq="' + it.seq + '"' + (it.vol ? ' data-xvol="' + it.vol + '"' : '') + ' data-idx="' + idx + '" title="' + (it.x === 'hh' ? 'HH moduna geçip bu râviyi açar' : 'el-Câmi‘ moduna geçip bu râviyi açar') + '">' +
+    '<span class="nseq">' + seqEt(it.seq) + '</span><span class="nname" dir="rtl">' + esc(it.name || '') + '</span><span class="nmeta">' + (it.x === 'hh' ? 'HH râvisi' : 'el-Câmi‘ · Cilt ' + it.vol) + ' · açmak için basın</span></button></li>';
   const r = it, x = rowSum(r), st = rowStatus(r), cur = r.nid === S.nid;
   const dot = REVIEWED(st) ? 'done' : x && x.reviewed ? 'part' : '';
   const nn = rowNotes(r), warn = x ? x.warn : r.w;
@@ -6873,6 +6900,7 @@ document.addEventListener('click', e => {
   const view = t.closest('.views [data-view]'); if (view) { setView(view.dataset.view); return; }
   const exp = t.closest('[data-exp]'); if (exp) { doExport(exp.dataset.exp); return; }
   const rf = t.closest('[data-rf]'); if (rf) { S.railFilter = rf.dataset.rf; renderRail(); return; }
+  const xo = t.closest('[data-xmod]'); if (xo) { otekiAc(xo.dataset.xmod, +xo.dataset.xseq, +xo.dataset.xvol || 0); if (DRW.mode.rail === 'overlay') closeDrawer('rail'); return; }
   const ni = t.closest('[data-nid]');
   if (ni) {
     const kb = $('rail').contains(document.activeElement);
@@ -7191,7 +7219,7 @@ document.addEventListener('keydown', e => {
 $('nlist').addEventListener('keydown', e => {
   const step = { ArrowDown: 1, ArrowUp: -1, PageDown: 10, PageUp: -10, Home: -1e9, End: 1e9 }[e.key]; if (!step) return;
   const cur = document.activeElement && document.activeElement.closest('.nitem'); if (!cur) return;
-  const rows = []; RV.items.forEach((it, i) => { if (!it.head) rows.push(i); });
+  const rows = []; RV.items.forEach((it, i) => { if (!it.head && !it.x) rows.push(i); });
   const k = rows.indexOf(+cur.dataset.idx); if (k < 0) return;
   const j = rows[Math.max(0, Math.min(rows.length - 1, k + step))]; e.preventDefault();
   const el = railReveal(RV.items[j].nid); if (el) el.focus({ preventScroll: true });
