@@ -1208,6 +1208,14 @@ tr.mf-on td { background: color-mix(in srgb, #c0392b 6%, transparent); }
 /* Teâruz: değerlendirmeye basınca hüküm penceresi */
 .conf-ph { font-size: inherit; color: inherit; text-decoration: underline dotted; text-underline-offset: 3px; padding: 0; }
 .conf-ph:hover { color: var(--accent, #1f6b52); text-decoration-style: solid; }
+/* HH merviyyâtı paneli (kitaba / hocaya basınca rivayetler) */
+.mrv-satir:hover td { background: var(--paper-2); }
+.mrv-panel { margin-top: 10px; }
+.mrv-bas { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.mrv-sec { display: flex; flex-wrap: wrap; gap: 10px; margin: 8px 0; }
+.mrv-liste { margin: 0; padding-inline-start: 1.6em; }
+.mrv-li { padding: 8px 0; border-bottom: 1px solid var(--line); }
+.mrv-metin { font-size: calc(17px * var(--yb, 1)); line-height: 1.9; margin-top: 4px; }
 
 </style>
 </head>
@@ -2663,7 +2671,7 @@ function hhTablo(n, V, key, title) {
     return '<tr style="cursor:default" class="' + (x.sil ? 'rej' : '') + '"><td data-v="' + esc(x.ad) + '">' + dzAdHucre(x, x.manual || (x.ed && x.ad !== x.orig.ad) ? null : disKisiBtn(p.id != null ? p : null)) + '</td>' +
       '<td class="num" data-v="' + (vef || '') + '">' + (vef ? 'h. ' + vef : '<span class="muted">—</span>') + '</td><td class="num" data-v="' + (tab || '') + '">' + (tab ? Math.round(tab) : p.sahabi === 1 ? '<span class="small">sahâbî</span>' : '<span class="muted">—</span>') + '</td>' +
       '<td data-v="' + esc(y ? y.tr : '') + '">' + (y ? esc(y.tr) : '<span class="muted">—</span>') + '</td><td class="ar small" data-v="' + esc(p.ih || '') + '">' + esc(p.ih || '') + '</td>' +
-      '<td class="num" data-v="' + (x.r || 0) + '">' + (x.manual ? '<span class="muted">—</span>' : sayiTr(x.r) + (x.h != null ? ' <span class="small muted" title="İsnadlardan hesaplanan sayı programınkinden farklı">(isnadlarda ' + sayiTr(x.h) + ')</span>' : '')) + (top && x.r ? '<div class="small muted">%' + (Math.round(x.r / top * 1000) / 10).toLocaleString('tr-TR') + '</div>' : '') + '</td><td class="num" data-v="' + (x.rt || 0) + '">' + (x.rt != null ? sayiTr(x.rt) : '<span class="muted">—</span>') + '</td>' +
+      '<td class="num" data-v="' + (x.r || 0) + '">' + (x.manual ? '<span class="muted">—</span>' : (key === 'hoca' ? '<button class="linkbtn" data-mrvh="' + esc(x.k) + '" title="Bu hocadan rivayetlerini göster">' + sayiTr(x.r) + '</button>' : sayiTr(x.r)) + (x.h != null ? ' <span class="small muted" title="İsnadlardan hesaplanan sayı programınkinden farklı">(isnadlarda ' + sayiTr(x.h) + ')</span>' : '')) + (top && x.r ? '<div class="small muted">%' + (Math.round(x.r / top * 1000) / 10).toLocaleString('tr-TR') + '</div>' : '') + '</td><td class="num" data-v="' + (x.rt || 0) + '">' + (x.rt != null ? sayiTr(x.rt) : '<span class="muted">—</span>') + '</td>' +
       '<td class="small">' + isr.map(r => '<span class="tag" title="' + esc(r.tur + (r.nit ? ' · ' + r.nit : '')) + '">' + esc(ILISKI_TR[r.tur] || r.tur) + (r.nit ? ' · ' + esc(r.nit) : '') + '</span>').join(' ') + '</td>' +
       '<td>' + kodlar((x.manual ? [] : ['HH']).concat(P ? [...P.kod].filter(k => k !== 'HH' && k !== 'TKZ') : [])) + (P && P.kod.has('TKZ') ? '<span class="tag" title="Tehzîbü’l-Kemâl listesinde de var">Tehzîb</span>' : '') + (P && P.sc.length + (P.merv ? 1 : 0) && P.adlar.some(a => adKok(a) !== adKok(x.ad)) ? '<div class="small muted ar" title="Aynı kişinin el-Câmi‘ ve CK’daki yazılışı">' + esc(P.adlar.filter(a => adKok(a) !== adKok(x.ad) && a !== (p.tamAd || '')).slice(0, 2).join(' · ')) + '</div>' : '') + '</td><td>' + dzButon(x) + '</td></tr>';
   };
@@ -2674,7 +2682,77 @@ function hhTablo(n, V, key, title) {
 function hhKitaplar(V) {
   const K = V.hh.kitaplar || []; if (!K.length) return '';
   return fold('dis-kitap', 'Rivayetlerinin geçtiği kitaplar (مروياته في كتب المتون) ' + kodlar(['HH']), '<div class="wrap"><table class="tbl" data-tid="hh-kitap"><thead><tr><th data-sk="t">Kitap</th><th data-sk="t">Müellif</th><th data-sk="n" class="num">Rivayet</th><th data-sk="n" class="num">Tekrarsız</th></tr></thead><tbody>' +
-    K.map(([b, h, g]) => { const k = disKitap(b); return '<tr style="cursor:default"><td class="ar">' + esc(k.ad) + '</td><td class="ar small">' + esc(k.muellif) + (k.vefat ? ' <span class="muted">(ö. ' + k.vefat + ')</span>' : '') + '</td><td class="num" data-v="' + (h || 0) + '">' + sayiTr(h) + '</td><td class="num" data-v="' + (g || 0) + '">' + sayiTr(g) + '</td></tr>'; }).join('') + '</tbody></table></div>', false, K.length + ' kitap');
+    K.map(([b, h, g]) => { const k = disKitap(b); return '<tr class="mrv-satir" data-mrvk="' + b + '" title="Bu kitaptaki rivayetlerini göster" style="cursor:pointer"><td class="ar">' + esc(k.ad) + '</td><td class="ar small">' + esc(k.muellif) + (k.vefat ? ' <span class="muted">(ö. ' + k.vefat + ')</span>' : '') + '</td><td class="num" data-v="' + (h || 0) + '">' + sayiTr(h) + '</td><td class="num" data-v="' + (g || 0) + '">' + sayiTr(g) + '</td></tr>'; }).join('') + '</tbody></table></div>', false, K.length + ' kitap');
+}
+// ----- HH merviyyâtı: kitaba ya da hocaya basınca rivayetler (tools/hh-merviyyat-hazirla.py → kaynak/dis/hh/merv, hadis) -----
+// Râvi dizini küçük dosyadır (kitap, no, cilt/sayfa, hoca, talebe); metinler 500’lük paketlerde, yalnız gösterilen rivayetlerinki iner.
+const MRV_DIZIN = 'kaynak/dis/hh/merv/dizin.json';
+const MRV = { dizin: null, at: 0, err: '', busy: {}, r: {}, b: {} };
+async function mervDizin() {
+  const c = ortakCfg(); if (!c || !AUTH.me()) return null;
+  if (MRV.dizin && Date.now() - MRV.at < 600000) return MRV.dizin;
+  MRV.at = Date.now();
+  try { const gh = ORT.client(c), m = await gh.meta(MRV_DIZIN); if (!m || !m.sha) { MRV.dizin = null; return null; } if (!MRV.dizin || MRV.dizin._sha !== m.sha) { const d = JSON.parse(await gh.blob(m.sha)); d._sha = m.sha; MRV.dizin = d; } MRV.err = ''; }
+  catch (e) { MRV.err = e.message || String(e); }
+  return MRV.dizin;
+}
+function mervBlob(tur, sha) {
+  if (MRV[tur][sha]) return Promise.resolve(MRV[tur][sha]);
+  const k = 'merv:' + tur + ':' + sha; if (MRV.busy[k]) return MRV.busy[k];
+  MRV.busy[k] = (async () => {
+    let r = null; try { r = await IDB.get('harf', k); } catch (e) { }
+    if (!r || !r.data) {
+      const c = ortakCfg(); if (!c) throw Error('ortak kayıt bağlı değil');
+      const t = await ORT.client(c).blob(sha);
+      if (typeof t !== 'string' || await ORT.blobSha(t) !== sha) throw Error('dosya dizindeki özetle tutmuyor');
+      r = { id: k, data: JSON.parse(t) }; try { await IDB.put('harf', r); } catch (e) { }
+    }
+    MRV[tur][sha] = r.data; return r.data;
+  })().catch(e => { MRV.err = e.message || String(e); return null; }).finally(() => { MRV.busy[k] = null; });
+  return MRV.busy[k];
+}
+// Râvinin HH numarası (el-Câmi‘ râvisiyse eşleşen HH kaydı)
+const mervHH = (n, V) => n.hhNo != null ? n.hhNo : V && V.rec ? V.rec[2] : null;
+function mervVeri(h) {
+  const d = MRV.dizin, sha = d && d.ravi && d.ravi[h]; if (!sha) return null;
+  return MRV.r[sha] || null;
+}
+function mervYukle(h) {
+  return mervDizin().then(d => { const sha = d && d.ravi && d.ravi[h]; return sha ? mervBlob('r', sha) : null; });
+}
+function mervMetin(hid) { const d = MRV.dizin, b = d && d.hadis[Math.floor(hid / d.paket)], P = b && MRV.b[b]; return P ? P[hid] || null : null; }
+function mervPaketleri(ids) { const d = MRV.dizin; if (!d) return Promise.resolve(); return Promise.all([...new Set(ids.map(h => d.hadis[Math.floor(h / d.paket)]).filter(Boolean))].map(sha => mervBlob('b', sha))); }
+// Panel: S.mrv = { hh, kitap, hoca, n } — kitap/hoca boşsa hepsi
+function mervPanel(n, V) {
+  const h = mervHH(n, V); if (h == null) return '';
+  const st = S.mrv && S.mrv.hh === h ? S.mrv : null;
+  if (!st) return '<div id="mrv-panel"></div>';
+  const D = mervVeri(h);
+  if (!D) { mervYukle(h).then(() => mervYenile()); return '<div id="mrv-panel" class="card"><div class="hint">' + (MRV.err ? 'Rivayetler alınamadı: ' + esc(MRV.err) : (MRV.dizin && !(MRV.dizin.ravi || {})[h] ? 'Bu râvinin rivayet listesi henüz hazırlanmadı.' : 'Rivayetler yükleniyor…')) + '</div></div>'; }
+  const R = D.r.filter(r => (!st.kitap || r[1] === +st.kitap) && (!st.hoca || r[5] === +st.hoca));
+  const kisi = id => id ? (disKisi(V, id) || {}).ad || D.kisi[id] || 'HH #' + id : '—';
+  const say = (L, i) => { const m = new Map(); for (const r of L) m.set(r[i], (m.get(r[i]) || 0) + 1); return [...m.entries()].sort((a, b) => b[1] - a[1]); };
+  const kitL = say(D.r.filter(r => !st.hoca || r[5] === +st.hoca), 1), hocL = say(D.r.filter(r => !st.kitap || r[1] === +st.kitap), 5);
+  const sec = (ad, k, L, ad2) => '<label class="cf"><span>' + ad + '</span><select class="field sm" data-mrvsec="' + k + '"><option value="">Tümü</option>' + L.map(([id, c]) => '<option value="' + (id || '') + '"' + (String(st[k]) === String(id) ? ' selected' : '') + '>' + esc(ad2(id)) + ' (' + c + ')</option>').join('') + '</select></label>';
+  const goster = R.slice(0, st.n || 50);
+  const eksik = goster.filter(r => !mervMetin(r[0])).map(r => r[0]);
+  if (eksik.length) mervPaketleri(eksik).then(() => mervYenile());
+  const satir = r => { const k = disKitap(r[1]), m = mervMetin(r[0]);
+    return '<li class="mrv-li"><div class="small"><b class="ar">' + esc(k.ad) + '</b> · no ' + esc(r[2] || '—') + (r[3] != null ? ' · c. ' + r[3] + (r[4] != null ? ', s. ' + r[4] : '') : '') +
+      ' · hocası: <span class="ar">' + esc(kisi(r[5])) + '</span>' + (r[6] ? ' · talebesi: <span class="ar">' + esc(kisi(r[6])) + '</span>' : '') + '</div>' +
+      (m ? (m[1] || m[2] ? '<div class="small muted ar">' + esc([m[1], m[2]].filter(Boolean).join(' · ')) + '</div>' : '') + '<div class="ar mrv-metin">' + esc(m[0]) + '</div>' : '<div class="hint">Metin yükleniyor…</div>') + '</li>'; };
+  return '<div id="mrv-panel" class="card mrv-panel"><div class="mrv-bas"><h3 class="panel-title" style="margin:0">Rivayetleri ' + kodlar(['HH']) + ' <span class="muted">' + R.length + ' rivayet' + (R.length !== D.r.length ? ' (toplam ' + D.r.length + ')' : '') + '</span></h3>' +
+    '<button class="btn ghost sm" data-mrvkapat title="Paneli kapat">✕</button></div>' +
+    '<div class="mrv-sec">' + sec('Kitap', 'kitap', kitL, id => disKitap(id).ad) + sec('Hoca', 'hoca', hocL, kisi) + '</div>' +
+    '<ol class="mrv-liste">' + goster.map(satir).join('') + '</ol>' +
+    (R.length > goster.length ? '<button class="btn ghost sm" data-mrvdaha>' + Math.min(50, R.length - goster.length) + ' rivayet daha göster (' + (R.length - goster.length) + ' kaldı)</button>' : '') +
+    '<p class="hint">Hoca: isnadda râvinin hemen önündeki halka; talebe: hemen ardındaki. Kaynak: Câmiu Hâdimi’l-Haremeyn (33 metin kitabı).</p></div>';
+}
+function mervYenile() { const el = $('mrv-panel'), n = NBYID[S.nid]; if (!el || !n) return; const V = disVeri(n); if (!V) return; const t = document.createElement('div'); t.innerHTML = mervPanel(n, V); el.replaceWith(t.firstElementChild); }
+function mervAc(patch) {
+  const n = NBYID[S.nid], V = n && disVeri(n), h = mervHH(n, V); if (h == null) return;
+  S.mrv = Object.assign(S.mrv && S.mrv.hh === h ? S.mrv : { hh: h, kitap: '', hoca: '' }, patch, { n: 50 });
+  mervYenile(); const el = $('mrv-panel'); if (el) el.scrollIntoView({ block: 'start', behavior: 'smooth' });
 }
 // ----- Hükümler: HH’deki cerh–ta‘dîl sözleri (kronolojik) ve özel tasnifler; sözler sayıma girer (hhSts) -----
 const SINIF_TR = { 0: ['Sınıflandırılmamış', ''], 1: ['Ta‘dîl', 'ok'], 2: ['Cerh', 'bad'], 3: ['Muhtelif', 'warn'], 4: ['Diğer bilgi', ''] };
@@ -4752,7 +4830,7 @@ function hocaTalebeTab(n, key) {
   return '<div class="pane">' + (V ? '' : disDurum(n)) + '<div class="toolbar-inline"><label class="small"><input type="checkbox" data-act="show-rej"' + (UI.showRejected ? ' checked' : '') + '> Reddedilenleri göster</label><span class="grow"></span>' + hintBtn(key) + '</div>' +
     (hoca ? hintP('hoca', 'Hocalar (şüyûh) “rivâ/haddese/semi‘a an …” ve Mîzân usulü “an … ve anhü …” kalıplarından çıkarılır. Olumsuz ve şartlı cümleler (“mâ haddese anhü”, “izâ revâ anhü sika”) ile senet içi adlar bu listeye alınmaz; senetlerdeki halkalar “el-Câmi‘ metnindeki senetli rivayetlerinden” bölümündedir. Adaylar doğrulanmamıştır. Talebeler ayrı sekmededir; ikisinden çıkan tahmini tabaka Sentez sekmesindedir.') : hintP('talebe', 'Talebeler (telâmîz) “ve anhü, revâ anhü, haddese anhü …” kalıplarından çıkarılır. Olumsuz ve şartlı cümleler ile senet içi adlar bu listeye alınmaz; senetlerdeki halkalar “el-Câmi‘ metnindeki senetli rivayetlerinden” bölümündedir. Adaylar doğrulanmamıştır. Hocalar ayrı sekmededir; ikisinden çıkan tahmini tabaka Sentez sekmesindedir.')) +
     (hoca ? idrakNotu(n, B) : '') + hkOzet(n, key, B) + mervBolum(n, V, key, B) + ckBolum(n, key, B) +
-    (V ? '<h3 class="panel-title">Dış kaynakta ' + (hoca ? 'hocaları (روى عن)' : 'talebeleri (روى عنه)') + ' ' + kodlar(['HH']) + ' <span class="muted">33 metin kitabının isnadlarından · rivayet sayısıyla · düzeltilebilir</span></h3>' + hhTablo(n, V, key, hoca ? 'Hocaları (روى عن)' : 'Talebeleri (روى عنه)') + (hoca ? hhKitaplar(V) : '') : '') +
+    (V ? '<h3 class="panel-title">Dış kaynakta ' + (hoca ? 'hocaları (روى عن)' : 'talebeleri (روى عنه)') + ' ' + kodlar(['HH']) + ' <span class="muted">33 metin kitabının isnadlarından · rivayet sayısıyla · düzeltilebilir</span></h3>' + hhTablo(n, V, key, hoca ? 'Hocaları (روى عن)' : 'Talebeleri (روى عنه)') + (hoca ? hhKitaplar(V) + mervPanel(n, V) : '') : '') +
     tkzBolum(n, lk) + '<h3 class="panel-title">Kaynak metinden çıkarılanlar ' + kodlar(['SC']) + ' <span class="muted">el-Câmi‘ blokları · düzeltilebilir</span></h3>' + listTable(n, lk, hoca ? 'Hocaları (şüyûh)' : 'Talebeleri (telâmîz)') + '</div>';
 }
 function renderRihleTab(n) {
@@ -6820,6 +6898,10 @@ document.addEventListener('click', e => {
   const ksc = t.closest('[data-ksec]'); if (ksc) { S.ksec = { nid: S.nid, key: ksc.dataset.ksec }; renderCenter(); $('center-scroll').scrollTop = 0; return; }
   const tm = t.closest('[data-tkm]'); if (tm) { const d = tkzVeri(NBYID[S.nid]), x = d && (tm.dataset.tkm === 'ravi' ? d.takrib : (d[tm.dataset.tkm.split(':')[0]] || [])[+tm.dataset.tkm.split(':')[1]]); const T = x && (x.takrib || x); if (T && T.metin) openDialog('Takrîbü’t-Tehzîb · #' + T.no, '<p class="ar dis-quote">' + esc(T.metin) + '</p><p class="hint">Takrîb maddesinin metni (Şamile 8609, s. ' + esc(T.sayfa || '—') + '); site içinde gösterilir.</p>'); return; }
   if (t.closest('[data-tkzload]')) { if (!need('volume')) return; tkzDosyaSec(); return; }
+  const mk = t.closest('[data-mrvk]'); if (mk) { mervAc({ kitap: mk.dataset.mrvk }); return; }
+  const mh = t.closest('[data-mrvh]'); if (mh) { mervAc({ hoca: mh.dataset.mrvh, kitap: '' }); return; }
+  if (t.closest('[data-mrvkapat]')) { S.mrv = null; mervYenile(); return; }
+  if (t.closest('[data-mrvdaha]')) { if (S.mrv) { S.mrv.n = (S.mrv.n || 50) + 50; mervYenile(); } return; }
   const dze = t.closest('[data-dzed]'); if (dze) { if (dze.dataset.dzed && !need('edit')) return; S.dzed = dze.dataset.dzed || null; renderCenter(); return; }
   const dzs = t.closest('[data-dzsil]'); if (dzs) { dzYaz(dzs.dataset.dzsil, 'sil'); return; }
   const dzg = t.closest('[data-dzgeri]'); if (dzg) { dzYaz(dzg.dataset.dzgeri, 'geri'); return; }
@@ -6965,6 +7047,7 @@ document.addEventListener('submit', e => {
 document.addEventListener('change', e => {
   if (e.target.id === 'narr-note' && e.target._old !== undefined && e.target._old !== e.target.value) { logAct('râvi-not', e.target.value.slice(0, 120), { nid: S.nid, seq: NBYID[S.nid].source_sequence, before: e.target._old, after: e.target.value }); e.target._old = e.target.value; }
   if (e.target.id === 'rail-sort') { S.sort = e.target.value; renderRail(); }
+  if (e.target.dataset && e.target.dataset.mrvsec && S.mrv) { S.mrv[e.target.dataset.mrvsec] = e.target.value; S.mrv.n = 50; mervYenile(); }
   if (e.target.dataset && e.target.dataset.cff) { const k = e.target.dataset.cff; CFF[k] = e.target.type === 'checkbox' ? e.target.checked : e.target.value; UI.cff = CFF; S.confLimit = 0; saveUI(); renderConflicts(); }
   if (e.target.dataset && e.target.dataset.cf) { CF[e.target.dataset.cf] = e.target.value; UI.cf = CF; saveUI(); renderCritics(); }
   if (e.target.dataset && e.target.dataset.urole) { const id = e.target.dataset.urole; try { const old = AUTH.setRole(id, e.target.value); const x = AUTH.list().find(y => y.id === id); logAct('kullanıcı', 'Rol: ' + x.username + ' · ' + AUTH.roleName(old) + ' → ' + AUTH.roleName(x.role), { pkg: '', before: old, after: x.role }); toast('Rol güncellendi.'); } catch (err) { toast(err.message, true); } renderSettings(); }
