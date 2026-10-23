@@ -6,7 +6,7 @@
 <title>Cerh-Taʿdîl · Kaynak Kontrolü</title>
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self' https://api.github.com https://generativelanguage.googleapis.com; img-src data:; base-uri 'none'; form-action 'none'">
 <meta name="generator" content="cerh-tadil/build.py CTX 2.0.0">
-<meta name="cerh-motor" content="428ad523a241f654">
+<meta name="cerh-motor" content="eaedd32662d5ad4b">
 <style>
 /* =========================================================
    Cerh-Ta‘dîl · Kaynak Kontrolü — arayüz stilleri
@@ -9892,6 +9892,10 @@ const RAPOR = (() => {
   let ELLE = null;
   function setElle(d) { ELLE = d && d.kayitlar ? d : null; }
   // Toparlama 5 (23.10.2026): eşleşen HH kaydından gelen vefatı yanlış olan râviler (kimlik eşleşmesi hatalı); anahtar cilt-sıra
+  // Uygulama izi: hangi elle kaydın nasıl bağlandığı (konum / lafiz / yok); araç ve testler için (tools/elle-denetle.js)
+  let IZ = null;
+  const iz = (x, d) => { if (IZ) IZ.set(x, d); };
+  function elleIzBaslat() { IZ = new Map(); return IZ; }
   function elleVefatYok(key) { return !!(ELLE && ELLE.vefatYok && ELLE.vefatYok.includes(key)); }
   const MUF = new Set(['kizb', 'tuhmet', 'fuhs', 'gaflet', 'fisk', 'vehm', 'ihtilat', 'tedlis', 'bidat', 'suhifz']);
   function elleTur(st, k, lv, sb) {
@@ -9915,7 +9919,22 @@ const RAPOR = (() => {
       const not = x.kaynak === 't5' ? 'Toparlama 5 denetimi (' + (x.kt || '') + ')' + (x.nt ? ': ' + x.nt : '')
         : x.kaynak === 'iktifa' ? 'el-İktifâ denetimi (atıfsız hüküm; sınıf ' + x.kt + (x.gv ? ', güven ' + x.gv : '') + ')' + (x.nt ? ': ' + x.nt : '')
         : 'Elle düzeltme (HH denetimi' + (x.hh ? ', HH söz #' + x.hh : '') + ')' + (x.nt ? ': ' + x.nt : '');
-      const bul = () => out.find(s => s.start === x.s && s.end === x.e && (s.critic || '-') === (x.c || '-')) || (x.kaynak ? out.find(s => s.start === x.s && s.end === x.e) : null) || (x.p ? out.find(s => s.phrase.includes(x.p) && (!x.c || s.critic === x.c)) : null);
+      // Hüküm önce konumuyla (blok içi başlangıç–bitiş ve münekkit) bulunur. Motor lafız sınırını değiştirdiyse aynı bloktaki
+      // aynı lafız ve aynı münekkitli hükme, eski konuma en yakın olanına yeniden bağlanır (23.10.2026; elle kararların korunması).
+      const ayniKisi = s => (s.critic || '-') === (x.c || '-') || (!!x.c && CTX.nz(s.critic_written || '') === CTX.nz(x.c));
+      const bul = () => {
+        const yer = out.filter(s => s.start === x.s && s.end === x.e), hedefte = s => !!x.cr && s.critic === x.cr;
+        let s = yer.find(ayniKisi);
+        if (s) { iz(x, 'konum'); return s; }
+        if ((s = yer.find(hedefte))) { iz(x, 'karsilandi'); return s; }   // motor artık kendisi aynı münekkiti veriyor
+        if (yer.length === 1 || (x.kaynak && yer.length)) { iz(x, 'konum'); return yer[0]; }   // aynı yerde tek hüküm: münekkit yazımı değişmiş olsa da odur
+        if (x.p) {
+          const p = CTX.nz(x.p), A = out.filter(s => CTX.nz(s.phrase || '').includes(p) && (!x.c || ayniKisi(s) || hedefte(s)));
+          s = A.sort((a, b) => Math.abs(a.start - (x.s || 0)) - Math.abs(b.start - (x.s || 0)))[0];
+          if (s) { iz(x, 'lafiz'); return s; }
+        }
+        iz(x, 'yok'); return null;
+      };
       if (x.a === 'kaldir') { const s = bul(); if (s) out = out.filter(y => y !== s); continue; }
       if (x.a === 'duzelt') {
         const s = bul(); if (!s) continue;
@@ -9935,6 +9954,7 @@ const RAPOR = (() => {
       }
       if (x.a === 'ekle') {
         let i = -1; if (x.p) { i = text.indexOf(x.p, Math.max(0, (x.s || 0) - 400)); if (i < 0) i = text.indexOf(x.p); }
+        iz(x, i < 0 ? 'yok' : 'konum');
         if (i < 0) continue;
         const e = i + x.p.length, a = Math.max(0, text.lastIndexOf('.', i) + 1), z = text.indexOf('.', e);
         const st = { key: (ids && ids.blockId != null ? 'b' + ids.blockId + '-' : '') + 'e' + i, block_id: ids && ids.blockId, narrator_id: ids && ids.narratorId,
@@ -10072,7 +10092,7 @@ const RAPOR = (() => {
     const sts = rec.sts.filter(x => !del.has(x.uid)), bh = new Set(sts.map(x => x.bid));
     return Object.assign({}, rec, { sts, hit: bh.size });
   }
-  return { setElle, elleVefatYok, elleUygula, raviSonrasi, bloklariCozumle, BICIM, HOW_TR, uniq, yearText, stUid, blockOpts, applyBlockFix, analiz, kim, alan, ozet, hazirUygun, kaldirileniAyikla };
+  return { setElle, elleVefatYok, elleIzBaslat, elleUygula, raviSonrasi, bloklariCozumle, BICIM, HOW_TR, uniq, yearText, stUid, blockOpts, applyBlockFix, analiz, kim, alan, ozet, hazirUygun, kaldirileniAyikla };
 });
 
 </script>
