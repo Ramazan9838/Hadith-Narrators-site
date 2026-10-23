@@ -1224,6 +1224,28 @@ tr.mf-on td { background: color-mix(in srgb, #c0392b 6%, transparent); }
 /* Sayıyla aramada öteki veri kümesindeki aynı numaralı râvi */
 .nitem-oteki { border: 1px dashed var(--line); opacity: .92; }
 .nitem-oteki .nmeta { font-size: 11px; color: var(--ink-3); }
+/* Rapor oluşturucu (Râvi raporu: bölümler, süzgeçler, önizleme) */
+.kur { display: grid; grid-template-columns: minmax(300px, 420px) 1fr; gap: 14px; margin: 8px 0; }
+.kur-liste { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; max-height: 56vh; overflow: auto; }
+.kur-b { border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px; }
+.kur-b.bos { opacity: .55; }
+.kur-bas { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+.kur-bas label { display: inline-flex !important; flex-direction: row !important; gap: 6px; align-items: center; font-size: calc(13px * var(--yb)); }
+.kur-bas input { width: auto !important; margin: 0; }
+.kur-ok { white-space: nowrap; }
+.kur-suz { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--line); }
+.kur-suz label { font-size: calc(12px * var(--yb)); }
+.kur-suz .kur-coklu { grid-column: 1 / -1; }
+.kur-sablon { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.kur-sablon select { flex: 1; min-width: 140px; }
+.kur-onizleme { border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; max-height: 60vh; overflow: auto; background: var(--paper, #fff); font-size: 12.5px; }
+.kur-onizleme table { border-collapse: collapse; width: 100%; margin: 4px 0 8px; }
+.kur-onizleme th, .kur-onizleme td { border: 1px solid var(--line); padding: 2px 5px; vertical-align: top; text-align: start; }
+.kur-onizleme td.ar { text-align: right; font-family: var(--ar-font, serif); }
+.kur-onizleme h1 { font-size: 16px; } .kur-onizleme h2 { font-size: 14px; } .kur-onizleme h3 { font-size: 13px; }
+@media (max-width: 760px) { .kur { grid-template-columns: 1fr; } .kur-suz { grid-template-columns: 1fr; } }
+.kur-onizleme dl.rp-meta { display: grid; grid-template-columns: max-content 1fr; gap: 1px 10px; margin: 4px 0; color: var(--ink-3); }
+.kur-onizleme dl.rp-meta dt { font-weight: 600; } .kur-onizleme dl.rp-meta dd { margin: 0; }
 
 </style>
 </head>
@@ -7604,6 +7626,101 @@ const RAPOR = (() => {
     return new Blob([...parts, ...central, new Uint8Array(e.buffer)], { type: type || 'application/zip' });
   }
 
+  /* ---------- Râvi raporu oluşturucu (23.10.2026) ----------
+     Bölümler seçilir (sıra değiştirilebilir), her bölümün kendi süzgeci vardır; önizleme canlıdır. Seçimler şablon olarak
+     tarayıcıda saklanır (KUR_SABLON) ve başka râvide aynen uygulanır. Hocaları/Talebeleri bütün kümeleri birleştiren listeden
+     (birlesikKisiler), rivayetler HH merviyyâtından, hükümler el-Câmi‘ + HH’den gelir. Ağ ya da yapay zekâ kullanılmaz. */
+  const KUR_SABLON = 'cerh-tadil-rapor-sablonlari', KUR_SON = 'cerh-tadil-rapor-son';
+  const TUR_AD = { T: 'Ta‘dîl', C: 'Cerh', J: 'Cehâlet', K: 'Karma / mukayyed', N: 'Cerhin reddi', x: 'Diğer (tavır, tercih…)' };
+  const turOf = s => { const k = eKind(s); return 'TCJKN'.includes(k) ? k : 'x'; };
+  const kisiAna = (n, key) => { try { return birlesikKisiler(n, key); } catch (e) { return null; } };
+  const kimeAd = k => ({ tumu: 'Bütün kümeler', HH: 'HH', SC: 'el-Câmi‘ (SC)', TKZ: 'Tehzîb', CK: 'Cevâmi‘u’l-Kelim (CK)' }[k] || k);
+  const sayi = v => v === '' || v == null || isNaN(+v) ? null : +v;
+  const KUR = [
+    { id: 'kimlik', ad: 'Kimlik', varmi: n => true, sec: n => [{ k: 'alan', t: 'coklu', ad: 'Alanlar', s: KFIELDS.map(([k, l]) => [k, l]) }],
+      yap(n, f, d) { const al = f.alan && f.alan.length ? f.alan : KFIELDS.map(x => x[0]); const K = kimOf(n);
+        const rows = KFIELDS.filter(([k]) => al.includes(k)).map(([k, l]) => [l, fieldVal(n, k)]).filter(r => r[1]).concat(K.tabakaTahmin && al.includes('tabaka') ? [['Tabaka tahmini', K.tabakaTahmin.text + ' (' + K.tabakaTahmin.rule + ')']] : []);   // boş alanlar yazılmaz
+        d.push({ t: 'h1', text: 'Kimlik' }, rows.length ? { t: 'kv', rows } : { t: 'p', text: 'Seçilen kimlik alanlarında bilgi yok.' }); } },
+    { id: 'varyant', ad: 'İsim varyantları', varmi: n => (n.effective.name_variants || []).length > 0, sec: () => [],
+      yap(n, f, d) { const v = [...new Set(n.effective.name_variants || [])]; if (v.length) d.push({ t: 'h1', text: 'İsim varyantları' }, { t: 'list', items: v }); } },
+    ...[['hoca', 'Hocaları'], ['talebe', 'Talebeleri']].map(([key, ad]) => ({ id: key, ad, varmi: n => { const B = kisiAna(n, key); return !!B && B.P.length > 0; },
+      sec(n) { const B = kisiAna(n, key); const yer = B ? [...new Set(B.P.map(x => (x.src.tumu || Object.values(x.src)[0] || {}).place).filter(Boolean).map(p => p.tr))].sort((a, b) => a.localeCompare(b, 'tr')) : [];
+        return [{ k: 'kume', t: 'tek', ad: 'Küme', s: (B ? B.var : ['tumu']).map(k => [k, kimeAd(k)]) }, { k: 'yer', t: 'tek', ad: 'Memleket / yer', s: [['', 'Hepsi']].concat(yer.map(y => [y, y])) },
+          { k: 'vefMin', t: 'sayi', ad: 'Vefat (h.) en erken' }, { k: 'vefMax', t: 'sayi', ad: 'en geç' }, { k: 'tabMin', t: 'sayi', ad: 'Tabaka en az' }, { k: 'tabMax', t: 'sayi', ad: 'en çok' },
+          { k: 'minR', t: 'sayi', ad: 'En az rivayet' }, { k: 'sira', t: 'tek', ad: 'Sıralama', s: [['r', 'Rivayet sayısı (çoktan aza)'], ['v', 'Vefat (eskiden yeniye)'], ['t', 'Tabaka'], ['a', 'Ad']] }, { k: 'ilk', t: 'sayi', ad: 'Yalnız ilk N kişi' }]; },
+      yap(n, f, d) {
+        const B = kisiAna(n, key); if (!B) return; const k = B.var.includes(f.kume) ? f.kume : 'tumu';
+        const w = x => k === 'tumu' ? Math.max(x.hh ? x.hh.r || 0 : 0, x.merv ? x.merv.n : 0, x.ck ? x.ck[1] || 0 : 0) : (x.src[k] || {}).w || 0;
+        let L = B.P.filter(x => x.src[k]).map(x => ({ x, s: x.src[k], w: w(x) }));
+        const [v1, v2, t1, t2, mr] = [f.vefMin, f.vefMax, f.tabMin, f.tabMax, f.minR].map(sayi);
+        L = L.filter(({ s, w }) => (!f.yer || (s.place && s.place.tr === f.yer)) && (v1 == null || (s.year && s.year >= v1)) && (v2 == null || (s.year && s.year <= v2)) && (t1 == null || (s.tab && s.tab >= t1)) && (t2 == null || (s.tab && s.tab <= t2)) && (mr == null || w >= mr));
+        const sr = { r: (a, b) => b.w - a.w, v: (a, b) => (a.s.year || 9999) - (b.s.year || 9999), t: (a, b) => (a.s.tab || 99) - (b.s.tab || 99), a: (a, b) => a.x.ad.localeCompare(b.x.ad, 'ar') }[f.sira || 'r'];
+        L.sort(sr); const top = L.length, ilk = sayi(f.ilk); if (ilk) L = L.slice(0, ilk);
+        const sz = [k !== 'tumu' ? 'küme: ' + kimeAd(k) : '', f.yer ? 'yer: ' + f.yer : '', v1 != null || v2 != null ? 'vefat ' + (v1 ?? '…') + '–' + (v2 ?? '…') : '', t1 != null || t2 != null ? 'tabaka ' + (t1 ?? '…') + '–' + (t2 ?? '…') : '', mr != null ? 'en az ' + mr + ' rivayet' : '', ilk ? 'ilk ' + ilk : ''].filter(Boolean);
+        d.push({ t: 'h1', text: ad + ' (' + top + ' kişi' + (sz.length ? ' · ' + sz.join(' · ') : '') + ')' });
+        d.push({ t: 'table', head: ['Ad', 'Küme', 'Vefat', 'Tabaka', 'Yer', 'Durum', 'Rivayet'], rows: L.map(({ x, s, w }) => [x.ad, [...x.kod].map(c => c === 'TKZ' ? 'Tehzîb' : c).join(' '), s.year ? 'h. ' + s.year : '', s.tab ? String(Math.round(s.tab)) : '', s.place ? s.place.tr : '', (x.hh && x.hh.p && x.hh.p.ih) || (x.ckp && x.ckp.rutbe) || s.ih || '', [x.hh && x.hh.r ? 'HH ' + x.hh.r : '', x.merv ? 'SC ' + x.merv.n : '', x.ck && x.ck[1] ? 'CK ' + x.ck[1] : ''].filter(Boolean).join(' · ')]) });
+      } })),
+    { id: 'rivayet', ad: 'Rivayetleri (HH merviyyâtı)', varmi: n => mervHH(n, disVeri(n)) != null, hazir: n => mervYukle(mervHH(n, disVeri(n))),
+      sec(n) { const D = mervVeri(mervHH(n, disVeri(n))); if (!D) return [{ k: '_', t: 'not', ad: 'Rivayet dizini yükleniyor…' }];
+        const V = disVeri(n), kisi = id => (V && disKisi(V, id) || {}).ad || D.kisi[id] || 'HH #' + id, say = (i, m) => { for (const r of D.r) if (r[i]) m.set(r[i], (m.get(r[i]) || 0) + 1); return [...m].sort((a, b) => b[1] - a[1]); };
+        return [{ k: 'kitap', t: 'tek', ad: 'Kitap', s: [['', 'Hepsi']].concat(say(1, new Map()).map(([b, c]) => [String(b), disKitap(b).ad + ' (' + c + ')'])) }, { k: 'hoca', t: 'tek', ad: 'Hoca', s: [['', 'Hepsi']].concat(say(5, new Map()).map(([h, c]) => [String(h), kisi(h) + ' (' + c + ')'])) },
+          { k: 'talebe', t: 'tek', ad: 'Talebe', s: [['', 'Hepsi']].concat(say(6, new Map()).map(([h, c]) => [String(h), kisi(h) + ' (' + c + ')'])) }, { k: 'metin', t: 'tek', ad: 'Metin', s: [['tam', 'Tam metin'], ['kisa', 'İlk 160 harf'], ['yok', 'Metinsiz (tablo)']] }, { k: 'ilk', t: 'sayi', ad: 'En çok N rivayet (boş: 200)' }]; },
+      async yap(n, f, d) {
+        const V = disVeri(n), h = mervHH(n, V), D = mervVeri(h) || await mervYukle(h); if (!D) return;
+        const kisi = id => id ? (V && disKisi(V, id) || {}).ad || D.kisi[id] || 'HH #' + id : '—';
+        const R0 = D.r.filter(r => (!f.kitap || r[1] === +f.kitap) && (!f.hoca || r[5] === +f.hoca) && (!f.talebe || r[6] === +f.talebe)), R = R0.slice(0, sayi(f.ilk) || 200);
+        if (f.metin !== 'yok') await mervPaketleri(R.map(r => r[0]));
+        const sz = [f.kitap ? 'kitap: ' + disKitap(+f.kitap).ad : '', f.hoca ? 'hoca: ' + kisi(+f.hoca) : '', f.talebe ? 'talebe: ' + kisi(+f.talebe) : ''].filter(Boolean);
+        d.push({ t: 'h1', text: 'Rivayetleri (' + R0.length + (R.length < R0.length ? ', ilk ' + R.length + ' gösterildi' : '') + (sz.length ? ' · ' + sz.join(' · ') : '') + ')' });
+        const yer = r => (r[3] != null ? 'c. ' + r[3] + (r[4] != null ? ', s. ' + r[4] : '') : '');
+        if (f.metin === 'yok') d.push({ t: 'table', head: ['#', 'Kitap', 'No', 'Cilt/sayfa', 'Hocası', 'Talebesi'], rows: R.map((r, i) => [String(i + 1), disKitap(r[1]).ad, String(r[2] || ''), yer(r), kisi(r[5]), kisi(r[6])]) });
+        else R.forEach((r, i) => { const k = disKitap(r[1]), m = mervMetin(r[0]) || ['', '', '']; let t = String(m[0] || '(metin alınamadı)').replace(/\s*\n\s*/g, ' '); if (f.metin === 'kisa' && t.length > 160) t = t.slice(0, 160) + '…';
+          d.push({ t: 'h2', text: (i + 1) + '. ' + k.ad + (k.muellif ? ' (' + k.muellif + ')' : '') + ' · no ' + (r[2] || '—') + (yer(r) ? ' · ' + yer(r) : '') }, { t: 'p', text: 'Hocası: ' + kisi(r[5]) + (r[6] ? ' · talebesi: ' + kisi(r[6]) : '') + (m[1] || m[2] ? ' · ' + [m[1], m[2]].filter(Boolean).join(' · ') : '') }, { t: 'p', text: t }); });
+      } },
+    { id: 'ozet', ad: 'Özet (en ağır cerh, en yüksek ta‘dîl)', varmi: n => true, sec: () => [], yap(n, f, d) { d.push({ t: 'h1', text: 'Özet' }, { t: 'p', text: strip(verdictText(n, AGG[n.id] || agg(n))) }); } },
+    { id: 'hukum', ad: 'Hükümler', varmi: n => stOf(n).length + hhStsOf(n).length > 0,
+      sec(n) { const sts = stOf(n).concat(hhStsOf(n)), m = new Map(), kay = new Set(); for (const s of sts) { const c = critKey(s); if (c) m.set(c, (m.get(c) || 0) + 1); kay.add(srcShort(s.b)); }
+        return [{ k: 'mun', t: 'tek', ad: 'Münekkit', s: [['', 'Hepsi']].concat([...m].sort((a, b) => ((CTX.critic(a[0]) || {}).death || 9999) - ((CTX.critic(b[0]) || {}).death || 9999)).map(([c, k]) => [c, crName(c, c) + ' (' + k + ')'])) },
+          { k: 'tur', t: 'tek', ad: 'Tür', s: [['', 'Hepsi']].concat(Object.entries(TUR_AD)) }, { k: 'kaynak', t: 'tek', ad: 'Kaynak eser', s: [['', 'Hepsi']].concat([...kay].map(k => [k, k])) },
+          { k: 'sayilmayan', t: 'tek', ad: 'Sayılmayan kayıtlar', s: [['', 'Dahil değil'], ['1', 'Dahil (işaretli)']] }, { k: 'sira', t: 'tek', ad: 'Sıralama', s: [['v', 'Münekkidin vefatına göre'], ['k', 'Kaynak sırasıyla']] }]; },
+      yap(n, f, d) {
+        let L = stOf(n).concat(hhStsOf(n)).filter(s => (!f.mun || critKey(s) === f.mun) && (!f.tur || turOf(s) === f.tur) && (!f.kaynak || srcShort(s.b) === f.kaynak) && (f.sayilmayan || eCounts(s)));
+        const ol = s => (CTX.critic(eCritic(s)) || {}).death || 9999, bo = s => s.b.hh ? 1e6 : s.b.block_order;
+        L.sort(f.sira === 'k' ? (a, b) => bo(a) - bo(b) || a.start - b.start : (a, b) => ol(a) - ol(b) || bo(a) - bo(b));
+        const sz = [f.mun ? 'münekkit: ' + crName(f.mun, f.mun) : '', f.tur ? 'tür: ' + TUR_AD[f.tur] : '', f.kaynak ? 'kaynak: ' + f.kaynak : '', f.sayilmayan ? 'sayılmayanlar dahil' : ''].filter(Boolean);
+        d.push({ t: 'h1', text: 'Hükümler (' + L.length + (sz.length ? ' · ' + sz.join(' · ') : '') + ')' });
+        d.push({ t: 'table', head: ['Münekkit', 'Vefat', 'Lafız', 'Tür', 'Şiddet', 'Kaynak', 'Sened / nakil yolu'].concat(f.sayilmayan ? ['Sayılır mı'] : []), rows: L.map(s => { const C = CTX.critic(eCritic(s)) || {}; return [crName(eCritic(s), s.critic_written), C.death ? String(C.death) : '', s.phrase || '(zımnî)', typeShort(s), sevText(s), srcShort(s.b) + (s.b.effective.source_locator ? ' ' + s.b.effective.source_locator : ''), senedText(s)].concat(f.sayilmayan ? [eCounts(s) ? 'evet' : 'hayır — ' + strip(sayilmamaSebebi(s))] : []); }) });
+      } },
+    { id: 'munekkit', ad: 'Münekkitlere göre görüşler', varmi: n => criticRows(n).length > 0, sec: () => [],
+      yap(n, f, d) { d.push({ t: 'h1', text: 'Münekkitler ve görüşleri' }, { t: 'table', head: ['Münekkit', 'Vefat', 'Tavır', 'Görüşler (nakil sayısı)', 'Nakleden eserler'], rows: criticRows(n).map(r => { const C = CTX.critic(r.c) || {}; return [crName(r.c, r.c), C.death ? String(C.death) : '', C.approach || '', r.gorus.map(g => (g.rep.phrase || '(zımnî)') + ' ×' + g.sts.length).join(' ، '), [...new Set(Object.values(r.phr).flatMap(p => [...p.sources]))].join(' ، ')]; }) }); } },
+    { id: 'tearuz', ad: 'Teâruz ve nakil farkları', varmi: n => narrConflicts(n).length > 0, sec: () => [],
+      yap(n, f, d) { const cf = narrConflicts(n); if (!cf.length) return; d.push({ t: 'h1', text: 'Teâruz ve nakil farkları' }, { t: 'table', head: ['Tür', 'Kayıt', 'Öneri', 'Araştırmacı kararı'], rows: cf.map(c => { const st = (REV.conf || {})[n.id + '|' + c.id] || {}; return [TYPE_TR[c.type], c.type === 'nakil' ? crName(c.critic, c.critic) + ': ' + c.nakil.e.text + ' → ' + c.nakil.q.text + ' (' + c.nakil.q.source + ')' : 'ta‘dîl: ' + c.tSide.map(x => crName(x.critic, x.critic) + ' ' + x.phrase).join('؛ ') + '\ncerh: ' + c.cSide.map(x => crName(x.critic, x.critic) + ' ' + x.phrase).join('؛ '), KARAR_TR[c.oneri] || '', (KARAR_TR[st.karar] || '') + (st.not ? ' — ' + st.not : '')]; }) }); } },
+    { id: 'notlar', ad: 'Araştırmacı notları', varmi: n => notesOf('n:' + n.id).length + stOf(n).filter(s => notesOf('s:' + s.uid).length).length > 0, sec: () => [],
+      yap(n, f, d) { const nn = notesOf('n:' + n.id).map(x => x.text + ' — ' + (x.by_name || x.by) + ', ' + new Date(x.at).toLocaleDateString('tr-TR')), sn = stOf(n).flatMap(s => notesOf('s:' + s.uid).map(x => '“' + (s.phrase || '') + '”: ' + x.text + ' — ' + (x.by_name || x.by)));
+        if (nn.length || sn.length) { d.push({ t: 'h1', text: 'Araştırmacı notları' }); if (nn.length) d.push({ t: 'list', title: 'Râvi hakkında', items: nn }); if (sn.length) d.push({ t: 'list', title: 'Hükümler hakkında', items: sn }); } } }
+  ];
+  const KUR_VARSAYILAN = () => ({ sira: KUR.map(b => b.id), acik: ['kimlik', 'hoca', 'talebe', 'ozet', 'hukum', 'tearuz', 'notlar'], f: {} });
+  const kurCfg = c => { const v = KUR_VARSAYILAN(); c = Object.assign(v, c || {}); c.sira = c.sira.filter(id => KUR.some(b => b.id === id)).concat(KUR.map(b => b.id).filter(id => !c.sira.includes(id))); c.f = c.f || {}; return c; };
+  async function kurRapor(n, cfg, layout) {
+    const d = [], isHH = n.hhNo != null;
+    for (const id of cfg.sira) { const b = KUR.find(x => x.id === id); if (!b || !cfg.acik.includes(id) || !b.varmi(n)) continue; await b.yap(n, cfg.f[id] || {}, d); }
+    d.push({ t: 'p', small: true, text: 'Bölümler ve süzgeçler araştırmacının seçimidir. Hocalar/talebeler bütün kümelerin birleşik listesinden (HH, el-Câmi‘, Tehzîb, CK), rivayetler HH merviyyâtından (hoca: isnadda râvinin hemen önündeki halka), hükümler el-Câmi‘ ve HH’den (CTX ' + CTX.VERSION + '). Otomatik tespitler araştırmacı denetimi gerektirir.' });
+    return { title: fieldVal(n, 'isim') + ' (' + (isHH ? 'HH ' + n.hhNo : 'Râvi #' + n.source_sequence) + ')', subtitle: isHH ? 'Câmiu Hâdimi’l-Haremeyn' : WORK + ' · c. ' + PK.vol + ' · s. ' + n.page_start + '–' + n.page_end,
+      meta: [['Tarih', now().toLocaleString('tr-TR')], ['Hazırlayan', who()], ['Bölümler', cfg.sira.filter(id => cfg.acik.includes(id)).map(id => KUR.find(b => b.id === id).ad).join(', ')]], blocks: d, landscape: layout === 'table', file: 'ravi-' + (isHH ? 'hh' + n.hhNo : n.source_sequence) + '-rapor' };
+  }
+  function kurHTML(n, cfg) {
+    const sat = id => { const b = KUR.find(x => x.id === id), var_ = b.varmi(n), ac = cfg.acik.includes(id), S = var_ ? b.sec(n) : [], f = cfg.f[id] || {};
+      const alan = x => x.t === 'not' ? '<span class="hint">' + esc(x.ad) + '</span>' : x.t === 'sayi' ? '<label>' + esc(x.ad) + '<input type="number" data-kf="' + id + '" data-kk="' + x.k + '" value="' + esc(f[x.k] ?? '') + '"></label>'
+        : x.t === 'coklu' ? '<fieldset class="seg kur-coklu"><legend>' + esc(x.ad) + '</legend>' + x.s.map(([v, l]) => '<label><input type="checkbox" data-kf="' + id + '" data-kk="' + x.k + '" value="' + esc(v) + '"' + (!f[x.k] || !f[x.k].length || f[x.k].includes(v) ? ' checked' : '') + '> ' + esc(l) + '</label>').join('') + '</fieldset>'
+        : '<label>' + esc(x.ad) + '<select data-kf="' + id + '" data-kk="' + x.k + '">' + x.s.map(([v, l]) => '<option value="' + esc(v) + '"' + (String(f[x.k] ?? (x.s[0] || [''])[0]) === v ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select></label>';
+      return '<li class="kur-b' + (var_ ? '' : ' bos') + '" data-kb="' + id + '"><div class="kur-bas"><label><input type="checkbox" data-kac="' + id + '"' + (ac && var_ ? ' checked' : '') + (var_ ? '' : ' disabled') + '> ' + esc(b.ad) + (var_ ? '' : ' <span class="muted small">(bu râvide veri yok)</span>') + '</label>' +
+        '<span class="kur-ok"><button type="button" class="linkbtn small" data-kyukari="' + id + '" title="Yukarı taşı">▲</button><button type="button" class="linkbtn small" data-kasagi="' + id + '" title="Aşağı taşı">▼</button>' + (S.length ? ' <button type="button" class="linkbtn small" data-ksuz="' + id + '" aria-expanded="false">Süzgeç ▾</button>' : '') + '</span></div>' +
+        (S.length ? '<div class="kur-suz" hidden>' + S.map(alan).join('') + '</div>' : '') + '</li>'; };
+    const sab = store.get(KUR_SABLON, {});
+    return '<div class="kur"><div class="kur-sol"><div class="kur-sablon"><select data-ksablon><option value="">Şablon seç…</option>' + Object.keys(sab).sort().map(k => '<option>' + esc(k) + '</option>').join('') + '</select> <button type="button" class="btn ghost sm" data-ksakla>Şablon olarak sakla</button> <button type="button" class="btn ghost sm" data-ksil>Sil</button></div>' +
+      '<ol class="kur-liste">' + cfg.sira.map(sat).join('') + '</ol></div><div class="kur-sag"><div class="small muted">Önizleme</div><div class="kur-onizleme" id="kur-onizleme"><p class="hint">Hazırlanıyor…</p></div></div></div>';
+  }
+
   /* ---------- Dışa aktarma penceresi ---------- */
   function criticOptions(scope) {
     const m = {}; for (const s of scopeStatements(scope)) { const c = eCritic(s); if (c && !(CTX.critic(c) || {}).group) m[c] = (m[c] || 0) + 1; }
@@ -7617,26 +7734,52 @@ const RAPOR = (() => {
     const n = NBYID[S.nid];
     const opts = criticOptions(scope);
     openDialog('Rapor dışa aktar', '<form class="fixform exp-form" id="exp-form">' +
-      '<fieldset class="seg"><legend>Rapor</legend><label><input type="radio" name="kind" value="critic"' + (kind === 'critic' ? ' checked' : '') + '> Münekkit raporu</label><label><input type="radio" name="kind" value="narrator"' + (kind === 'narrator' ? ' checked' : '') + '> Râvi raporu <span class="muted">(#' + n.source_sequence + ' <span class="ar">' + esc(n.effective.canonical_name) + '</span>)</span></label></fieldset>' +
+      '<fieldset class="seg"><legend>Rapor</legend><label><input type="radio" name="kind" value="critic"' + (kind === 'critic' ? ' checked' : '') + '> Münekkit raporu</label><label><input type="radio" name="kind" value="narrator"' + (kind === 'narrator' ? ' checked' : '') + '> Râvi raporu <span class="muted">(' + (n.hhNo != null ? 'HH ' + n.hhNo : '#' + n.source_sequence) + ' <span class="ar">' + esc(n.effective.canonical_name) + '</span>)</span></label></fieldset>' +
       '<div class="exp-critic"><label>Münekkit<select name="critic">' + opts.map(([c, k]) => '<option value="' + esc(c) + '"' + (c === cur ? ' selected' : '') + '>' + esc(crName(c, c)) + ' · ' + k + ' hüküm</option>').join('') + '</select></label>' +
       '<label>Kapsam<select name="scope">' + [['all', 'Bütün eser · ' + fmt(IDX.length) + ' râvi']].concat(multiVol() ? [['vol', 'Bu cilt · ' + PK.vol + '. cilt']] : []).map(([k, l]) => '<option value="' + k + '"' + (k === scope ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select></label></div>' +
+      '<div class="exp-kur"></div>' +
       '<fieldset class="seg"><legend>Biçim</legend>' + [['html', 'HTML'], ['md', 'Markdown'], ['docx', 'Word (DOCX)'], ['pdf', 'PDF (tablo)']].map(([k, l], i) => '<label><input type="radio" name="fmt" value="' + k + '"' + ((preset.fmt || 'docx') === k ? ' checked' : '') + '> ' + l + '</label>').join('') + '</fieldset>' +
       '<fieldset class="seg"><legend>Düzen</legend><label><input type="radio" name="layout" value="sections" checked> Bölümlü (râvi râvi)</label><label><input type="radio" name="layout" value="table"> Tek tablo (yatay sayfa)</label></fieldset>' +
       '<p class="hint">PDF, tarayıcının yazdırma penceresinden “PDF olarak kaydet” ile alınır; Arapça harf birleşmesi ve sağdan sola düzen bu yolla doğru korunur. PDF seçildiğinde düzen kendiliğinden tek tablodur.</p>' +
       '<div class="review-row"><button class="btn primary">Dışa aktar</button><button class="btn ghost" type="button" data-close="gen-dialog">Vazgeç</button></div></form>');
-    const f = $('exp-form');
-    const sync = () => { f.querySelector('.exp-critic').hidden = f.kind.value !== 'critic'; if (f.fmt.value === 'pdf') f.layout.value = 'table'; };
+    const f = $('exp-form'), kb = f.querySelector('.exp-kur');
+    // Râvi raporu: oluşturucu (bölümler, süzgeçler, önizleme, şablon)
+    let cfg = kurCfg(store.get(KUR_SON, null)), acikSuz = new Set(), onT = 0, onSira = 0;
+    const kurCiz = () => { if (f.kind.value !== 'narrator') { kb.innerHTML = ''; return; } kb.innerHTML = kurHTML(n, cfg); for (const id of acikSuz) { const el = kb.querySelector('[data-kb="' + id + '"] .kur-suz'), bt = kb.querySelector('[data-ksuz="' + id + '"]'); if (el) { el.hidden = false; bt.setAttribute('aria-expanded', 'true'); } } onizle(); };
+    const onizle = () => { clearTimeout(onT); onT = setTimeout(async () => { const k = ++onSira, el = $('kur-onizleme'); if (!el) return;
+      try { const d = await kurRapor(n, cfg, 'sections'); if (k === onSira && $('kur-onizleme')) $('kur-onizleme').innerHTML = htmlBody(d); } catch (err) { if ($('kur-onizleme')) $('kur-onizleme').innerHTML = '<p class="hint">Önizleme hazırlanamadı: ' + esc(err.message || err) + '</p>'; } }, 220); };
+    const hazirla = async () => {   // dış kaynak ve rivayet dizini gelince süzgeç seçenekleri dolar
+      for (let i = 0; i < 50 && disKayit(n) && !disVeri(n); i++) await new Promise(r => setTimeout(r, 300));
+      for (const b of KUR) if (b.hazir && b.varmi(n)) { try { await b.hazir(n); } catch (e) { } }
+      if ($('exp-form') === f) kurCiz();
+    };
+    const kurOku = el => { const id = el.dataset.kf, k = el.dataset.kk, F = cfg.f[id] = cfg.f[id] || {};
+      if (el.type === 'checkbox') F[k] = [...kb.querySelectorAll('[data-kf="' + id + '"][data-kk="' + k + '"]')].filter(x => x.checked).map(x => x.value); else F[k] = el.value; };
+    kb.onclick = e => {
+      const t = e.target, tasi = (id, y) => { const i = cfg.sira.indexOf(id), j = i + y; if (j < 0 || j >= cfg.sira.length) return; [cfg.sira[i], cfg.sira[j]] = [cfg.sira[j], cfg.sira[i]]; kurCiz(); };
+      if (t.dataset.kyukari) return tasi(t.dataset.kyukari, -1);
+      if (t.dataset.kasagi) return tasi(t.dataset.kasagi, 1);
+      if (t.dataset.ksuz) { const id = t.dataset.ksuz, el = kb.querySelector('[data-kb="' + id + '"] .kur-suz'); el.hidden = !el.hidden; t.setAttribute('aria-expanded', String(!el.hidden)); if (el.hidden) acikSuz.delete(id); else acikSuz.add(id); return; }
+      if (t.hasAttribute('data-ksakla')) { const ad = (prompt('Şablon adı (ör. Hoca–rivayet raporu):') || '').trim(); if (!ad) return; const S = store.get(KUR_SABLON, {}); S[ad] = JSON.parse(JSON.stringify(cfg)); store.set(KUR_SABLON, S); kurCiz(); kb.querySelector('[data-ksablon]').value = ad; toast('“' + ad + '” şablonu saklandı (bu tarayıcıda).'); return; }
+      if (t.hasAttribute('data-ksil')) { const ad = kb.querySelector('[data-ksablon]').value; if (!ad) { toast('Önce silinecek şablonu seçin.'); return; } const S = store.get(KUR_SABLON, {}); delete S[ad]; store.set(KUR_SABLON, S); kurCiz(); toast('“' + ad + '” şablonu silindi.'); return; }
+    };
+    const sync = () => { f.querySelector('.exp-critic').hidden = f.kind.value !== 'critic'; $('gen-dialog').classList.toggle('genis', f.kind.value === 'narrator'); if (f.fmt.value === 'pdf') f.layout.value = 'table'; };
     f.onchange = async e => {
+      if (e.target.dataset.kac) { const id = e.target.dataset.kac; cfg.acik = cfg.acik.filter(x => x !== id).concat(e.target.checked ? [id] : []); onizle(); return; }
+      if (e.target.dataset.kf) { kurOku(e.target); onizle(); return; }
+      if (e.target.dataset.ksablon !== undefined) { const S = store.get(KUR_SABLON, {}), v = e.target.value; if (v && S[v]) { cfg = kurCfg(JSON.parse(JSON.stringify(S[v]))); kurCiz(); kb.querySelector('[data-ksablon]').value = v; } return; }
+      if (e.target.name === 'kind') { sync(); kurCiz(); return; }
       if (e.target.name === 'scope') { const sc = f.scope.value; if (!corpusReady(sc)) { f.critic.disabled = true; while (!corpusReady(sc)) await buildCorpus(sc); f.critic.disabled = false; } const sel = f.critic.value; f.critic.innerHTML = criticOptions(sc).map(([c, k]) => '<option value="' + esc(c) + '"' + (c === sel ? ' selected' : '') + '>' + esc(crName(c, c)) + ' · ' + k + ' hüküm</option>').join(''); }
       sync();
     };
-    sync();
+    sync(); kurCiz(); if (f.kind.value === 'narrator') hazirla(); else f.kind.forEach(r => r.addEventListener('change', () => { if (f.kind.value === 'narrator') hazirla(); }, { once: true }));
+    f.oninput = e => { if (e.target.dataset.kf && e.target.type === 'number') { kurOku(e.target); onizle(); } };
     f.onsubmit = async e => {
       e.preventDefault();
       const fmt = f.fmt.value, layout = fmt === 'pdf' ? 'table' : f.layout.value;
       let doc;
       if (f.kind.value === 'critic') { if (!f.critic.value) { toast('Bu kapsamda münekkit yok.', true); return; } doc = criticReport(f.critic.value, f.scope.value, layout); }
-      else doc = narratorReport(NBYID[S.nid], layout);
+      else { store.set(KUR_SON, cfg); doc = await kurRapor(n, cfg, layout); }
       $('gen-dialog').close();
       exportDoc(doc, fmt);
     };
@@ -7649,7 +7792,7 @@ const RAPOR = (() => {
     else printDoc(doc);
     logAct('dışa-aktar', doc.title + ' · ' + ({ md: 'Markdown', html: 'HTML', docx: 'Word', pdf: 'PDF' }[fmt] || fmt), { pkg: PK.id });
   }
-  return { open, criticReport, narratorReport, toMarkdown, toHTML, toDocx, zipStore, exportDoc };
+  return { open, criticReport, narratorReport, kurRapor, KUR, toMarkdown, toHTML, toDocx, zipStore, exportDoc };
 })();
 
 </script>
