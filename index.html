@@ -6,7 +6,7 @@
 <title>Cerh-Taʿdîl · Kaynak Kontrolü</title>
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self' https://api.github.com https://generativelanguage.googleapis.com; img-src data:; base-uri 'none'; form-action 'none'">
 <meta name="generator" content="cerh-tadil/build.py CTX 2.0.0">
-<meta name="cerh-motor" content="f987c723e9c3809b">
+<meta name="cerh-motor" content="6fdb869b8642689b">
 <style>
 /* =========================================================
    Cerh-Ta‘dîl · Kaynak Kontrolü — arayüz stilleri
@@ -5179,6 +5179,23 @@ const LEXBYID = Object.fromEntries(CTX.LEXICON.map(e => [e.id, e]));
 const MOTOR = (document.querySelector('meta[name="cerh-motor"]') || {}).content || CTX.VERSION;
 function corpusSig0(p) { return [p.kind === 'snapshot' ? RKEY0 : p.kind === 'hh' ? 'hh:' + ((DIS.dizin.hhRavi || {}).liste || {}).blob + ':' + p.rows.length : (VOLS[p.vol] || {}).sha, p.from, p.to, MOTOR, CTKR.BICIM].join('|') + (ELLED.sha ? '|e' + ELLED.sha.slice(0, 12) : ''); }
 function corpusSig(p) { return corpusSig0(p) + '|' + store.get(rkeyOf(p) + ':blkv', 0); }
+// Motor ve elle düzeltme sürümü dışındaki imza: saklı özet depodaki dilim içerik özetiyle (h) hâlâ aynıysa, motor ya da elle
+// dosyası değişmiş olsa bile yeniden indirilmeden kullanılır (23.10.2026; yalnız değişen dilimler iner)
+function sigBase(p) { return [p.kind === 'snapshot' ? RKEY0 : p.kind === 'hh' ? 'hh' : (VOLS[p.vol] || {}).sha, p.from, p.to, CTKR.BICIM, store.get(rkeyOf(p) + ':blkv', 0)].join('|'); }
+// Depodaki dizin güncel motorla ve bu tarayıcıdaki elle dosyasıyla üretilmiş mi? Elle dosyası depodakinden eskiyse önce tazelenir:
+// tutmazlık sayfayı dilimleri kendisi baştan çözümlemeye düşürmesin (23.10.2026)
+async function korpusUygun() {
+  const d = await korpusDizin(); if (!d || d.motor !== MOTOR || d.bicim !== CTKR.BICIM) return null;
+  if ((d.elle || '') !== ELLED.sha) { await elleGetir(true); if ((d.elle || '') !== ELLED.sha) return null; }
+  return d;
+}
+// Saklı özet (tam ya da hafif) imzası eskimiş ama içeriği depodakiyle aynıysa imzası yenilenir; yeniden kullanılabilir mi?
+function ozetYenile(p, rec) {
+  const d = KDEPO.dizin, e = d && p.kind === 'volume' && d.ciltler[p.vol];
+  if (!rec || !rec.h || !e || !e.h || e.h[p.id] !== rec.h || rec.sb !== sigBase(p)) return false;
+  if (d.motor !== MOTOR || d.bicim !== CTKR.BICIM || (d.elle || '') !== ELLED.sha || !CTKR.hazirUygun(revOf(p))) return false;
+  rec.sig = corpusSig(p); return true;
+}
 /* ---------- Depodaki hazır özet (kaynak/korpus; tools/korpus-hazirla.js) ----------
    Dilim özetleri sözlük ya da motor değiştikçe depoda yeniden üretilir; ortak kayıt bağlıysa tarayıcı çözümlemeyi
    kendisi yapmaz, cildin hazır özetini indirir. Kullanılması için motor özeti, cilt dosyasının SHA-256’sı ve dilim
@@ -5209,10 +5226,10 @@ function elleUygula(d, sha) {
   CTKR.setElle(d); ELLED.sha = sha || '';
   if (SNAP) { prepare(SNAP); renderAll(); }
 }
-async function elleGetir() {
+async function elleGetir(zorla) {
   if (!ELLED.sha) { try { const r = await IDB.get('harf', 'elle'); if (r && r.data && r.sha) elleUygula(r.data, r.sha); } catch (e) { } }
   const c = ortakCfg(); if (!c || !AUTH.me()) return;
-  if (Date.now() - ELLED.at < 600000) return; ELLED.at = Date.now();
+  if (!zorla && Date.now() - ELLED.at < 600000) return; ELLED.at = Date.now();
   try {
     const gh = ORT.client(c), m = await gh.meta(ELLE_YOL);
     if (!m || !m.sha) { elleUygula(null, ''); return; }
@@ -5237,12 +5254,33 @@ function korpusCilt(e) {
 async function hazirOzet(p) {
   if (p.kind !== 'volume' || !VOLS[p.vol]) return null;
   const R = revOf(p); if (!CTKR.hazirUygun(R)) return null;
-  const d = await korpusDizin(); if (!d || d.motor !== MOTOR || d.bicim !== CTKR.BICIM || (d.elle || '') !== ELLED.sha) return null;
+  const d = await korpusUygun(); if (!d) return null;
   const e = d.ciltler[p.vol]; if (!e || e.sha256 !== VOLS[p.vol].sha) return null;
   const V = await korpusCilt(e), r = V && V.paketler && V.paketler[p.id];
   if (!r || r.sig0 !== corpusSig0(p).replace(/\|e[0-9a-f]{12}$/, '')) return null;
-  const rec = Object.assign({ id: p.id, sig: corpusSig(p) }, CTKR.kaldirileniAyikla(r, R)); delete rec.sig0;
+  const rec = Object.assign({ id: p.id, sig: corpusSig(p), sb: sigBase(p) }, CTKR.kaldirileniAyikla(r, R)); delete rec.sig0;
   return rec;
+}
+// Depodaki hafif özet (kaynak/korpus/hafif): liste ve rapor sayfaları için; tam özetin yaklaşık onda biri
+function korpusHafif(e) {
+  if (KDEPO.hafif && KDEPO.hafif.blob === e.hafif.blob) return KDEPO.hafif.p;
+  const c = ortakCfg(); if (!c) return Promise.resolve(null);
+  const pr = (async () => {
+    const t = await ORT.client(c).blob(e.hafif.blob);
+    if (typeof t !== 'string' || await ORT.blobSha(t) !== e.hafif.blob) throw Error('hafif özet dizindeki özetle tutmuyor');
+    return JSON.parse(t);
+  })().catch(x => { KDEPO.err = x.message || String(x); KDEPO.hafif = null; return null; });
+  KDEPO.hafif = { blob: e.hafif.blob, p: pr }; return pr;
+}
+async function hazirHafif(p) {
+  if (p.kind !== 'volume' || !VOLS[p.vol]) return null;
+  const R = revOf(p); if (!CTKR.hazirUygun(R)) return null;
+  const d = await korpusUygun(); if (!d) return null;
+  const e = d.ciltler[p.vol]; if (!e || !e.hafif || e.sha256 !== VOLS[p.vol].sha) return null;
+  const V = await korpusHafif(e), r = V && V.paketler && V.paketler[p.id];
+  if (!r || r.sig0 !== corpusSig0(p).replace(/\|e[0-9a-f]{12}$/, '')) return null;
+  const L = Object.assign({ id: p.id + '#satir', sig: corpusSig(p), sb: sigBase(p) }, CTKR.hafifAyikla(r, R)); delete L.sig0;
+  return L;
 }
 function compactPackage(p) {
   const rec = CTKR.ozet(Object.values(packageData(p).narrators), revOf(p));
@@ -5256,10 +5294,7 @@ function compactPackage(p) {
 const SATIR = { recs: {}, loaded: false, job: null, again: false };
 const CST = new Map(), SUMC = new Map();   // dilim → inceleme durumu / satır özetleri (önbellek)
 function dropChunkCaches(id) { HYD.delete(id); CST.delete(id); SUMC.delete(id); LSTC.delete(id); CRITC = CRITF = null; }
-function lightOf(rec) {
-  return { id: rec.id + '#satir', sig: rec.sig, blocks: rec.blocks, hit: rec.hit, nc: rec.sts.filter(x => x.critic).length, rows: rec.rows,
-    sts: rec.sts.map(x => [x.uid, x.seq, x.critic || '', x.kind, x.severity, x.tMax, x.cMax, x.counts ? 1 : 0, x.flags || [], x.mufassar || '', x.sebebs || [], x.phrase || '', (x.terms || []).map(t => t.id), x.critic_written || '', x.question ? 1 : 0, x.confidence ?? 1, x.source || '', x.bid ?? null, x.type || '']) };
-}
+function lightOf(rec) { return Object.assign({ id: rec.id + '#satir', sig: rec.sig, sb: rec.sb, h: rec.h }, CTKR.hafif(rec)); }
 // Dilimin depodaki inceleme kaydından: râvi durumları, râvi başına not sayısı, incelenen hüküm sayısı
 function chunkState(p) {
   let c = CST.get(p.id); if (c) return c;
@@ -5323,19 +5358,43 @@ async function runIndex() {
     await Promise.all(PKGS.filter(p => !SATIR.recs[p.id]).map(p => IDB.get('dizin', p.id + '#satir').then(r => { if (r && r.rows) SATIR.recs[p.id] = r; }).catch(() => { })));
     railDirty();
   }
+  try { await korpusUygun(); } catch (e) { }
   for (;;) {
     const p = PKGS.find(x => x !== PK && !(SATIR.recs[x.id] && SATIR.recs[x.id].sig === corpusSig(x)));
     if (!p) break;
     await idle();
     if (p === PK || !PKGS.includes(p)) continue;   // beklerken açılmış ya da kaldırılmış olabilir
-    const sig = corpusSig(p);
-    let rec = KORPUS.recs[p.id] && KORPUS.recs[p.id].sig === sig ? KORPUS.recs[p.id] : null;
-    if (!rec) { try { const c = await IDB.get('dizin', p.id); if (c && c.sig === sig) rec = c; } catch (e) { } }
-    if (p === PK) continue;
-    if (!rec) { rec = await hazirOzet(p) || compactPackage(p); if (p === PK) continue; try { await IDB.put('dizin', rec); } catch (e) { } }
-    keepLight(p, rec);
+    await hafifHazirla(p);
     railDirty();
   }
+}
+// Dilimin hafif özeti: saklı olan (imzası yenilenebiliyorsa) → tam özetten → depodaki hafif özet → depodaki tam özet ya da tarayıcıda çözümleme
+async function hafifHazirla(p) {
+  const L0 = SATIR.recs[p.id];
+  if (L0 && L0.sig !== corpusSig(p) && ozetYenile(p, L0)) { SUMC.delete(p.id); LSTC.delete(p.id); CRITC = null; IDB.put('dizin', L0).catch(() => { }); return; }
+  const sig = corpusSig(p);
+  let rec = KORPUS.recs[p.id] && KORPUS.recs[p.id].sig === sig ? KORPUS.recs[p.id] : null;
+  if (!rec) { try { const c = await IDB.get('dizin', p.id); if (c && (c.sig === sig || ozetYenile(p, c))) rec = c; } catch (e) { } }
+  if (p === PK) return;
+  if (!rec) { const L = await hazirHafif(p); if (L && p !== PK) { SATIR.recs[p.id] = L; SUMC.delete(p.id); LSTC.delete(p.id); CRITC = null; IDB.put('dizin', L).catch(() => { }); return; } }
+  if (!rec) { rec = await hazirOzet(p) || compactPackage(p); if (p === PK) return; try { await IDB.put('dizin', rec); } catch (e) { } }
+  keepLight(p, rec);
+}
+// Kapsamın hafif özetleri (liste ve rapor sayfaları): tam özeti beklemez
+function buildLight(scope, onStep) {
+  if (SATIR.hafifIs) return SATIR.hafifIs;
+  SATIR.hafifIs = (async () => {
+    try { await korpusUygun(); } catch (e) { }
+    const need = scopePkgs(scope).filter(p => p !== PK && !(SATIR.recs[p.id] && SATIR.recs[p.id].sig === corpusSig(p)));
+    KORPUS.total = need.length; KORPUS.done = 0;
+    for (const p of need) {
+      if (p !== PK && PKGS.includes(p) && !(SATIR.recs[p.id] && SATIR.recs[p.id].sig === corpusSig(p))) await hafifHazirla(p);
+      KORPUS.done++; if (onStep) onStep();
+      await new Promise(r => setTimeout(r, 0));
+    }
+    LEXC = CRITC = null; railDirty();
+  })().finally(() => { SATIR.hafifIs = null; SATIR.sonDeneme = Date.now(); });
+  return SATIR.hafifIs;
 }
 function keepLight(p, rec) { const L = lightOf(rec); SATIR.recs[p.id] = L; SUMC.delete(p.id); LSTC.delete(p.id); CRITC = null; IDB.put('dizin', L).catch(() => { }); }
 function scopePkgs(scope) { return scope === 'vol' ? PKGS.filter(p => p.vol === PK.vol) : PKGS; }
@@ -5350,7 +5409,8 @@ function buildCorpus(scope, onStep) {
       if (p === PK) { KORPUS.done++; continue; }   // beklerken açılmış olabilir: açık dilim canlı veriden okunur
       const sig = corpusSig(p);
       let rec = cache[p.id] && cache[p.id].sig === sig ? cache[p.id] : null;
-      if (!rec) { rec = await hazirOzet(p) || compactPackage(p); IDB.put('dizin', rec).catch(() => { }); }   // yazma beklenmez (şifreleme arka planda)
+      if (!rec && cache[p.id]) { try { await korpusUygun(); } catch (e) { } if (ozetYenile(p, cache[p.id])) { rec = cache[p.id]; IDB.put('dizin', rec).catch(() => { }); } }   // içerik aynı: indirilmez, imzası yenilenir
+      if (!rec) { try { await korpusUygun(); } catch (e) { } rec = await hazirOzet(p) || compactPackage(p); IDB.put('dizin', rec).catch(() => { }); }   // yazma beklenmez (şifreleme arka planda)
       if (!(SATIR.recs[p.id] && SATIR.recs[p.id].sig === sig)) keepLight(p, rec);
       KORPUS.recs[p.id] = rec; KORPUS.done++; LEXC = CRITC = CRITF = null;
       if (onStep) onStep();
@@ -5483,7 +5543,7 @@ UI.csort = UI.csort || 'vefat';
 S.critTab = S.critTab || 'hukum';
 // Hafif özetten hüküm nesneleri (sayım için gereken alanlar; inceleme kararları uygulanır, HH hükümleri ve araştırmacı eklemeleriyle)
 function lightSts(p) {
-  const L = SATIR.recs[p.id]; if (!L || L.sig !== corpusSig(p)) return null;
+  const L = SATIR.recs[p.id]; if (!L || (L.sig !== corpusSig(p) && !SATIR.eski)) return null;
   const c = LSTC.get(p.id); if (c && c.L === L) return c.out;
   const R = revOf(p), out = [], nn = new Map();
   const nOf = (seq, name) => { let n = nn.get(seq); if (!n) nn.set(seq, n = { id: nidOf(p, seq), source_sequence: seq, effective: { canonical_name: name || '' } }); return n; };
@@ -5525,6 +5585,15 @@ function critPrepare(el, then) {
   el.innerHTML = '<div class="card" style="max-width:560px"><h3>Münekkit verisi hazırlanıyor…</h3><span class="pkg-prog" style="width:100%;height:8px"><i id="corp-bar" style="width:0%"></i></span><div class="hint" id="corp-txt" style="margin-top:6px">Hazırlanıyor…</div><div class="hint">Dilim özetleri ortak kayıt bağlıysa depodaki hazır özetten alınır, değilse bu tarayıcıda bir kez çözümlenir; ikisi de bu tarayıcıda saklanır, sonraki açılışlarda yalnız okunur.</div></div>';
   buildCorpus(S.scope, () => { const bar = $('corp-bar'), t = $('corp-txt'); const r = KORPUS.done / Math.max(1, KORPUS.total); if (bar) bar.style.width = (r * 100) + '%'; if (t) t.textContent = '%' + Math.floor(r * 100); }).then(then);
 }
+// Liste ve rapor sayfaları için: yalnız hafif özetler hazırlanır (tam özet beklenmez)
+function lightPrepare(el, then) {
+  el.innerHTML = '<div class="card" style="max-width:560px"><h3>Veriler hazırlanıyor…</h3><span class="pkg-prog" style="width:100%;height:8px"><i id="corp-bar" style="width:0%"></i></span><div class="hint" id="corp-txt" style="margin-top:6px">Hazırlanıyor…</div><div class="hint">Liste ve rapor için hafif özetler depodan alınır (ilk açılışta birkaç saniye); bu tarayıcıda saklanır, sonraki açılışlarda yalnız değişen dilimler iner.</div></div>';
+  buildLight(S.scope, () => { const bar = $('corp-bar'), t = $('corp-txt'); const r = KORPUS.done / Math.max(1, KORPUS.total); if (bar) bar.style.width = (r * 100) + '%'; if (t) t.textContent = '%' + Math.floor(r * 100); }).then(then);
+}
+// Güncelleme inerken sayfa önceki (bu tarayıcıda saklı) özetlerle açılır; bitince kendiliğinden yenilenir (23.10.2026)
+function eskiVarMi(scope) { return Date.now() - (SATIR.sonDeneme || 0) > 5000 && scopePkgs(scope).every(p => p === PK || SATIR.recs[p.id]); }   // az önce güncellenip yine eksikse döngüye girilmez
+function eskiyleGoster(fn) { SATIR.eski = true; try { return fn(); } finally { SATIR.eski = false; } }
+function guncellemeNotu() { return '<div class="note" id="guncel-not" style="margin-bottom:8px"><b>Veriler güncelleniyor…</b> Şimdilik bu tarayıcıda saklı önceki sürüm gösteriliyor; yeni sürüm inince sayfa kendiliğinden yenilenir.</div>'; }
 function critFiltered(D) {
   const qn = nz(S.critQ), ql = S.critQ.toLocaleLowerCase('tr'), qk = /^#?(\d+)$/.exec(S.critQ.trim());
   const sorts = { vefat: (a, b) => (a.C.death || 9999) - (b.C.death || 9999) || b.st.length - a.st.length, hukum: (a, b) => b.st.length - a.st.length, ravi: (a, b) => b.narr.size - a.narr.size || b.st.length - a.st.length,
@@ -5548,9 +5617,11 @@ function setCrail(open, focus) { UI.crail = open ? 'open' : 'closed'; saveUI(); 
 function renderCritics() {
   if (isPhone() && !S.critSel && UI.crail !== 'open' && !renderCritics.ph) { renderCritics.ph = 1; UI.crail = 'open'; }
   layoutCrail();
-  const D = critData();
-  if (!D) { $('clist').innerHTML = ''; $('crail-head').innerHTML = ''; critPrepare($('critics-body'), renderCritics); return; }
+  let D = critData(), eski = false;
+  if (!D && eskiVarMi(S.scope)) { D = eskiyleGoster(() => { const src = critSrcLight(S.scope); return src ? critPrep(criticAgg(src)) : null; }); eski = !!D; }
+  if (!D) { $('clist').innerHTML = ''; $('crail-head').innerHTML = ''; lightPrepare($('critics-body'), renderCritics); return; }
   renderCritHead(D); renderCritList(D); renderCritCenter(D);
+  if (eski) { const b = $('critics-body'); if (b && !$('guncel-not')) b.insertAdjacentHTML('afterbegin', guncellemeNotu()); buildLight(S.scope).then(() => { if (S.view === 'critics') renderCritics(); }); }
 }
 function renderCritHead(D) {
   const regions = [...new Set(D.all.map(m => m.C.region).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'tr'));
@@ -5873,7 +5944,14 @@ function pct(x) { return (x * 100).toFixed(1).replace('.', ',') + '%'; }
 // (Wilson %95), türe göre dağılım; Râvi 1–50 için eski (SQLite) ayrıştırıcıyla karşılaştırma
 // Tespit raporu hafif özetlerden (SATIR) hesaplanır: tam özeti (KORPUS) beklemez; hafif özeti eksik dilim varsa önce o hazırlanır
 function renderReport() {
-  if (!critSrcLight(S.scope)) { critPrepare($('report-body'), () => { if (S.view === 'report') renderReport(); }); return; }
+  if (!critSrcLight(S.scope)) {
+    if (eskiVarMi(S.scope) && !renderReport.ic) {   // önceki saklı özetlerle hemen göster, güncelleme bitince yenile
+      renderReport.ic = true; try { eskiyleGoster(renderReport); } finally { renderReport.ic = false; }
+      const b = $('report-body'); if (b && !$('guncel-not')) b.insertAdjacentHTML('afterbegin', guncellemeNotu());
+      buildLight(S.scope).then(() => { if (S.view === 'report') renderReport(); }); return;
+    }
+    if (!renderReport.ic) { lightPrepare($('report-body'), () => { if (S.view === 'report') renderReport(); }); return; }
+  }
   const V = {};
   for (const p of scopePkgs(S.scope)) {
     let sts, blocks, hit, nIds, R;
@@ -10093,6 +10171,19 @@ const RAPOR = (() => {
     return { narrators: ns.length, narrator_ids: ns.map(n => n.id), blocks, hit, bmeta, sts, kim: kimlik, rows };
   }
   // Hazır özet bu dilime uygulanabilir mi: dilimde künye ya da metin düzeltmesi yoksa evet (kaldırılan hükümler ayıklanır)
+  /* Hafif özet (23.10.2026): liste ve rapor sayfalarının (Münekkitler listesi, Tespit raporu, râvi listesi) ihtiyacı kadar alan.
+     Sayfadaki lightOf ile depodaki kaynak/korpus/hafif/c<cilt>.json aynı işlevle üretilir; ikisi birebir aynıdır. */
+  function hafif(rec) {
+    return { blocks: rec.blocks, hit: rec.hit, nc: rec.sts.filter(x => x.critic).length, rows: rec.rows,
+      sts: rec.sts.map(x => [x.uid, x.seq, x.critic || '', x.kind, x.severity, x.tMax, x.cMax, x.counts ? 1 : 0, x.flags || [], x.mufassar || '', x.sebebs || [], x.phrase || '', (x.terms || []).map(t => t.id), x.critic_written || '', x.question ? 1 : 0, x.confidence ?? 1, x.source || '', x.bid ?? null, x.type || '']) };
+  }
+  // Kaldırılan hükümler hafif özetten de ayıklanır (kaldirileniAyikla’nın hafif karşılığı)
+  function hafifAyikla(L, R) {
+    const del = R && R.st ? new Set(Object.keys(R.st).filter(k => R.st[k] && R.st[k].v === 'del')) : null;
+    if (!del || !del.size) return L;
+    const sts = L.sts.filter(a => !del.has(a[0]));
+    return Object.assign({}, L, { sts, hit: new Set(sts.map(a => a[17])).size, nc: sts.filter(a => a[2]).length });
+  }
   function hazirUygun(R) { return !R || ((!R.blk || !Object.keys(R.blk).length) && (!R.txt || !Object.keys(R.txt).length)); }
   function kaldirileniAyikla(rec, R) {
     const del = R && R.st ? new Set(Object.keys(R.st).filter(k => R.st[k] && R.st[k].v === 'del')) : null;
@@ -10100,7 +10191,7 @@ const RAPOR = (() => {
     const sts = rec.sts.filter(x => !del.has(x.uid)), bh = new Set(sts.map(x => x.bid));
     return Object.assign({}, rec, { sts, hit: bh.size });
   }
-  return { setElle, elleVefatYok, elleIzBaslat, elleUygula, raviSonrasi, bloklariCozumle, BICIM, HOW_TR, uniq, yearText, stUid, blockOpts, applyBlockFix, analiz, kim, alan, ozet, hazirUygun, kaldirileniAyikla };
+  return { setElle, elleVefatYok, elleIzBaslat, elleUygula, raviSonrasi, bloklariCozumle, BICIM, HOW_TR, uniq, yearText, stUid, blockOpts, applyBlockFix, analiz, kim, alan, ozet, hazirUygun, kaldirileniAyikla, hafif, hafifAyikla };
 });
 
 </script>
