@@ -2547,8 +2547,12 @@ async function disMetinGoster(n, pid, soz) {
     ' <span class="small muted">· c. ' + esc(p[1] == null ? '—' : p[1]) + ' s. ' + esc(p[2] == null ? '—' : p[2]) + ' · HH paragraf #' + pid + '</span></div>' +
     (soz ? '<div class="sec"><h4>Söz</h4><p class="ar dis-quote">' + esc(soz) + '</p></div>' : '') +
     '<div class="ar dis-metin">' + metinIsaret(p[3] || '', core) + '</div>' +
+    '<div class="dis-kunye-satir small" id="dis-kunye-satir"></div>' +
     '<p class="hint">Metin, HH veritabanındaki (programın esas aldığı baskı) paragraftır; cilt ve sayfa o baskıya aittir.</p>';
   const mk = $('gen-body').querySelector('.dis-metin mark'); if (mk) mk.scrollIntoView({ block: 'center' });
+  // Eserin künyesi (HH’nin bildirdiği neşir): metnin altında, kopyalama düğmesiyle
+  kunyeGetir().then(() => { const el = $('dis-kunye-satir'); if (!el) return; const ky = kunyeOf(p[0]);
+    el.innerHTML = ky ? '<b>Künye</b> ' + kunyeBtn(p[0]) + ' <span class="ar">' + esc(ky.kunye) + '</span>' + (p[1] != null ? ' <span class="muted">(c. ' + esc(p[1]) + ', s. ' + esc(p[2] ?? '—') + ')</span>' : '') : '<span class="muted">Bu eserin künyesi HH’de yok (HH ' + esc(p[0]) + ').</span>'; });
 }
 // Kişi kartı (hoca, talebe, münekkit): HH’deki tam kimlik kaydı (kaynak/dis/kart/k<id/200>.json, tıklayınca yüklenir)
 const KART_ALAN = [['name', 'Tam adı'], ['famous_name', 'Şöhreti'], ['kunya', 'Künyesi'], ['laqab', 'Lakabı'], ['nasab', 'Nisbesi'], ['kinship', 'Akrabalık · nesep'],
@@ -2741,6 +2745,17 @@ function kunyeGetir() {
 const kunyeOf = id => KNY.d && KNY.d.kitaplar[String(id)] || null;
 const KITAP_SVG = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2.5 3.2c1.8-.7 3.7-.7 5.5.4v9.2c-1.8-1.1-3.7-1.1-5.5-.4zM13.5 3.2c-1.8-.7-3.7-.7-5.5.4v9.2c1.8-1.1 3.7-1.1 5.5-.4z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>';
 function kunyeBtn(id) { return id == null ? '' : '<button type="button" class="kunye-btn" data-kunye="' + esc(String(id)) + '" title="Eser künyesini kopyala (HH ' + esc(String(id)) + ')" aria-label="Eser künyesini kopyala">' + KITAP_SVG + '</button>'; }
+// HH’den gelen hükmün kaynağı: sözün HH’deki paragrafı sitede açılır (künyesiyle); el-Câmi‘ hükümlerinde düğme yoktur (23.10.2026)
+const HHK = new Map();
+function hhKaynakBtn(s) { if (!s || s.origin !== 'HH' || s.hhSoz == null) return ''; HHK.set(s.uid, s); return '<button type="button" class="btn ghost sm" data-hhkaynak="' + esc(s.uid) + '" title="Sözün geçtiği HH paragrafını aç (eser künyesiyle)">Kaynağı göster</button>'; }
+async function hhKaynakAc(uid) {
+  const s = HHK.get(uid); if (!s) return; const n = s.n;
+  openDialog('Kaynak metin · HH', '<div class="hint">Metin yükleniyor…</div>', true);
+  let V = disVeri(n); for (let i = 0; i < 40 && !V && disKayit(n); i++) { await new Promise(r => setTimeout(r, 250)); V = disVeri(n); }
+  const x = V && (V.hh.sozler || []).find(z => z.id === s.hhSoz);
+  if (!x || !x.p) { $('gen-body').innerHTML = '<div class="note">Bu sözün HH’deki paragrafı bulunamadı' + (V ? '' : ' (dış kaynak verisi yüklenemedi)') + '.</div>'; return; }
+  disMetinGoster(n, x.p, x.t);
+}
 async function panoyaYaz(t) {
   try { await navigator.clipboard.writeText(t); return true; } catch (e) { }
   const a = document.createElement('textarea'); a.value = t; a.style.position = 'fixed'; a.style.opacity = '0'; document.body.appendChild(a); a.select();
@@ -2902,7 +2917,7 @@ function hhSozlerHTML(n, V) {
       s.m.map(m => { const p = disKisi(V, m[1]); return '<span class="small muted">söyleyen:</span> ' + (p ? disKisiBtn(Object.assign({}, p, { ad: m[0] || p.ad })) : '<span class="ar">' + esc(m[0] || '?') + '</span>') + (p && p.vefat ? ' <span class="small muted">(ö. ' + p.vefat + ')</span>' : '') + (m[2] ? ' <span class="small muted">· nakleden:</span> <span class="ar">' + esc(m[2]) + '</span>' : ''); }).join(' <span class="muted">|</span> ') +
       ' ' + kodlar(['HH'].concat(ck ? ['SC'] : [])) + '</header><p class="ar dis-quote">' + esc(s.t) + '</p>' +
       ((s.l || []).length ? '<div class="small">' + s.l.map(([t, c]) => '<span class="tag ' + (c === 1 ? 'ok' : c === 3 ? 'bad' : '') + ' ar" title="HH’deki cerh–ta‘dîl lafzı">' + esc(t) + '</span>').join(' ') + '</div>' : '') +
-      '<div class="dis-src">' + (k ? disAr(k.ad) + (k.muellif ? ' · ' + disAr(k.muellif) : '') + ' <span class="small muted">c. ' + esc(s.k[1] ?? '—') + ' s. ' + esc(s.k[2] ?? '—') + '</span>' : '<span class="small muted">kaynağı belirtilmemiş</span>') +
+      '<div class="dis-src">' + (k ? disAr(k.ad) + (k.muellif ? ' · ' + disAr(k.muellif) : '') + ' <span class="small muted">c. ' + esc(s.k[1] ?? '—') + ' s. ' + esc(s.k[2] ?? '—') + '</span> ' + kunyeBtn(s.k[0]) : '<span class="small muted">kaynağı belirtilmemiş</span>') +
       (s.p ? ' <button class="btn ghost sm" data-diss="' + s.id + '">Kaynağı göster</button>' : '') + '</div></article>';
   };
   // Sözler hüküm olarak yukarıda münekkitlerin görüşleri arasındadır; burada yalnız tam metinleri (aranabilir, kapalı gelir)
@@ -3309,7 +3324,7 @@ function hhPopHTML(s) {
     '<div class="badges">' + kindTag(k, s.type) + '<span class="tag">' + sevText(s) + '</span>' + (s.mufassar ? '<span class="tag">' + esc(s.mufassar) + '</span>' : '') + (eCounts(s) ? '' : '<span class="tag warn">sayılmaz</span>') + '</div>' +
     (eCounts(s) ? '' : '<div class="note" style="margin-top:6px">Sayıma girmez: ' + esc(sayilmamaSebebi(s)) + '.</div>') +
     '<dl class="kv" style="margin-top:10px"><dt>Münekkit</dt><dd>' + esc(C ? C.tr : (s.critic_written || '—')) + (C && C.death ? ' · ö. ' + C.death : '') + ' <span class="ar">' + esc(s.critic_written || '') + '</span></dd>' +
-    '<dt>Kaynak</dt><dd>' + kod('HH') + ' HH’deki cerh–ta‘dîl sözü (söz #' + s.hhSoz + ')' + (s.transmitter ? ' · nakleden: <span class="ar">' + esc(s.transmitter) + '</span>' : '') + '</dd><dt>Mertebe</dt><dd>' + esc(s.grade) + '</dd></dl>' +
+    '<dt>Kaynak</dt><dd>' + kod('HH') + ' ' + (s.b.kitap != null ? '<span class="ar">' + esc(srcShort(s.b)) + '</span> ' + esc(s.b.effective.source_locator || '') + ' ' + kunyeBtn(s.b.kitap) + ' · ' : '') + 'HH’deki cerh–ta‘dîl sözü (söz #' + s.hhSoz + ')' + (s.transmitter ? ' · nakleden: <span class="ar">' + esc(s.transmitter) + '</span>' : '') + ' ' + hhKaynakBtn(s) + '</dd><dt>Mertebe</dt><dd>' + esc(s.grade) + '</dd></dl>' +
     '<p class="hint">Sözün tam metni ve kaynağı râvinin Hükümler sekmesinde, münekkidin başlığı altındadır.</p>' +
     '<div class="row" style="margin-top:12px;justify-content:flex-end"><button class="btn primary" data-goto="' + esc(gotoAttr(s)) + '">Detaya git → râvinin Hükümler sekmesi</button></div>';
 }
@@ -3374,12 +3389,12 @@ function gorusHH(scSts, H, srcV) {
 }
 function hhHukumSatiri(h, munSutun) {
   const s = h.soz, k = s.k ? disKitap(s.k[0]) : null, x = h.st, rel = s.m.map(m => m[2]).filter(Boolean);
-  return '<tr class="hh-row" style="cursor:default"><td class="num">' + kod('HH') + (x && x.hhAyni && x.hhAyni.length ? '<div class="small muted" title="Aynı hüküm HH’de başka eserden de aktarılmış (söz #' + x.hhAyni.join(', #') + '); bir kez sayılır">×' + (x.hhAyni.length + 1) + '</div>' : '') + '</td><td><div class="ar" style="font-size:calc(15px * var(--yb))">' + esc(k ? k.ad : '—') + '</div>' + (s.k ? '<div class="small muted">c. ' + esc(s.k[1] ?? '—') + ' s. ' + esc(s.k[2] ?? '—') + '</div>' : '') + '</td>' +
+  return '<tr class="hh-row" style="cursor:default"><td class="num">' + kod('HH') + (x && x.hhAyni && x.hhAyni.length ? '<div class="small muted" title="Aynı hüküm HH’de başka eserden de aktarılmış (söz #' + x.hhAyni.join(', #') + '); bir kez sayılır">×' + (x.hhAyni.length + 1) + '</div>' : '') + '</td><td><div class="ar" style="font-size:calc(15px * var(--yb))">' + esc(k ? k.ad : '—') + (k ? ' ' + kunyeBtn(s.k[0]) : '') + '</div>' + (s.k ? '<div class="small muted">c. ' + esc(s.k[1] ?? '—') + ' s. ' + esc(s.k[2] ?? '—') + '</div>' : '') + '</td>' +
     (munSutun ? '<td><div>' + esc(crName(h.critic, h.critic) || '—') + '</div><div class="ar small muted" style="font-size:calc(14px * var(--yb))">' + esc(s.m.map(m => m[0]).filter(Boolean).join('، ')) + '</div></td>' : '') +
     '<td class="ar lafiz">' + esc(x ? x.phrase : sozCekirdekYazi(s.t)) + (x && x.phrase !== s.t.trim() ? '<div class="small muted ar">' + esc(s.t.slice(0, 160)) + (s.t.length > 160 ? '…' : '') + '</div>' : '') + '</td>' +
     '<td>' + kindTag(x ? x.kind : h.kind, x ? x.type.split(' /')[0] : 'HH: ' + (SINIF_TR[s.s] || ['?'])[0]) + (x && (x.flags || []).includes('hh-sinif') ? '<div class="small muted" title="' + esc(FLAGTXT['hh-sinif']) + '">HH sınıfından</div>' : '') + (x && x.hhMotor && x.hhMotor[1] !== 'yok' ? '<div class="small muted" title="HH esas: motorun okuması farklıydı">motor: ' + esc([x.hhMotor[0] ? crName(x.hhMotor[0], x.hhMotor[0]) : '', KNAME[x.hhMotor[1]] || x.hhMotor[1]].filter(Boolean).join(' · ')) + '</div>' : '') + '</td><td>' + (x ? sevScale(x) : '<span class="small muted">lafız tanınmadı</span>') + '</td>' +
     '<td class="small">' + esc(x ? (x.sebebs || []).map(c => CTX.SEBEB[c]).join(', ') : '') + '</td><td class="small">' + (rel.length ? 'nakleden: <span class="ar">' + esc(rel.join('، ')) + '</span>' : '') + '</td>' +
-    '<td class="small">' + (h.ck ? kodlar(['SC']) + ' el-Câmi‘de de geçiyor' : '<span class="muted">yalnız HH</span>') + '</td><td>' + (s.p ? '<button class="btn ghost sm" data-diss="' + s.id + '">Kaynak</button>' : '') + '</td></tr>';
+    '<td class="small">' + (h.ck ? kodlar(['SC']) + ' el-Câmi‘de de geçiyor' : '<span class="muted">yalnız HH</span>') + '</td><td>' + (s.p ? '<button class="btn ghost sm" data-diss="' + s.id + '">Kaynağı göster</button>' : '') + '</td></tr>';
 }
 const sozCekirdekYazi = t => (t.includes(':') ? t.split(':').slice(1).join(':') : t).trim();
 function disHukumBolumu(n) {
@@ -4483,7 +4498,7 @@ function renderRulingsTab(n) {
     viewMenu([['data-act="counted"', 'Yalnız sayılanlar', UI.countedOnly, 'Sayıma girmeyen kayıtları gizle'], ['data-act="old"', 'Eski tespitler', UI.showOld, 'SQLite ayrıştırıcısıyla karşılaştırma']]) + hintBtn('hukum') + '</div><div class="pane">' +
     denetimOzetHTML(n) + metinOzetHTML(n) + icOzetHTML(n) + hintP('hukum', 'Satıra tıklayınca hüküm sağdaki panelde açılır; aynı satıra yeniden tıklayınca kaynak metindeki yerine gidilir. Sağdaki düğmeler: ✓ doğru, ✗ yanlış, ✎ düzelt (tür, münekkit, şiddet, lafız/pasaj, sened, aktaran, sebep — sağdaki panelde açılır), 🗑 kaldır.') + '<div class="wrap">';
   const row = (s, grouped) => '<tr data-st="' + esc(s.uid) + '" aria-current="' + (S.sel && S.sel.id === s.uid) + '" class="' + (eCounts(s) ? '' : 'dim') + '">' +
-    '<td class="num">' + s.b.block_order + '</td><td><div class="ar" style="font-size:calc(15px * var(--yb))">' + esc(srcShort(s.b)) + (s.b.kitap != null ? ' ' + kunyeBtn(s.b.kitap) : '') + '</div><div class="small muted">' + esc(s.b.effective.source_locator || '') + '</div>' + hhAyniRozet(s) + '</td>' +
+    '<td class="num">' + s.b.block_order + '</td><td><div class="ar" style="font-size:calc(15px * var(--yb))">' + esc(srcShort(s.b)) + (s.b.kitap != null ? ' ' + kunyeBtn(s.b.kitap) : '') + '</div><div class="small muted">' + esc(s.b.effective.source_locator || '') + '</div>' + (s.origin === 'HH' ? '<div>' + hhKaynakBtn(s) + '</div>' : '') + hhAyniRozet(s) + '</td>' +
     (grouped ? '' : '<td><div>' + esc(crLabel(s)) + '</div>' + (s.critic_written && s.critic_written !== 'قلت' ? '<div class="ar small muted" style="font-size:calc(14px * var(--yb))">' + esc(s.critic_written) + '</div>' : '') + gorusRozet(s) + '</td>') +
     '<td class="ar lafiz">' + (s.phrase ? lafizHTML(s) : '<span class="muted small">(zımnî)</span>') + '</td>' +
     '<td>' + kindTag(eKind(s), eType(s).replace(' / İnsan kontrolü gerekli', '')) + (baglamRozet(s) ? '<div>' + baglamRozet(s) + '</div>' : '') + '</td><td data-v="' + (eKind(s) === 'K' ? eTMax(s) - eCMax(s) : eSev(s)) + '">' + sevScale(s) + '</td>' +
@@ -5091,7 +5106,7 @@ function inspStatement(s) {
   if (g && g.sts.length > 1) out += '<div class="sec"><h4>Bu görüşün nakilleri <span class="muted">' + g.sts.length + ' nakil · tek görüş sayılır</span> ' + gorusEtiket(g) + '</h4>' +
     g.sts.map(x => '<div class="gnakil' + (x === s ? ' cur' : '') + '"><button class="linkbtn" data-st="' + esc(x.uid) + '">' + esc(srcShort(x.b)) + '</button> <span class="small muted">blok ' + x.b.block_order + (termSet(x).size < g.T.size ? ' · kısaltılmış' : '') + '</span><div class="ar" style="font-size:calc(19px * var(--yb))">' + esc(x.phrase || '(zımnî)') + '</div></div>').join('') + '</div>';
   out += '<div class="sec"><h4>Nakil</h4><dl class="kv"><dt>Tür</dt><dd>' + esc(s.transmission || '—') + '</dd>' + (s.transmitter ? '<dt>Aktaran</dt><dd>' + esc(crName(s.transmitter, s.transmitter)) + '</dd>' : '') +
-    '<dt>Kaynak eser</dt><dd><span class="ar" style="font-size:calc(19px * var(--yb))">' + esc(srcShort(s.b)) + '</span> ' + esc(s.b.effective.source_locator || '') + (s.b.kitap != null ? ' ' + kunyeBtn(s.b.kitap) : '') + '</dd><dt>Atıf dayanağı</dt><dd>' + esc(BASIS[s.basis] || s.basis) + '</dd>' + (s.formula ? '<dt>Nakil kalıbı</dt><dd class="ar">' + esc(s.formula) + '</dd>' : '') + '</dl>' +
+    '<dt>Kaynak eser</dt><dd><span class="ar" style="font-size:calc(19px * var(--yb))">' + esc(srcShort(s.b)) + '</span> ' + esc(s.b.effective.source_locator || '') + (s.b.kitap != null ? ' ' + kunyeBtn(s.b.kitap) : '') + ' ' + hhKaynakBtn(s) + '</dd><dt>Atıf dayanağı</dt><dd>' + esc(BASIS[s.basis] || s.basis) + '</dd>' + (s.formula ? '<dt>Nakil kalıbı</dt><dd class="ar">' + esc(s.formula) + '</dd>' : '') + '</dl>' +
     '<div class="hint" style="margin-top:6px">Sened / nakil yolu</div>' + (s.chain ? '<div class="ctx" style="font-size:calc(19px * var(--yb))">' + esc(s.chain) + '</div>' + (isnadLinks(s.chain).length > 1 ? '<div class="links ar" dir="rtl" title="Senedin halkaları (yaklaşık)">' + isnadLinks(s.chain).map(x => '<span>' + esc(x) + '</span>').join('<i>←</i>') + '<i>←</i><span class="crit-end">' + esc(eCritic(s) ? crName(eCritic(s), s.critic_written) : s.critic_written || '?') + '</span></div>' : '') : '<div>' + senedHTML(s) + '</div>') + '</div>';
   if (s.sebebs && s.sebebs.length) out += '<div class="sec"><h4>Ta‘n / ta‘dîl sebebi</h4><div class="termchips">' + s.sebebs.map(x => '<span class="tag">' + esc(CTX.SEBEB[x] || x) + '</span>').join('') + '</div></div>';
   const nk = s.origin !== 'user' && nakilOf(s);
@@ -5814,7 +5829,7 @@ function critPopHTML(s) {
     '<div class="badges">' + kindTag(k, eType(s).replace(' / İnsan kontrolü gerekli', ' (insan kontrolü)')) + '<span class="tag">' + sevText(s) + '</span>' + denetimRozet(s) + baglamRozet(s) + (s.mufassar ? '<span class="tag">' + esc(s.mufassar) + '</span>' : '') + (eCounts(s) ? '' : '<span class="tag warn">sayılmıyor</span>') + '</div>' +
     (eCounts(s) ? '' : '<div class="note" style="margin-top:6px">Sayıma girmez: ' + esc(sayilmamaSebebi(s)) + '.</div>') +
     '<dl class="kv" style="margin-top:10px"><dt>Münekkit</dt><dd>' + esc(C ? C.tr : (eCritic(s) || s.critic_written || '—')) + (C && C.death ? ' · ö. ' + C.death : '') + (eCritic(s) || s.critic_written ? ' <span class="ar">' + esc(eCritic(s) || s.critic_written) + '</span>' : '') + '</dd>' +
-    '<dt>Kaynak eser</dt><dd><span class="ar">' + esc(srcShort(s.b)) + '</span> ' + esc(s.b.effective.source_locator || '') + (s.b.kitap != null ? ' ' + kunyeBtn(s.b.kitap) : '') + '</dd>' +
+    '<dt>Kaynak eser</dt><dd><span class="ar">' + esc(srcShort(s.b)) + '</span> ' + esc(s.b.effective.source_locator || '') + (s.b.kitap != null ? ' ' + kunyeBtn(s.b.kitap) : '') + ' ' + hhKaynakBtn(s) + '</dd>' +
     '<dt>Nakil</dt><dd>' + esc(s.transmission || '—') + (s.transmitter ? ' · aktaran: ' + esc(crName(s.transmitter, s.transmitter)) : '') + '</dd>' +
     '<dt>Mertebe</dt><dd>' + esc(s.grade || '—') + '</dd></dl>' +
     (s.chain ? '<div class="hint" style="margin-top:6px">Sened / nakil yolu</div><div class="ctx">' + esc(s.chain) + '</div>' : '') +
@@ -7051,6 +7066,7 @@ function placeMenu(m) {
 }
 document.addEventListener('click', e => {
   const t = e.target;
+  const hk = t.closest('[data-hhkaynak]'); if (hk) { e.preventDefault(); e.stopPropagation(); hhKaynakAc(hk.dataset.hhkaynak); return; }
   const ky = t.closest('[data-kunye]'); if (ky) { e.preventDefault(); e.stopPropagation(); kunyeKopyala(ky.dataset.kunye); return; }
   if (t.closest('[data-kunye-hepsi]')) { kunyeGetir().then(async d => { if (!d) { toast('Künye listesi alınamadı.', true); return; } const L = Object.entries(d.kitaplar).sort((a, b) => a[0] - b[0]).map(([id, k]) => 'HH ' + id + ' — ' + k.kunye); toast(await panoyaYaz(L.join('\n')) ? L.length + ' künye kopyalandı.' : 'Panoya yazılamadı.', false, 4000); }); return; }
   const mb = t.closest('[aria-haspopup="true"][aria-controls]');
