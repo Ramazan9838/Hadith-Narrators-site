@@ -1216,6 +1216,11 @@ tr.mf-on td { background: color-mix(in srgb, #c0392b 6%, transparent); }
 .mrv-liste { margin: 0; padding-inline-start: 1.6em; }
 .mrv-li { padding: 8px 0; border-bottom: 1px solid var(--line); }
 .mrv-metin { font-size: calc(17px * var(--yb, 1)); line-height: 1.9; margin-top: 4px; }
+/* Tablo üstündeki Markdown indirme düğmesi */
+.md-dugme { display: flex; justify-content: flex-end; margin: 2px 0 -2px; }
+.md-dugme .linkbtn { font-size: 12px; color: var(--ink-3); }
+.md-dugme .linkbtn:hover { color: var(--accent); }
+@media print { .md-dugme { display: none; } }
 
 </style>
 </head>
@@ -2742,13 +2747,56 @@ function mervPanel(n, V) {
       ' · hocası: <span class="ar">' + esc(kisi(r[5])) + '</span>' + (r[6] ? ' · talebesi: <span class="ar">' + esc(kisi(r[6])) + '</span>' : '') + '</div>' +
       (m ? (m[1] || m[2] ? '<div class="small muted ar">' + esc([m[1], m[2]].filter(Boolean).join(' · ')) + '</div>' : '') + '<div class="ar mrv-metin">' + esc(m[0]) + '</div>' : '<div class="hint">Metin yükleniyor…</div>') + '</li>'; };
   return '<div id="mrv-panel" class="card mrv-panel"><div class="mrv-bas"><h3 class="panel-title" style="margin:0">Rivayetleri ' + kodlar(['HH']) + ' <span class="muted">' + R.length + ' rivayet' + (R.length !== D.r.length ? ' (toplam ' + D.r.length + ')' : '') + '</span></h3>' +
-    '<button class="btn ghost sm" data-mrvkapat title="Paneli kapat">✕</button></div>' +
+    '<span><button class="btn ghost sm" data-mrvmd title="Süzgeçteki bütün rivayetleri metinleriyle Markdown dosyası olarak indir">⇩ Markdown</button> <button class="btn ghost sm" data-mrvkapat title="Paneli kapat">✕</button></span></div>' +
     '<div class="mrv-sec">' + sec('Kitap', 'kitap', kitL, id => disKitap(id).ad) + sec('Hoca', 'hoca', hocL, kisi) + '</div>' +
     '<ol class="mrv-liste">' + goster.map(satir).join('') + '</ol>' +
     (R.length > goster.length ? '<button class="btn ghost sm" data-mrvdaha>' + Math.min(50, R.length - goster.length) + ' rivayet daha göster (' + (R.length - goster.length) + ' kaldı)</button>' : '') +
     '<p class="hint">Hoca: isnadda râvinin hemen önündeki halka; talebe: hemen ardındaki. Kaynak: Câmiu Hâdimi’l-Haremeyn (33 metin kitabı).</p></div>';
 }
 function mervYenile() { const el = $('mrv-panel'), n = NBYID[S.nid]; if (!el || !n) return; const V = disVeri(n); if (!V) return; const t = document.createElement('div'); t.innerHTML = mervPanel(n, V); el.replaceWith(t.firstElementChild); }
+// Süzgeçteki bütün rivayetler (metinleriyle) Markdown dosyası olarak
+async function mervMarkdown() {
+  const n = NBYID[S.nid], V = n && disVeri(n), st = S.mrv, D = st && mervVeri(st.hh); if (!D) return;
+  const R = D.r.filter(r => (!st.kitap || r[1] === +st.kitap) && (!st.hoca || r[5] === +st.hoca));
+  toast('Markdown hazırlanıyor (' + R.length + ' rivayet)…');
+  await mervPaketleri(R.map(r => r[0]));
+  const kisi = id => id ? (disKisi(V, id) || {}).ad || D.kisi[id] || 'HH #' + id : '—';
+  const ad = n.effective.canonical_name || ('HH ' + st.hh);
+  const L = ['# ' + ad + ' — rivayetleri', '', '- Râvi: ' + ad + ' (HH ' + st.hh + ')', '- Süzgeç: kitap: ' + (st.kitap ? disKitap(+st.kitap).ad : 'tümü') + ' · hoca: ' + (st.hoca ? kisi(+st.hoca) : 'tümü'),
+    '- Rivayet: ' + R.length + (R.length !== D.r.length ? ' (toplam ' + D.r.length + ')' : ''), '- Kaynak: Câmiu Hâdimi’l-Haremeyn (33 metin kitabı); hoca: isnadda râvinin hemen önündeki halka, talebe: hemen ardındaki', '- Tarih: ' + new Date().toLocaleDateString('tr'), ''];
+  R.forEach((r, i) => { const k = disKitap(r[1]), m = mervMetin(r[0]) || ['', '', ''];
+    L.push('## ' + (i + 1) + '. ' + k.ad + (k.muellif ? ' (' + k.muellif + ')' : '') + ' · no ' + (r[2] || '—') + (r[3] != null ? ' · c. ' + r[3] + (r[4] != null ? ', s. ' + r[4] : '') : ''), '',
+      '- Hocası: ' + kisi(r[5]) + (r[6] ? ' · talebesi: ' + kisi(r[6]) : ''), ...(m[1] || m[2] ? ['- ' + [m[1], m[2]].filter(Boolean).join(' · ')] : []), '', '> ' + String(m[0] || '(metin alınamadı)').replace(/\s*\n\s*/g, ' '), ''); });
+  const dosya = 'rivayetler-HH' + st.hh + (st.kitap ? '-k' + st.kitap : '') + (st.hoca ? '-h' + st.hoca : '') + '.md';
+  download(dosya, L.join('\n'), 'text/markdown;charset=utf-8'); logAct('dışa-aktarım', dosya, {});
+}
+// Tablolar Markdown dosyası olarak: sayfadaki her tablonun (table.tbl[data-tid]) üstüne küçük bir düğme konur (23.10.2026)
+function mdHucre(td) { return (td.tagName === 'TH' ? td.textContent : td.innerText || td.textContent || '').replace(/\s*\n\s*/g, ' · ').replace(/\s+/g, ' ').replace(/\|/g, '\\|').trim(); }
+function tabloMarkdown(t) {
+  const bas = [...t.querySelectorAll('thead th')].map(mdHucre), satir = [...t.querySelectorAll('tbody tr')].filter(tr => !tr.hidden && tr.style.display !== 'none').map(tr => [...tr.children].map(mdHucre));
+  const kol = bas.map((_, i) => i).filter(i => bas[i]);   // başlıksız (düğme) sütunlar atlanır
+  const sec = r => '| ' + kol.map(i => r[i] || '').join(' | ') + ' |';
+  return [sec(bas), '| ' + kol.map(() => '---').join(' | ') + ' |', ...satir.map(sec)].join('\n');
+}
+function tabloBaslik(t) {
+  const sec = t.closest('details.fold, section, .card, .lsec'); let h = sec && sec.querySelector('summary h3, h3');
+  if (!h) { let e = (t.closest('.wrap') || t).previousElementSibling; while (e && !/^H[1-4]$/.test(e.tagName) && !e.querySelector('h3')) e = e.previousElementSibling; h = e && (/^H[1-4]$/.test(e.tagName) ? e : e.querySelector('h3')); }
+  return (h ? (h.innerText || h.textContent) : t.dataset.tid).replace(/\s+/g, ' ').trim();
+}
+function tabloMdIndir(t) {
+  const n = S.view === 'desk' ? NBYID[S.nid] : null, bas = tabloBaslik(t);
+  const md = ['# ' + bas, '', ...(n ? ['- Râvi: ' + (n.effective.canonical_name || '') + ' (' + ravNo(n) + ')'] : []), '- Tarih: ' + new Date().toLocaleDateString('tr'), '', tabloMarkdown(t), ''].join('\n');
+  const dosya = (t.dataset.tid || 'tablo') + (n ? '-' + ravNo(n).replace(/\s+/g, '') : '') + '.md';
+  download(dosya, md, 'text/markdown;charset=utf-8'); logAct('dışa-aktarım', dosya, {});
+}
+function mdDugmeEkle() {
+  for (const t of document.querySelectorAll('main table.tbl[data-tid], #app table.tbl[data-tid], .view table.tbl[data-tid]')) {
+    const w = t.closest('.wrap') || t; if (w.previousElementSibling && w.previousElementSibling.classList.contains('md-dugme')) continue;
+    w.insertAdjacentHTML('beforebegin', '<div class="md-dugme"><button class="linkbtn small" data-mdtablo title="Bu tabloyu Markdown dosyası olarak indir">⇩ Markdown</button></div>');
+  }
+}
+let mdZaman = 0;
+new MutationObserver(() => { if (mdZaman) return; mdZaman = requestAnimationFrame(() => { mdZaman = 0; mdDugmeEkle(); }); }).observe(document.documentElement, { childList: true, subtree: true });
 function mervAc(patch) {
   const n = NBYID[S.nid], V = n && disVeri(n), h = mervHH(n, V); if (h == null) return;
   S.mrv = Object.assign(S.mrv && S.mrv.hh === h ? S.mrv : { hh: h, kitap: '', hoca: '' }, patch, { n: 50 });
@@ -6900,6 +6948,8 @@ document.addEventListener('click', e => {
   if (t.closest('[data-tkzload]')) { if (!need('volume')) return; tkzDosyaSec(); return; }
   const mk = t.closest('[data-mrvk]'); if (mk) { mervAc({ kitap: mk.dataset.mrvk }); return; }
   const mh = t.closest('[data-mrvh]'); if (mh) { mervAc({ hoca: mh.dataset.mrvh, kitap: '' }); return; }
+  if (t.closest('[data-mrvmd]')) { mervMarkdown(); return; }
+  const mdt = t.closest('[data-mdtablo]'); if (mdt) { const w = mdt.parentElement.nextElementSibling, tb = w && (w.matches('table') ? w : w.querySelector('table.tbl')); if (tb) tabloMdIndir(tb); return; }
   if (t.closest('[data-mrvkapat]')) { S.mrv = null; mervYenile(); return; }
   if (t.closest('[data-mrvdaha]')) { if (S.mrv) { S.mrv.n = (S.mrv.n || 50) + 50; mervYenile(); } return; }
   const dze = t.closest('[data-dzed]'); if (dze) { if (dze.dataset.dzed && !need('edit')) return; S.dzed = dze.dataset.dzed || null; renderCenter(); return; }
