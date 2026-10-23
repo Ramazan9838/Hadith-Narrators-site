@@ -1246,6 +1246,12 @@ tr.mf-on td { background: color-mix(in srgb, #c0392b 6%, transparent); }
 @media (max-width: 760px) { .kur { grid-template-columns: 1fr; } .kur-suz { grid-template-columns: 1fr; } }
 .kur-onizleme dl.rp-meta { display: grid; grid-template-columns: max-content 1fr; gap: 1px 10px; margin: 4px 0; color: var(--ink-3); }
 .kur-onizleme dl.rp-meta dt { font-weight: 600; } .kur-onizleme dl.rp-meta dd { margin: 0; }
+/* Rapor bölümlerini sürükleme tutamağı */
+.kur-bas > label { flex: 1; }
+.kur-tut { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; margin-inline-end: 4px; color: #a9aeac; cursor: grab; touch-action: none; border-radius: 4px; flex: none; }
+.kur-tut:hover, .kur-tut:focus-visible { color: #7d8381; background: color-mix(in srgb, var(--ink-3) 10%, transparent); outline: none; }
+.kur-b.suruk { opacity: .85; box-shadow: 0 4px 14px rgba(0,0,0,.12); border-color: var(--accent); }
+.kur-b.suruk .kur-tut { cursor: grabbing; }
 
 </style>
 </head>
@@ -7721,8 +7727,8 @@ const RAPOR = (() => {
       const alan = x => x.t === 'not' ? '<span class="hint">' + esc(x.ad) + '</span>' : x.t === 'sayi' || x.t === 'metin' ? '<label>' + esc(x.ad) + '<input type="' + (x.t === 'sayi' ? 'number' : 'text') + '" data-kf="' + id + '" data-kk="' + x.k + '" value="' + esc(f[x.k] ?? '') + '"></label>'
         : x.t === 'coklu' ? '<fieldset class="seg kur-coklu"><legend>' + esc(x.ad) + '</legend>' + x.s.map(([v, l]) => '<label><input type="checkbox" data-kf="' + id + '" data-kk="' + x.k + '" value="' + esc(v) + '"' + (!f[x.k] || !f[x.k].length || f[x.k].includes(v) ? ' checked' : '') + '> ' + esc(l) + '</label>').join('') + '</fieldset>'
         : '<label>' + esc(x.ad) + '<select data-kf="' + id + '" data-kk="' + x.k + '">' + x.s.map(([v, l]) => '<option value="' + esc(v) + '"' + (String(f[x.k] ?? (x.s[0] || [''])[0]) === v ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select></label>';
-      return '<li class="kur-b' + (var_ ? '' : ' bos') + '" data-kb="' + id + '"><div class="kur-bas"><label><input type="checkbox" data-kac="' + id + '"' + (ac && var_ ? ' checked' : '') + (var_ ? '' : ' disabled') + '> ' + esc(b.ad) + (var_ ? '' : ' <span class="muted small">(bu râvide veri yok)</span>') + '</label>' +
-        '<span class="kur-ok"><button type="button" class="linkbtn small" data-kyukari="' + id + '" title="Yukarı taşı">▲</button><button type="button" class="linkbtn small" data-kasagi="' + id + '" title="Aşağı taşı">▼</button>' + (S.length ? ' <button type="button" class="linkbtn small" data-ksuz="' + id + '" aria-expanded="false">Süzgeç ▾</button>' : '') + '</span></div>' +
+      return '<li class="kur-b' + (var_ ? '' : ' bos') + '" data-kb="' + id + '"><div class="kur-bas"><span class="kur-tut" data-ktut="' + id + '" tabindex="0" role="button" aria-label="' + esc(b.ad) + ': sürükleyerek taşı (klavyede ↑ ↓)" title="Basılı tutup sürükleyin"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M3 4.5h10M3 8h10M3 11.5h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span><label><input type="checkbox" data-kac="' + id + '"' + (ac && var_ ? ' checked' : '') + (var_ ? '' : ' disabled') + '> ' + esc(b.ad) + (var_ ? '' : ' <span class="muted small">(bu râvide veri yok)</span>') + '</label>' +
+        '<span class="kur-ok">' + (S.length ? '<button type="button" class="linkbtn small" data-ksuz="' + id + '" aria-expanded="false">Süzgeç ▾</button>' : '') + '</span></div>' +
         (S.length ? '<div class="kur-suz" hidden>' + S.map(alan).join('') + '</div>' : '') + '</li>'; };
     const sab = store.get(sabKey || KUR_SABLON, {});
     return '<div class="kur"><div class="kur-sol"><div class="kur-sablon"><select data-ksablon><option value="">Şablon seç…</option>' + Object.keys(sab).sort().map(k => '<option>' + esc(k) + '</option>').join('') + '</select> <button type="button" class="btn ghost sm" data-ksakla>Şablon olarak sakla</button> <button type="button" class="btn ghost sm" data-ksil>Sil</button></div>' +
@@ -7839,10 +7845,22 @@ const RAPOR = (() => {
     };
     const kurOku = el => { const cfg = C(), id = el.dataset.kf, k = el.dataset.kk, F = cfg.f[id] = cfg.f[id] || {};
       if (el.type === 'checkbox') F[k] = [...kb.querySelectorAll('[data-kf="' + id + '"][data-kk="' + k + '"]')].filter(x => x.checked).map(x => x.value); else F[k] = el.value; };
+    // Sıralama: tutamaktan basılı tutup sürükleme (fare ve dokunmatik); klavyede tutamakta ↑ ↓ (23.10.2026)
+    const siraOku = () => { C().sira = [...kb.querySelectorAll('.kur-liste > [data-kb]')].map(li => li.dataset.kb); };
+    kb.onpointerdown = e => {
+      const h = e.target.closest('[data-ktut]'); if (!h || e.button > 0) return;
+      e.preventDefault(); const li = h.closest('.kur-b'), ol = li.parentElement; li.classList.add('suruk');
+      const hareket = ev => { const y = ev.clientY; for (const o of [...ol.children]) { if (o === li) continue; const r = o.getBoundingClientRect(); if (y < r.top + r.height / 2) { if (li.nextElementSibling !== o) ol.insertBefore(li, o); return; } } if (ol.lastElementChild !== li) ol.appendChild(li); };
+      const bit = () => { document.removeEventListener('pointermove', hareket); document.removeEventListener('pointerup', bit); document.removeEventListener('pointercancel', bit); li.classList.remove('suruk'); siraOku(); onizle(); };
+      document.addEventListener('pointermove', hareket); document.addEventListener('pointerup', bit); document.addEventListener('pointercancel', bit);   // bölüm yer değiştirince imleç tutamaktan çıkar; olaylar belgeden dinlenir
+    };
+    kb.onkeydown = e => {
+      const h = e.target.closest('[data-ktut]'); if (!h || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return;
+      e.preventDefault(); const li = h.closest('.kur-b'), o = e.key === 'ArrowUp' ? li.previousElementSibling : li.nextElementSibling; if (!o) return;
+      if (e.key === 'ArrowUp') li.parentElement.insertBefore(li, o); else li.parentElement.insertBefore(o, li); h.focus(); siraOku(); onizle();
+    };
     kb.onclick = e => {
-      const t = e.target, cfg = C(), tasi = (id, y) => { const i = cfg.sira.indexOf(id), j = i + y; if (j < 0 || j >= cfg.sira.length) return; [cfg.sira[i], cfg.sira[j]] = [cfg.sira[j], cfg.sira[i]]; kurCiz(); };
-      if (t.dataset.kyukari) return tasi(t.dataset.kyukari, -1);
-      if (t.dataset.kasagi) return tasi(t.dataset.kasagi, 1);
+      const t = e.target, cfg = C();
       if (t.dataset.ksuz) { const id = t.dataset.ksuz, el = kb.querySelector('[data-kb="' + id + '"] .kur-suz'); el.hidden = !el.hidden; t.setAttribute('aria-expanded', String(!el.hidden)); if (el.hidden) acikSuz.delete(id); else acikSuz.add(id); return; }
       if (t.hasAttribute('data-ksakla')) { const ad = (prompt('Şablon adı (ör. ' + M().ornek + '):') || '').trim(); if (!ad) return; const S = store.get(M().sab, {}); S[ad] = JSON.parse(JSON.stringify(cfg)); store.set(M().sab, S); kurCiz(); kb.querySelector('[data-ksablon]').value = ad; toast('“' + ad + '” şablonu saklandı (bu tarayıcıda).'); return; }
       if (t.hasAttribute('data-ksil')) { const ad = kb.querySelector('[data-ksablon]').value; if (!ad) { toast('Önce silinecek şablonu seçin.'); return; } const S = store.get(M().sab, {}); delete S[ad]; store.set(M().sab, S); kurCiz(); toast('“' + ad + '” şablonu silindi.'); return; }
