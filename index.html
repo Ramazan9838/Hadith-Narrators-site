@@ -2608,7 +2608,7 @@ function ckKisiKart(n, id) {
     '</dl><p class="hint">' + kodlar(['CK']) + ' Bu kişi HH listesinde bulunamadı; bilgi Cevâmi‘u’l-Kelim’in râvi kaydındandır.</p>', true);
 }
 // ----- Eşleşme notu (Kimlik sekmesinin başında) -----
-const YOL_TR = { metin: 'Lisân/Kâmil metni örtüşüyor', 'kanıt': 'ad + söz/hoca kanıtı', 'ad+metin': 'ad + seyrek ortak ifade', metin2: 'el-Câmi‘in öteki bir bloğu Lisân/Kâmil metniyle örtüşüyor', 'mîzân': 'Mîzân’daki yeri + ad (İbn Hacer’in Lisân sonundaki Tehzîb ricâli listesi)', 'kanıt6': 'ad + kanıt puanı (münekkit sözleri, hadis metni, senet halkaları, dede adı, hüküm uyumu)' };
+const YOL_TR = { metin: 'Lisân/Kâmil metni örtüşüyor', 'kanıt': 'ad + söz/hoca kanıtı', 'ad+metin': 'ad + seyrek ortak ifade', metin2: 'el-Câmi‘in öteki bir bloğu Lisân/Kâmil metniyle örtüşüyor', 'mîzân': 'Mîzân’daki yeri + ad (İbn Hacer’in Lisân sonundaki Tehzîb ricâli listesi)', 'kanıt6': 'ad + kanıt puanı (münekkit sözleri, hadis metni, senet halkaları, dede adı, hüküm uyumu)', elle: 'elle eşleştirildi: kaynak metni okunarak (kaynak/elle/hh-eslesme.json)' };
 const MIZAN_KURAL = { A: 'ad + seyrek ortak ifade', B: 'sayfa aralığındaki tek adaş', C: 'ism + liste satırındaki sıfat' };
 const yollar = y => String(y || '').replace('ad+metin', '\u0001').split('+').map(x => x === '\u0001' ? 'ad+metin' : x).filter(Boolean);
 function kanitTr(k) {
@@ -5774,7 +5774,7 @@ async function runIndex() {
     railDirty();
   }
   // Satır özetleri (arama, süzgeç, sayılar) ve münekkit sayımının hükümleri boş zamanda önceden hesaplanır: ilk aramada takılma olmasın
-  for (const p of PKGS.slice()) { if (SATIR.again) return; while (KORPUS.busy || SATIR.hafifIs) await (KORPUS.busy || SATIR.hafifIs).catch(() => { }); if (p === PK || !PKGS.includes(p) || (SUMC.has(p.id) && LSTC.has(p.id))) continue; await idle(); if (p !== PK && PKGS.includes(p)) { chunkSums(p); lightSts(p); } }
+  for (const p of PKGS.slice()) { if (SATIR.again) return; while (KORPUS.busy || SATIR.hafifIs || CONF_IS) await (KORPUS.busy || SATIR.hafifIs || CONF_IS).catch(() => { }); if (p === PK || !PKGS.includes(p) || (SUMC.has(p.id) && LSTC.has(p.id))) continue; await idle(); if (p !== PK && PKGS.includes(p)) { chunkSums(p); lightSts(p); } }
 }
 // Dilimin hafif özeti: saklı olan (imzası yenilenebiliyorsa) → tam özetten → depodaki hafif özet → depodaki tam özet ya da tarayıcıda çözümleme
 async function hafifHazirla(p) {
@@ -5798,18 +5798,21 @@ function buildLight(scope, onStep) {
     for (const p of need) {
       if (p !== PK && PKGS.includes(p) && !(SATIR.recs[p.id] && SATIR.recs[p.id].sig === corpusSig(p))) await hafifHazirla(p);
       KORPUS.done++; if (onStep) onStep();
-      await new Promise(r => setTimeout(r, 0));
+      await nefes();
     }
     LEXC = CRITC = null; railDirty();
   })().finally(() => { SATIR.hafifIs = null; SATIR.sonDeneme = Date.now(); });
   return SATIR.hafifIs;
 }
+// Uzun döngülerde ekrana ~50 ms’de bir nefes aldırır (her adımda beklemek setTimeout’un en az 4 ms’lik payıyla toplam süreyi uzatır)
+let NEFES_T = 0;
+const nefes = async () => { if (performance.now() - NEFES_T < 50) return; await new Promise(r => setTimeout(r, 0)); NEFES_T = performance.now(); };
 function keepLight(p, rec) { const L = lightOf(rec); SATIR.recs[p.id] = L; SUMC.delete(p.id); LSTC.delete(p.id); CRITC = null; sonraYaz('dizin', L); }
 // Tarayıcı kaydına yazma (JSON + sıkıştırma + şifreleme ana iş parçacığını yorar): özet kurulurken bekletilir, boş zamanda tek tek yazılır
 const YAZQ = []; let yazIs = null;
 function sonraYaz(n, rec) {
   YAZQ.push([n, rec]); if (yazIs) return;
-  yazIs = (async () => { while (YAZQ.length) { while (KORPUS.busy || SATIR.hafifIs) await (KORPUS.busy || SATIR.hafifIs).catch(() => { }); await idle(); const [a, r] = YAZQ.shift(); try { await IDB.put(a, r); } catch (e) { } } })().finally(() => { yazIs = null; });
+  yazIs = (async () => { while (YAZQ.length) { while (KORPUS.busy || SATIR.hafifIs || CONF_IS) await (KORPUS.busy || SATIR.hafifIs || CONF_IS).catch(() => { }); await idle(); const [a, r] = YAZQ.shift(); try { await IDB.put(a, r); } catch (e) { } } })().finally(() => { yazIs = null; });
 }
 function scopePkgs(scope) { return scope === 'vol' ? PKGS.filter(p => p.vol === PK.vol) : PKGS; }
 function corpusReady(scope) { return scopePkgs(scope).every(p => p === PK || (KORPUS.recs[p.id] && KORPUS.recs[p.id].sig === corpusSig(p))); }
@@ -5828,7 +5831,7 @@ function buildCorpus(scope, onStep) {
       if (!(SATIR.recs[p.id] && SATIR.recs[p.id].sig === sig)) keepLight(p, rec);
       KORPUS.recs[p.id] = rec; KORPUS.done++; LEXC = CRITC = CRITF = null;
       if (onStep) onStep();
-      await new Promise(r => setTimeout(r, 0));
+      await nefes();
     }
   })().finally(() => { KORPUS.busy = null; });
   return KORPUS.busy;
@@ -6180,16 +6183,36 @@ function scopeConflicts(scope) {
   const push = (list, meta) => { for (const c of list) out.push(Object.assign({ key: meta.nid + '|' + c.id }, c, meta)); };
   for (const p of scopePkgs(scope)) {
     if (p === PK) { for (const n of NARR) push(narrConflicts(n), { pkg: PK.id, seq: n.source_sequence, nid: n.id, name: n.effective.canonical_name, R: REV }); continue; }
-    const rec = KORPUS.recs[p.id]; if (!rec) continue;
-    hydrate(p, rec); const h = HYD.get(p.id);
-    if (!h.conf) {
-      const by = new Map(); for (const s of h.out) { let l = by.get(s.n.source_sequence); if (!l) by.set(s.n.source_sequence, l = []); l.push(s); }
-      const R = revOf(p); h.conf = [];
-      for (const [seq, sts] of by) for (const c of CTN.conflicts(ctnFlat(sts))) h.conf.push(Object.assign({ key: sts[0].n.id + '|' + c.id }, c, { pkg: p.id, seq, nid: sts[0].n.id, name: sts[0].n.effective.canonical_name, R }));
-    }
-    out.push(...h.conf);
+    const c = pkgConf(p); if (c) out.push(...c);
   }
   return out;
+}
+// Açık olmayan dilimin teâruz kayıtları (dilim başına önbellek: HYD)
+function pkgConf(p) {
+  const rec = KORPUS.recs[p.id]; if (!rec) return null;
+  hydrate(p, rec); const h = HYD.get(p.id);
+  if (!h.conf) {
+    const by = new Map(); for (const s of h.out) { let l = by.get(s.n.source_sequence); if (!l) by.set(s.n.source_sequence, l = []); l.push(s); }
+    const R = revOf(p); h.conf = [];
+    for (const [seq, sts] of by) for (const c of CTN.conflicts(ctnFlat(sts))) h.conf.push(Object.assign({ key: sts[0].n.id + '|' + c.id }, c, { pkg: p.id, seq, nid: sts[0].n.id, name: sts[0].n.effective.canonical_name, R }));
+  }
+  return h.conf;
+}
+const confEksik = scope => scopePkgs(scope).filter(p => p !== PK && KORPUS.recs[p.id] && !((HYD.get(p.id) || {}).conf && HYD.get(p.id).rec === KORPUS.recs[p.id]));
+// Teâruz kayıtları dilim dilim, aralarda tarayıcıya nefes aldırarak hesaplanır (ilk açılışta sayfa donmasın); ilerleme el’de
+var CONF_IS = null;
+function confHazirla(el, then) {
+  el.innerHTML = scopeBar() + '<div class="card" style="max-width:560px"><h3>Teâruzlar hesaplanıyor…</h3><span class="pkg-prog" style="width:100%;height:8px"><i id="conf-bar" style="width:0%"></i></span><div class="hint" id="conf-txt" style="margin-top:6px">%0</div><div class="hint">İlk açılışta bir kez yapılır; sonra bellekten okunur.</div></div>';
+  if (!CONF_IS) CONF_IS = (async () => {
+    const L = confEksik(S.scope); let t0 = performance.now();
+    for (let i = 0; i < L.length; i++) {
+      pkgConf(L[i]);
+      if (performance.now() - t0 < 50) continue;   // ~50 ms’lik dilimler: araya ekran çizimi girer, bekleme payı birikmez
+      const bar = $('conf-bar'), t = $('conf-txt'); if (bar) bar.style.width = ((i + 1) / L.length * 100) + '%'; if (t) t.textContent = '%' + Math.floor((i + 1) / L.length * 100);
+      await new Promise(r => setTimeout(r, 0)); t0 = performance.now();
+    }
+  })().finally(() => { CONF_IS = null; });
+  CONF_IS.then(then);
 }
 const CFF = Object.assign({ type: '', zeh: false, durum: '', oneri: '', q: '' }, UI.cff || {});
 // Eski sürümde açık olmayan dilimin kararı “<dilim>:<sıra>|…” anahtarıyla yazılmıştı; o da okunur
@@ -6203,6 +6226,7 @@ function sideHTML(list, cls) {
 function confGoto(c, x) { const s = x._s; return s ? gotoAttr(s) : ''; }
 function renderConflicts() {
   if (!ensureScope($('conflicts-body'), renderConflicts)) return;
+  if (confEksik(S.scope).length > 3) { confHazirla($('conflicts-body'), renderConflicts); return; }
   const all = scopeConflicts(S.scope);
   const ql = trk(CFF.q.trim()), qn = nz(CFF.q).trim();
   const list = all.filter(c => (!CFF.type || c.type === CFF.type) && (!CFF.zeh || c.zehebi) && (!CFF.durum || (confState(c).durum || '') === (CFF.durum === 'acik' ? '' : CFF.durum)) && (!CFF.oneri || c.oneri === CFF.oneri) &&
