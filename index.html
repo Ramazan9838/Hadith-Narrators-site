@@ -39,7 +39,7 @@
   --k-r: #eb6834;
   --k-d: #8a8f86;
   --k-s: #8a8f86;
-  --k-m: #8a8f86;
+  --k-m: #8a8f86; --k-l: #8a8f86;
   --k-v: #2a8c8c;
   --k-p: #7a5cc4;
   --tint-t: #e6f0fb;
@@ -93,7 +93,7 @@
     --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 6px 18px rgba(0, 0, 0, .25);
     --shadow-lg: 0 10px 40px rgba(0, 0, 0, .55);
     --k-t: #3987e5; --k-n: #199e70; --k-k: #c98500; --k-b: #d55181; --k-j: #9085e9; --k-c: #e66767; --k-r: #d95926;
-    --k-d: #8f918a; --k-s: #8f918a; --k-m: #8f918a; --k-v: #3fb3ad; --k-p: #a48ce6;
+    --k-d: #8f918a; --k-s: #8f918a; --k-m: #8f918a; --k-l: #8f918a; --k-v: #3fb3ad; --k-p: #a48ce6;
     --tint-t: #1b2a3d; --tint-n: #16302a; --tint-k: #33290f; --tint-b: #3a1f2b; --tint-j: #26233f; --tint-c: #3d1f1f; --tint-r: #3a2418; --tint-d: #262724; --tint-v: #183332; --tint-p: #282038;
     --warn: #f0c060; --warn-bg: #2f2710; --ok: #5fd08a; --bad: #ff8a80;
     --on-accent: #10201a; --overlay: rgba(0, 0, 0, .55);
@@ -117,7 +117,7 @@
   --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 6px 18px rgba(0, 0, 0, .25);
   --shadow-lg: 0 10px 40px rgba(0, 0, 0, .55);
   --k-t: #3987e5; --k-n: #199e70; --k-k: #c98500; --k-b: #d55181; --k-j: #9085e9; --k-c: #e66767; --k-r: #d95926;
-  --k-d: #8f918a; --k-s: #8f918a; --k-m: #8f918a; --k-v: #3fb3ad; --k-p: #a48ce6;
+  --k-d: #8f918a; --k-s: #8f918a; --k-m: #8f918a; --k-l: #8f918a; --k-v: #3fb3ad; --k-p: #a48ce6;
   --tint-t: #1b2a3d; --tint-n: #16302a; --tint-k: #33290f; --tint-b: #3a1f2b; --tint-j: #26233f; --tint-c: #3d1f1f; --tint-r: #3a2418; --tint-d: #262724; --tint-v: #183332; --tint-p: #282038;
   --warn: #f0c060; --warn-bg: #2f2710; --ok: #5fd08a; --bad: #ff8a80;
   --on-accent: #10201a; --overlay: rgba(0, 0, 0, .55);
@@ -338,7 +338,7 @@ body.tb-gizli .topbar > :not(.tb-notch) { display: none !important; }
 .tag.k::before { content: ""; width: 7px; height: 7px; border-radius: 2px; background: var(--kc); }
 .k-t { --kc: var(--k-t); --kt: var(--tint-t); } .k-n { --kc: var(--k-n); --kt: var(--tint-n); } .k-k { --kc: var(--k-k); --kt: var(--tint-k); }
 .k-b { --kc: var(--k-b); --kt: var(--tint-b); } .k-j { --kc: var(--k-j); --kt: var(--tint-j); } .k-c { --kc: var(--k-c); --kt: var(--tint-c); }
-.k-r { --kc: var(--k-r); --kt: var(--tint-r); } .k-v { --kc: var(--k-v); --kt: var(--tint-v); } .k-p { --kc: var(--k-p); --kt: var(--tint-p); } .k-d, .k-s, .k-m, .k-i { --kc: var(--k-d); --kt: var(--tint-d); }
+.k-r { --kc: var(--k-r); --kt: var(--tint-r); } .k-v { --kc: var(--k-v); --kt: var(--tint-v); } .k-p { --kc: var(--k-p); --kt: var(--tint-p); } .k-d, .k-s, .k-m, .k-l, .k-i { --kc: var(--k-d); --kt: var(--tint-d); }
 .tag.k { background: var(--kt); }
 
 .subtabs { display: flex; gap: 2px; margin-top: 4px; overflow-x: auto; scrollbar-width: none; }
@@ -1139,7 +1139,7 @@ tr.mf-on td { background: color-mix(in srgb, #c0392b 6%, transparent); }
 .note.idrak .unlem { color: var(--bad); font-weight: 800; }
 /* ---------- Münekkitler: solda açılır–kapanır münekkit listesi, ortada seçilen münekkit ya da genel görünüm ----------
    Çekmece düzeni çalışma masasıyla aynıdır (#view-critics.desk; data-rail = closed | overlay | docked). */
-.cdesk #critics-body { max-width: calc(1180px * var(--yb)); margin: 0 auto; padding: 20px max(var(--gutter, 28px), 28px) 48px; }
+.cdesk #critics-body, .ldesk #lex-body { max-width: calc(1180px * var(--yb)); margin: 0 auto; padding: 20px max(var(--gutter, 28px), 28px) 48px; }
 .clist .citem { width: 100%; text-align: left; border: 1px solid transparent; background: transparent; border-radius: 10px; padding: 7px 9px 7px 11px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 8px; align-items: center; position: relative; color: inherit; font: inherit; cursor: pointer; }
 .clist .citem::before { content: ''; position: absolute; left: 2px; top: 9px; bottom: 9px; width: 3px; border-radius: 2px; background: var(--line-2); }
 .clist .citem[data-lean="cerh"]::before { background: var(--k-c); } .clist .citem[data-lean="tadil"]::before { background: var(--k-t); } .clist .citem[data-lean="karma"]::before { background: var(--warn); }
@@ -1169,7 +1169,7 @@ tr.mf-on td { background: color-mix(in srgb, #c0392b 6%, transparent); }
 .ctop .muted { font-size: calc(11px * var(--yb)); }
 .ctabs { margin: 16px 0 10px; }
 .cwait { display: flex; align-items: center; gap: 10px; }
-@media (max-width: 880px) { .cdesk #critics-body { padding: 16px 16px 72px; } .chead { grid-template-columns: 1fr; } }
+@media (max-width: 880px) { .cdesk #critics-body, .ldesk #lex-body { padding: 16px 16px 72px; } .chead { grid-template-columns: 1fr; } }
 /* Özet çubukları: basınca o kişiler listelenir */
 .sbar[data-hkf] { cursor: pointer; border-radius: 6px; }
 .sbar[data-hkf]:hover, .sbar[data-hkf]:focus-visible { background: var(--accent-soft); outline: none; }
@@ -1259,6 +1259,39 @@ tr.mf-on td { background: color-mix(in srgb, #c0392b 6%, transparent); }
 .hh-yer { margin-top: 3px; color: var(--ink-3); display: flex; align-items: center; gap: 2px; flex-wrap: wrap; }
 .hh-yer .linkbtn { font-size: 11px; }
 .hh-yer .ar { font-size: calc(13px * var(--yb)); }
+
+/* Lafız dizini: kalıp listesi solda açılır–kapanır çekmece (Münekkitler gibi); geçişler süzülür */
+#llist.lexlist { border: 0; border-radius: 0; background: transparent; overflow: auto; flex: 1; }
+#lrail .lexf { margin: 0; }
+.lexfilt { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 8px; }
+.lexfilt .search { flex: 1; min-width: 180px; max-width: 320px; }
+.lexfilt select { max-width: 220px; }
+.lexfilt .cf-count { margin-left: auto; }
+
+/* Yöntem: mertebe tablosu, sözlük haritası, ihtilaflı lafızlar */
+.mertebe-tbl tr.mrt-t td:first-child { color: var(--k-t); } .mertebe-tbl tr.mrt-c td:first-child { color: var(--k-c); }
+.tag.hk-ih { background: color-mix(in srgb, var(--k-t) 16%, transparent); } .tag.hk-it { background: color-mix(in srgb, var(--warn) 18%, transparent); } .tag.hk-su { background: color-mix(in srgb, var(--k-c) 16%, transparent); }
+.smap-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 6px 0 10px; }
+.smap-tools .search { flex: 1; min-width: 200px; max-width: 340px; }
+.smap { display: flex; flex-direction: column; gap: 4px; }
+.smap-h { margin: 12px 0 2px; font-weight: 650; font-size: calc(13px * var(--yb)); }
+.smap-g { border: 1px solid var(--line); border-radius: 9px; background: var(--paper); border-left: 3px solid var(--line-2); }
+.smap-g.k-t, .smap-g.k-n { border-left-color: var(--k-t); } .smap-g.k-c, .smap-g.k-j { border-left-color: var(--k-c); } .smap-g.k-k { border-left-color: var(--warn); }
+.smap-g > summary { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) auto auto; gap: 10px; align-items: center; padding: 6px 10px; cursor: pointer; list-style: none; }
+.smap-g > summary::-webkit-details-marker { display: none; }
+.smap-ex { font-size: calc(17px * var(--yb)); direction: rtl; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.smap-tr { font-size: calc(12.5px * var(--yb)); color: var(--ink-2); }
+.smap-n { font-size: calc(11px * var(--yb)); color: var(--ink-3); font-variant-numeric: tabular-nums; min-width: 32px; text-align: right; }
+.smap-l { font-size: calc(10.5px * var(--yb)); }
+.smap-b { padding: 2px 12px 10px; border-top: 1px solid var(--line); }
+.smap-b p { margin: 6px 0; }
+.lisan-metin { direction: rtl; text-align: right; font-size: calc(18px * var(--yb)); line-height: 1.9; max-height: 60vh; overflow: auto; }
+.ihtilaf-tbl td { vertical-align: top; }
+@media (max-width: 700px) { .smap-g > summary { grid-template-columns: minmax(0, 1fr) auto; } .smap-tr { grid-column: 1 / -1; order: 3; } }
+
+/* Kaynak metin: hükmün bütün lafzının altı çizili (Hükümler’deki lafız); anahtar kalıp ayrıca vurgulu */
+.btext .sp { text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--kc) 70%, transparent); text-decoration-thickness: 1.5px; text-underline-offset: 6px; text-decoration-skip-ink: none; }
+.lafiz-ip { cursor: help; }
 
 </style>
 </head>
@@ -1393,7 +1426,15 @@ tr.mf-on td { background: color-mix(in srgb, #c0392b 6%, transparent); }
   <section class="center" aria-label="Münekkit"><div class="scroll" id="critics-scroll" style="flex:1"><div class="pane" id="critics-body"></div></div></section>
 </main>
 <main class="view scroll" id="view-conflicts" hidden><div class="pane" id="conflicts-body"></div></main>
-<main class="view scroll" id="view-lex" hidden><div class="pane" id="lex-body"></div></main>
+<main class="view desk cdesk ldesk" id="view-lex" data-rail="closed" hidden>
+  <aside class="drawer rail" id="lrail" aria-label="Kalıp listesi" inert>
+    <div class="drawer-head"><h3>Kalıplar <span class="muted" id="lrail-count"></span></h3><button class="btn ghost sm icon" id="lrail-close" type="button" aria-label="Kalıp listesini kapat" title="Kapat">✕</button></div>
+    <div class="rail-head" id="lrail-head"></div>
+    <div class="nlist lexlist" id="llist" role="listbox" aria-label="Kalıp listesi"></div>
+  </aside>
+  <button class="notch notch-l" id="lrail-notch" type="button" aria-controls="lrail" aria-expanded="false" title="Kalıp listesi"><span class="chev" aria-hidden="true">›</span><span class="lbl">Kalıplar</span><i class="fdot" hidden></i></button>
+  <section class="center" aria-label="Lafız dizini"><div class="scroll" id="lex-scroll" style="flex:1"><div class="pane" id="lex-body"></div></div></section>
+</main>
 <main class="view scroll" id="view-report" hidden><div class="pane" id="report-body"></div></main>
 <main class="view scroll" id="view-analyze" hidden><div class="pane analyzer" id="analyze-body"></div></main>
 <main class="view scroll" id="view-method" hidden><div class="pane" id="method-body"></div></main>
@@ -1436,8 +1477,8 @@ const fmt = n => Number(n).toLocaleString('tr-TR');
 const digitsTr = s => String(s || '').replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
 const TYPES = ['Taʿdîl', 'Karma / Mukayyed', 'Cerh', 'Bilinmiyor / İnsan kontrolü gerekli'];
 const KSTACK = ['T', 'N', 'K', 'B', 'J', 'C'];                        // doğrulanmış renk sırası
-const KNAME = { T: 'Ta‘dîl', N: 'Cerhin reddi', K: 'Karma', B: 'Mezhep / bid‘at', J: 'Cehâlet', C: 'Cerh', R: 'Rivâyet hükmü', V: 'Rivayet tavrı', P: 'Tercih', D: 'Diyânet', S: 'Sükût', M: 'Münekkit tenkidi' };
-const KDESC = { T: 'Râviyi güvenilir kılan ifade', N: 'Bir cerhin reddi veya hafifletilmesi', K: 'Ta‘dîl + kayıt (mukayyed) bir arada', B: 'Mezhep/bid‘at nitelemesi (ta‘n sebebi)', J: 'Tanınmama (cehâlet)', C: 'Adâlet veya zabta yönelik cerh', R: 'Hüküm râviye değil rivayete (hadise) ait', V: 'Bir kimsenin ondan rivayet edip etmemesi (olumlu/olumsuz tavır); ta‘dîl–cerh toplamına girmez, Münekkitler’de ayrı sayılır. “Ondan yazmayın” gibi başkalarına tavsiye cerhtir', P: 'Tercih (mukayeseli ta‘dîl): râviyi bir başkasından üstün ya da aşağı tutma (lehine/aleyhine); ta‘dîl–cerh toplamına girmez, Münekkitler’de ayrı sayılır', D: 'Diyânet/zühd övgüsü (rivayet ta‘dîli değil)', S: 'Cerh ve ta‘dîl zikredilmemiş', M: 'Münekkidin kendisi hakkında değerlendirme' };
+const KNAME = { T: 'Ta‘dîl', N: 'Cerhin reddi', K: 'Karma', B: 'Mezhep / bid‘at', J: 'Cehâlet', C: 'Cerh', R: 'Rivâyet hükmü', V: 'Rivayet tavrı', P: 'Tercih', D: 'Diyânet', S: 'Sükût', M: 'Münekkit tenkidi', L: 'Tabaka / biyografi' };
+const KDESC = { T: 'Râviyi güvenilir kılan ifade', N: 'Bir cerhin reddi veya hafifletilmesi', K: 'Ta‘dîl + kayıt (mukayyed) bir arada', B: 'Mezhep/bid‘at nitelemesi (ta‘n sebebi)', J: 'Tanınmama (cehâlet)', C: 'Adâlet veya zabta yönelik cerh', R: 'Hüküm râviye değil rivayete (hadise) ait', V: 'Bir kimsenin ondan rivayet edip etmemesi (olumlu/olumsuz tavır); ta‘dîl–cerh toplamına girmez, Münekkitler’de ayrı sayılır. “Ondan yazmayın” gibi başkalarına tavsiye cerhtir', P: 'Tercih (mukayeseli ta‘dîl): râviyi bir başkasından üstün ya da aşağı tutma (lehine/aleyhine); ta‘dîl–cerh toplamına girmez, Münekkitler’de ayrı sayılır', D: 'Diyânet/zühd övgüsü (rivayet ta‘dîli değil)', S: 'Cerh ve ta‘dîl zikredilmemiş', M: 'Münekkidin kendisi hakkında değerlendirme', L: 'Sahâbîlik, tabaka ya da biyografi bilgisi; cerh–ta‘dîl lafzı değildir, sayılmaz' };
 const kc = k => 'k-' + String(k || 'd').toLowerCase();
 const FLAGTXT = { mezhep: 'Mezhep / bid‘at notu (cerh sayılmaz)', 'şiî-ricâl': 'Şiî ricâl (Sünnî sayıma girmez)', 'hedef-şüpheli': 'Başka kişi hakkında olabilir', soru: 'Soru cümlesi', 'soru-teyit': 'Soru–cevapla teyit', 'söz-sahibi-belirsiz': 'Münekkidi belirsiz — bağlam incelemesi gerekli', 'fiil-oznesi': 'İsimsiz «qâle»: söyleyen önceki nakil fiilinin öznesi', 'isnad-içi': 'Senet içinde', derleme: 'Derleme eser', zeame: 'Za‘ame (nakleden katılmıyor)', 'istilah-zehebi': 'Atıfsız «mechûl» Ebû Hâtim’e yazıldı (râvinin kayıtlarında Ebû Hâtim’e atıf var; Zehebî ıstılahı)', 'istilah-aday': 'Atıfsız «mechûl»: ez-Zehebî’nin kendi sözü (Ebû Hâtim’e atıf bulunmadı)', kronoloji: 'Kronoloji: münekkit eser müellifinden sonra ölmüş; söz ona ait olmayabilir', 'mizan-nakli': 'Lisân’da “intehâ”ya kadarki Mîzân nakli', 'mizan-tekrar': 'Lisân’daki Mîzân nakli: aynı söz Mîzân’ın kendisinden sayılır (burada sayılmaz)', rüya: 'Rüyaya dayalı', şartlı: 'Şartlı hüküm', zımnî: 'Zımnî (kitaba alma)', olumsuz: 'Olumsuzlanmış lafız (tersine çevrildi)', itiraz: 'Ardından itiraz var (atıf ya da hüküm tartışmalı)', mukayyed: 'Kayıtlı (mukayyed) cerh: belirli bir hocadan rivayetine mahsus; genel cerh sayılmaz', 'mukayyed-t': 'Kayıtlı (mukayyed) ta‘dîl: belirli bir hocadan rivayetine mahsus', elle: 'Elle düzeltme (HH denetiminde tek tek okunarak düzeltildi ya da eklendi)', 'hh-sinif': 'HH’nin sınıfından (motor lafzı okuyamadı ya da türü HH’ye göre alındı)', 'hh-esas': 'HH’nin kaydına göre sayıldı (motorun hedef/söz sahibi şüphesi yok sayıldı)', 'iktifa-itiraz': 'el-İktifâ: Moğultay’ın nakil tartışması / İbnü’l-Cevzî’ye itiraz; râvi hakkında doğrudan hüküm sayılmaz', 'iktifa-baska': 'el-İktifâ: hüküm başka kişi ya da isnad hakkında; bu râviye sayılmaz', 'iktifa-hukum-degil': 'el-İktifâ: cerh–ta‘dîl hükmü değil (biyografik bilgi, usûl tartışması)', 'baska-kisi': 'Okunarak teyit: hüküm başka kişi (hoca, akraba, senetteki biri) hakkında; bu râviye sayılmaz', 'hukum-degil': 'Okunarak teyit: cerh–ta‘dîl hükmü değil (hadis metni, usûl ya da senet notu)', 'hedef-ok': 'Okunarak teyit: hüküm râvinin kendisi hakkında', 'nakil-ok': 'Okunarak teyit: motor doğru okumuş; fark gerçek nakil/rivayet farkıdır (Teâruz’da)', 'kronoloji-ok': 'Okunarak teyit: kronoloji uyarısı incelendi' };
 
@@ -2749,6 +2790,42 @@ function kunyeGetir() {
   })().catch(e => { KNY.err = e.message || String(e); return null; }).finally(() => { KNY.busy = null; });
   return KNY.busy;
 }
+// Lisânü’l-Muhaddisîn sözlük haritası (kaynak/lisanul-muhaddisin/harita.json; tools/lisan-harita-hazirla.js): madde metinleri gizli depodan
+const LSN_YOL = 'kaynak/lisanul-muhaddisin/harita.json', LSN = { d: null, busy: null, err: '' };
+function lisanGetir() {
+  if (LSN.d) return Promise.resolve(LSN.d); if (LSN.busy) return LSN.busy;
+  LSN.busy = (async () => {
+    const c = ortakCfg(); if (!c || !AUTH.me()) return null;
+    const gh = ORT.client(c), m = await gh.meta(LSN_YOL); if (!m || !m.sha) return null;
+    let r = null; try { r = await IDB.get('harf', 'lisan:' + m.sha); } catch (e) { }
+    if (!r || !r.data) { const t = await gh.blob(m.sha); if (typeof t !== 'string' || await ORT.blobSha(t) !== m.sha) throw Error('dosya özetle tutmuyor'); r = { id: 'lisan:' + m.sha, data: JSON.parse(t) }; try { await IDB.put('harf', r); } catch (e) { } }
+    LSN.d = r.data; return LSN.d;
+  })().catch(e => { LSN.err = e.message || String(e); return null; }).finally(() => { LSN.busy = null; });
+  return LSN.busy;
+}
+const grupKey = e => e.k + e.lv + '|' + e.tr;
+// Tabaka tahmini verisi (kaynak/dis/hh/tabaka.json; tools/hh-tabaka-hazirla.py): HH hocalarından hadis alanların tabaka dağılımı ve Siyer tabakası
+const TBK_YOL = 'kaynak/dis/hh/tabaka.json', TBK = { d: null, busy: null, err: '' };
+function tabakaGetir() {
+  if (TBK.d) return Promise.resolve(TBK.d); if (TBK.busy) return TBK.busy;
+  TBK.busy = (async () => {
+    const c = ortakCfg(); if (!c || !AUTH.me()) return null;
+    const gh = ORT.client(c), m = await gh.meta(TBK_YOL); if (!m || !m.sha) return null;
+    let r = null; try { r = await IDB.get('harf', 'tabaka:' + m.sha); } catch (e) { }
+    if (!r || !r.data) { const t = await gh.blob(m.sha); if (typeof t !== 'string' || await ORT.blobSha(t) !== m.sha) throw Error('dosya özetle tutmuyor'); r = { id: 'tabaka:' + m.sha, data: JSON.parse(t) }; try { await IDB.put('harf', r); } catch (e) { } }
+    TBK.d = r.data; return TBK.d;
+  })().catch(e => { TBK.err = e.message || String(e); return null; }).finally(() => { TBK.busy = null; });
+  return TBK.busy;
+}
+const lisanMd = e => (LSN.d && LSN.d.gruplar[grupKey(e)]) || [];
+// Lisân maddesi açılır pencerede (metnin başı; mertebeler maddesi tamamıyla)
+async function lisanMaddeAc(no) {
+  openDialog('Lisânü’l-Muhaddisîn · md. ' + no, '<div class="hint">Madde yükleniyor…</div>', true);
+  const d = await lisanGetir(), m = d && d.maddeler[no];
+  $('gen-body').innerHTML = m ? '<p class="small muted">' + esc(d.kaynak) + ' · ' + m[0] + '. cilt · madde ' + no + '</p><h3 class="ar" style="font-size:calc(22px * var(--yb))">' + esc(m[1]) + '</h3><div class="ar lisan-metin">' + esc(m[2]).replace(/\n/g, '<br>') + '</div>'
+    : '<div class="note">Madde yüklenemedi' + (LSN.err ? ' (' + esc(LSN.err) + ')' : ortakCfg() ? '' : ': ortak kayıt bağlı değil') + '. Metin gizli depodadır (kaynak/lisanul-muhaddisin).</div>';
+}
+const lisanBtn = no => '<button type="button" class="linkbtn small lisan-md" data-lisan="' + no + '" title="Lisânü’l-Muhaddisîn’deki maddeyi aç">md. ' + no + '</button>';
 const kunyeOf = id => KNY.d && KNY.d.kitaplar[String(id)] || null;
 const KITAP_SVG = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2.5 3.2c1.8-.7 3.7-.7 5.5.4v9.2c-1.8-1.1-3.7-1.1-5.5-.4zM13.5 3.2c-1.8-.7-3.7-.7-5.5.4v9.2c1.8-1.1 3.7-1.1 5.5-.4z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>';
 function kunyeBtn(id) { return id == null ? '' : '<button type="button" class="kunye-btn" data-kunye="' + esc(String(id)) + '" title="Eser künyesini kopyala (HH ' + esc(String(id)) + ')" aria-label="Eser künyesini kopyala">' + KITAP_SVG + '</button>'; }
@@ -4405,7 +4482,7 @@ function renderText(text, sts, opts) {
   for (const s of sts) {
     if (s.end > s.start) iv.push({ a: s.start, e: s.end, t: 'st', s });
     const moved = s._o && (s.start !== s._o.start || s.end !== s._o.end);
-    for (const t of s.terms || []) if (t.end > t.start && (!moved || (t.start >= s.start && t.end <= s.end))) iv.push({ a: t.start, e: t.end, t: 'term', s, k: s.origin === 'user' ? eKind(s) : t.k });
+    for (const t of s.terms || []) if (t.end > t.start && (!moved || (t.start >= s.start && t.end <= s.end))) iv.push({ a: t.start, e: t.end, t: 'term', s, k: s.origin === 'user' ? eKind(s) : t.k, id: t.id });
   }
   for (const m of opts.markers || []) if (m.names && m.names.length && ['named', 'post', 'mention', 'zaama', 'qult'].includes(m.type)) iv.push({ a: m.start, e: m.end, t: 'mk' });
   for (const x of opts.notes || []) iv.push({ a: x.start, e: x.end, t: 'ist' });
@@ -4435,7 +4512,8 @@ function renderText(text, sts, opts) {
     const old = cov.find(x => x.t === 'old'); if (old) cls.push('oldv');
     if (opts.refStart != null && a >= opts.refStart) cls.push('ref');
     const seg = esc(text.slice(a, e));
-    if (cls.length || uids.length) out += '<span class="' + cls.join(' ') + '"' + (uids.length ? ' data-st="' + esc(uids.join('|')) + '"' : '') + (old ? ' data-old="' + old.o.id + '"' : '') + '>' + seg + '</span>';
+    const ip = term && LEXBYID[term.id] ? lafizIpucu(LEXBYID[term.id]) : '';   // lafzın anlamı: üzerine gelip bekleyince
+    if (cls.length || uids.length) out += '<span class="' + cls.join(' ') + '"' + (uids.length ? ' data-st="' + esc(uids.join('|')) + '"' : '') + (old ? ' data-old="' + old.o.id + '"' : '') + (ip ? ' title="' + esc(ip) + '"' : '') + '>' + seg + '</span>';
     else out += seg;
   }
   return out;
@@ -4518,7 +4596,12 @@ function lafizEk(s) {
   const m = /^\s*([^.،,؛;:؟?!\n«»\[\]()]{1,90})/.exec(s.b._text.slice(s.end, s.end + 120).replace(/\s*\n(?![\s\n]*\n)\s*/g, ' '));   // tek satır sonu cümleyi bölmez if (!m || !/^[\u0621-\u064A]/.test(m[1].trim())) return '';
   return m[1].trim().split(/\s+/).slice(0, 8).join(' ');
 }
-function lafizHTML(s) { const ek = lafizEk(s); return esc(s.phrase || '') + (ek ? ' <span class="lafiz-ek" title="Lafzın cümledeki devamı (metinden; hükmün sınırı değişmez)">' + esc(ek) + '</span>' : ''); }
+// Lafzın anlamı (üzerine gelip bekleyince): hükmün kalıplarının Türkçe adı, anlamı ve mertebesi (Yöntem → Sözlük haritası)
+function stIpucu(s) {
+  const es = [...new Set((s.terms || []).map(t => LEXBYID[t.id]).filter(Boolean))];
+  return es.length ? es.map(lafizIpucu).join('\n\n') : eType(s);
+}
+function lafizHTML(s) { const ek = lafizEk(s); return '<span class="lafiz-ip" title="' + esc(stIpucu(s)) + '">' + esc(s.phrase || '') + '</span>' + (ek ? ' <span class="lafiz-ek" title="Lafzın cümledeki devamı (metinden; hükmün sınırı değişmez)">' + esc(ek) + '</span>' : ''); }
 function stChip(s) {
   const k = eKind(s); const cur = S.sel && S.sel.type === 'st' && S.sel.id === s.uid;
   const who = eCritic(s) ? crName(eCritic(s), s.critic_written) : (s.critic_written || '?');
@@ -4850,19 +4933,54 @@ function sentezKart(ppl, title, filt) {
     '<div class="small" style="margin-top:6px"><b>Memleket</b> ' + (plN ? '· bilinen ' + plN : '· bilinmiyor') + '</div>' + (plN ? sbar(top, plN) : '') +
     '<div class="small" style="margin-top:6px"><b>Tabaka</b> ' + (tabs.length ? '· bilinen ' + tabs.length + ' · ortanca ' + median(tabs).toFixed(1) : '· bilinmiyor') + '</div>' + (tabs.length ? sbar(Object.keys(tb).sort((a, b) => a - b).map(t => [t + '. ' + esc(CTK.TABAKA_TR[t] || ''), tb[t], filt && 'tab:' + t]), tabs.length) : '') + '</section>';
 }
+/* Hocalara kıyasla tabaka (29.10.2026): râvinin HH’deki hocalarından hadis alan, tabakası HH’de (İbn Hacer, Takrîb) bilinen kişilerin
+   tabaka dağılımı; her hoca eşit ağırlıkla (dağılımı 1’e bölünerek) katılır, râvinin kendisi çıkarılır. Tahmin: ağırlıklı ortanca
+   (aynı hocadan alanlar akrandır). Tabakası HH’de bulunan râvide HH’deki veri esastır; ez-Zehebî’nin Siyer’indeki tabakası ayrıca verilir. */
+function hocaKiyasHesap(n) {
+  const V = disVeri(n), D = TBK.d; if (!V || !V.hh || !D) return null;
+  const self = mervHH(n, V), kendi = V.hh.kart && V.hh.kart.tabaqa_rank ? +V.hh.kart.tabaqa_rank : null;
+  const ids = [...new Set(birlesikKisiler(n, 'hoca').P.filter(x => x.hh).map(x => +x.hh.k))];
+  const top = {}; let hoca = 0, kisi = 0;
+  for (const h of ids) {
+    const a = D.tt[h]; if (!a) continue; const c = {};
+    for (let i = 0; i < a.length; i += 2) c[a[i]] = a[i + 1];
+    if (kendi && c[kendi]) c[kendi]--;   // râvinin kendisi
+    const t = Object.values(c).reduce((x, y) => x + y, 0); if (!t) continue;
+    hoca++; kisi += t; for (const r in c) top[r] = (top[r] || 0) + c[r] / t;
+  }
+  if (!hoca) return { kendi, siyer: self != null ? D.siyer[self] : null, hoca: 0, ids: ids.length };
+  let say = 0, med = null; for (const r of Object.keys(top).map(Number).sort((x, y) => x - y)) { say += top[r]; if (med == null && say >= hoca / 2) med = r; }
+  const dag = Object.keys(top).map(Number).sort((x, y) => x - y).map(r => [r, top[r] / hoca]);
+  return { kendi, siyer: self != null ? D.siyer[self] : null, hoca, ids: ids.length, kisi, med, dag };
+}
+function hocaKiyas(n) {
+  const V = disVeri(n); if (!V || !V.hh) return '';
+  if (!TBK.d) { if (!TBK.busy && !TBK.err) tabakaGetir().then(d => { if (d && NBYID[S.nid] === n) renderCenter(); }); return TBK.err ? '<br><span class="small muted">Hocalara kıyasla tabaka verisi alınamadı: ' + esc(TBK.err) + '</span>' : ''; }
+  const k = hocaKiyasHesap(n); if (!k) return '';
+  const tb = r => r + '. tabaka (' + esc(CTK.TABAKA_TR[r] || '') + ')';
+  let o = '';
+  if (k.kendi) o += '<br><b>HH’ye göre (İbn Hacer, Takrîb):</b> ' + tb(k.kendi) + ' ' + kodlar(['HH']) + ' <span class="small muted">· esas alınır</span>';
+  if (k.hoca) {
+    const yuzde = k.dag.filter(x => x[1] >= 0.05).map(x => x[0] + '. %' + Math.round(x[1] * 100)).join(' · ');
+    o += '<br><b>Hocalarına kıyasla:</b> ' + tb(k.med) + ' <span class="small muted">· HH’deki ' + k.hoca + ' hocasından hadis alan, tabakası bilinen ' + sayiTr(k.kisi) + ' kişinin çoğunlukla bulunduğu tabaka (her hoca eşit ağırlıkta): ' + yuzde +
+      (k.kendi ? ' · HH’deki tabakayla ' + (k.kendi === k.med ? 'örtüşüyor' : Math.abs(k.kendi - k.med) + ' tabaka fark') : '') + ' · yöntem, tabakası HH’de bilinen 6976 râvide sınandığında %52 aynı tabakayı, %90 en çok bir tabaka farkla buldu</span>';
+  } else if (k.ids) o += '<br><span class="small muted">Hocalarına kıyas yapılamadı: HH’deki hocalarından hadis alanların tabakası bilinmiyor.</span>';
+  if (k.siyer) o += '<br><b>ez-Zehebî, Siyeru a‘lâmi’n-nübelâ:</b> ' + k.siyer + '. tabaka <span class="small muted">· Siyer’in kendi tabaka bölümü; İbn Hacer’in 12 tabakasıyla aynı ölçek değildir</span>';
+  return o + '<br><span class="small muted">Tezkiretü’l-huffâz ve el-Mu‘în fî tabakâti’l-muhaddisîn HH’de yalnız birkaç sayfa olduğundan kullanılamadı.</span>';
+}
 function listeSentez(n) {
   const H = sentezKisiler(n, 'hocalar'), T = sentezKisiler(n, 'talebeler');
   const tH = median(H.map(p => p.tab).filter(Boolean)), tT = median(T.map(p => p.tab).filter(Boolean));
   const yH = median(H.map(p => p.year).filter(Boolean)), yT = median(T.map(p => p.year).filter(Boolean));
   const est = tH != null && tT != null ? ((tH + 1) + (tT - 1)) / 2 : tH != null ? tH + 1 : tT != null ? tT - 1 : null;
   const e = est != null ? Math.max(1, Math.min(12, Math.round(est))) : null;
-  const own = fieldVal(n, 'tabaka'), td = tkzVeri(n);
+  const own = fieldVal(n, 'tabaka'), td = tkzVeri(n), hk = hocaKiyas(n);
   let out = '<h3 class="panel-title">Hoca ve talebe sentezi <span class="muted">otomatik tahmin — hüküm değildir</span></h3><div class="set-grid">' + sentezKart(H, 'Hocaları') + sentezKart(T, 'Talebeleri') + '</div>';
   out += '<div class="note info" style="margin-top:8px"><b>Tahmini tabaka:</b> ' + (e ? e + '. tabaka (' + esc(CTK.TABAKA_TR[e] || '') + ')' : 'hesaplanamadı (hoca ve talebelerin vefat ya da tabakası bilinmiyor)') +
     (e ? ' <span class="small muted">· dayanak: ' + [tH != null ? 'hocaların ortanca tabakası ' + tH.toFixed(1) + ' (+1)' : '', tT != null ? 'talebelerinki ' + tT.toFixed(1) + ' (−1)' : ''].filter(Boolean).join(' · ') + '</span>' : '') +
     (yH || yT ? '<br><b>Tahmini vefat:</b> ' + (yH && yT ? 'h. ' + Math.round(yH) + ' ile ' + Math.round(yT) + ' arasında' : yH ? 'h. ' + Math.round(yH) + '’den sonra' : 'h. ' + Math.round(yT) + '’den önce') + ' <span class="small muted">(hocaların ve talebelerin ortanca vefatı)</span>' : '') +
     (td && td.takrib && td.takrib.tabaka ? '<br><b>Takrîb’e göre:</b> ' + Math.round(td.takrib.tabaka) + '. tabaka' + (td.takrib.vefat ? ', vefat h. ' + td.takrib.vefat + (td.takrib.yaklasik ? ' (yaklaşık)' : '') : '') + (e ? ' <span class="small muted">· tahminle ' + (Math.round(td.takrib.tabaka) === e ? 'örtüşüyor' : Math.abs(Math.round(td.takrib.tabaka) - e) + ' tabaka fark') + '</span>' : '') : '') +
-    (own ? '<br><span class="small">Kimlikteki tabaka: <span class="ar">' + esc(own) + '</span></span>' : '') + '<br><span class="small muted">Vefat ve memleket listedeki girişlerden, HH kaydından, Tehzîb/Takrîb verisinden ya da addaki nisbeden alınır; vefatı bilinen kişinin tabakası yaklaşık hesaplanır. Bilgisi eksik kişiyi ✎ ile tamamlayın.</span></div>';
+    hk + (own ? '<br><span class="small">Kimlikteki tabaka: <span class="ar">' + esc(own) + '</span></span>' : '') + '<br><span class="small muted">Vefat ve memleket listedeki girişlerden, HH kaydından, Tehzîb/Takrîb verisinden ya da addaki nisbeden alınır; vefatı bilinen kişinin tabakası yaklaşık hesaplanır. Bilgisi eksik kişiyi ✎ ile tamamlayın.</span></div>';
   return out;
 }
 function renderTeachersTab(n) { return hocaTalebeTab(n, 'hoca'); }
@@ -6308,33 +6426,72 @@ function lexAgg(src) {
   return Object.values(M);
 }
 var LEX = null;
+// Lafzın mertebesi, anlamı ve notu (Lafız dizini kartı, ipuçları)
+const mertebeAd = e => ('TNK'.includes(e.k) ? CTX.TLEVEL[e.lv] : CTX.CLEVEL[e.lv]) || KNAME[e.k] || '—';
+const lafizAnlam = e => (typeof CTS !== 'undefined' && CTS.anlam(grupKey(e))) || '';
+function lafizIpucu(e) { return [e.tr + (lafizAnlam(e) ? ' — ' + lafizAnlam(e) : ''), KNAME[e.k] + (e.lv ? ' · ' + mertebeAd(e) : ''), e.nt].filter(Boolean).join('\n'); }
+function lafizKart(e) {
+  const a = lafizAnlam(e), md = lisanMd(e);
+  if (!LSN.d && !LSN.busy) lisanGetir().then(d => { if (d && S.view === 'lex') renderLex(); });
+  return (a ? '<p style="margin:2px 0 6px"><b>Anlamı:</b> ' + esc(a) + '</p>' : '') + (e.nt ? '<div class="note info">' + esc(e.nt) + '</div>' : '') +
+    (md.length ? '<p class="small" style="margin:6px 0 0">Lisânü’l-Muhaddisîn: ' + md.slice(0, 8).map(n => lisanBtn(n) + ' <span class="ar">' + esc((LSN.d.maddeler[n] || [])[1] || '') + '</span>').join(' · ') + '</p>' : '');
+}
+UI.lrail = UI.lrail || 'open';
+function layoutLrail() {
+  const v = $('view-lex'); if (!v) return;
+  const open = UI.lrail === 'open', mode = !open ? 'closed' : isPhone() ? 'overlay' : 'docked';
+  v.dataset.rail = mode; $('lrail').inert = mode === 'closed';
+  $('lrail-notch').setAttribute('aria-expanded', String(mode !== 'closed'));
+  $('lrail-notch').querySelector('.fdot').hidden = !(S.lexQ || S.lexK);
+}
+function setLrail(open, focus) { UI.lrail = open ? 'open' : 'closed'; saveUI(); layoutLrail(); if (open && focus) { const q = $('lex-f'); if (q) q.focus({ preventScroll: true }); } }
+const LEXKINDS = ['T', 'N', 'K', 'B', 'J', 'C', 'R', 'V', 'P', 'D', 'S', 'M'];
+// Kalıp listesi (çekmece): tür ve metin süzgeciyle
+function renderLexList(LX) {
+  const q = (S.lexQ || '').trim(), qn = nz(q), ql = trk(q);
+  const list = LX.filter(m => !S.lexK || m.e.k === S.lexK).sort((a, b) => LEXKINDS.indexOf(a.e.k) - LEXKINDS.indexOf(b.e.k) || (b.e.k === 'T' ? b.e.lv - a.e.lv : a.e.lv - b.e.lv) || b.occ.length - a.occ.length);
+  const gor = m => !q || nz(stripH(sampleText(m)) + ' ' + m.e.tr).includes(qn) || trIcer(m.e.tr, ql) || m.occ.some(o => nz(o.t.text).includes(qn));
+  const vis = list.filter(gor);
+  $('llist').innerHTML = vis.map(m => '<button data-lex="' + esc(m.e.id) + '" role="option" aria-current="' + (m.e.id === S.lexSel) + '" title="' + esc(lafizIpucu(m.e)) + '"><span class="tag k ' + kc(m.e.k) + '" title="' + esc(KNAME[m.e.k]) + '">' + (m.e.lv || '·') + '</span><span class="lxw"><span class="lx">' + esc(stripH(sampleText(m))) + '</span><span class="small muted">' + esc(m.e.tr) + '</span></span><span class="cnt">' + m.occ.length + '</span></button>').join('') || '<div class="empty-state small">Bu süzgeçte kalıp yok.</div>';
+  $('lrail-count').textContent = vis.length + ' / ' + LX.length;
+  return list;
+}
 function renderLex() {
-  if (!ensureScope($('lex-body'), renderLex)) return;
+  layoutLrail();
+  if (!ensureScope($('lex-body'), renderLex)) { $('llist').innerHTML = ''; $('lrail-head').innerHTML = ''; return; }
   LEX = LEX || lexAgg();
   const lexKey = S.scope + '|' + PK.id + '|' + Object.keys(KORPUS.recs).length + '|' + ADDED.length;
   if (!LEXC || LEXC.key !== lexKey) LEXC = { key: lexKey, data: lexAgg(scopeStatements(S.scope).filter(s => s.origin !== 'user' && s.origin !== 'HH')) };
   const LX = LEXC.data;
-  const kinds = ['T', 'N', 'K', 'B', 'J', 'C', 'R', 'V', 'P', 'D', 'S', 'M'];
-  const list = LX.filter(m => !S.lexK || m.e.k === S.lexK).sort((a, b) => kinds.indexOf(a.e.k) - kinds.indexOf(b.e.k) || (b.e.k === 'T' ? b.e.lv - a.e.lv : a.e.lv - b.e.lv) || b.occ.length - a.occ.length);
-  if (!S.lexSel && list[0]) S.lexSel = list[0].e.id;
+  $('lrail-head').innerHTML = '<div class="search lexf"><label class="sr-only" for="lex-f">Kalıp süz</label><input id="lex-f" type="search" placeholder="Kalıp süz (Arapça veya Türkçe)…" autocomplete="off" value="' + esc(S.lexQ || '') + '"></div>' +
+    '<div class="chips lex-kinds" style="margin-top:6px"><button class="chip" data-lexk="" aria-pressed="' + !S.lexK + '">Tümü</button>' + LEXKINDS.filter(k => LX.some(m => m.e.k === k)).map(k => '<button class="chip" data-lexk="' + k + '" aria-pressed="' + (S.lexK === k) + '"><span class="sw" style="background:var(--k-' + k.toLowerCase() + ')"></span>' + KNAME[k] + '</button>').join('') + '</div>';
+  const list = renderLexList(LX);
+  if ((!S.lexSel || !LX.some(m => m.e.id === S.lexSel)) && list[0]) S.lexSel = list[0].e.id;
   const sel = LX.find(m => m.e.id === S.lexSel);
   const nLex = CTX.LEXICON.filter(e => e.k !== 'X').length;
   let out = viewHead({ key: 'lex', title: 'Lafız dizini', sub: LX.length + ' kalıp ' + (S.scope === 'vol' && multiVol() ? 'bu ciltte' : 'eserde') + ' geçiyor · sözlükte ' + nLex + ' kalıp', actions: scopeBar(),
-    help: 'Motorun sözlüğündeki her kalıbın bu kapsamda geçtiği yerler, bağlamıyla (KWIC: bağlam içinde anahtar kelime). Soldan bir kalıp seçin; sağdaki satıra tıklayınca ilgili râvi ve hüküm açılır. Kalıbın düzenli ifadesi kartta açılır; mertebe ölçeği, sınıflar ve örnekler Yöntem sayfasındadır.' }) + scopeNote() +
-    '<div class="chips lex-kinds"><button class="chip" data-lexk="" aria-pressed="' + !S.lexK + '">Tümü</button>' + kinds.filter(k => LX.some(m => m.e.k === k)).map(k => '<button class="chip" data-lexk="' + k + '" aria-pressed="' + (S.lexK === k) + '"><span class="sw" style="background:var(--k-' + k.toLowerCase() + ')"></span>' + KNAME[k] + '</button>').join('') + '</div>';
-  out += '<div class="twocol"><div class="lexcol"><div class="search lexf"><label class="sr-only" for="lex-f">Kalıp süz</label><input id="lex-f" type="search" placeholder="Kalıp süz (Arapça veya Türkçe)…" autocomplete="off"></div><div class="lexlist">' + list.map(m => '<button data-lex="' + esc(m.e.id) + '" aria-current="' + (m.e.id === S.lexSel) + '"><span class="tag k ' + kc(m.e.k) + '" title="' + esc(KNAME[m.e.k]) + '">' + (m.e.lv || '·') + '</span><span class="lxw"><span class="lx">' + esc(stripH(sampleText(m))) + '</span><span class="small muted">' + esc(m.e.tr) + '</span></span><span class="cnt">' + m.occ.length + '</span></button>').join('') + '</div></div><div>';
+    help: 'Motorun sözlüğündeki her kalıbın bu kapsamda geçtiği yerler, bağlamıyla (KWIC: bağlam içinde anahtar kelime). Soldaki çekmeceden bir kalıp seçin; geçişler münekkite, esere ve metne göre süzülebilir; satıra tıklayınca ilgili râvi ve hüküm açılır. Lafızların anlamı, mertebesi, ihtilafları ve münekkitlerin özel kullanımları Yöntem → Sözlük haritası’ndadır.' }) + scopeNote();
   if (sel) {
-    out += '<div class="card" style="margin-bottom:10px"><h3>' + kindTag(sel.e.k) + ' ' + esc(sel.e.tr) + '</h3><div class="termchips" style="margin:4px 0 6px">' + entryExamples(sel.e, 10).list.map(x => '<span class="tag k ' + kc(sel.e.k) + '"><span class="ar" style="font-size:calc(19px * var(--yb))">' + esc(x) + '</span></span>').join('') + '</div><details class="hint"><summary>Düzenli ifade (normalize imlâ)</summary><code dir="ltr" style="unicode-bidi:plaintext">' + esc(sel.e.p.replace(/\(\?<\w+>/g, '(')) + '</code></details><div class="hint">Mertebe: ' + esc(sel.e.k === 'T' ? CTX.TLEVEL[sel.e.lv] || '' : CTX.CLEVEL[sel.e.lv] || '—') + ' · Sebep: ' + esc(CTX.SEBEB[sel.e.sb] || '—') + ' · ' + sel.occ.length + ' geçiş</div>' + (sel.e.nt ? '<div class="note info">' + esc(sel.e.nt) + '</div>' : '') + '</div>';
-    const occ = sel.occ.length > 1500 ? sel.occ.slice(0, 1500) : sel.occ;
-    out += (sel.occ.length > occ.length ? '<p class="hint">İlk ' + fmt(occ.length) + ' geçiş gösteriliyor (toplam ' + fmt(sel.occ.length) + ').</p>' : '') + '<div class="wrap" style="background:var(--paper);border:1px solid var(--line);border-radius:10px"><table class="kwic"><tbody>' + occ.map(({ s, t }) => {
-      let pre, post;
-      if (t.pre != null) { pre = t.pre; post = t.post; } else { const txt = s.b._text.replace(/\n/g, ' '); pre = txt.slice(Math.max(0, t.start - 48), t.start); post = txt.slice(t.end, t.end + 48); }
+    const F = S.lexF && S.lexF.id === sel.e.id ? S.lexF : (S.lexF = { id: sel.e.id, c: '', e: '', q: '', say: false });
+    out += '<div class="card" style="margin-bottom:10px"><h3>' + kindTag(sel.e.k) + ' ' + esc(sel.e.tr) + '</h3><div class="termchips" style="margin:4px 0 6px">' + entryExamples(sel.e, 10).list.map(x => '<span class="tag k ' + kc(sel.e.k) + '"><span class="ar" style="font-size:calc(19px * var(--yb))">' + esc(x) + '</span></span>').join('') + '</div>' + lafizKart(sel.e) + '<details class="hint"><summary>Düzenli ifade (normalize imlâ)</summary><code dir="ltr" style="unicode-bidi:plaintext">' + esc(sel.e.p.replace(/\(\?<\w+>/g, '(')) + '</code></details><p class="small muted" style="margin:4px 0 0">Mertebe: ' + esc(mertebeAd(sel.e)) + (sel.e.sb ? ' · Sebep: ' + esc((CTX.SEBEB || {})[sel.e.sb] || sel.e.sb) : '') + ' · ' + fmt(sel.occ.length) + ' geçiş</p></div>';
+    const cS = new Map(), eS = new Map();
+    for (const { s } of sel.occ) { const c = eCritic(s) || '-'; cS.set(c, (cS.get(c) || 0) + 1); const e = s.b.effective.source_name || ''; eS.set(e, (eS.get(e) || 0) + 1); }
+    const qn = nz(F.q || '').trim();
+    const ctx = ({ s, t }) => { if (t.pre != null) return [t.pre, t.post]; const txt = s.b._text.replace(/\n/g, ' '); return [txt.slice(Math.max(0, t.start - 48), t.start), txt.slice(t.end, t.end + 48)]; };
+    const all = sel.occ.filter(o => (!F.c || (eCritic(o.s) || '-') === F.c) && (!F.e || (o.s.b.effective.source_name || '') === F.e) && (!F.say || eCounts(o.s)) && (!qn || nz(ctx(o).join(' ') + ' ' + o.t.text + ' #' + o.s.n.source_sequence + ' ' + o.s.n.effective.canonical_name).includes(qn)));
+    const sec = (id, m, v, bos) => '<select class="field sm" data-lexf="' + id + '"><option value="">' + bos + '</option>' + [...m].sort((a, b) => b[1] - a[1]).map(([k, n]) => '<option value="' + esc(k) + '"' + (v && k === v ? ' selected' : '') + '>' + esc(id === 'c' ? (k !== '-' ? crName(k, k) : 'Söz sahibi belirsiz') : (k || '(eser yok)')) + ' (' + n + ')</option>').join('') + '</select>';
+    out += '<div class="lexfilt"><div class="search"><label class="sr-only" for="lexf-q">Geçişlerde ara</label><input id="lexf-q" type="search" placeholder="Bağlamda, râvi adında veya #numarada ara…" value="' + esc(F.q || '') + '"></div>' + sec('c', cS, F.c, 'Bütün münekkitler') + sec('e', eS, F.e, 'Bütün eserler') +
+      '<label class="chk-inline small"><input type="checkbox" data-lexf="say"' + (F.say ? ' checked' : '') + '> Yalnız sayılanlar</label><span class="small muted cf-count">' + fmt(all.length) + ' / ' + fmt(sel.occ.length) + ' geçiş</span></div>';
+    const occ = all.length > 1500 ? all.slice(0, 1500) : all;
+    out += (all.length > occ.length ? '<p class="hint">İlk ' + fmt(occ.length) + ' geçiş gösteriliyor (toplam ' + fmt(all.length) + ').</p>' : '') + '<div class="wrap" style="background:var(--paper);border:1px solid var(--line);border-radius:10px"><table class="kwic"><tbody>' + occ.map(o => {
+      const { s, t } = o, [pre, post] = ctx(o);
       return '<tr data-goto="' + esc(gotoAttr(s)) + '"><td class="src">' + '#' + s.n.source_sequence + ' · ' + esc(crName(eCritic(s), s.critic_written)) + '</td><td class="l">' + esc(post) + '…</td><td class="c" style="color:var(--ink)"><span class="hs ' + kc(t.k) + '">' + esc(t.text) + '</span></td><td class="r">…' + esc(pre) + '</td></tr>';
-    }).join('') + '</tbody></table></div>';
+    }).join('') + (occ.length ? '' : '<tr><td class="empty-state">Bu süzgeçte geçiş yok.</td></tr>') + '</tbody></table></div>';
   }
-  $('lex-body').innerHTML = out + '</div></div>';
-  // Kalıp listesini yeniden çizmeden süzer
-  const f = $('lex-f'); f.oninput = () => { const q = f.value.trim(), qn = nz(q), ql = trk(q); for (const b of document.querySelectorAll('.lexlist [data-lex]')) b.hidden = !!q && !nz(b.textContent).includes(qn) && !trIcer(b.textContent, ql); };
+  $('lex-body').innerHTML = out;
+  const f = $('lex-f'); f.oninput = () => { S.lexQ = f.value; renderLexList(LX); layoutLrail(); };
+  const fq = $('lexf-q'); if (fq) fq.oninput = () => { clearTimeout(fq._t); fq._t = setTimeout(() => { S.lexF.q = fq.value; renderLex(); const g = $('lexf-q'); g.focus(); g.setSelectionRange(g.value.length, g.value.length); }, 200); };
+  for (const el of document.querySelectorAll('#lex-body [data-lexf]')) el.onchange = () => { const k = el.dataset.lexf; S.lexF[k] = k === 'say' ? el.checked : el.value; renderLex(); };
 }
 // Düzenli ifadeyi okunur örneklere açar: (?:a|b) → a · b, (…)? → isteğe bağlı, \S+ → …
 function expandPattern(p, max) {
@@ -6534,13 +6691,25 @@ function renderMethod() {
     '<li><b>Hoca ve talebe:</b> el-Mizzî, <i>Tehzîbü’l-Kemâl</i> (rumuzlu hoca/talebe listeleri); İbn Hacer, <i>Takrîbü’t-Tehzîb</i> (tabaka ve vefat).</li>' +
     '<li><b>Münekkitlerin tavrı:</b> ez-Zehebî, <i>Zikru men yu‘temedu kavlühû fi’l-cerh ve’t-ta‘dîl</i>.</li></ul>' +
 
-    '<h3>2. Mertebe ölçeği</h3><p>Sehâvî’nin tasnifinde adı geçen lafızlar orada bırakılmıştır. Sehâvî’de geçmeyen lafızlar Lisânü’l-Muhaddisîn’deki açıklamaya göre yerleştirilmiştir (ör. ' + ar('ذو مناكير، صاحب مناكير') + ' “metrûk lafızlarındandır” → −4; ' + ar('رضا، متين') + ' “sika anlamındadır” → +4). İki kaynak ayrıştığında Sehâvî’nin mertebesi korunur, Lisân’ın görüşü kalıbın notunda gösterilir (ör. ' + ar('واه') + ').</p><div class="wrap"><table class="tbl"><thead><tr><th>Değer</th><th>Mertebe</th><th>Sözlükteki kalıplar (örnek)</th></tr></thead><tbody>' +
-    [6, 5, 4, 3, 2, 1].map(v => '<tr style="cursor:default"><td class="num">+' + v + '</td><td>' + esc(CTX.TLEVEL[v]) + '</td><td class="ar" style="font-size:calc(15px * var(--yb))">' + row('T', v) + '</td></tr>').join('') +
-    [1, 2, 3, 4, 5, 6].map(v => '<tr style="cursor:default"><td class="num">−' + v + '</td><td>' + esc(CTX.CLEVEL[v]) + '</td><td class="ar" style="font-size:calc(15px * var(--yb))">' + row('C', v) + (v === 2 ? ' · ' + row('J', 2) : '') + '</td></tr>').join('') + '</tbody></table></div>' +
-    '<p><b>Üç mertebe:</b> Cüdey‘, İbn Ebî Hâtim’in iki taksiminden râvileri üç mertebeye ayırır (I, 561–566). Ölçekteki karşılıkları: <b>ihticâc</b> +3…+6 (sahih ve hasen râvisi); <b>i‘tibâr</b> +2…−2 (sâlih, şeyh; leyyin, leyse bi’l-kavî; za‘îf): hadisi mütâbaat ve şâhit için yazılır; <b>sukût</b> −3…−6 (metrûk, zâhib, kezzâb): hadisi i‘tibâra da elverişsizdir (II, 1075–1078). Cüdey‘ bir lafzın belirli bir münekkitteki anlamını o münekkitin kendi açıklamasıyla ya da istikrâyla gösterdiğinde mertebe yalnız o münekkit için değiştirilir; genel mertebe Sehâvî’de kalır.</p>' +
+    '<h3>2. Mertebe ölçeği</h3><p>Sitede her hüküm −6…+6 arasında bir değer alır. Sehâvî’nin tasnifinde adı geçen lafızlar orada bırakılmıştır; geçmeyenler Lisânü’l-Muhaddisîn’deki açıklamaya göre yerleştirilmiştir (ör. ' + ar('ذو مناكير، صاحب مناكير') + ' “metrûk lafızlarındandır” → −4; ' + ar('رضا، متين') + ' “sika anlamındadır” → +4). İki kaynak ayrıştığında Sehâvî’nin mertebesi korunur, Lisân’ın görüşü kalıbın notunda ve aşağıdaki Sözlük haritasında gösterilir. <b>Rivayetin hükmü</b> sütunu Cüdey‘’in üç mertebesini izler: <b>ihticâc</b> (tek başına delil), <b>i‘tibâr</b> (mütâbaat ve şâhit için yazılır), <b>sukût</b> (i‘tibâra da elverişsiz).</p>' +
+    '<div class="wrap"><table class="tbl mertebe-tbl"><thead><tr><th>Değer</th><th>Mertebe</th><th>Rivayetin hükmü</th><th>Lisân (md. 1419)</th><th>Açıklama</th><th>Sözlükteki kalıplar (örnek)</th></tr></thead><tbody>' +
+    CTS.MERTEBE.map(m => { const k = m.v > 0 ? 'T' : 'C', lv = Math.abs(m.v), n = L.filter(e => (m.v > 0 ? 'TN' : 'CJ').includes(e.k) && e.lv === lv).length; return '<tr style="cursor:default" class="mrt-' + (m.v > 0 ? 't' : 'c') + '"><td class="num"><b>' + (m.v > 0 ? '+' : '−') + lv + '</b></td><td>' + esc(m.ad) + '<div class="small muted">' + n + ' kalıp</div></td><td><span class="tag hk-' + (m.hukum.startsWith('İhticâc') ? 'ih' : m.hukum === 'İ‘tibâr' ? 'it' : 'su') + '">' + esc(m.hukum) + '</span></td><td class="num">' + m.lisan + '</td><td class="small">' + esc(m.ac) + '</td><td class="ar" style="font-size:calc(15px * var(--yb))">' + row(k, lv) + (k === 'C' && lv === 2 ? ' · ' + row('J', 2) : '') + '</td></tr>'; }).join('') + '</tbody></table></div>' +
+    '<p><b>Lisânü’l-Muhaddisîn’in yedi mertebesi</b> (md. 1419 · ' + lisanBtn(1419) + '): müellif râvileri yedi mertebeye ayırır ve her mertebeye giren lafızları sayar; mertebelerin bazen yaklaşık olduğunu, lafızların mertebesinde münekkitler arasında ittifak bulunmadığını belirtir.</p>' +
+    '<div class="wrap"><table class="tbl"><thead><tr><th>Mertebe</th><th>Râviler</th><th>Sitedeki karşılığı</th><th>Lisân’ın saydığı lafızlardan</th></tr></thead><tbody>' +
+    CTS.LISAN7.map(m => '<tr style="cursor:default"><td class="num">' + m.m + '</td><td>' + esc(m.ad) + '</td><td class="small">' + esc(m.site) + '</td><td class="ar" style="font-size:calc(15px * var(--yb))">' + esc(m.l) + '</td></tr>').join('') + '</tbody></table></div>' +
+    '<p><b>Üç mertebe:</b> Cüdey‘, İbn Ebî Hâtim’in iki taksiminden râvileri üç mertebeye ayırır (I, 561–566): <b>ihticâc</b> +3…+6 (sahih ve hasen râvisi); <b>i‘tibâr</b> +2…−2 (sâlih, şeyh; leyyin, leyse bi’l-kavî; za‘îf); <b>sukût</b> −3…−6 (metrûk, zâhib, kezzâb) (II, 1075–1078). Lisân da râvileri önce ikiye (kabul ve red), sonra üçe ayırır: ihticâc olunan sikalar, istişhâd olunan mutavassıtlar, ne ihticâc ne istişhâd olunan metrûkler (md. 1419).</p>' +
     '<p class="cite">Örnekler cilt metninde geçen yazımlardır; eserde (ya da seçili ciltte) geçen kalıplar, düzenli ifadeleri ve geçtikleri yerlerle Lafız dizini sayfasında listelenir.</p>' +
 
-    '<h3>3. Münekkite ve esere özgü ıstılahlar</h3><ul>' +
+    '<h3>3. Sözlük haritası</h3><p>Sözlükteki bütün kalıp grupları sınıf ve mertebeye göre. Her grupta lafzın Türkçe anlamı, mertebesi, rivayetin hükmü, sebebi, eserdeki geçiş sayısı ve Lisânü’l-Muhaddisîn’deki maddeleri vardır; madde numarasına basınca maddenin metni açılır (metin gizli depodan gelir). “Lafız dizini” bağlantısı lafzın geçtiği yerleri açar. Hükümler ve Kaynak metin sekmelerinde lafzın üzerine gelip beklemek de anlamını gösterir.</p>' +
+    '<div class="smap-tools"><div class="search"><label class="sr-only" for="smap-q">Haritada ara</label><input id="smap-q" type="search" placeholder="Lafız, Türkçe ad veya anlam…" autocomplete="off"></div><div class="chips" id="smap-k"></div><span class="small muted" id="smap-n"></span></div><div id="smap" class="smap"><p class="hint">Harita hazırlanıyor…</p></div>' +
+
+    '<h3>4. İhtilaflı lafızlar ve münekkitlerin kullanımı (Lisânü’l-Muhaddisîn)</h3><p>Aynı lafız münekkite ve bağlama göre farklı anlam taşıyabilir; Lisân bunu sık sık hatırlatır ve her münekkitin ıstılahının kendi sözlerinin istikrâsıyla öğrenilmesini ister (md. 416’da el-Mu‘allimî’den). Aşağıda Lisân’ın tartıştığı başlıca lafızlar ve sitedeki karşılıkları; madde numaralarına basınca Lisân’ın metni açılır. Cüdey‘’e dayanan münekkite özgü kurallar 5. bölümdedir.</p>' +
+    '<div class="wrap"><table class="tbl ihtilaf-tbl"><thead><tr><th>Lafız</th><th>Sitede</th><th>Lisân’a göre anlamı ve ihtilaf</th><th>Madde</th></tr></thead><tbody>' +
+    CTS.IHTILAF.map(x => '<tr style="cursor:default"><td class="ar" style="font-size:calc(17px * var(--yb));white-space:nowrap">' + esc(x.l) + '</td><td class="small">' + esc(x.site) + '</td><td class="small">' + esc(x.o) + '</td><td class="small">' + x.md.map(lisanBtn).join(' ') + '</td></tr>').join('') + '</tbody></table></div>' +
+    '<p><b>Münekkitlerin özel kullanımları</b> (Lisân’dan):</p><div class="wrap"><table class="tbl"><thead><tr><th>Münekkit</th><th>Kullanım</th><th>Madde</th></tr></thead><tbody>' +
+    CTS.MUNEKKIT.map(x => '<tr style="cursor:default"><td>' + esc(x.c) + '</td><td class="small">' + esc(x.o) + '</td><td class="small">' + x.md.map(lisanBtn).join(' ') + '</td></tr>').join('') + '</tbody></table></div>' +
+
+    '<h3>5. Münekkite ve esere özgü ıstılahlar</h3><ul>' +
     '<li>el-Buhârî: ' + ar('منكر الحديث') + ' ve ' + ar('فيه نظر') + ' −2. Zehebî ve sonrakiler ağır cerh sayar; Cüdey‘’in istikrâsına göre ikisi de değişik derecelerdeki râviler için kullanılmış mücmel cerhtir, “münkerü’l-hadîs dediğimden rivayet helal olmaz” sözü Buhârî’nin eserlerinde bulunmaz (I, 603–607, 614–616). ' + ar('مقارب الحديث') + ' +3 (hasen); ' + ar('في إسناده نظر') + ' rivayet hakkındadır; ' + ar('سكتوا عنه') + ' = terk ettiler (ez-Zehebî, <i>el-Mûkıza</i>; Cüdey‘, I, 631).</li>' +
     '<li>Ahmed b. Hanbel: ' + ar('لا أعلم به بأسا') + ', ' + ar('صالح الحديث') + ', ' + ar('مقارب الحديث') + ' +3; ' + ar('جيد الحديث') + ' +4 (Cüdey‘, I, 571, 576–579, 584).</li>' +
     '<li>Yahyâ b. Maîn ve Duhaym: ' + ar('لا بأس به') + ' = sika (+4); ' + ar('لا شيء') + ' = ' + ar('ليس بشيء') + ', mücmel cerh (Cüdey‘, I, 574, 619–622).</li>' +
@@ -6554,24 +6723,24 @@ function renderMethod() {
     '<li>Mütekaddimûn (Cûzcânî, İbn Adî, İbn Hibbân): ' + ar('روى المعضلات، معضل الحديث') + ' = münker rivayetler (−2), sonraki ıstılahtaki mu‘dal değildir (Cüdey‘, I, 617–618).</li>' +
     '<li>el-Cûzcânî: ' + ar('زائغ، مذموم المذهب') + ' mezhep kaydıdır (İbn Adî), rivayette za‘f değildir.</li></ul>' +
 
-    '<h3>4. Sınıflar ve sebepler</h3><p>Her lafız bir sınıfa ve bir sebebe bağlanır. Cerh sebepleri İbn Hacer’in on ta‘n sebebini izler: adâlete ilişkin kizb, kizb ittihamı, fısk, cehâlet, bid‘at; zabta ilişkin fuhş-i galat, gaflet, vehim, muhâlefet, sû-i hıfz (ihtilât ve tedlîs ayrıca işaretlenir). Sebebi beyan edilmiş cerh <b>müfesser</b>, edilmemişi <b>mübhem</b> sayılır.</p>' +
+    '<h3>6. Sınıflar ve sebepler</h3><p>Her lafız bir sınıfa ve bir sebebe bağlanır. Cerh sebepleri İbn Hacer’in on ta‘n sebebini izler: adâlete ilişkin kizb, kizb ittihamı, fısk, cehâlet, bid‘at; zabta ilişkin fuhş-i galat, gaflet, vehim, muhâlefet, sû-i hıfz (ihtilât ve tedlîs ayrıca işaretlenir). Sebebi beyan edilmiş cerh <b>müfesser</b>, edilmemişi <b>mübhem</b> sayılır.</p>' +
     '<div class="cards">' + ['T', 'N', 'K', 'B', 'J', 'C', 'R', 'V', 'P', 'D', 'S', 'M'].map(k => '<div class="card"><h3>' + kindTag(k) + '</h3><div class="hint">' + esc(KDESC[k]) + '</div><div class="hint">' + L.filter(e => e.k === k).length + ' kalıp</div></div>').join('') + '</div>' +
 
-    '<h3>5. Sayım kuralları</h3><ul>' +
+    '<h3>7. Sayım kuralları</h3><ul>' +
     '<li><b>Görüş ve nakil:</b> aynı münekkitin aynı (ya da birini kapsayan) lafızla verdiği hüküm, kaç eserde nakledilirse nakledilsin tek görüş sayılır; nakiller ayrıca gösterilir. Nakillerden biri hükmü kısaltıyorsa <i>ihtisâr</i>, ifade farklıysa <i>lafız farkı</i> işaretlenir. Aynı münekkitin farklı hükmü ayrı görüştür.</li>' +
     '<li><b>Bid‘at:</b> yalın bid‘at ifadesi (' + ar('شيعي، قدري، مرجئ') + ') mezhep kaydıdır, cerh sayılmaz; aynı cümlede rivayetini reddeden bir lafız varsa cerhtir. Bid‘atına <b>dâ‘î</b> olmak tek başına cerhtir; ' + ar('غير داعية') + ' gibi olumsuzlar cerh değildir. Cüdey‘ dâ‘î ayrımını nazarî bulur ve sıdkı sabit râvide bid‘ati cerh saymaz (I, 396–411); sitede dâ‘î cerh sayılmaya devam eder.</li>' +
     '<li><b>Rivayet tavrı ve tedlîs:</b> tavır ayrı sayılır; Cüdey‘’e göre yalnız sikadan rivayet ettiği bilinen münekkitlerin (Mâlik, Şu‘be, el-Kattân, İbn Mehdî, Ahmed, Ebû Zür‘a) rivayeti tevsîktir (I, 307–314). Tedlîs hafif cerh (−1) sayılır; Cüdey‘ onu yalnız tedlîs edilen rivayeti etkileyen nisbî bir cerh sayar (I, 376–378).</li>' +
     '<li><b>Şiî ricâl:</b> en-Necâşî, et-Tûsî, el-Keşşî, İbnü’l-Gadâirî, İbn Şehrâşûb, İbn Ebî Tayy, İbn Dâvûd el-Hillî ve el-Allâme el-Hillî’nin değerlendirmeleri “Şiî tevsîki / Şiî cerhi / İmâmî ricâl kaydı” olarak ayrı gösterilir; Sünnî cerh–ta‘dîl sayımına girmez.</li>' +
     '<li><b>Sayılmayanlar:</b> rivâyet (hadis) hükmü, diyânet övgüsü, sükût, münekkit tenkidi, hedefi başka kişi olan ya da soru cümlesindeki lafız (' + ar('يحتج به؟') + '), şartlı hükümler. Harf ve benzeri dış kaynak kayıtları da sayıma eklenmez.</li></ul>' +
 
-    '<h3>6. Söz sahibinin (münekkit) tespiti</h3><ol>' +
+    '<h3>8. Söz sahibinin (münekkit) tespiti</h3><ol>' +
     '<li><b>Açık işaret:</b> ' + ar('قال X:') + ', ' + ar('سمعت X يقول') + ', ' + ar('سألت X') + ', ' + ar('عن X أنه قال') + ', senet içinde ' + ar('حدثنا X قال') + '.</li>' +
     '<li><b>Fiil kalıbı:</b> ' + ar('ضعفه / وثقه / لينه / تركه / اتهمه / كذبه / عدله / مشاه X') + ' — öznedeki her münekkit ayrı kayıttır.</li>' +
     '<li><b>Sonradan atıf:</b> ' + ar('متروك، قاله أبو الفتح الأزدي') + '.</li>' +
     '<li><b>Atıfsız hüküm:</b> eserin müellifine verilir; eserin ıstılahı varsa uygulanır (aşağıdaki tablo). Derleme eserlerde (İbnü’l-Cevzî, İbn Arrâk, Fettenî, Makrîzî) düşük güvenle işaretlenir.</li>' +
     '<li><b>Soru–cevap:</b> isimsiz cevap bağlamdaki son adlandırılmış kişiye verilir; soru cümlesindeki lafız hüküm sayılmaz.</li></ol>' +
 
-    '<h3>7. Metin süzgeçleri</h3><ul>' +
+    '<h3>9. Metin süzgeçleri</h3><ul>' +
     '<li><b>Normalizasyon:</b> harekeler ve tatvîl silinir; ' + ar('أ إ آ ٱ') + ' → ' + ar('ا') + ', ' + ar('ى') + ' → ' + ar('ي') + ', ' + ar('ة') + ' → ' + ar('ه') + ', ' + ar('ؤ') + ' → ' + ar('و') + '; ' + ar('ئ') + ' korunur. Vurgular özgün imlâ üzerinde gösterilir.</li>' +
     '<li><b>En uzun eşleşme:</b> çakışan kalıplardan en uzunu alınır; böylece ' + ar('لا يحتج به') + ' ta‘dîl sayılmaz. Olumsuzluklar “fe-” ile de tanınır (' + ar('فلا يحتج به، فليس بثقة') + ').</li>' +
     '<li><b>Bağlam: olumsuzlama (21.10.2026).</b> Sözlükte olumsuz biçimi bulunmayan bir lafzın hemen önünde olumsuz edat varsa (' + ar('ليس، لم، لا، ما، غير') + ') hüküm tersine çevrilir: olumsuzlanan ta‘dîl cerh (' + ar('ليس يكتب حديثه') + ' “hadisi yazılmaz”, ' + ar('غير صدوق') + ', ' + ar('ما كان ثقة') + '), olumsuzlanan cerh cerhin reddi sayılır (' + ar('لم يكن متهما') + ', ' + ar('وما تركه أحد') + '). İlgi ve şart cümleciğindeki lafız hüküm değildir (' + ar('فيما لم يخالف الثقات') + ', ' + ar('من لم يجهل') + ', ' + ar('بعد ما اختلط') + '); «lâ … illâ» istisnası hükmü teyit eder (' + ar('ما ترك حديثه إلا للرفض') + '); ' + ar('لا وثق ولا ضعف') + ' hüküm sayılmaz. Bütün eserde yapılan bağlam taramasında eski motorun bu kayıtları sistematik olarak ters saydığı görüldü; düzeltme örneklem okumasıyla yaklaşık %80 isabetli çıktı, kalan yanlışların çoğu sözün başka kişi ya da hadis hakkında olmasıdır.</li>' +
@@ -6581,20 +6750,21 @@ function renderMethod() {
     '<li><b>Haber metni ve ıstılah cümleleri:</b> merfû haberin ve âyetin içi taranmaz; ' + ar('كل من أقول فيه مجهول') + ' gibi tanımlar hüküm değildir.</li>' +
     '<li><b>Zımnî cerh:</b> du‘afâ eserlerinde açık lafız bulunmayan tercüme, kitaba alınması sebebiyle düşük güvenle kaydedilir.</li></ul>' +
 
-    '<h3>8. Hoca ve talebe</h3><ul>' +
+    '<h3>10. Hoca ve talebe</h3><ul>' +
     '<li>Kaynak metinden çıkarılan adlar düzeltilebilir; vefat ve memleket girilen değerden, HH ya da Tehzîb/Takrîb kaydından veya addaki nisbeden gelir. Dış kaynak bilgileri (HH, UD) ilgili sekmelerde kaynak koduyla (SC, CK, HH, UD) gösterilir ve hüküm sayılarına eklenmez.</li>' +
     '<li><b>Tehzîbü’l-Kemâl:</b> “revâ an” ve “revâ anhü” listeleri rumuzlarıyla alınır. Rumuzsuz hoca, Kütüb-i Sitte’de ondan rivayeti olmayan hocadır.</li>' +
     '<li><b>Takrîbü’t-Tehzîb:</b> tabaka ve vefat maddenin metninden okunur. Yüzyılı yazılmamış vefat yılı, İbn Hacer’in mukaddimedeki kuralıyla tamamlanır (1–2. tabaka 1. asır, 3–8. tabaka 2. asır, 9–12. tabaka 3. asır). Kişi, ad ve rumuz kapsamasıyla eşleştirilir (isnadda geçen kişi o kitapta da geçer); birden çok aday kalırsa eşleştirilmez.</li>' +
     '<li><b>İdrâk:</b> hocasının vefatı râvininkinden 100 yıldan fazla önceyse Hocalar sekmesinde “idrâk şüpheli” uyarısı çıkar; tarih, idrâkin ve semâın denetlenmesinde kullanılır (Cüdey‘, I, 97–112). Küçük yaşta Hz. Peygamber’i gören sahâbîdir, fakat rivayeti tâbiî rivayeti hükmünde mürseldir (I, 118–119); bu, sahâbîlik kaydının notunda belirtilir.</li>' +
-    '<li><b>Sentez:</b> râvinin tahmini tabakası, hocalarının ortanca tabakası +1 ile talebelerininki −1’in ortalamasıdır; Takrîb’deki tabakayla karşılaştırılır. Tahmindir, hüküm değildir.</li></ul>' +
+    '<li><b>Sentez:</b> râvinin tahmini tabakası, hocalarının ortanca tabakası +1 ile talebelerininki −1’in ortalamasıdır; Takrîb’deki tabakayla karşılaştırılır. Tahmindir, hüküm değildir.</li>' +
+    '<li><b>Hocalarına kıyasla tabaka:</b> râvinin HH’deki hocalarından hadis alan ve tabakası HH’de (İbn Hacer, Takrîb) bilinen kişilerin tabaka dağılımı çıkarılır; her hoca eşit ağırlıkla katılır ve kişilerin çoğunlukla bulunduğu tabaka (ağırlıklı ortanca) râvinin tabakası için yorumdur (tabakası HH’de bilinen 6976 râvide sınandı: %52 aynı tabaka, %90 en çok bir tabaka fark). Tabakası HH’de bulunan râvide HH’deki veri esastır. ez-Zehebî’nin Siyer’indeki tabaka bölümü ayrıca anılır (ölçeği farklıdır). Tezkiretü’l-huffâz ve el-Mu‘în HH’de yalnız birkaç sayfa olduğundan kullanılamadı. Veri gizli depodadır (tools/hh-tabaka-hazirla.py).</li></ul>' +
 
-    '<h3>9. Münekkitler</h3><p>Tavır sütunu Zehebî’nin üçlü taksimine (müteannit/müteşeddid, mütesâhil, mu‘tedil) dayanır; tercih için bir işarettir. Şehir sütunu münekkidin ilmî faaliyet merkezidir. Notlarda Cüdey‘’in münekkitlerin sıfatı (I, 203–231) ve teâruz (I, 513–557) bahislerinden özetler vardır: tek başına sözü esas alınmayanlar (Ebü’l-Feth el-Ezdî, Mesleme b. Kāsım), mezhep tesiri görülenler (Cûzcânî, İbn Hırâş, Dûlâbî, İbn Ukde) ve cehâlette aşırı gidenler (İbnü’l-Kattân, İbn Hazm).</p><div class="wrap"><table class="tbl" data-tid="method-critics"><thead><tr><th data-sk="t">Münekkit</th><th data-sk="n">Vefat</th><th data-sk="t">Şehir · bölge</th><th data-sk="t">Tavır</th><th>Not</th></tr></thead><tbody>' +
+    '<h3>11. Münekkitler</h3><p>Tavır sütunu Zehebî’nin üçlü taksimine (müteannit/müteşeddid, mütesâhil, mu‘tedil) dayanır; tercih için bir işarettir. Şehir sütunu münekkidin ilmî faaliyet merkezidir. Notlarda Cüdey‘’in münekkitlerin sıfatı (I, 203–231) ve teâruz (I, 513–557) bahislerinden özetler vardır: tek başına sözü esas alınmayanlar (Ebü’l-Feth el-Ezdî, Mesleme b. Kāsım), mezhep tesiri görülenler (Cûzcânî, İbn Hırâş, Dûlâbî, İbn Ukde) ve cehâlette aşırı gidenler (İbnü’l-Kattân, İbn Hazm).</p><div class="wrap"><table class="tbl" data-tid="method-critics"><thead><tr><th data-sk="t">Münekkit</th><th data-sk="n">Vefat</th><th data-sk="t">Şehir · bölge</th><th data-sk="t">Tavır</th><th>Not</th></tr></thead><tbody>' +
     crit.map(c => '<tr style="cursor:default"><td data-v="' + esc(c.tr) + '">' + esc(c.tr) + (c.shii ? ' <span class="tag">Şiî ricâl</span>' : '') + '<div class="ar small muted" style="font-size:calc(14px * var(--yb))">' + esc(c.canon) + '</div></td><td class="num">' + (c.death || '') + '</td><td class="small" data-v="' + esc(c.region + ' ' + c.city) + '">' + esc(c.city) + '<div class="muted">' + esc(c.region) + '</div></td><td class="small">' + esc(c.approach) + '</td><td class="small">' + esc(c.note) + '</td></tr>').join('') + '</tbody></table></div>' +
 
-    '<h3>10. Kaynak eser gelenekleri</h3><div class="wrap"><table class="tbl"><thead><tr><th>Eser (ayırt edici ad)</th><th>Atıfsız hükmün sahibi</th><th>Kural</th></tr></thead><tbody>' +
+    '<h3>12. Kaynak eser gelenekleri</h3><div class="wrap"><table class="tbl"><thead><tr><th>Eser (ayırt edici ad)</th><th>Atıfsız hükmün sahibi</th><th>Kural</th></tr></thead><tbody>' +
     CTX.CONVENTIONS.map(c => '<tr style="cursor:default"><td class="ar" style="font-size:calc(15px * var(--yb))">' + esc(c.m) + '</td><td>' + esc(crName(c.c, c.c)) + '</td><td class="small">' + esc([c.majhul ? 'atıfsız “mechûl” → ez-Zehebî; râvinin kayıtlarında Ebû Hâtim’e atıf varsa Ebû Hâtim' : '', c.lisan ? '“intehâ”ya kadar Mîzân nakli (ez-Zehebî; Mîzân kaydı varsa oradan sayılır), sonrası ve (ز) İbn Hacer' : '', c.comp ? 'derleme/ihtisar' : '', c.asked ? 'suâlât: sorulan münekkit' : '', c.incl ? 'zımnî cerh (kitaba alma)' : '', c.extra ? 'takma ad: ' + Object.keys(c.extra).join(', ') : ''].filter(Boolean).join(' · ')) + '</td></tr>').join('') + '</tbody></table></div>' +
 
-    '<h3>11. Sınırlar</h3><ul>' +
+    '<h3>13. Sınırlar</h3><ul>' +
     '<li>Kural tabanlı sistem sözlükte bulunmayan, alışılmadık ya da kinayeli ifadeleri kaçırabilir; aynı lafız münekkite ve bağlama göre farklı anlam taşıyabilir (Lisânü’l-Muhaddisîn’in sık uyarısı). Bu yüzden her kayıt incelemeye açıktır.</li>' +
     '<li>Güven puanı kalıbın açıklığından ve atıf dayanağından türetilen sıralı bir göstergedir; olasılık değildir.</li>' +
     '<li>Gerçek isabet ve duyarlılık, araştırmacının “Doğru / Yanlış / Eksik ekle” kayıtlarıyla Tespit raporunda ölçülür.</li></ul>' +
@@ -6608,8 +6778,38 @@ function renderMethod() {
     '<li>Muhammed Halef Selâme, <i>Lisânü’l-Muhaddisîn: Mu‘cem yu‘nâ bi-şerhi mustalahâti’l-muhaddisîn</i> (5 cilt, 2007).</li>' +
     '<li>Abdullah b. Yûsuf el-Cüdey‘, <i>Tahrîru ulûmi’l-hadîs</i> (2 cilt, Beyrut: Müessesetü’r-Reyyân, 1424/2003), I, 187–635 (“Nakdü’n-nakale”); II, 997–1086.</li></ul>' +
     '<h3>Hâdimü’l-Haremeyn kaynak künyeleri</h3><div id="method-kunye"><p class="hint">Künyeler yükleniyor…</p></div>';
-  docToc($('method-body'), 'm', { 3: 'm:4', 8: 'm:9', 9: 'm:10' });
-  kunyeYontemDoldur();
+  docToc($('method-body'), 'm', { 5: 'm:4', 10: 'm:9', 11: 'm:10' });
+  kunyeYontemDoldur(); smapKur();
+}
+// Sözlük haritası (Yöntem 3. bölüm): kalıp grupları sınıf ve mertebeye göre; anlam, hüküm, geçiş, Lisân maddeleri
+const SMAP_KINDS = ['T', 'K', 'N', 'J', 'C', 'B', 'R', 'V', 'P', 'D', 'S', 'M', 'L'];
+const hukumOf = (k, lv) => 'TN'.includes(k) ? (lv >= 3 ? 'İhticâc' : 'İ‘tibâr') : k === 'K' ? 'İ‘tibâr' : 'CJ'.includes(k) ? (lv <= 2 ? 'İ‘tibâr' : 'Sukût') : '';
+function smapKur() {
+  const el = $('smap'); if (!el) return;
+  const occ = new Map(); const LX = (LEXC && LEXC.data) || (LEX = LEX || lexAgg());
+  for (const m of LX) occ.set(m.e.id, m.occ.length);
+  const G = new Map();
+  for (const e of CTX.LEXICON) { if (e.k === 'X' || !e.tr) continue; const k = grupKey(e); let g = G.get(k); if (!g) G.set(k, g = { k: e.k, lv: e.lv, tr: e.tr, sb: e.sb, nt: e.nt || '', es: [], n: 0 }); g.es.push(e); g.n += occ.get(e.id) || 0; if (!g.nt && e.nt) g.nt = e.nt; }
+  const list = [...G.values()].sort((a, b) => SMAP_KINDS.indexOf(a.k) - SMAP_KINDS.indexOf(b.k) || ('TNK'.includes(a.k) ? b.lv - a.lv : a.lv - b.lv) || b.n - a.n);
+  const S2 = smapKur.S = smapKur.S || { q: '', k: '' };
+  $('smap-k').innerHTML = '<button class="chip" data-smk="" aria-pressed="' + !S2.k + '">Tümü</button>' + SMAP_KINDS.filter(k => list.some(g => g.k === k)).map(k => '<button class="chip" data-smk="' + k + '" aria-pressed="' + (S2.k === k) + '"><span class="sw" style="background:var(--k-' + k.toLowerCase() + ')"></span>' + KNAME[k] + '</button>').join('');
+  const q = S2.q.trim(), qn = nz(q), ql = trk(q);
+  const vis = list.filter(g => (!S2.k || g.k === S2.k) && (!q || nz(g.es.map(e => expandPattern(e.p, 3).join(' ')).join(' ')).includes(qn) || trIcer(g.tr + ' ' + CTS.anlam(grupKey(g)) + ' ' + g.nt, ql)));
+  let son = '';
+  el.innerHTML = vis.map(g => {
+    const key = grupKey(g), a = CTS.anlam(key), md = (LSN.d && LSN.d.gruplar[key]) || [], ex = [...new Set(g.es.flatMap(e => entryExamples(e, 3).list))].slice(0, 5);
+    const bas = g.k + ('TNKCJ'.includes(g.k) ? g.lv : ''), head = bas !== son ? (son = bas, '<div class="smap-h">' + kindTag(g.k) + ' ' + ('TNK'.includes(g.k) ? '+' + g.lv + ' · ' + esc(CTX.TLEVEL[g.lv] || '') : 'CJ'.includes(g.k) ? '−' + g.lv + ' · ' + esc(CTX.CLEVEL[g.lv] || '') : esc(KDESC[g.k] || '')) + (hukumOf(g.k, g.lv) ? ' <span class="small muted">· ' + hukumOf(g.k, g.lv) + '</span>' : '') + '</div>') : '';
+    const go = g.es.find(e => occ.get(e.id)) || g.es[0];
+    return head + '<details class="smap-g ' + kc(g.k) + '"><summary><span class="ar smap-ex">' + esc(ex.join(' · ')) + '</span><span class="smap-tr">' + esc(g.tr) + '</span><span class="smap-n" title="Eserde (yüklü kapsamda) geçiş">' + (g.n ? fmt(g.n) : '·') + '</span>' + (md.length ? '<span class="tag smap-l" title="Lisânü’l-Muhaddisîn’de madde var">Lisân</span>' : '') + '</summary><div class="smap-b">' +
+      (a ? '<p><b>Anlamı:</b> ' + esc(a) + '</p>' : '') + '<p class="small">' + kindTag(g.k) + ' ' + esc(mertebeAd(g)) + (hukumOf(g.k, g.lv) ? ' · <b>' + hukumOf(g.k, g.lv) + '</b>' : '') + (g.sb ? ' · Sebep: ' + esc(CTX.SEBEB[g.sb] || g.sb) : '') + ' · ' + g.es.length + ' kalıp · ' + (g.n ? fmt(g.n) + ' geçiş' : 'yüklü kapsamda geçmiyor') + ' · <button type="button" class="linkbtn small" data-lexgo="' + esc(go.id) + '">Lafız dizininde aç</button></p>' +
+      (g.nt ? '<div class="note info small">' + esc(g.nt) + '</div>' : '') +
+      (md.length ? '<p class="small">Lisânü’l-Muhaddisîn: ' + md.map(n => lisanBtn(n) + ' <span class="ar">' + esc(LSN.d.maddeler[n][1]) + '</span>').join(' · ') + '</p>' : LSN.d ? '' : '<p class="small muted">Lisân maddeleri ortak kayıt bağlıyken yüklenir.</p>') +
+      '</div></details>';
+  }).join('') || '<p class="hint">Bu süzgeçte kalıp yok.</p>';
+  $('smap-n').textContent = vis.length + ' / ' + list.length + ' grup';
+  const qi = $('smap-q'); if (qi && !qi.oninput) { qi.value = S2.q; qi.oninput = () => { clearTimeout(qi._t); qi._t = setTimeout(() => { S2.q = qi.value; smapKur(); }, 200); }; }
+  for (const b of document.querySelectorAll('#smap-k [data-smk]')) b.onclick = () => { S2.k = b.dataset.smk; smapKur(); };
+  if (!LSN.d && !LSN.busy && !smapKur.denendi) { smapKur.denendi = true; lisanGetir().then(d => { if (d) smapKur(); }); }
 }
 // Uzun belge: solda içindekiler (yapışkan), bölüm başlıkları id alır; verilen bölümler katlanır.
 // Bağlantılar adres çubuğunu değiştirmez (hash yönlendirmesi bozulmasın)
@@ -7114,7 +7314,7 @@ document.addEventListener('keydown', e => {
 }, true);
 applySizes();
 $('tb-notch').addEventListener('click', () => setTopbar(!!UI.tbHide)); applyTopbar();
-let drwRaf = 0; window.addEventListener('resize', () => { cancelAnimationFrame(drwRaf); drwRaf = requestAnimationFrame(() => { layoutDrawers(); fitTopbar(); if (S.view === 'critics') layoutCrail(); }); });
+let drwRaf = 0; window.addEventListener('resize', () => { cancelAnimationFrame(drwRaf); drwRaf = requestAnimationFrame(() => { layoutDrawers(); fitTopbar(); if (S.view === 'critics') layoutCrail(); if (S.view === 'lex') layoutLrail(); }); });
 // Yazdırırken hüküm özeti (Sayılar) açık basılır; sonra eski hâline döner
 window.addEventListener('beforeprint', () => { const d = document.querySelector('.nh-sum'); if (d && !d.open) { d.dataset.printOpen = '1'; d.open = true; } });
 window.addEventListener('afterprint', () => { const d = document.querySelector('.nh-sum[data-print-open]'); if (d) { d.open = false; setTimeout(() => { delete d.dataset.printOpen; }, 0); } });
@@ -7314,7 +7514,11 @@ document.addEventListener('click', e => {
   if (t.closest('[data-critall]')) { S.critAll = true; const D = critData(); if (D) renderCritCenter(D); return; }
   if (t.closest('#crail-notch')) { setCrail(UI.crail !== 'open', true); return; }
   if (t.closest('#crail-close')) { setCrail(false); return; }
-  const lx = t.closest('[data-lex]'); if (lx) { S.lexSel = lx.dataset.lex; renderLex(); return; }
+  const lsm = t.closest('[data-lisan]'); if (lsm) { lisanMaddeAc(+lsm.dataset.lisan); return; }
+  const lxg = t.closest('[data-lexgo]'); if (lxg) { S.lexSel = lxg.dataset.lexgo; S.lexK = ''; S.lexQ = ''; setView('lex'); return; }
+  if (t.closest('#lrail-notch')) { setLrail(UI.lrail !== 'open', true); return; }
+  if (t.closest('#lrail-close')) { setLrail(false); return; }
+  const lx = t.closest('[data-lex]'); if (lx) { S.lexSel = lx.dataset.lex; if (isPhone()) setLrail(false); renderLex(); $('lex-scroll').scrollTop = 0; return; }
   const lk = t.closest('[data-lexk]'); if (lk) { S.lexK = lk.dataset.lexk; S.lexSel = ''; renderLex(); return; }
   const act = t.closest('[data-act]');
   if (act) {
@@ -8063,6 +8267,254 @@ const RAPOR = (() => {
   }
   return { open, criticReport, narratorReport, kurRapor, KUR, kurMRapor, KURM, toMarkdown, toHTML, toDocx, zipStore, exportDoc };
 })();
+
+</script>
+<script type="text/plain" id="src-sozluk">
+/* =========================================================
+   CTS — Sözlük haritası (Yöntem → Sözlük haritası; lafız kartı ve ipuçları)
+   Ana kaynak: Muhammed Halef Selâme, Lisânü’l-Muhaddisîn (5 cilt). “md.” Lisân’ın madde numarasıdır
+   (kaynak/lisanul-muhaddisin/metin; maddelerin metni sayfaya gizli depodan, harita.json ile gelir).
+   Lisân’da bulunmayan yerlerde Sehâvî, İbn Hacer (Takrîb mukaddimesi), ez-Zehebî ve Cüdey‘ (Tahrîr) esas alınır;
+   kendi konumlandırmamız açıkça “sitede” diye belirtilir.
+   Anahtar biçimi: “<tür><mertebe>|<sözlükteki Türkçe ad>” (src/ctlex.js kalıp grubu).
+   ========================================================= */
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else root.CTS = factory();
+})(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+  // Lafzın Türkçe anlamı (tercüme ve kısa açıklama). Sözlükteki ad zaten Türkçe anlamı veriyorsa burada yer almaz.
+  const ANLAM = {
+    'T6|En üst tevsik': 'İnsanların en güvenilirlerinden, en sağlamı, en hâfızı: güvenilirlikte en üst derece.',
+    'T6|Benzersiz (ta‘dîlin zirvesi)': 'Eşsiz, tek; güvenilirlik ve doğrulukta son nokta ona varır.',
+    'T6|Cehbez': 'Hadisin ince eleştirmeni, usta münekkidi.',
+    'T6|Ondan daha hâfızını görmedim': 'Ondan daha iyi ezberleyen / daha sağlam birini görmedim.',
+    'T5|Te’kîdli tevsîk': 'Güvenilir ve sağlam, hüccet (ta‘dîl lafzı tekrarla ya da iki sıfatla pekiştirilmiş).',
+    'T5|A‘lâm / eimmeden': 'Hadis imamlarından, meşhur âlimlerden biri.',
+    'T5|Sikalığında ittifak': 'Güvenilir olduğunda görüş birliği vardır; doğruluk madenlerinden.',
+    'T5|En sağlamlarından': 'İnsanların (ya da bir şehir halkının) en sağlam râvilerinden.',
+    'T5|En bilgilisi': 'Falancanın hadisini insanların en iyi bileni.',
+    'T4|Sika (güvenilir)': 'Güvenilir: adâleti ve zabtı tam râvi (Lisân md. 416).',
+    'T4|Hâfız, sadûk, imam': 'Hâfız ve güvenilir (sadûk/sika) imam.',
+    'T4|Sebt idi (kâne sebten)': 'Sağlam (sebt), güvenilir, hâfız idi.',
+    'T4|Sebt / mutkın': 'Sağlam, itkân sahibi; âdil ve zâbıt.',
+    'T4|Hüccet': 'Hüccet: rivayeti tek başına delil olur.',
+    'T4|Hâfız / imam': 'Hâfız; hadiste imam.',
+    'T4|Tevsik etti (vessekahû)': '(Münekkit) onu güvenilir saydı.',
+    'T4|Tevsik ettiler (vessekûhu)': '(Münekkitler) onu güvenilir saydılar.',
+    'T4|Sikalardan / hâfızlardan': 'Güvenilir râvilerden / hâfızlardan biri.',
+    'T4|İmam (sıfat)': 'İmam, muhaddis, hâfız (sıfat olarak).',
+    'T4|Mutlak olarak tevsik etti': 'Hiçbir kayıt koymadan güvenilir dedi.',
+    'T4|Sika sayardı (kâne yüvessikuhû)': '(Münekkit) onu güvenilir sayardı.',
+    'T4|Metîn / rızâ': 'Sağlam (metîn), rivayetine razı olunan (rızâ); Lisân: sika anlamındadır.',
+    'T4|Delil olur (yuhtecc bih)': 'Rivayeti delil olarak kullanılır; adâleti sabittir.',
+    'T4|Ta‘dîl etti (addelehû)': '(Münekkit) onu âdil saydı.',
+    'T4|Sadûk, sika (te’kîd)': 'Doğru sözlü ve güvenilir (iki sıfat birlikte).',
+    'T3|Sadûk': 'Çok doğru sözlü: âdil, zabtı biraz hafif râvi; hadisi yazılır ve incelenir (İbn Ebî Hâtim; Lisân md. 817).',
+    'T3|Sadûk idi': 'Doğru sözlü idi (bkz. sadûk).',
+    'T3|Lâ be’se bih': 'Onda bir beis (sakınca) yoktur; cumhura göre sadûk ile eş değer (Lisân md. 1168).',
+    'T3|Me’mûn / hıyâr': 'Güvenilir, emin; hayırlı kimse.',
+    'T3|Sıdk ehli': 'Doğruluk ehlinden.',
+    'T3|Sıhhat-i hadis övgüsü': 'Hadisi sahihtir.',
+    'T3|es-Sikât’ta zikretti (zımnî tevsik)': 'Onu (bir münekkit) “es-Sikât” kitabında andı; zımnî tevsîk.',
+    'T3|Razı oldu (radiyehû)': '(Münekkit) ondan razı oldu, rivayetini kabul etti.',
+    'T3|Beis yok (lem yekün bihî be’s)': 'Onda bir sakınca yoktu.',
+    'T3|Hakkında hayırdan başka bilmiyorum': 'Hakkında iyilikten başka bir şey bilmiyorum.',
+    'T3|Câizü’l-hadîs': 'Hadisi geçer, kabul edilebilir.',
+    'T3|Hadisinde beis yok': 'Hadisinde sakınca yok.',
+    'T3|Zehebî’nin «صح» işareti (tevsîkle amel edilir)': 'ez-Zehebî’nin Mîzân’da “صح” işareti: tevsîkle amel edilir.',
+    'T3|Sıdk ehli (şeyhu sıdk)': 'Doğru sözlü bir şeyh / sâlih bir şeyh idi.',
+    'T3|Sadûk (sıfat)': 'Doğru sözlü (sıfat olarak).',
+    'T3|Tevsîkini nakletti': 'Falancanın onu tevsîk ettiğini nakletti.',
+    'T3|es-Sikât’ta (İbn Hibbân)': 'İbn Hibbân’ın es-Sikât’ında anılır (zımnî tevsîk; İbn Hibbân mechûllere de yer verir).',
+    'T3|Hakkında ta‘n bilinmiyor': 'İlim ehlinden kimsenin onu tenkit ettiğini bilmiyoruz.',
+    'T3|Sıdktan uzak tutulamaz': 'Doğruluktan uzak sayılamaz.',
+    'T2|Mahalluhu’s-sıdk': 'Yeri doğruluktur: sadûktan biraz aşağı; desteklenmeden delil olmaz (Lisân md. 1398).',
+    'T2|Sâlihu’l-hadîs': 'Hadisi elverişli; Lisân’a göre tel’în (yumuşatma) lafızlarındandır, i‘tibâr içindir (md. 790).',
+    'T2|Ceyyidü’l-hadîs': 'Hadisi iyi.',
+    'T2|Hasenü’l-hadîs': 'Hadisleri hasen.',
+    'T2|Mukâribü’l-hadîs': 'Hadisi sikaların hadisine yakın (kesre ile); ta‘dîldir (Lisân md. 1504).',
+    'T2|Şeyh vasat / vasat': 'Orta halli şeyh: ne yüksek ne düşük.',
+    'T2|Şeyh (Ebû Hâtim ıstılahı)': 'Şeyh: az rivayetli, rivayet ehlinden; cerh de değil tevsik de değil (Lisân md. 771).',
+    'T2|Sâlih': 'Elverişli; tel’în lafızlarındandır (Lisân md. 790).',
+    'T2|Hadisleri müstakim': 'Hadisleri doğru, düzgün.',
+    'T2|Senâ etti (esnâ aleyh)': 'Onu övdü.',
+    'T2|Sahîhinde hadisini tahrîc etti (zımnî tevsik)': 'Hadisini Sahîh’inde rivayet etti (zımnî tevsîk).',
+    'T2|Hadisini sahihledi': 'Hadisini sahih saydı.',
+    'T2|Kuvvetli saydı (kavvâhu)': 'Onu kuvvetli saydı.',
+    'T2|Sâlih (memleketiyle)': '(Basralı/Kûfeli …) sâlih bir râvi.',
+    'T2|Mukâribü’l-hâl / hadisleri iyi': 'Hâli (sikalara) yakın; hadisleri iyi.',
+    'T2|Kabul etti (meşşâhu)': 'Hakkındaki söze rağmen onu kabul edip yürüttü (ez-Zehebî ıstılahı).',
+    'T2|Şeyh sâlih': 'Sâlih bir şeyh.',
+    'T2|Kitabı sahih (zabtu’l-kitâb)': 'Kitabı (yazılı nüshası) sahihtir: zabtu’l-kitâb.',
+    'T2|Semâ‘ı sahih': 'Dinlemesi (semâı) sahihtir.',
+    'T2|Müstedrek’te ihticâcla tahrîc': 'el-Hâkim Müstedrek’te ona dayanarak hadisini rivayet etti.',
+    'T1|Ta‘dîlin en alt mertebesi': 'Sâlihçik (suveylih), inşallah sadûk, inşallah beis yok: ta‘dîlin en alt derecesi.',
+    'T1|Beis bilmiyorum': 'Onda bir sakınca bilmiyorum (Lisân md. 1324: çoğunlukla “lâ be’se bih” değerinde).',
+    'T1|Hadisi yazılır': 'Hadisi yazılır: tek başına söylenince zayıf ama terk edilmemiş râvi (i‘tibâr; Lisân md. 1695).',
+    'T1|Hadisi i‘tibâr için alınır': 'Hadisi i‘tibâr (mütâbaat/şâhit araştırması) için kullanılır.',
+    'T1|Tevsik edildi (wüssika)': '(Biri tarafından) güvenilir sayıldı; ez-Zehebî’de tevsiki yalnız mütesâhilden gelen râvi.',
+    'T1|İstişhâd olunur / muhtemel': 'Şâhit olarak kullanılır; rivayeti kaldırılabilir.',
+    'T1|Sıdk, istisnalı': 'İnşallah kuvvetlidir; inşallah yeri doğruluktur.',
+    'K2|Sadûk, vehmi var': 'Doğru sözlü ama vehmeder / hataları var (Takrîb’in 5. mertebesi).',
+    'K2|Sadûk, hıfzı kötü': 'Doğru sözlü ama hıfzı kötü.',
+    'K2|Sadûk, sonradan tagayyür': 'Doğru sözlü, sonunda hıfzı değişti / karıştırdı.',
+    'K2|Sadûk, bid‘atla itham': 'Doğru sözlü, Şîa / kader / ircâ ile itham edildi.',
+    'K2|Sadûk, münkerleri var': 'Doğru sözlü, münker rivayetleri var.',
+    'K1|Hadisi yazılır, delil olmaz': 'Hadisi yazılır ama delil olmaz (i‘tibâr).',
+    'C1|Leyyin': 'Yumuşak, gevşek: hafif za‘f; i‘tibâra engel değildir (Lisân md. 1318, 1506).',
+    'C1|Tel’în etti (leyyenehû)': 'Onu leyyin (hafif zayıf) saydı.',
+    'C1|Tenkit etti (ğamezehû)': 'Onu tenkit etti, ayıpladı.',
+    'C1|Hafif cerh': 'Hakkında söz var; onda bir zaaf var.',
+    'C1|Hakkında konuşuldu': 'Hakkında (cerh yönünde) konuşuldu; söyleyeni belirsiz mübhem cerh (Lisân md. 465).',
+    'C1|Tanırsın da yadırgarsın da': 'Hadisini bazen tanır (kabul eder), bazen yadırgarsın.',
+    'C1|Tedlîs': 'Tedlîs eder: işitmediğini işitmiş gibi gösterir.',
+    'C1|İhtilât / tagayyür': 'Sonunda hıfzı değişti.',
+    'C1|Tahlît (karıştırma)': 'Rivayetleri karıştırma.',
+    'C1|Hadisinde nekâret': 'Hadisinde biraz münkerlik var.',
+    'C1|Du‘afâ kitabında zikretti (zımnî cerh)': 'Onu Du‘afâ kitabında andı (zımnî cerh).',
+    'C1|Za‘îf sayıldı (du‘‘ife)': 'Zayıf sayıldı (söyleyeni belirsiz).',
+    'C1|Garîb rivayet eder (yuğrib)': 'Başkalarında bulunmayan (garîb) rivayetler getirir.',
+    'C1|Hâtıbu leyl (ayırt etmeden toplar)': 'Gece odun toplayan: iyiyi kötüyü ayırmadan rivayet toplar.',
+    'C1|Tesviye tedlîsi': 'Senetteki zayıf râviyi düşürüp senedi düzgün gösterir (tedlîsü’t-tesviye).',
+    'C1|Mütâbaatı yok (lâ yütâba‘ aleyh)': 'Rivayetinde ona uyan (mütâbaat eden) yok; el-Ukaylî bunu sikalar için de söyler.',
+    'C1|Pek değil (lem yekün bi-zâk)': 'O kadar değildi; başkası ondan daha sağlam.',
+    'C1|Kuvvetli değil': 'Hadiste kuvvetli değil (bkz. leyse bi’l-kavî, Lisân md. 1268).',
+    'C1|Hadisi kuvvetli değil': 'Hadisi kuvvetli değil.',
+    'C2|Za‘f': 'Zayıf: rivayeti kabulden çok redde yakın (Lisân md. 885).',
+    'C2|Za‘îf saydılar (da‘‘afûhu)': '(Münekkitler) onu zayıf saydılar.',
+    'C2|Za‘îf saydı (da‘‘afehû)': '(Münekkit) onu zayıf saydı.',
+    'C2|Münkerü’l-hadîs': 'Hadisi münker; mütekaddimûnda garîb-zayıf ya da şiddetli zayıf rivayet (Lisân md. 1536).',
+    'C2|Münkerleri var': 'Münker (yadırganan) rivayetleri var.',
+    'C2|Vâh': 'Çok zayıf; Lisân’a göre çoğunda istişhâda elverişsiz (md. 1603).',
+    'C2|Delil olmaz': 'Rivayeti delil olarak kullanılmaz; çoğunlukla i‘tibâra elverişli râvi için (Lisân md. 1189).',
+    'C2|Hüccet değil': 'Hüccet değil; Lisân’a göre şiddetli ta‘nda “lâ yuhtecc bih”ten daha sık (md. 1276).',
+    'C2|Fîhi nazar': 'Onda düşünülecek (şüpheli) bir şey var; el-Buhârî’nin ıstılahında ihtilaflı (Lisân md. 1035).',
+    'C2|Vâhî saydı (vehhâhu)': 'Onu çok zayıf saydı.',
+    'C2|Razı olmadı (lem yerdahu)': 'Ondan razı olmadı.',
+    'C2|Mu‘dal (münker) rivayetler': 'Mütekaddimûnda “mu‘dal”: münker rivayetler (sonraki ıstılahtaki mu‘dal değil).',
+    'C2|Telkîn kabul eder': 'Kendisine söyletileni (telkîni) hadis diye rivayet eder.',
+    'C2|Gaflet': 'Gafil: rivayette dikkatsiz.',
+    'C2|Muhallit': 'Rivayetleri karıştırır.',
+    'C2|Zayıflar arasında': 'Zayıflar arasındadır (İbn Adî: bazen i‘tibâr olunan, bazen metrûk râvi için).',
+    'C3|Şiddetli za‘f': 'Çok zayıf; hadisi reddedilir, i‘tibâra elverişsiz.',
+    'C3|Bir şey değil (leyse bi-şey’)': 'Bir şey değil: mübalağalı zem; İbn Maîn’de az hadislilik anlamı ihtilaflıdır (Lisân md. 1281).',
+    'C3|Hiçbir şey değil': 'Hiçbir şey değil (İbn Maîn’in “lâ şey’”i).',
+    'C3|Bid‘atına dâ‘î': 'Bid‘atına çağıran (dâ‘î).',
+    'C3|İşi bitmiş (ferağallâhu minh)': 'Allah onun işini bitirmiş: artık sözü edilmez.',
+    'C4|Metrûk': 'Terk edilmiş: istişhâda da elverişsiz; yalnız ittiham değil (Lisân md. 1346).',
+    'C4|Sekatû anh (terk ettiler)': 'Hakkında sustular; el-Buhârî’de “terk ettiler” demektir (Lisân md. 726).',
+    'C4|Terk etti (terakehû)': '(Münekkit) onu terk etti.',
+    'C4|Fuhş-i galat': 'Hatası fahiş: hatası doğrusundan çok.',
+    'C4|Tâlif': 'Helak olmuş, düşmüş râvi.',
+    'C4|Sika değil': 'Güvenilir değil; Mâlik ve İbn Maîn’de bazen yalnız “sika lafzını esirgemek” (Lisân md. 416).',
+    'C4|Me’mûn değil': 'Güvenilir değil.',
+    'C4|Müttehem': 'Yalanla / uydurmakla itham edilmiş.',
+    'C4|İttiham etti (ittehemehû)': '(Münekkit) onu itham etti.',
+    'C4|Belâyâsı var (vaz‘a kinaye)': 'Musibet rivayetleri var (uydurmaya kinaye).',
+    'C4|Metrûk (Lisân’a göre)': 'Hadisi gitti; hiçbir şey değil: Lisân’a göre metrûk lafızları.',
+    'C4|Münkerler sahibi': 'Münkerler sahibi; Lisân: metrûk lafızlarındandır.',
+    'C4|Ittiham lafızları (Lisân)': 'İttiham lafızları: yalanla itham edildi, sözüne güvenilmez (Lisân).',
+    'C4|Sika değil (lem yekün bi-sika)': 'Güvenilir değildi.',
+    'C5|Kezzâb / vaddâ‘': 'Çok yalancı / uydurmacı.',
+    'C5|Kizb lafızları (Lisân)': 'Çok yalancı (effâk), yalan uydurur, semâ‘ kaydı uydurur (Lisân).',
+    'C5|Yalancı saydılar': '(Münekkitler) onu yalancı saydılar.',
+    'C5|Yalanladı (kezzebehû)': '(Münekkit) onu yalancı saydı.',
+    'C6|Kizbde mübalağa': 'İnsanların en yalancısı; yalanın direği.',
+    'C6|Kizbde mübalağa (Lisân)': 'Yalan dağarcığı, yalan madeni; yalancılığı darbımesel olmuş.',
+    'J2|Mechûl': 'Bilinmeyen: çoğunlukla cehâlet-i ayn, bazen hâl; Ebû Hâtim bunda acele eder (Lisân md. 1385).',
+    'J2|Hâli meçhul': 'Hâli bilinmeyen (mestûr): birden çok râvisi olup tevsik edilmemiş (Lisân md. 1443).',
+    'J2|Nekre / karanlık hâl': 'Tanınmayan; durumu karanlık.',
+    'J1|Meşhur değil': 'Tanınmış değil.',
+    'J1|Adaleti sabit olmadı': 'Adâleti sabit olmadı (İbnü’l-Kattân: kimse açıkça sika dememiş).',
+    'B1|Teşeyyu‘': 'Şîa’ya meyleder (mezhep kaydı; tek başına cerh sayılmaz).',
+    'B2|Rafz': 'Râfızî (mezhep kaydı).',
+    'B1|Kader / ircâ / nasb / cehmiyye': 'Kader / ircâ / nasb görüşünde (mezhep kaydı).',
+    'B1|Zeyğ (sapma)': 'Haktan sapmış (el-Cûzcânî’nin mezhep kaydı).',
+    'B1|Mezhebi kınanmış': 'Mezhebi kınanmış (el-Cûzcânî; İbn Adî: rivayette za‘f değil).',
+    'N0|Terk edilmez': 'Terk edilmez: zayıf olsa da hadisi yazılır.',
+    'N0|Kasıtlı yalan nefyedildi': 'Kasten yalan söylemez.',
+    'N0|Terk derecesine inmez': 'Durumu terk derecesinde değil; hakkında söz var ama kaldırılır.',
+    'M0|Cerhte aşırılık': 'Cerhte aşırı / müteannit.',
+    'M0|Hükümde gevşeklik': 'Hakkında yumuşak konuştu.',
+    'S0|Sükût (cerh de ta‘dîl de yok)': 'Hakkında sustu; cerh de ta‘dîl de zikretmedi (Lisân md. 725: tevsik değildir).',
+    'S0|Tevakkuf (estahîrullâh fîh)': 'Hakkında Allah’tan hayır dilerim: tevakkuf (İbn Hibbân).',
+    'R0|Mevzû / bâtıl': 'Uydurma / bâtıl (rivayet hükmü).',
+    'P0|Tercih (mukayese)': 'Falancadan daha sevimli / daha sağlam (iki râvi arasında tercih).'
+  };
+
+  // Mertebe ölçeği (sitede −6…+6). Lisân’ın yedi mertebesi (md. 1419) ve rivayetin hükmü
+  const MERTEBE = [
+    { v: 6, ad: 'Ta‘dîlin en üst mertebesi', hukum: 'İhticâc', lisan: 1, ac: 'İsm-i tafdîl ve benzeri mübalağa (“insanların en güvenilirlerinden”, “eşsiz”). Lisân’ın 1. mertebesi: es-sikâtü’l-esbâtü’l-mutkınûn.' },
+    { v: 5, ad: 'Te’kîdli tevsîk', hukum: 'İhticâc', lisan: 1, ac: 'Aynı ta‘dîl lafzının tekrarı ya da iki sıfatla pekiştirilmesi (sika sebt, sika hâfız, sika sika). Lisân bunları da 1. mertebeye koyar.' },
+    { v: 4, ad: 'Tevsîk', hukum: 'İhticâc', lisan: 2, ac: 'Tek sıfatla tevsik: sika, sebt, hüccet, âdil zâbıt, sahîhu’l-hadîs, yuhtecc bih. Lisân’ın 2. mertebesi: sika adını hak eden ama 1. mertebeden aşağı olanlar.' },
+    { v: 3, ad: 'Sıdk', hukum: 'İhticâc (ihtilaflı)', lisan: 3, ac: 'Sadûk, lâ be’se bih, ceyyidü’l-hadîs, hasenü’l-hadîs. Lisân’ın 3. mertebesi: hasen hadis râvileri; müteahhirûn çoğunlukla ihticâc eder, mütekaddimûn teferrüdünü karinelere göre kabul ya da reddeder (md. 817, 1168).' },
+    { v: 2, ad: 'Sıdkın alt derecesi', hukum: 'İ‘tibâr', lisan: 4, ac: 'Mahalluhu’s-sıdk, sâlihu’l-hadîs, şeyh vasat, mukâribü’l-hadîs. Lisân’ın 4. mertebesi: istişhâd olunur, ihticâc olunmaz; mahalluhu’s-sıdk desteklenmeden delil olmaz (md. 1398).' },
+    { v: 1, ad: 'Ta‘dîlin en alt mertebesi', hukum: 'İ‘tibâr', lisan: 4, ac: 'Suveylih, sadûk inşallah, ercû ennehû lâ be’se bih, yuktebu hadîsuhû. Lisân 4. mertebeye koyar; “yuktebu hadîsuhû” tek başına za‘f bildirir (md. 1695).' },
+    { v: -1, ad: 'Hafif cerh', hukum: 'İ‘tibâr', lisan: 5, ac: 'Leyyin, fîhi makāl, tükllime fîh, leyse bi’l-kavî, leyse bi-zâk, makbûl (Takrîb). Lisân’ın 5. mertebesi: hadisleri i‘tibâr için yazılır.' },
+    { v: -2, ad: 'Za‘f', hukum: 'İ‘tibâr', lisan: 5, ac: 'Za‘îf, da‘‘afûhu, leyse bi-hucce, lâ yuhtecc bih, münkerü’l-hadîs (sitede). Lisân “leyse bi-hucce”yi 5. mertebeye, “münkerü’l-hadîs” ve “vâh”ı 6. mertebeye koyar; site Sehâvî’yi izleyerek −2’de bırakır, Lisân’ın görüşü kalıbın notundadır.' },
+    { v: -3, ad: 'Şiddetli za‘f', hukum: 'Sukût', lisan: 6, ac: 'Za‘îf cidden, leyse bi-şey’, ruddü hadîsuhû, irmi bih. Lisân’ın 6. mertebesi: istişhâd da olunmaz.' },
+    { v: -4, ad: 'Terk / ittiham', hukum: 'Sukût', lisan: '6–7', ac: 'Metrûk, sâkıt, zâhibü’l-hadîs, tâlif (Lisân 6) ve müttehem, yesriku’l-hadîs, lâ yusaddak (Lisân 7). “Metrûk” yalnız ittiham için değil, istişhâda elverişsiz her râvi için söylenir (md. 1346).' },
+    { v: -5, ad: 'Kizb / vaz‘', hukum: 'Sukût', lisan: 7, ac: 'Kezzâb, vaddâ‘, yeda‘u’l-hadîs, effâk. Lisân’ın 7. mertebesi: müttehemler, kezzâblar ve vaddâ‘lar.' },
+    { v: -6, ad: 'Kizbde mübalağa', hukum: 'Sukût', lisan: 7, ac: 'Ekzebü’n-nâs, ruknü’l-kizb, cirâbü’l-kizb, ma‘dinü’l-kizb.' }
+  ];
+
+  // Lisânü’l-Muhaddisîn md. 1419: müellifin kendi yedi mertebesi (her mertebeden seçme lafızlar) ve sitedeki karşılığı
+  const LISAN7 = [
+    { m: 1, ad: 'es-Sikâtü’l-esbâtü’l-mutkınûn', site: '+6, +5', l: 'أثبت الناس، أوثق الناس، إليه المنتهى في التثبت، أمير المؤمنين في الحديث، ثقة ثبت، ثقة ثقة، ثقة حافظ، حجة، نسيج وحده، لا يُسأل عنه' },
+    { m: 2, ad: 'Sika (1. mertebeden aşağı)', site: '+4', l: 'ثبت، ثقة، ثقة صدوق، صادق أمين، صحيح الحديث، عدل حافظ، عدل ضابط، يحتج بحديثه' },
+    { m: 3, ad: 'Sadûk (hasen hadis râvisi)', site: '+3; “ثقة ربما وهم” türü karma (K)', l: 'صدوق، لا بأس به، ليس به بأس، جيد الحديث، حسن الحديث، خيار، ثقة ربما وهم، ثقة له أوهام' },
+    { m: 4, ad: 'İstişhâd olunanlar (üst)', site: '+2, +1; “صدوق يهم” türü karma (K)', l: 'محله الصدق، صالح الحديث، شيخ وسط، مقارب الحديث، صويلح، صدوق إن شاء الله، لا أعلم به بأساً، صدوق يهم، صدوق سيء الحفظ' },
+    { m: 5, ad: 'İstişhâd olunanlar (alt)', site: '−1, −2', l: 'لين، فيه مقال، تكلموا فيه، ليس بالقوي، ليس بذاك، ليس بحجة، ضعيف يعتبر به، يكتب حديثه، مقبول، مستور، سيء الحفظ' },
+    { m: 6, ad: 'Metrûkler', site: '−2 … −4', l: 'متروك، تركوه، ساقط، ذاهب الحديث، ليس بشيء، ضعيف جداً، منكر الحديث، واه، سكتوا عنه، ليس بثقة، لا يعتبر به، ذو مناكير' },
+    { m: 7, ad: 'Müttehemler, kezzâblar, vaddâ‘lar', site: '−4 … −6', l: 'متهم بالكذب، يسرق الحديث، كذاب، وضاع، يضع الحديث، دجال، يركب الأسانيد، معدن الكذب، يضرب المثل بكذبه' }
+  ];
+
+  // İhtilaflı lafızlar: Lisân’daki tartışmanın özeti (Türkçe; md. = Lisân madde no)
+  const IHTILAF = [
+    { l: 'ثقة', md: [416], site: '+4', o: 'Cumhura göre zabtı tam âdil râvi. Bazı münekkitler sadûk için de kullanır; mütekaddimûndan bazıları yalnız “kasten yalan söylemez” anlamında kullanmış, tad‘îf lafızlarıyla birlikte de söylemiştir. el-Mu‘allimî “sika” denilenleri yedi kullanıma ayırır (en üst derecedekiler … tek râvisi olan mechûl). İbn Maîn aynı râviye bazen “sika”, bazen “leyse bi-sika” der; Mâlik’in “leyse bi-sika”sı (Sâlih mevlâ’t-Tev’eme) bir rivayette yalnız sika lafzını esirgemektir. Lafız aslî anlamından ancak delille çıkarılır.' },
+    { l: 'لا بأس به / ليس به بأس', md: [1168, 1324], site: '+3 (İbn Maîn ve Duhaym’da +4)', o: 'Cumhura göre sadûk ile eş değer; müteahhirûn ihticâc eder, tahkike göre üstündeki ya da dengi muhalefet ederse veya taşıyamayacağı bir rivayette teferrüd ederse delil olmaz. İbn Maîn: “Leyse bih be’s dediğim sikadır” (İbn Ebî Hayseme); Duhaym da “sika dedim” der. el-Irâkî: bu, iki lafzı eşitlemez, “sika”nın mertebeleri içinde olduğunu bildirir. Yahyâ el-Kattân Ömer b. el-Velîd için “itimat etmem, ama lâ be’se bih” demiştir. Tahrîru’t-Takrîb müelliflerinin en-Nesâî’nin şeyhleri hakkındaki “lâ be’se bih”ini mutlak tevsik sayması Lisân’a göre tartışmalıdır. “Mâ a‘lemu bihî be’sen” çoğunlukla “lâ be’se bih” değerindedir.' },
+    { l: 'ليس بشيء / لا شيء', md: [1281], site: '−3', o: 'Mübalağalı zem: rivayetinden yararlanılmaz. el-Münzirî: başkası tevsik edip ihticâc etmişse “ihticâc olunacak bir şey değil”, zaafı meşhursa metrûk anlamına alınır. el-Hâkim, İbnü’l-Kattân, İbn Hacer ve el-Mu‘allimî İbn Maîn’in bu lafzı bazen “hadisi azdır” anlamında kullandığını söyler; Lisân bu iddiayı delilleriyle kabul etmez. el-Mu‘allimî’nin ölçüsü: râvi az hadisli ve tevsik edilmişse az hadis anlamına, aksi hâlde cerh anlamına alınır.' },
+    { l: 'منكر الحديث', md: [1536], site: '−2 (Lisân’da 6. mertebe)', o: 'Mütekaddimûnda münker, mahfûz ve ma‘rûfun zıddıdır: garîb-zayıf, şiddetli zayıf ya da şâz-matrûh. İbn Hacer, Ahmed ve el-Kattân’ın “münker”i ferd için kullandığını, el-Berdîcî’nin tek kalan her rivayete münker dediğini söyler; Lisân bu iddiaları “müsellem değil” diye reddeder. es-Süyûtî: el-Buhârî “münkerü’l-hadîs”i rivayeti helal olmayan râvi için kullanır.' },
+    { l: 'فيه نظر / في حديثه نظر', md: [1035, 725], site: '−2', o: 'Cumhur ve el-Buhârî râvi, hadis ve hükümlerin tad‘îfinde kullanır. el-Buhârî: “Cerhini açıklamadığım her râvi ihtimal üzeredir; fîhi nazar dersem ihtimali yoktur.” ez-Zehebî, el-Irâkî, İbn Kesîr, es-Sehâvî, es-Süyûtî ve el-Mu‘allimî bunu el-Buhârî’nin ittiham ya da terk lafzı sayar; Lisân, tahkikin bu iddiaların zayıflığını gösterdiğini söyler.' },
+    { l: 'سكتوا عنه', md: [726], site: '−4', o: 'Genelde “hakkında cerh de ta‘dîl de söylemediler”. el-Buhârî ise “terk ettiler” anlamında kullanır (ez-Zehebî istikrâ ile; ed-Dûlâbî; Cüdey‘: başkasından haber veren mücmel cerh). Ebû Hâtim, Ebû Zür‘a ve Müslim’de çok nadirdir.' },
+    { l: 'سكت عنه البخاري / ابن أبي حاتم', md: [725], site: 'Sükût (sayılmaz)', o: 'el-Buhârî et-Târîh’te, İbn Ebî Hâtim el-Cerh ve’t-ta‘dîl’de râviyi anıp cerh ya da ta‘dîl zikretmemiştir. Bazı müteahhirûnun bunu tevsik sayması doğru değildir: el-Buhârî’de râvi “ihtimal üzere”dir; İbn Ebî Hâtim’in sükûtu, muteber bir cerh ya da ta‘dîl bulamadığını gösterir.' },
+    { l: 'شيخ', md: [771], site: '+2 (Ebû Hâtim)', o: 'Beş asla döner: az rivayet, az râvi, az ilim, zabta az özen, rivayet ehli olmak. Bu yüzden bazen mechûl, bazen hafif zayıf, bazen kabul ile red arasındaki râvi için söylenir. ez-Zehebî: cerh lafzı değil, tevsik de değil; istikrâya göre hüccet değil. el-Mizzî: terk edilmez, tek başına delil olmaz. İbnü’l-Kattân: Ebû Hâtim’in “şeyh”i yalnız az hadisli olduğunu bildirir.' },
+    { l: 'صالح / صالح الحديث', md: [790, 795], site: '+2', o: 'Mertebesinde ihtilaf vardır; Lisân’a göre doğrusu tel’în lafızlarından olmasıdır, çünkü imamlar onu “leyse bi’l-kavî”, “fîhi za‘f”, “lâ yuhtecc bih”, “yu‘teberu bih”, “vasat” ile birlikte söyler. Ebû Dâvûd’un Sünen’deki “sükût ettiğim sâlihtir” sözündeki “sâlih” ise ihticâc ve istişhâda elverişli olanların ikisini de kapsar.' },
+    { l: 'صدوق', md: [817], site: '+3', o: 'Zabtı biraz hafif âdil râvi: “sika ama mutkın değil”. İbn Ebî Hâtim: sadûk, mahalluhu’s-sıdk ve lâ be’se bih denilen “hadisi yazılır ve incelenir”, ikinci menzile. Müteahhirûn teferrüdünü mutlak kabul eder; mütekaddimûn karinelere göre kabul ya da reddeder. ez-Zehebî: sadûkun teferrüdü münker sayılır.' },
+    { l: 'محله الصدق', md: [1398], site: '+2', o: 'Ta‘dîlin aşağı derecesi; ez-Zehebî ve el-Irâkî “sadûk”tan bir mertebe aşağı koyar. Mütâbaat ya da şâhitle desteklenmeden delil olmaz. Ebû Hâtim ve Ebû Zür‘a, Saîd b. Beşîr için “mahalluhu’s-sıdk” dedikten sonra “delil olmaz, yazılan bir şeyh” demiştir.' },
+    { l: 'ليس بالقوي / ليس بقوي / ليس بذاك', md: [1268, 1283, 1279], site: '−1', o: 'Za‘îften hafif, sadûktan aşağı. Ebû Hâtim’de “kavî sebt derecesine ulaşmamış”; en-Nesâî: “cerh-i müfsid değil”, bu lafzı söylediği râvilerden rivayet eder; el-Buhârî bazen “za‘îf” anlamında kullanır. el-Mu‘allimî: “leyse bi-kavî” kuvveti mutlak nefyeder, “leyse bi’l-kavî” yalnız kemal derecesini; en-Nesâî bu farka riayet eder. “Leyse bi-zâk” da değişik derecelerde tel’îndir (Cüdey‘).' },
+    { l: 'ليس بحجة / لا يحتج به', md: [1276, 1189], site: '−2', o: 'İkisi de istişhâda elverişli ya da elverişsiz, delil olmayan her râvi için söylenir. Dikkatli münekkitler “lâ yuhtecc bih”i çoğunlukla istişhâd olunan râvi için kullanır; Lisân’a göre “leyse bi-hucce” şiddetli ta‘nda daha sık geçer.' },
+    { l: 'يكتب حديثه', md: [1695], site: '+1', o: 'Tek başına söylenince “zayıftır, ama terk edilmez” demektir; tevsik lafzıyla birlikte gelmez. Cüdey‘’in üç hâli: yalnız (za‘f, i‘tibâr), ta‘dîlle birlikte (rivayeti tahkik edilmeli), cerhle birlikte (cerh i‘tibârdan düşürecek derecede değil).' },
+    { l: 'مقبول / لين الحديث', md: [1506, 1318], site: '−1', o: 'Cumhurun dilinde “makbûl” teferrüdünde de kabul edilen râvidir. İbn Hacer Takrîb’de kendi ıstılahını koyar: 6. mertebe, az hadisli ve terkini gerektiren bir şey sabit olmayan râvi; mütâbaat varsa makbûl, yoksa leyyinü’l-hadîs. “Leyyin” hafif za‘ftır, i‘tibâra engel değildir.' },
+    { l: 'مستور', md: [1443], site: 'Cehâlet (J)', o: 'Tarifleri muzdariptir. İbn Hacer (Takrîb 7. mertebe) ve İbnü’l-Kattân: birden çok kişi rivayet etmiş, tevsik edilmemiş râvi, yani mechûlü’l-hâl. es-Sehâvî: hakkında cerh de ta‘dîl de nakledilmemiş ya da ikisi nakledilip biri tercih edilmemiş râvi.' },
+    { l: 'مجهول', md: [1385], site: '−2 (cehâlet)', o: 'Cumhurda çoğu zaman cehâlet-i ayn, bazen cehâlet-i hâl. Râvisi büyük bir sebt ise hâli güçlenir; en-Nesâî ve İbn Hibbân böylesiyle ihticâc eder. İbn Maîn: İbn Sîrîn ve eş-Şa‘bî gibi âlimlerin rivayet ettiği mechûl değildir; İbnü’l-Medînî daha çok şart arar. Ebû Hâtim tecrîhte bazen acele eder, çoğunlukla hâli kasteder; ez-Zehebî Mîzân’da atıfsız “mechûl”ün Ebû Hâtim’in sözü olduğunu söyler.' },
+    { l: 'واه / واهي الحديث', md: [1603], site: '−2 (Lisân’da 6. mertebe)', o: 'Muhaddislerin çoğunda istişhâda elverişsiz şiddetli za‘f; bazıları terki gerektirmeyen za‘f için kullanır.' },
+    { l: 'مقارب الحديث', md: [1504], site: '+2', o: 'Râ kesreli “mukârib”: hadisi sikaların hadisine yakın, ta‘dîldir. Fethayla okuyup cerh sayanlar hatalıdır (el-Irâkî, es-Sehâvî); İbnü’l-Cezerî’nin onu cerh lafızları arasında sayması tenhâdır. el-Buhârî ve et-Tirmizî’de râviyi takviye için söylenir.' },
+    { l: 'متروك', md: [1346], site: '−4', o: 'İstişhâda elverişsiz her râvi için söylenir; zabt kusurundan dolayı da olabilir, yalnız yalanla itham edilen için değildir (İbn Receb).' },
+    { l: 'ضعيف', md: [885], site: '−2', o: 'Rivayeti kabulden çok redde yakın râvi. Ebû Nuaym, el-Münzirî ve el-Heysemî bunu bazen mevzû ve şiddetli zayıfı da kapsayacak geniş anlamda kullanır.' }
+  ];
+
+  // Münekkitlerin özel kullanımları (Lisân’dan; sitedeki kural parantez içinde)
+  const MUNEKKIT = [
+    { c: 'Yahyâ b. Maîn', md: [1168, 1281, 416], o: '“Leyse bih be’s” dediği sikadır (+4); “leyse bi-şey’” bazen az hadislilik için denmiştir, ama Lisân bunu genelleştirmez; “sika” bazen yalnız yalan söylememeyi bildirir; aynı râviye farklı hükümleri vardır.' },
+    { c: 'Duhaym', md: [1168], o: '“Lâ be’se bih” = sika (+4).' },
+    { c: 'el-Buhârî', md: [1035, 726, 725, 1268, 1536], o: '“Fîhi nazar” ve “sekatû anh” ihtilaflı (sitede −2 ve −4); cerhini açıklamadığı râvi “ihtimal üzere”, sükûtu tevsik değil; “leyse bi’l-kavî” bazen za‘îf anlamında; es-Süyûtî’ye göre “münkerü’l-hadîs” rivayeti helal olmayan râvi için.' },
+    { c: 'Ebû Hâtim', md: [771, 1268, 1385, 1695, 1398], o: '“Şeyh” az hadisli, rivayet ehli; “leyse bi’l-kavî” kavî sebt derecesine ulaşmamış; “mechûl”de acele eder, çoğunlukla hâli kasteder; “yuktebu hadîsuhû” i‘tibâr; “mahalluhu’s-sıdk … delil olmaz”.' },
+    { c: 'Ahmed b. Hanbel ve Yahyâ el-Kattân', md: [1536, 1168], o: 'İbn Hacer’e göre “münker”i ferd için kullanırlar (Lisân kabul etmez). el-Kattân’ın “lâ be’se bih”i itimat etmediği ama tutunan râvi için de olmuştur.' },
+    { c: 'el-Berdîcî', md: [1536], o: 'İbn Hacer’e göre tek kalan her rivayete “münker” der; Lisân bu yorumu tartışır.' },
+    { c: 'en-Nesâî', md: [1268, 1168], o: '“Leyse bi’l-kavî” cerh-i müfsid değildir, böyle dediği râvilerden rivayet eder; “leyse bi-kavî” ile “leyse bi’l-kavî” arasındaki farka riayet eder (el-Mu‘allimî).' },
+    { c: 'Mâlik', md: [416], o: '“Leyse bi-sika” bazen yalnız sika lafzını esirgemektir (İbnü’l-Kattân’ın yorumu; Şu‘be mevlâ İbn Abbâs).' },
+    { c: 'Ebû Dâvûd', md: [790], o: 'Sünen’de “sükût ettiğim sâlihtir”: ihticâc ve istişhâda elverişli olanların ikisi de.' },
+    { c: 'İbn Ebî Hâtim', md: [725, 817], o: 'Sükûtu muteber cerh–ta‘dîl bulamadığını gösterir; sadûk ve benzerleri “yazılır ve incelenir” (ikinci menzile).' },
+    { c: 'İbn Hacer (Takrîb)', md: [1506, 1443], o: '“Makbûl” mütâbaat varsa kabul, yoksa leyyin (6. mertebe); “mestûr / mechûlü’l-hâl” 7. mertebe.' },
+    { c: 'ez-Zehebî', md: [1385, 771], o: 'Mîzân’da atıfsız “mechûl” Ebû Hâtim’indir; “fîhi cehâle, lâ yu‘raf” kendi sözüdür; “mahalluhu’s-sıdk, lâ be’se bih, şeyh, sâlihu’l-hadîs” denilenleri ta‘dîl bâbı sayıp Mîzân’a almaz.' },
+    { c: 'Ebû Nuaym, el-Münzirî, el-Heysemî', md: [885], o: '“Za‘îf”i geniş anlamda kullanırlar: mevzû ve şiddetli zayıf da girer.' }
+  ];
+
+  const anlam = key => ANLAM[key] || '';
+  return { VERSION: '1.0.0', ANLAM, MERTEBE, LISAN7, IHTILAF, MUNEKKIT, anlam };
+});
 
 </script>
 <script>
@@ -12101,7 +12553,7 @@ const KASA = (() => {
     return u;
   }
   function inject(elId) { const s = document.createElement('script'); s.textContent = $(elId).textContent; document.body.appendChild(s); }
-  function start() { $('login').hidden = true; inject('src-app'); inject('src-rapor'); }
+  function start() { $('login').hidden = true; inject('src-sozluk'); inject('src-app'); inject('src-rapor'); }
   function showLogin(msg) {
     document.body.classList.add('locked'); $('login').hidden = false;
     const tag = $('login-kasa');
