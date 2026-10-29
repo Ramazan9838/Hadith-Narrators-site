@@ -1308,6 +1308,18 @@ tr.mf-on td { background: color-mix(in srgb, #c0392b 6%, transparent); }
 .tdok-oteki { margin: 0; padding-left: 18px; }
 @media (max-width: 880px) { .tdok-yan { grid-template-columns: minmax(0, 1fr); } }
 
+/* Lafız dizini: geçişin altında açılan döküm */
+.kwic tr[aria-expanded="true"] td { background: var(--accent-soft); }
+.kwic tr.kwic-dok { cursor: default; }
+.kwic tr.kwic-dok:hover td { background: var(--paper-2); }
+.kwic tr.kwic-dok > td { white-space: normal; font-family: var(--ui); font-size: calc(14px * var(--yb)); background: var(--paper-2); padding: 12px 18px 16px; max-width: none; }
+.tdok .tside { display: grid; gap: 4px; padding: 6px 0 6px 12px; margin-bottom: 6px; }
+.tside-bas { display: flex; gap: 6px; align-items: baseline; flex-wrap: wrap; }
+.tsoz { line-height: 1.7; }
+.tsoz .conf-ph[aria-expanded="true"] { background: var(--accent-soft); border-radius: 6px; padding: 0 4px; }
+.tsoz-dok { margin: 6px 0 10px; padding: 12px 14px; background: var(--paper-2); border: 1px solid var(--line); border-radius: 10px; font-size: calc(13.5px * var(--yb)); }
+.tdok .tsoz .small .ar { font-size: calc(14px * var(--yb)); }
+
 </style>
 </head>
 <body class="locked">
@@ -6358,11 +6370,11 @@ function confHazirla(el, then) {
 const CFF = Object.assign({ type: '', zeh: false, durum: '', oneri: '', q: '' }, UI.cff || {});
 // Eski sürümde açık olmayan dilimin kararı “<dilim>:<sıra>|…” anahtarıyla yazılmıştı; o da okunur
 function confState(c) { const C = c.R.conf || {}; return C[c.key] || C[c.pkg + ':' + c.seq + '|' + c.id] || {}; }
-function sideHTML(list, cls, tam) {
+function sideHTML(list, cls) {
   const by = {}; for (const x of list) (by[x.critic] = by[x.critic] || []).push(x);
   // Değerlendirmeye basınca hüküm açılır pencerede (Münekkitler’deki gibi); pencereden “Detaya git” râvinin sayfasına, oradan “Teâruz sayfasına dön”
   const ph = x => { const s0 = x._s; if (!s0) return '<span class="ar">' + esc(x.phrase) + '</span>'; const k = gotoAttr(s0); CPOP.set(k, s0); return '<button type="button" class="linkbtn ar conf-ph" data-cpop="' + esc(k) + '" title="Hükmün ayrıntısı ve metni">' + esc(x.phrase || '(zımnî)') + '</button>'; };
-  return Object.entries(by).map(([c, xs]) => '<div class="side ' + cls + '"><b>' + esc(crName(c, c)) + '</b> ' + (tam ? xs : xs.slice(0, 3)).map(ph).join(' ، ') + (!tam && xs.length > 3 ? ' <span class="muted small" title="' + esc(xs.slice(3).map(x => x.phrase).join(' ، ')) + '">+' + (xs.length - 3) + '</span>' : '') + '</div>').join('');
+  return Object.entries(by).map(([c, xs]) => '<div class="side ' + cls + '"><b>' + esc(crName(c, c)) + '</b> ' + xs.slice(0, 3).map(ph).join(' ، ') + (xs.length > 3 ? ' <span class="muted small" title="' + esc(xs.slice(3).map(x => x.phrase).join(' ، ')) + '">+' + (xs.length - 3) + '</span>' : '') + '</div>').join('');
 }
 function confGoto(c, x) { const s = x._s; return s ? gotoAttr(s) : ''; }
 UI.trail = UI.trail || 'open';
@@ -6423,11 +6435,22 @@ function renderConflicts() {
   const q = $('cff-q'); q.oninput = () => { CFF.q = q.value; UI.cff = CFF; saveUI(); clearTimeout(q._t); q._t = setTimeout(() => { renderConflicts(); const q2 = $('cff-q'); q2.focus(); q2.setSelectionRange(q2.value.length, q2.value.length); }, 200); };
 }
 // Seçilen teâruz kaydının dökümü: râvi, tür, tarafların bütün sözleri (ya da nakil farkı), öneri ve gerekçesi, karar formu; aynı râvinin öteki kayıtları
+// Dökümde bir taraf: münekkit (vefatı, tavrı), her sözü eseri ve mertebesiyle; söze basınca hükmün dökümü ve metni hemen altında açılır
+function confTaraf(list, cls) {
+  const by = new Map(); for (const x of list) { if (!by.has(x.critic)) by.set(x.critic, []); by.get(x.critic).push(x); }
+  return [...by].map(([cr, xs]) => { const C = CTX.critic(cr) || {};
+    return '<div class="side tside ' + cls + '"><div class="tside-bas"><b>' + esc(crName(cr, cr)) + '</b>' + (C.death ? ' <span class="small muted">ö. ' + C.death + '</span>' : '') + (C.approach ? ' <span class="tag">' + esc(C.approach) + '</span>' : '') + '</div>' +
+      xs.map(x => { const s0 = x._s, k = s0 ? gotoAttr(s0) : '', acik = k && S.confPh === k;
+        let dok = ''; if (acik) { try { dok = critPopHTML(s0); } catch (e) { dok = '<button class="btn primary sm" data-goto="' + esc(k) + '">Detaya git → râvinin sayfasında aç</button>'; } }
+        return '<div class="tsoz"><button type="button" class="linkbtn ar conf-ph" ' + (k ? 'data-confph="' + esc(k) + '" aria-expanded="' + !!acik + '"' : 'disabled') + ' title="Değerlendirmenin metnini aç / kapat">' + esc(x.phrase || '(zımnî)') + '</button>' +
+          '<span class="small muted"> · <span class="ar">' + esc(x.source || (s0 ? srcShort(s0.b) : '')) + '</span>' + (s0 && s0.grade ? ' · ' + esc(s0.grade) : '') + (s0 && s0.transmission && s0.transmission !== 'Bilinmiyor' ? ' · ' + esc(s0.transmission) : '') + '</span>' +
+          (acik ? '<div class="tsoz-dok">' + dok + '</div>' : '') + '</div>'; }).join('') + '</div>'; }).join('');
+}
 function confDokum(c, list) {
   const st = confState(c), i = list.indexOf(c), oteki = list.filter(x => x.nid === c.nid && x.pkg === c.pkg && x !== c);
   const adim = (d, l) => { const x = list[i + d]; return '<button class="btn sm" data-confsel="' + (x ? esc(x.key) : '') + '"' + (x ? '' : ' disabled') + '>' + l + '</button>'; };
   const govde = c.type === 'nakil' ? '<div class="cdiff-acik"><p class="small"><b>' + esc(crName(c.critic, c.critic)) + '</b> · ' + esc(c.title) + ' <span class="muted">· ' + esc(c.nakil.q.source || '') + '</span></p>' + diffHTML(c.nakil) + '</div>'
-    : '<div class="tdok-yan"><div><h4>Ta‘dîl tarafı</h4><div class="sides">' + (sideHTML(c.tSide, 't', true) || '<span class="muted small">—</span>') + '</div></div><div><h4>Cerh tarafı</h4><div class="sides">' + (sideHTML(c.cSide, 'c', true) || '<span class="muted small">—</span>') + '</div></div></div>' + (c.type === 'içi' ? '<p class="small muted">' + esc(c.title) + '</p>' : '');
+    : '<p class="hint" style="margin:0 0 8px">Söze basınca değerlendirmenin dökümü ve metindeki yeri hemen altında açılır; “Detaya git” râvinin sayfasına götürür.</p><div class="tdok-yan"><div><h4>Ta‘dîl tarafı <span class="muted">(' + c.tSide.length + ' söz)</span></h4><div class="sides">' + (confTaraf(c.tSide, 't') || '<span class="muted small">—</span>') + '</div></div><div><h4>Cerh tarafı <span class="muted">(' + c.cSide.length + ' söz)</span></h4><div class="sides">' + (confTaraf(c.cSide, 'c') || '<span class="muted small">—</span>') + '</div></div></div>' + (c.type === 'içi' ? '<p class="small muted">' + esc(c.title) + '</p>' : '');
   return '<section class="card tdok" id="conf-dokum"><div class="tdok-bas"><div><button class="linkbtn gonarr" data-gonarr="' + esc(c.pkg + '|' + c.seq) + '" title="Bu râviyi çalışma masasında aç"><b>' + (c.seq >= HSEQ0 ? seqEt(c.seq) : '#' + c.seq) + '</b> <span class="ar" style="font-size:calc(20px * var(--yb))">' + esc(c.name) + '</span></button>' +
     '<div class="small muted">' + esc(TYPE_TR[c.type]) + (c.zehebi ? ' <span class="tag zeh">ez-Zehebî</span>' : '') + ' · öneri: <b>' + esc(KARAR_TR[c.oneri] || '—') + '</b> · durum: <span class="tag' + (st.durum === 'cozuldu' ? ' ok' : '') + '">' + esc(DURUM_TR[st.durum || '']) + '</span>' + (st.karar ? ' · karar: <b>' + esc(KARAR_TR[st.karar]) + '</b>' : '') + '</div></div>' +
     '<div class="tdok-adim">' + adim(-1, '‹ Önceki') + '<span class="small muted">' + fmt(i + 1) + ' / ' + fmt(list.length) + '</span>' + adim(1, 'Sonraki ›') + '</div></div>' +
@@ -6527,7 +6550,7 @@ function renderLex() {
   const sel = LX.find(m => m.e.id === S.lexSel);
   const nLex = CTX.LEXICON.filter(e => e.k !== 'X').length;
   let out = viewHead({ key: 'lex', title: 'Lafız dizini', sub: LX.length + ' kalıp ' + (S.scope === 'vol' && multiVol() ? 'bu ciltte' : 'eserde') + ' geçiyor · sözlükte ' + nLex + ' kalıp', actions: scopeBar(),
-    help: 'Motorun sözlüğündeki her kalıbın bu kapsamda geçtiği yerler, bağlamıyla (KWIC: bağlam içinde anahtar kelime). Soldaki çekmeceden bir kalıp seçin; geçişler münekkite, esere ve metne göre süzülebilir; satıra tıklayınca ilgili râvi ve hüküm açılır. Lafızların anlamı, mertebesi, ihtilafları ve münekkitlerin özel kullanımları Yöntem → Sözlük haritası’ndadır.' }) + scopeNote();
+    help: 'Motorun sözlüğündeki her kalıbın bu kapsamda geçtiği yerler, bağlamıyla (KWIC: bağlam içinde anahtar kelime). Soldaki çekmeceden bir kalıp seçin; geçişler münekkite, esere ve metne göre süzülebilir; satıra tıklayınca hükmün dökümü hemen altında açılır; “Detaya git” ile râvinin sayfasına gidilir. Lafızların anlamı, mertebesi, ihtilafları ve münekkitlerin özel kullanımları Yöntem → Sözlük haritası’ndadır.' }) + scopeNote();
   if (sel) {
     const F = S.lexF && S.lexF.id === sel.e.id ? S.lexF : (S.lexF = { id: sel.e.id, c: '', e: '', q: '', say: false });
     out += '<div class="card" style="margin-bottom:10px"><h3>' + kindTag(sel.e.k) + ' ' + esc(sel.e.tr) + '</h3><div class="termchips" style="margin:4px 0 6px">' + entryExamples(sel.e, 10).list.map(x => '<span class="tag k ' + kc(sel.e.k) + '"><span class="ar" style="font-size:calc(19px * var(--yb))">' + esc(x) + '</span></span>').join('') + '</div>' + lafizKart(sel.e) + '<details class="hint"><summary>Düzenli ifade (normalize imlâ)</summary><code dir="ltr" style="unicode-bidi:plaintext">' + esc(sel.e.p.replace(/\(\?<\w+>/g, '(')) + '</code></details><p class="small muted" style="margin:4px 0 0">Mertebe: ' + esc(mertebeAd(sel.e)) + (sel.e.sb ? ' · Sebep: ' + esc((CTX.SEBEB || {})[sel.e.sb] || sel.e.sb) : '') + ' · ' + fmt(sel.occ.length) + ' geçiş</p></div>';
@@ -6542,7 +6565,9 @@ function renderLex() {
     const occ = all.length > 1500 ? all.slice(0, 1500) : all;
     out += (all.length > occ.length ? '<p class="hint">İlk ' + fmt(occ.length) + ' geçiş gösteriliyor (toplam ' + fmt(all.length) + ').</p>' : '') + '<div class="wrap" style="background:var(--paper);border:1px solid var(--line);border-radius:10px"><table class="kwic"><tbody>' + occ.map(o => {
       const { s, t } = o, [pre, post] = ctx(o);
-      return '<tr data-goto="' + esc(gotoAttr(s)) + '"><td class="src">' + '#' + s.n.source_sequence + ' · ' + esc(crName(eCritic(s), s.critic_written)) + '</td><td class="l">' + esc(post) + '…</td><td class="c" style="color:var(--ink)"><span class="hs ' + kc(t.k) + '">' + esc(t.text) + '</span></td><td class="r">…' + esc(pre) + '</td></tr>';
+      const ok = stPkg(s) + ':' + s.b.id + ':' + t.start, acik = S.lexOpen === ok;
+      let dok = ''; if (acik) { try { dok = critPopHTML(s); } catch (e) { dok = '<div class="row"><button class="btn primary" data-goto="' + esc(gotoAttr(s)) + '">Detaya git → râvinin sayfasında aç</button></div>'; } }
+      return '<tr data-lexopen="' + esc(ok) + '"' + (acik ? ' aria-expanded="true"' : '') + ' title="Dökümü aç / kapat"><td class="src">' + '#' + s.n.source_sequence + ' · ' + esc(crName(eCritic(s), s.critic_written)) + '</td><td class="l">' + esc(post) + '…</td><td class="c" style="color:var(--ink)"><span class="hs ' + kc(t.k) + '">' + esc(t.text) + '</span></td><td class="r">…' + esc(pre) + '</td></tr>' + (acik ? '<tr class="kwic-dok"><td colspan="4">' + dok + '</td></tr>' : '');
     }).join('') + (occ.length ? '' : '<tr><td class="empty-state">Bu süzgeçte geçiş yok.</td></tr>') + '</tbody></table></div>';
   }
   $('lex-body').innerHTML = out;
@@ -7496,6 +7521,7 @@ document.addEventListener('click', e => {
   const jp = t.closest('[data-jump]'); if (jp) { const h = $(jp.dataset.jump); if (h) { const d = h.closest('details'); if (d) d.open = true; h.scrollIntoView({ block: 'start', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); h.tabIndex = -1; h.focus({ preventScroll: true }); } return; }
   const ct = t.closest('[data-conftab]'); if (ct) { const k = ct.dataset.conftab; if (k === 'analiz') UI.confTab = 'analiz'; else { UI.confTab = ''; CFF.type = k; UI.cff = CFF; } S.confLimit = 0; saveUI(); renderConflicts(); const nb = document.querySelector('[data-conftab="' + k + '"]'); if (nb) nb.focus({ preventScroll: true }); return; }
   const cm = t.closest('[data-confmore]'); if (cm) { S.confLimit = (S.confLimit || 200) + 300; renderConflicts(); return; }
+  const cph2 = t.closest('[data-confph]'); if (cph2) { const k = cph2.dataset.confph, sc = $('conflicts-scroll'), y = sc.scrollTop; S.confPh = S.confPh === k ? '' : k; renderConflicts(); sc.scrollTop = y; return; }
   const cs = t.closest('[data-confsel]'); if (cs) { if (!cs.dataset.confsel) return; S.confSel = cs.dataset.confsel; if (isPhone()) setTrail(false); renderConflicts(); $('conflicts-scroll').scrollTop = 0; const it = document.querySelector('#tlist [aria-current="true"]'); if (it) it.scrollIntoView({ block: 'nearest' }); return; }
   if (t.closest('#trail-notch')) { setTrail(UI.trail !== 'open', true); return; }
   if (t.closest('#trail-close')) { setTrail(false); return; }
@@ -7577,6 +7603,8 @@ document.addEventListener('click', e => {
   if (t.closest('#lrail-notch')) { setLrail(UI.lrail !== 'open', true); return; }
   if (t.closest('#lrail-close')) { setLrail(false); return; }
   const lx = t.closest('[data-lex]'); if (lx) { S.lexSel = lx.dataset.lex; if (isPhone()) setLrail(false); renderLex(); $('lex-scroll').scrollTop = 0; return; }
+  // Lafız dizini: geçişe basınca dökümü hemen altında açılır (ikinci basışta kapanır); “Detaya git” râvinin sayfasına götürür
+  const lxo = t.closest('tr[data-lexopen]'); if (lxo) { const k = lxo.dataset.lexopen, sc = $('lex-scroll'), y = sc.scrollTop; S.lexOpen = S.lexOpen === k ? '' : k; renderLex(); sc.scrollTop = y; return; }
   const lk = t.closest('[data-lexk]'); if (lk) { S.lexK = lk.dataset.lexk; S.lexSel = ''; renderLex(); return; }
   const act = t.closest('[data-act]');
   if (act) {
