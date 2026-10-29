@@ -411,7 +411,7 @@ body[data-vurgu="sade"] .hs:not(.sel):not(:hover), body[data-vurgu="sade"] .sp:n
 
 /* Tablo */
 .tbl { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
-.tbl th { text-align: left; font-size: calc(11px * var(--yb)); color: var(--ink-3); font-weight: 600; letter-spacing: .3px; text-transform: uppercase; padding: 8px 10px; border-bottom: 1px solid var(--line); background: var(--paper-2); position: sticky; top: 0; white-space: nowrap; }
+.tbl th { text-align: left; font-size: calc(11px * var(--yb)); color: var(--ink-3); font-weight: 600; letter-spacing: .3px; text-transform: uppercase; padding: 8px 10px; border-bottom: 1px solid var(--line); background: var(--paper-2); position: relative; z-index: 2; transform: translateY(var(--thy, 0px)); white-space: nowrap; }
 .tbl th button { border: 0; background: none; padding: 0; color: inherit; font: inherit; letter-spacing: inherit; text-transform: inherit; }
 .tbl td { padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
 .tbl tr:last-child td { border-bottom: 0; }
@@ -1319,6 +1319,7 @@ tr.mf-on td { background: color-mix(in srgb, #c0392b 6%, transparent); }
 .tsoz .conf-ph[aria-expanded="true"] { background: var(--accent-soft); border-radius: 6px; padding: 0 4px; }
 .tsoz-dok { margin: 6px 0 10px; padding: 12px 14px; background: var(--paper-2); border: 1px solid var(--line); border-radius: 10px; font-size: calc(13.5px * var(--yb)); }
 .tdok .tsoz .small .ar { font-size: calc(14px * var(--yb)); }
+.tbl.yapisik thead th { box-shadow: inset 0 -1px 0 var(--line), 0 3px 6px -2px rgba(0, 0, 0, .14); }
 
 </style>
 </head>
@@ -7395,7 +7396,26 @@ document.addEventListener('keydown', e => {
 }, true);
 applySizes();
 $('tb-notch').addEventListener('click', () => setTopbar(!!UI.tbHide)); applyTopbar();
-let drwRaf = 0; window.addEventListener('resize', () => { cancelAnimationFrame(drwRaf); drwRaf = requestAnimationFrame(() => { layoutDrawers(); fitTopbar(); if (S.view === 'critics') layoutCrail(); if (S.view === 'lex') layoutLrail(); if (S.view === 'conflicts') layoutTrail(); }); });
+/* Tablo başlıkları kaydırınca üstte kalır (29.10.2026): tablolar çoğunlukla yatay kaydırmalı .wrap içinde olduğundan CSS’in
+   position: sticky’si işlemez; başlık satırı, tablonun bağlı olduğu dikey kaydırma alanının üst kenarına (yapışkan araç çubuğu
+   varsa onun altına) translateY ile indirilir. Tablo bitince başlık tablonun içinde kalır. */
+const TH_SC = new WeakMap();
+function dikeyKaydirma(el) { for (let p = el.parentElement; p && p !== document.body; p = p.parentElement) { if (p.scrollHeight > p.clientHeight + 1) { const o = getComputedStyle(p).overflowY; if (o === 'auto' || o === 'scroll') return p; } } return null; }
+function basliklariYerlestir(kok) {
+  for (const t of kok ? kok.querySelectorAll('table.tbl') : document.querySelectorAll('.view:not([hidden]) table.tbl, dialog[open] table.tbl')) {
+    const th = t.tHead; if (!th || !t.offsetParent) continue;
+    let sc = TH_SC.get(t); if (sc === undefined || (sc && !sc.contains(t))) { sc = dikeyKaydirma(t); TH_SC.set(t, sc); }
+    let ust = sc ? sc.getBoundingClientRect().top : 0;
+    if (sc) { const tb = sc.querySelector('.toolbar'); if (tb && getComputedStyle(tb).position === 'sticky') { const r = tb.getBoundingClientRect(); if (r.top <= ust + 1 && r.bottom > ust) ust = r.bottom; } }
+    const r = t.getBoundingClientRect(), off = Math.max(0, Math.min(ust - r.top, r.height - th.offsetHeight - 4));
+    if (off > 0) { t.style.setProperty('--thy', off + 'px'); t.classList.add('yapisik'); } else if (t.classList.contains('yapisik')) { t.style.removeProperty('--thy'); t.classList.remove('yapisik'); }
+  }
+}
+let thRaf = 0, thZam = 0; const thPlanla = kok => { cancelAnimationFrame(thRaf); thRaf = requestAnimationFrame(() => basliklariYerlestir(kok)); };
+document.addEventListener('scroll', e => { if (e.target instanceof Element && e.target.querySelector('table.tbl')) thPlanla(e.target); }, true);
+// Yeniden çizimden sonra (ör. sıralama, süzgeç) bir kez: art arda değişiklikler tek ölçüme toplanır
+new MutationObserver(() => { clearTimeout(thZam); thZam = setTimeout(() => thPlanla(null), 120); }).observe(document.body, { childList: true, subtree: true });
+let drwRaf = 0; window.addEventListener('resize', () => { cancelAnimationFrame(drwRaf); drwRaf = requestAnimationFrame(() => { layoutDrawers(); fitTopbar(); if (S.view === 'critics') layoutCrail(); if (S.view === 'lex') layoutLrail(); if (S.view === 'conflicts') layoutTrail(); thPlanla(null); }); });
 // Yazdırırken hüküm özeti (Sayılar) açık basılır; sonra eski hâline döner
 window.addEventListener('beforeprint', () => { const d = document.querySelector('.nh-sum'); if (d && !d.open) { d.dataset.printOpen = '1'; d.open = true; } });
 window.addEventListener('afterprint', () => { const d = document.querySelector('.nh-sum[data-print-open]'); if (d) { d.open = false; setTimeout(() => { delete d.dataset.printOpen; }, 0); } });
