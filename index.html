@@ -1371,6 +1371,45 @@ tr.mf-on td { background: color-mix(in srgb, #c0392b 6%, transparent); }
 .ctag-yol .linkbtn { font-family: var(--ar); font-size: 1.05rem; }
 .ctag-pg { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 8px 0; }
 @media (max-width: 900px) { .ctag-lay { grid-template-columns: 1fr; } .ctag-side { position: static; max-height: none; } .ctag-q { width: 100%; } .ctag-s { margin-inline-start: 0; } }
+/* Senet ağı süzgeçleri (er-Ravâfid ile aynı davranış) */
+.ctag-suz { display: inline-flex; align-items: center; gap: 6px; }
+.ctag-suz-i { width: 12px; height: 12px; background: currentColor; clip-path: polygon(0 0, 100% 0, 62% 48%, 62% 100%, 38% 84%, 38% 48%); opacity: .7; }
+.ctag-suz[aria-expanded="true"] { background: var(--paper-2); border-color: var(--ink-3); }
+.ctag-suz-n:not(:empty) { background: var(--k-k); color: #1c1a14; border-radius: 999px; padding: 2px 7px; font-size: 11px; line-height: 1.2; }
+.ctag-agf { border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+.ctag-agf-r { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.ctag-agf-l { font: 700 11px var(--ui); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); min-width: 120px; cursor: help; }
+.ctag-hs { display: flex; flex-wrap: wrap; gap: 6px; }
+.ctag-h { position: relative; }
+.ctag-h > summary { list-style: none; cursor: pointer; font: 600 12px var(--ui); letter-spacing: .04em; border: 1px solid var(--line-2); border-radius: 999px; padding: 6px 11px; background: var(--paper); color: var(--ink-2); white-space: nowrap; }
+.ctag-h > summary::-webkit-details-marker { display: none; }
+.ctag-h > summary::after { content: ' ▾'; color: var(--ink-3); }
+.ctag-h[open] > summary, .ctag-h > summary:hover { border-color: var(--ink-3); color: var(--ink); }
+.ctag-h.on > summary { background: var(--k-t); border-color: var(--k-t); color: #fff; }
+.ctag-h.on > summary::after { color: #fff; }
+.ctag-pop { position: absolute; z-index: 40; top: calc(100% + 6px); left: 0; width: min(380px, calc(100vw - 40px)); background: var(--paper); border: 1px solid var(--line-2); border-radius: var(--radius); box-shadow: var(--shadow-lg); padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+.ctag-pq, .ctag-zq { font: inherit; font-size: 13px; color: var(--ink); background: var(--paper-2); border: 1px solid var(--line-2); border-radius: 8px; padding: 6px 8px; width: 100%; box-sizing: border-box; }
+.ctag-pl { max-height: min(340px, 52vh); overflow: auto; display: flex; flex-direction: column; }
+.ctag-po { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 3px 5px; border-radius: 6px; cursor: pointer; }
+.ctag-po:hover { background: var(--paper-2); }
+.ctag-po.on { background: var(--tint-t); }
+.ctag-po .ar { font-size: 1.05rem; overflow-wrap: anywhere; }
+.ctag-pf { display: flex; gap: 6px; justify-content: flex-end; }
+.ctag-zbox { position: relative; flex: 1 1 240px; max-width: 420px; }
+.ctag-zl { position: absolute; z-index: 40; top: calc(100% + 4px); left: 0; right: 0; max-height: 300px; overflow: auto; background: var(--paper); border: 1px solid var(--line-2); border-radius: var(--radius); box-shadow: var(--shadow-lg); padding: 4px; }
+.ctag-zop { display: flex; align-items: center; gap: 8px; width: 100%; border: 0; background: none; color: var(--ink); padding: 5px 8px; border-radius: 6px; cursor: pointer; text-align: start; font: inherit; }
+.ctag-zop .small { margin-inline-start: auto; }
+.ctag-zop:hover, .ctag-zop.on { background: var(--paper-2); }
+.ctag-alt { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.ctag-alt .ctag-agf-l { min-width: 0; }
+.ctag-cips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; }
+.ctag-cp { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--k-k); background: var(--tint-k); border-radius: 999px; padding: 1px 3px 1px 10px; max-width: 100%; color: var(--ink); }
+.ctag-cp small { font: 700 10px var(--ui); letter-spacing: .05em; text-transform: uppercase; color: var(--ink-3); white-space: nowrap; }
+.ctag-cp .ar { font-size: 1.05rem; overflow-wrap: anywhere; }
+.ctag-ci { border: 0; background: none; color: var(--ink-2); font-size: 16px; line-height: 1; padding: 2px 6px; border-radius: 999px; cursor: pointer; }
+.ctag-ci:hover { background: var(--paper-2); color: var(--ink); }
+.ctag-d.zs circle { stroke: var(--k-k); stroke-width: 4; }
+@media (max-width: 700px) { .ctag-agf-l { min-width: 0; width: 100%; } .ctag-zbox { max-width: none; flex-basis: 100%; } .ctag-pop { position: fixed; left: 12px; right: 12px; top: 90px; width: auto; } }
 
 </style>
 </head>
@@ -1549,12 +1588,15 @@ tr.mf-on td { background: color-mix(in srgb, #c0392b 6%, transparent); }
    d: râvi → talebesi → … → musannif); düğüm = [id, hadis, tekrarsız, biten hadis, biten tekrarsız, [çocuklar]].
    Bir yol (kanal), isnadların bittiği bir düğüme kadardır (ağırlığı orada biten hadisler); derinlik seçilince o halkada
    kesilir ve altındaki bütün hadisleri taşır.
-   Aynı kişi farklı derinliklerde geçse de tek düğümdür; sütunu en ağır geçtiği derinliktir. */
+   Aynı kişi farklı derinliklerde geçse de tek düğümdür; sütunu en ağır geçtiği derinliktir.
+   Süzgeçler (er-Ravâfid senet ağıyla aynı): halka süzgeci (HALKA n ve UÇ sütununda seçilen râvilerden geçen yollar;
+   aynı sütunda «ya da», sütunlar arasında «ve») ve zincir süzgeci (1–3 râvi; isteğe bağlı verilen sırayla, bitişik).
+   Konum yoldaki sıradır (kökten sayılır); çizimdeki sütun ise düğümün en ağır geçtiği konumdur. */
 const CTAG = (() => {
   const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m]));
   const fmt = n => Number(n || 0).toLocaleString('tr-TR');
   const norm = s => String(s || '').replace(/[ً-ٰٟـ]/g, '').replace(/[أإآٱ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').trim();
-  const SATIR = 190, SAYFA = 25;
+  const SATIR = 190, SAYFA = 25, ZMAX = 3;
   let olcu = null;
   function satirla(s, max) {
     if (!olcu) olcu = document.createElement('canvas').getContext('2d');
@@ -1583,7 +1625,7 @@ const CTAG = (() => {
   /* host: boş kap; V: {hh, u, d, kisi}; o: { kart(id), git(id) → bool, ad(id), dosya: 'senet-agi-…' } */
   function kur(host, V, o = {}) {
     const ad = k => (V.kisi && V.kisi[k]) || (o.ad && o.ad(k)) || ('#' + k);
-    const S = { yon: V.u && V.u.length ? 'u' : 'd', N: 25, m: 'h', dz: 0, q: '', zoom: 1, sayfa: 1 };
+    const S = { yon: V.u && V.u.length ? 'u' : 'd', N: 25, m: 'h', dz: 0, q: '', zoom: 1, sayfa: 1, h: new Map(), u: new Set(), z: [], o: false, b: false };
     const yonAd = { u: 'Yukarı: hocalarına doğru (isnadın başına)', d: 'Aşağı: talebelerine doğru (musannife)' };
     host.innerHTML = `<div class="ctag">
       <div class="ctag-tb">
@@ -1593,6 +1635,7 @@ const CTAG = (() => {
           <select class="ctag-n" aria-label="Kapsam" title="En ağır kaç yol çizilsin"><option value="10">İlk 10 yol</option><option value="25" selected>İlk 25 yol</option><option value="50">İlk 50 yol</option><option value="100">İlk 100 yol</option><option value="250">İlk 250 yol</option><option value="0">Bütün yollar</option></select>
           <select class="ctag-dz" aria-label="Derinlik" title="Kaç halkaya kadar gidilsin; kısa derinlik aynı başlangıçlı yolları birleştirir"><option value="0">bütün halkalar</option><option value="1">1 halka</option><option value="2">2 halka</option><option value="3">3 halka</option><option value="4">4 halka</option><option value="5">5 halka</option></select>
           <select class="ctag-m" aria-label="Ölçüt" title="Çizgi kalınlığı, daire büyüklüğü ve sıralama"><option value="h">ölçüt: hadis</option><option value="t">ölçüt: tekrarsız</option></select>
+          <button type="button" class="btn sm ctag-suz" aria-expanded="false" title="Halkalarda süzme ve zincir süzgeci (çiftli / üçlü süzme)"><span class="ctag-suz-i" aria-hidden="true"></span>Süzgeçler<b class="ctag-suz-n"></b></button>
         </div>
         <div class="ctag-g ctag-s">
           <span class="small muted ctag-say"></span>
@@ -1600,6 +1643,15 @@ const CTAG = (() => {
           <button type="button" class="btn sm ctag-sif">Sıfırla</button>
         </div>
       </div>
+      <div class="ctag-agf" role="group" aria-label="Halka ve zincir süzgeçleri" hidden>
+        <div class="ctag-agf-r"><span class="ctag-agf-l" title="Bir halka sütununda yalnız seçilen râvilerden geçen yollar kalır. Aynı sütunda birden çok seçim «ya da», sütunlar arası «ve» ile bağlanır.">Halkalarda süz</span><div class="ctag-hs"></div></div>
+        <div class="ctag-agf-r"><span class="ctag-agf-l" title="Yol, seçilen râvilerin hepsinden geçmelidir (çiftli / üçlü süzme).">Zincir süzgeci</span>
+          <div class="ctag-zbox"><input type="search" class="ctag-zq" placeholder="1–3 râvi: ad yazıp seçin" aria-label="Zincir süzgecine râvi ekle" autocomplete="off"><div class="ctag-zl" role="listbox" hidden></div></div>
+          <label class="small" title="Seçim sırası kökten uca doğru yoldaki sırayı verir"><input type="checkbox" class="ctag-zo"> verilen sırayla</label>
+          <label class="small" title="Seçilen râviler yolda art arda gelmeli (aralarında başka halka olmamalı)"><input type="checkbox" class="ctag-zb"> bitişik</label></div>
+        <p class="hint ctag-ipucu">Bir halka sütunundan ya da zincir süzgecinden râvi seçin; düğüm panelindeki «Zincir süzgecine ekle» ve bağ panelindeki «Bu çifti süz» de kullanılabilir.</p>
+      </div>
+      <div class="ctag-alt" hidden><span class="ctag-agf-l">Süzgeç</span><div class="ctag-cips"></div><button type="button" class="btn sm ctag-tem">Temizle</button></div>
       <div class="ctag-lay">
         <div class="ctag-wrap"><svg class="ctag-svg" role="img" aria-label="Senet ağı"></svg></div>
         <aside class="ctag-side" aria-live="polite"></aside>
@@ -1610,18 +1662,106 @@ const CTAG = (() => {
     const $q = s => host.querySelector(s), svg = $q('.ctag-svg'), wrap = $q('.ctag-wrap'), side = $q('.ctag-side');
     let G = null, YOL = [];
     const bosPanel = () => { side.innerHTML = `<h4>Ağ ayrıntısı</h4><p class="hint">Bir düğüme basınca o râviden geçen yollar vurgulanır; ${S.yon === 'u' ? 'kimden aldığı' : 'kime verdiği'} ve kişi kartı burada açılır. Bir bağa basınca iki halka arasındaki yollar listelenir.</p>`; };
-    const hazirla = () => { YOL = yollar(V.hh, V[S.yon] || [], S.dz); YOL.forEach(c => c.np = c.parts.map(p => norm(ad(p)))); };
+    const hazirla = () => {
+      YOL = yollar(V.hh, V[S.yon] || [], S.dz); YOL.forEach(c => c.np = c.parts.map(p => norm(ad(p))));
+      MAXP = Math.max(1, ...YOL.map(c => c.parts.length)) - 1;
+      for (const [d, set] of S.h) if (d > MAXP || !set.size) S.h.delete(d);   // derinlik kısalınca o halkaların seçimi düşer
+      halkaKur();
+    };
+    let MAXP = 1;
+    const posAd = d => 'HALKA ' + d, ucAd = () => S.yon === 'u' ? 'UÇ · isnadın başı' : 'UÇ · musannif';
+    const zincirUyar = p => {
+      const ix = S.z.map(k => p.indexOf(k)); if (ix.some(i => i < 0)) return false;
+      const s = S.o ? ix : ix.slice().sort((a, b) => a - b);
+      for (let i = 1; i < s.length; i++) { if (s[i] <= s[i - 1]) return false; if (S.b && s[i] !== s[i - 1] + 1) return false; }
+      return true;
+    };
+    // haric: seçenek sayımında o süzgecin kendisi dışarıda kalır
+    const gec = (c, haric = '') => {
+      for (const [d, set] of S.h) if (haric !== 'h' + d && set.size && !set.has(c.parts[d])) return false;
+      if (haric !== 'u' && S.u.size && !S.u.has(c.parts[c.parts.length - 1])) return false;
+      if (haric !== 'z' && S.z.length && !zincirUyar(c.parts)) return false;
+      return true;
+    };
+    const suzguVar = () => S.z.length || S.u.size || [...S.h.values()].some(x => x.size);
+    const secili = () => { const s = new Set(S.z); S.u.forEach(k => s.add(k)); S.h.forEach(set => set.forEach(k => s.add(k))); return s; };
+    const suzguMetni = () => {
+      const p = [];
+      [...S.h.entries()].sort((a, b) => a[0] - b[0]).forEach(([d, set]) => { if (set.size) p.push(`${posAd(d)}: ${[...set].map(ad).join(' / ')}`); });
+      if (S.u.size) p.push(`${ucAd()}: ${[...S.u].map(ad).join(' / ')}`);
+      if (S.z.length) p.push(`yolda ${S.z.map(ad).join(S.o ? ' → ' : ' + ')}${S.o ? ' (bu sırayla)' : ''}${S.b ? ' (bitişik)' : ''}`);
+      return p.join(' · ');
+    };
+    const suzulmus = () => { const q = norm(S.q); return YOL.filter(c => (!q || c.np.some(p => p.includes(q))) && gec(c)); };
+    function halkaKur() {
+      $q('.ctag-hs').innerHTML = Array.from({ length: Math.max(0, MAXP - 1) }, (_, i) => i + 1).map(d => `<details class="ctag-h" data-p="h${d}"><summary>${posAd(d)}<b class="ctag-sy"></b></summary><div class="ctag-pop"></div></details>`).join('')
+        + `<details class="ctag-h" data-p="u"><summary>${esc(ucAd())}<b class="ctag-sy"></b></summary><div class="ctag-pop"></div></details>`;
+    }
+    const setOf = p => p === 'u' ? S.u : (S.h.get(+p.slice(1)) || (S.h.set(+p.slice(1), new Set()), S.h.get(+p.slice(1))));
+    const secenek = p => {
+      const mp = new Map();
+      YOL.forEach(c => { if (!gec(c, p)) return; const k = p === 'u' ? c.parts[c.parts.length - 1] : c.parts[+p.slice(1)]; if (k == null) return; mp.set(k, (mp.get(k) || 0) + c[S.m]); });
+      return [...mp.entries()];
+    };
+    function popCiz(dt) {
+      const pop = dt.querySelector('.ctag-pop');
+      if (!pop.firstChild) {
+        pop.innerHTML = `<input type="search" class="ctag-pq" placeholder="süz (Arapça)" aria-label="Seçenekleri süz"><div class="ctag-pl"></div><div class="ctag-pf"><button type="button" class="btn sm" data-ctagpt>Seçimi kaldır</button><button type="button" class="btn sm" data-ctagpk>Kapat</button></div>`;
+        pop.querySelector('.ctag-pq').addEventListener('input', () => popListe(dt));
+      }
+      popListe(dt);
+    }
+    function popListe(dt) {
+      const pop = dt.querySelector('.ctag-pop'), set = setOf(dt.dataset.p), q = norm(pop.querySelector('.ctag-pq').value);
+      let L = secenek(dt.dataset.p); const toplam = L.length;
+      set.forEach(k => { if (!L.some(([x]) => x === k)) L.push([k, 0]); });     // seçili olup öteki süzgeçlerle düşenler de görünsün
+      if (q) L = L.filter(([k]) => norm(ad(k)).includes(q));
+      L.sort((a, b) => (set.has(b[0]) - set.has(a[0])) || b[1] - a[1]);
+      const sinir = 400;
+      pop.querySelector('.ctag-pl').innerHTML = (L.length ? L.slice(0, sinir).map(([k, n]) => `<label class="ctag-po${set.has(k) ? ' on' : ''}"><input type="checkbox" value="${esc(k)}"${set.has(k) ? ' checked' : ''}><span class="ar">${esc(ad(k))}</span><span class="small muted">${fmt(n)}</span></label>`).join('') : '<p class="hint">Eşleşen râvi yok.</p>')
+        + `<p class="small muted">${fmt(toplam)} râvi${L.length > sinir ? ` · ilk ${sinir} gösteriliyor; süzün` : ''} · sayı: öteki süzgeçlerle birlikte ${S.m === 'h' ? 'hadis' : 'tekrarsız'}</p>`;
+    }
+    const zAday = () => { const mp = new Map(); YOL.forEach(c => new Set(c.parts.slice(1)).forEach(k => mp.set(k, (mp.get(k) || 0) + c.h))); return [...mp.entries()].sort((a, b) => b[1] - a[1]); };
+    function zEkle(k) { if (!k || S.z.includes(k) || S.z.length >= ZMAX) return; S.z.push(k); $q('.ctag-zq').value = ''; $q('.ctag-zl').hidden = true; panel(true); S.sayfa = 1; ciz(); }
+    function zOner() {
+      const q = norm($q('.ctag-zq').value), zl = $q('.ctag-zl');
+      if (!q) { zl.hidden = true; return; }
+      const L = zAday().filter(([k]) => !S.z.includes(k) && norm(ad(k)).includes(q)).slice(0, 30);
+      zl.innerHTML = L.length ? L.map(([k, n], i) => `<button type="button" role="option" class="ctag-zop${i ? '' : ' on'}" data-k="${esc(k)}"><span class="ar">${esc(ad(k))}</span><span class="small muted">${fmt(n)} hadis</span></button>`).join('') : '<p class="hint">Bu ağda eşleşen râvi yok.</p>';
+      zl.hidden = false;
+    }
+    function cipCiz(ch) {
+      const cip = [], x = (tp, k) => `<button type="button" class="ctag-ci" data-t="${tp}" data-k="${esc(k)}" title="Kaldır" aria-label="Kaldır">×</button>`;
+      [...S.h.entries()].sort((a, b) => a[0] - b[0]).forEach(([d, set]) => set.forEach(k => cip.push(`<span class="ctag-cp"><small>${posAd(d)}</small><span class="ar">${esc(ad(k))}</span>${x('h' + d, k)}</span>`)));
+      S.u.forEach(k => cip.push(`<span class="ctag-cp"><small>${esc(ucAd())}</small><span class="ar">${esc(ad(k))}</span>${x('u', k)}</span>`));
+      S.z.forEach((k, i) => cip.push(`${i ? `<span class="muted" aria-hidden="true">${S.o ? '→' : '+'}</span>` : ''}<span class="ctag-cp"><small>zincir ${i + 1}</small><span class="ar">${esc(ad(k))}</span>${x('z', k)}</span>`));
+      $q('.ctag-cips').innerHTML = cip.join('');
+      $q('.ctag-alt').hidden = !cip.length;
+      $q('.ctag-suz-n').textContent = cip.length || '';
+      $q('.ctag-ipucu').hidden = !!cip.length;
+      $q('.ctag-zq').disabled = S.z.length >= ZMAX;
+      $q('.ctag-zq').placeholder = S.z.length >= ZMAX ? `en çok ${ZMAX} râvi seçildi` : `1–${ZMAX} râvi: ad yazıp seçin`;
+      $q('.ctag-zo').checked = S.o; $q('.ctag-zb').checked = S.b;
+      host.querySelectorAll('.ctag-h').forEach(dt => {
+        const p = dt.dataset.p, n = p === 'u' ? S.u.size : (S.h.get(+p.slice(1)) || new Set()).size;
+        dt.querySelector('.ctag-sy').textContent = n ? ' · ' + n : ''; dt.classList.toggle('on', !!n);
+        if (dt.open) popListe(dt);
+      });
+    }
+    function panel(ac) { $q('.ctag-agf').hidden = !ac; $q('.ctag-suz').setAttribute('aria-expanded', ac); }
+    const temizle = () => { S.h.clear(); S.u.clear(); S.z = []; };
     function ciz() {
       host.querySelectorAll('[data-yon]').forEach(b => b.setAttribute('aria-pressed', b.dataset.yon === S.yon));
       $q('.ctag-uc-ad').textContent = S.yon === 'u' ? 'yolun ucu: isnadın başı (çoğunlukla sahâbî)' : 'yolun ucu: musannif';
-      const m = S.m, q = norm(S.q);
-      const ch = YOL.filter(c => !q || c.np.some(p => p.includes(q))).sort((a, b) => b[m] - a[m] || b.h - a.h || a.id - b.id);
+      const m = S.m;
+      const ch = suzulmus().sort((a, b) => b[m] - a[m] || b.h - a.h || a.id - b.id);
+      cipCiz(ch);
       const gor = S.N ? ch.slice(0, S.N) : ch;
       $q('.ctag-say').textContent = `${fmt(gor.length)} / ${fmt(ch.length)} yol`;
       const nodes = new Map(), edges = new Map();
       G = { nodes, edges, gor, ch };
       tabloCiz(ch);
-      if (!gor.length) { G.W = 600; G.H = 110; svg.innerHTML = `<text class="ctag-kat" x="16" y="56">${YOL.length ? 'Aramayla eşleşen yol yok.' : 'Bu yönde yol yok.'}</text>`; zoomUygula(); bosPanel(); return; }
+      if (!gor.length) { G.W = 600; G.H = 110; svg.innerHTML = `<text class="ctag-kat" x="16" y="56">${YOL.length ? 'Bu süzgeç ya da aramayla eşleşen yol yok. Bir seçimi kaldırın ya da «Temizle»ye basın.' : 'Bu yönde yol yok.'}</text>`; zoomUygula(); bosPanel(); return; }
       gor.forEach(c => {
         c.parts.forEach((k, d) => {
           let n = nodes.get(k); if (!n) { n = { k, w: 0, yol: new Set(), uc: false, dw: new Map() }; nodes.set(k, n); }
@@ -1657,8 +1797,9 @@ const CTAG = (() => {
         const a = pos.get(e.a), b = pos.get(e.b); if (!a || !b) continue; const dx = (b.x - a.x) * .52;
         h += `<path class="ctag-bag" data-e="${e.key}" d="M ${a.x} ${a.y} C ${a.x + dx} ${a.y}, ${b.x - dx} ${b.y}, ${b.x} ${b.y}" stroke-width="${(1.2 + 8 * Math.sqrt(e.w / maxE)).toFixed(2)}"><title>${esc(ad(e.a))} ${OK} ${esc(ad(e.b))} · ${fmt(e.w)} · ${e.yol.size} yol</title></path>`;
       }
+      const sec = secili();
       for (const n of nodes.values()) {
-        const p = pos.get(n.k), cls = n.d === 0 ? 'kok' : n.uc ? 'uc' : 'ara';
+        const p = pos.get(n.k), cls = (n.d === 0 ? 'kok' : n.uc ? 'uc' : 'ara') + (sec.has(n.k) ? ' zs' : '');
         h += `<g class="ctag-d ${cls}" data-n="${n.k}" transform="translate(${p.x},${p.y})" tabindex="0" role="button" aria-label="${esc(ad(n.k))}"><circle r="${n.r.toFixed(1)}"><title>${esc(ad(n.k))} · ${n.yol.size} yol · ${fmt(n.w)}</title></circle></g>`;
         h += `<text class="ctag-et" data-n="${n.k}" x="${p.x}" y="${(p.y + n.r + 17).toFixed(1)}" text-anchor="middle" direction="rtl" unicode-bidi="plaintext">${n.L.map((s, i) => `<tspan x="${p.x}"${i ? ` dy="${SH}"` : ''}>${esc(s)}</tspan>`).join('')}</text>`;
       }
@@ -1693,7 +1834,7 @@ const CTAG = (() => {
         <div class="ctag-pill"><span>${fmt(tum.length)} yol</span><span>${fmt(tum.reduce((a, c) => a + c.h, 0))} hadis</span><span>${fmt(tum.reduce((a, c) => a + c.t, 0))} tekrarsız</span></div>
         ${liste('Kimden aldı', hoca)}${liste('Kime verdi', talebe)}
         <div class="ctag-kv"><b>Yollar${tum.length > 6 ? ' · ilk 6 / ' + fmt(tum.length) : ''}</b>${tum.slice(0, 6).map(yolSatir).join('')}</div>
-        <div class="ctag-btn"><button type="button" class="btn sm" data-ctagkart="${k}">Kişi kartı</button>${o.git && o.git(k) ? `<button type="button" class="btn sm" data-ctaggit="${k}">Sayfasına git</button>` : ''}<button type="button" class="btn sm" data-ctagara="${k}">Ağda bu râviyi ara</button></div>`;
+        <div class="ctag-btn"><button type="button" class="btn sm" data-ctagkart="${k}">Kişi kartı</button>${o.git && o.git(k) ? `<button type="button" class="btn sm" data-ctaggit="${k}">Sayfasına git</button>` : ''}<button type="button" class="btn sm" data-ctagara="${k}">Ağda bu râviyi ara</button>${n.d > 0 ? `<button type="button" class="btn sm" data-ctagzek="${k}"${S.z.includes(k) || S.z.length >= ZMAX ? ' disabled' : ''} title="Zincir süzgecine ekler (çiftli / üçlü süzme)">${S.z.includes(k) ? 'Zincir süzgecinde' : S.z.length >= ZMAX ? 'Zincir süzgeci dolu (' + ZMAX + ')' : 'Zincir süzgecine ekle'}</button>` : ''}</div>`;
     }
     function bagAc(key) {
       const e = G.edges.get(key); if (!e) return;
@@ -1703,12 +1844,13 @@ const CTAG = (() => {
       side.innerHTML = `<div class="small muted">Rivayet bağı</div><h4><span class="ar">${esc(ad(tal))}</span> <span class="muted">←</span> <span class="ar">${esc(ad(hoc))}</span></h4>
         <p class="hint"><span class="ar">${esc(ad(tal))}</span>, bu yollarda <span class="ar">${esc(ad(hoc))}</span>’den rivayet ediyor.</p>
         <div class="ctag-pill"><span>${e.yol.size} yol</span><span>${fmt(e.w)} ${S.m === 'h' ? 'hadis' : 'tekrarsız'}</span></div>
-        <div class="ctag-kv"><b>Yollar</b>${cs.slice(0, 10).map(yolSatir).join('')}</div>`;
+        <div class="ctag-kv"><b>Yollar</b>${cs.slice(0, 10).map(yolSatir).join('')}</div>
+        ${S.z.length === 0 ? `<div class="ctag-btn"><button type="button" class="btn sm" data-ctagcift="${esc(key)}" title="İki halkayı zincir süzgecine verilen sırayla ve bitişik olarak ekler">Bu çifti süz</button></div>` : ''}`;
     }
     function tabloCiz(ch) {
       const sayfa = Math.max(1, Math.ceil(ch.length / SAYFA)); S.sayfa = Math.min(S.sayfa, sayfa);
       const p = ch.slice((S.sayfa - 1) * SAYFA, S.sayfa * SAYFA), OK = S.yon === 'u' ? '←' : '→';
-      $q('.ctag-tablo').innerHTML = `<div class="ctag-th"><b>Yollar</b> <span class="small muted">${fmt(ch.length)} yol · ${S.yon === 'u' ? 'râviden isnadın başına' : 'râviden musannife'}${S.dz ? ' · ' + S.dz + ' halkaya kadar' : ''}</span>
+      $q('.ctag-tablo').innerHTML = `<div class="ctag-th"><b>Yollar</b> <span class="small muted">${fmt(ch.length)} yol · ${S.yon === 'u' ? 'râviden isnadın başına' : 'râviden musannife'}${S.dz ? ' · ' + S.dz + ' halkaya kadar' : ''}${suzguMetni() ? ' · ' + esc(suzguMetni()) : ''}</span>
         <span class="ctag-sp"></span><button type="button" class="btn sm ctag-md"${ch.length ? '' : ' disabled'}>⇩ Markdown</button></div>
         <div class="tw"><table class="tbl"><thead><tr><th class="num">#</th><th>Yol</th><th class="num">Hadis</th><th class="num">Tekrarsız</th><th class="num">Halka</th></tr></thead><tbody>
         ${p.map(c => `<tr><td class="num">${c.id}</td><td class="ar ctag-yol">${c.parts.map(x => `<button type="button" class="linkbtn" data-ctagn="${x}">${esc(ad(x))}</button>`).join(` <span class="muted">${OK}</span> `)}</td><td class="num">${fmt(c.h)}</td><td class="num">${fmt(c.t)}</td><td class="num">${c.parts.length - 1}</td></tr>`).join('') || '<tr><td colspan="5" class="hint">Yol yok.</td></tr>'}
@@ -1716,8 +1858,8 @@ const CTAG = (() => {
         ${sayfa > 1 ? `<div class="ctag-pg"><button type="button" class="btn sm" data-ctags="${S.sayfa - 1}"${S.sayfa > 1 ? '' : ' disabled'}>← önceki</button><span class="small muted">${S.sayfa} / ${sayfa}</span><button type="button" class="btn sm" data-ctags="${S.sayfa + 1}"${S.sayfa < sayfa ? '' : ' disabled'}>sonraki →</button></div>` : ''}`;
     }
     function markdown() {
-      const q = norm(S.q), ch = YOL.filter(c => !q || c.np.some(p => p.includes(q))), OK = S.yon === 'u' ? ' ← ' : ' → ';
-      let md = `# ${ad(String(V.hh))} · senet ağı (${S.yon === 'u' ? 'hocalarına doğru' : 'talebelerine doğru'})\n\nHH #${V.hh} · ${ch.length} yol${S.dz ? ' · ' + S.dz + ' halkaya kadar' : ''}${S.q ? ' · arama: ' + S.q : ''} · ${new Date().toLocaleDateString('tr-TR')}\n\n`;
+      const ch = suzulmus(), OK = S.yon === 'u' ? ' ← ' : ' → ', sz = suzguMetni();
+      let md = `# ${ad(String(V.hh))} · senet ağı (${S.yon === 'u' ? 'hocalarına doğru' : 'talebelerine doğru'})\n\nHH #${V.hh} · ${ch.length} yol${S.dz ? ' · ' + S.dz + ' halkaya kadar' : ''}${sz ? ' · süzgeç: ' + sz : ''}${S.q ? ' · arama: ' + S.q : ''} · ${new Date().toLocaleDateString('tr-TR')}\n\n`;
       md += `Kaynak: Câmiu Hâdimi’l-Haremeyn isnadları (33 metin kitabı). «Tekrarsız» farklı tahrîc grubu sayısıdır.\n\n| # | Yol | Hadis | Tekrarsız | Halka |\n|---:|---|---:|---:|---:|\n`;
       ch.forEach(c => { md += `| ${c.id} | ${c.parts.map(x => ad(x).replace(/\|/g, '\\|')).join(OK)} | ${c.h} | ${c.t} | ${c.parts.length - 1} |\n`; });
       const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([md], { type: 'text/markdown;charset=utf-8' }));
@@ -1726,9 +1868,17 @@ const CTAG = (() => {
     // olaylar
     host.addEventListener('click', ev => {
       const t = ev.target;
-      const yb = t.closest('[data-yon]'); if (yb && !yb.disabled) { S.yon = yb.dataset.yon; S.sayfa = 1; hazirla(); ciz(); return; }
+      const yb = t.closest('[data-yon]'); if (yb && !yb.disabled) { if (yb.dataset.yon !== S.yon) temizle(); S.yon = yb.dataset.yon; S.sayfa = 1; derinlikKur(); hazirla(); ciz(); return; }
+      if (t.closest('.ctag-suz')) { panel($q('.ctag-agf').hidden); return; }
+      if (t.closest('.ctag-tem')) { temizle(); S.sayfa = 1; ciz(); return; }
+      const ci = t.closest('.ctag-ci'); if (ci) { const tp = ci.dataset.t, k = ci.dataset.k; if (tp === 'z') S.z = S.z.filter(x => x !== k); else if (tp === 'u') S.u.delete(k); else { const s = S.h.get(+tp.slice(1)); if (s) s.delete(k); } S.sayfa = 1; ciz(); return; }
+      const pt = t.closest('[data-ctagpt]'); if (pt) { setOf(pt.closest('.ctag-h').dataset.p).clear(); S.sayfa = 1; ciz(); return; }
+      const pk = t.closest('[data-ctagpk]'); if (pk) { pk.closest('.ctag-h').open = false; return; }
+      const zo = t.closest('.ctag-zop'); if (zo) { zEkle(zo.dataset.k); return; }
+      const zk = t.closest('[data-ctagzek]'); if (zk && !zk.disabled) { const k = zk.dataset.ctagzek; zEkle(k); if (G.nodes.has(k)) dugumAc(k); return; }
+      const cf = t.closest('[data-ctagcift]'); if (cf) { const [a, b] = cf.dataset.ctagcift.split('>'); S.z = [a, b]; S.o = S.b = true; panel(true); S.sayfa = 1; ciz(); return; }
       const z = t.closest('.ctag-zoom button'); if (z) { const f = +z.dataset.z; if (f) zoomKat(f); else { S.zoom = 1; zoomUygula(); } return; }
-      if (t.closest('.ctag-sif')) { S.q = ''; S.N = 25; S.m = 'h'; S.dz = 0; S.zoom = 1; S.sayfa = 1; $q('.ctag-q').value = ''; $q('.ctag-n').value = '25'; $q('.ctag-m').value = 'h'; $q('.ctag-dz').value = '0'; hazirla(); ciz(); return; }
+      if (t.closest('.ctag-sif')) { S.q = ''; S.N = 25; S.m = 'h'; S.dz = 0; S.zoom = 1; S.sayfa = 1; temizle(); S.o = S.b = false; $q('.ctag-q').value = ''; $q('.ctag-n').value = '25'; $q('.ctag-m').value = 'h'; $q('.ctag-dz').value = '0'; hazirla(); ciz(); return; }
       if (t.closest('.ctag-md')) { markdown(); return; }
       const sg = t.closest('[data-ctags]'); if (sg && !sg.disabled) { S.sayfa = +sg.dataset.ctags; tabloCiz(G.ch); return; }
       const kb = t.closest('[data-ctagkart]'); if (kb) { o.kart && o.kart(kb.dataset.ctagkart, ad(kb.dataset.ctagkart)); return; }
@@ -1743,6 +1893,32 @@ const CTAG = (() => {
     $q('.ctag-n').addEventListener('change', ev => { S.N = +ev.target.value; ciz(); });
     $q('.ctag-m').addEventListener('change', ev => { S.m = ev.target.value; ciz(); });
     $q('.ctag-dz').addEventListener('change', ev => { S.dz = +ev.target.value; S.sayfa = 1; hazirla(); ciz(); });
+    // halka pencereleri: biri açılınca öteki kapanır; dışarı tıklayınca ve Esc ile kapanır
+    host.addEventListener('toggle', ev => { const dt = ev.target; if (!dt.classList || !dt.classList.contains('ctag-h') || !dt.open) return; host.querySelectorAll('.ctag-h[open]').forEach(x => { if (x !== dt) x.open = false; }); popCiz(dt); if (innerWidth > 700) dt.querySelector('.ctag-pq').focus(); }, true);
+    host.addEventListener('change', ev => {
+      const cb = ev.target.closest('.ctag-pl input[type=checkbox]');
+      if (cb) { const set = setOf(cb.closest('.ctag-h').dataset.p); cb.checked ? set.add(cb.value) : set.delete(cb.value); S.sayfa = 1; ciz(); return; }
+      if (ev.target.classList.contains('ctag-zo')) { S.o = ev.target.checked; ciz(); }
+      if (ev.target.classList.contains('ctag-zb')) { S.b = ev.target.checked; ciz(); }
+    });
+    document.addEventListener('click', function kapat(ev) {
+      if (!host.isConnected) { document.removeEventListener('click', kapat); return; }
+      host.querySelectorAll('.ctag-h[open]').forEach(dt => { if (!dt.contains(ev.target)) dt.open = false; });
+      if (!ev.target.closest('.ctag-zbox')) $q('.ctag-zl').hidden = true;
+    });
+    // Esc belge düzeyinde: kutu işaretlenince liste yeniden çizilir ve odak sayfa gövdesine düşer
+    document.addEventListener('keydown', function esc(ev) {
+      if (!host.isConnected) { document.removeEventListener('keydown', esc); return; }
+      if (ev.key === 'Escape') host.querySelectorAll('.ctag-h[open]').forEach(dt => { dt.open = false; dt.querySelector('summary').focus(); });
+    });
+    host.addEventListener('keydown', ev => {
+      if (!ev.target.classList || !ev.target.classList.contains('ctag-zq')) return;
+      const zl = $q('.ctag-zl'), L = [...zl.querySelectorAll('.ctag-zop')], i = L.findIndex(x => x.classList.contains('on'));
+      if (ev.key === 'Enter') { ev.preventDefault(); const b = L[Math.max(0, i)]; if (b && !zl.hidden) zEkle(b.dataset.k); }
+      else if ((ev.key === 'ArrowDown' || ev.key === 'ArrowUp') && L.length) { ev.preventDefault(); const j = (i + (ev.key === 'ArrowDown' ? 1 : -1) + L.length) % L.length; L.forEach((x, n) => x.classList.toggle('on', n === j)); L[j].scrollIntoView({ block: 'nearest' }); }
+      else if (ev.key === 'Escape') zl.hidden = true;
+    });
+    let zzt; $q('.ctag-zq').addEventListener('input', () => { clearTimeout(zzt); zzt = setTimeout(zOner, 150); });
     wrap.addEventListener('wheel', e => { if (!e.ctrlKey && !e.metaKey) return; e.preventDefault(); const r = wrap.getBoundingClientRect(); zoomKat(e.deltaY < 0 ? 1.12 : 1 / 1.12, { x: e.clientX - r.left, y: e.clientY - r.top }); }, { passive: false });
     { let dr = null, kay = false;
       wrap.addEventListener('pointerdown', e => { if (e.button !== 0 || e.pointerType === 'touch' || e.target.closest('.ctag-d, .ctag-bag')) return; dr = { x: e.clientX, y: e.clientY, l: wrap.scrollLeft, t: wrap.scrollTop }; kay = false; });
@@ -1750,8 +1926,8 @@ const CTAG = (() => {
       const bit = e => { if (!dr) return; dr = null; wrap.classList.remove('drag'); try { wrap.releasePointerCapture(e.pointerId); } catch (_) { } };
       wrap.addEventListener('pointerup', bit); wrap.addEventListener('pointercancel', bit);
       wrap.addEventListener('click', e => { if (kay) { kay = false; e.stopPropagation(); } }, true); }
-    $q('.ctag-dz').innerHTML = '<option value="0">bütün halkalar</option>' + Array.from({ length: Math.min(8, DERIN_EN(V[S.yon] || [])) }, (_, i) => `<option value="${i + 1}">${i + 1} halka</option>`).join('');
-    hazirla(); ciz();
+    function derinlikKur() { S.dz = 0; $q('.ctag-dz').innerHTML = '<option value="0">bütün halkalar</option>' + Array.from({ length: Math.min(8, DERIN_EN(V[S.yon] || [])) }, (_, i) => `<option value="${i + 1}">${i + 1} halka</option>`).join(''); }
+    derinlikKur(); hazirla(); ciz();
     if (document.fonts && document.fonts.status !== 'loaded') document.fonts.ready.then(() => { if (host.isConnected) ciz(); });
   }
   return { kur, yollar };
