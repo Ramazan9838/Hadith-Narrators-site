@@ -6,7 +6,7 @@
 <title>Cerh-Taʿdîl · Kaynak Kontrolü</title>
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self' https://api.github.com https://generativelanguage.googleapis.com; img-src data:; base-uri 'none'; form-action 'none'">
 <meta name="generator" content="cerh-tadil/build.py CTX 2.0.0">
-<meta name="cerh-motor" content="467fd8dc2c55509e">
+<meta name="cerh-motor" content="cb6c64a39b5aee61">
 <style>
 /* =========================================================
    Cerh-Ta‘dîl · Kaynak Kontrolü — arayüz stilleri
@@ -3021,10 +3021,16 @@ function kisiAdBtn(P, ad, ckId) {
   if (ci) return '<button class="linkbtn ar kisi-ad"' + st + ' data-ckkisi="' + ci + '" title="CK kişi bilgisi">' + esc(ad) + '</button>';
   return '<span class="ar"' + st + '>' + esc(ad) + '</span>';
 }
-// Yer: ikamet ya da nisbeden (harf-i tarifsiz biçim de denenir)
+// Yer: verilen alanların ilkinde bulunan yer (harf-i tarifsiz biçim de denenir)
 function disYer(...ts) {
   for (const t of ts) for (const p of String(t || '').split(/[،,|؛;]/)) { const y = CTK.placeOf(p) || CTK.placeOf(nz(p).replace(/(^|\s)ال/g, '$1')); if (y) return y; }
   return null;
+}
+// Memleket (asıl) nisbeden, yoksa addan, yoksa ikametten; ikamet farklıysa ayrıca verilir. HH’nin “ikamet” alanı gidip kaldığı yerleri de
+// sayar (Nâfi‘ mevlâ İbn Ömer: ikamet «مصر», nisbe «المدني»); memleket olarak ikamet öne alınınca Medineliler Mısırlı görünüyordu (05.11.2026).
+function disMemleket(p, ad) {
+  const asil = disYer(p.nisbe, ad), ik = disYer(p.ikamet);
+  return { y: asil || ik, ikamet: asil && ik && ik.tr !== asil.tr ? ik : null };
 }
 // İbn Hacer’in hükmünden kaba mertebe (sentez için; hüküm değildir)
 const IH_SINIF = [['sahâbî', /صحابي|صحبة|له رؤية/], ['metrûk · müttehem · kezzâb', /متروك|كذاب|متهم|وضاع|يضع/], ['zayıf · leyyin', /ضعيف|لين|منكر|واه/], ['mechûl · mestûr', /مجهول|مستور|لا يعرف/], ['sika', /ثقة|ثبت|حافظ|حجة|إمام|امام|متقن/], ['sadûk · lâ be’se bih', /صدوق|لا بأس به|لا باس به/], ['makbûl', /مقبول/]];
@@ -3234,11 +3240,11 @@ function hhTablo(n, V, key, title) {
   const top = canli.reduce((a, x) => a + (x.r || 0), 0);
   const row = x => {
     if (S.dzed === x.rk) return dzForm(x, 10);
-    const p = x.p || {}, y = disYer(p.ikamet, p.nisbe, x.ad), P = B.hhOf.get(x.rk), isr = il.get(+x.k) || [];
+    const p = x.p || {}, ym = disMemleket(p, x.ad), y = ym.y, P = B.hhOf.get(x.rk), isr = il.get(+x.k) || [];
     const vef = dzVefat(x.vefat), tab = dzTabaka(x.tabaka);
     return '<tr style="cursor:default" class="' + (x.sil ? 'rej' : '') + '"><td data-v="' + esc(x.ad) + '">' + dzAdHucre(x, x.manual || (x.ed && x.ad !== x.orig.ad) ? null : disKisiBtn(p.id != null ? p : null)) + '</td>' +
       '<td class="num" data-v="' + (vef || '') + '">' + (vef ? 'h. ' + vef : '<span class="muted">—</span>') + '</td><td class="num" data-v="' + (tab || '') + '">' + (tab ? Math.round(tab) : p.sahabi === 1 ? '<span class="small">sahâbî</span>' : '<span class="muted">—</span>') + '</td>' +
-      '<td data-v="' + esc(y ? y.tr : '') + '">' + (y ? esc(y.tr) : '<span class="muted">—</span>') + '</td><td class="ar small" data-v="' + esc(p.ih || '') + '">' + esc(p.ih || '') + '</td>' +
+      '<td data-v="' + esc(y ? y.tr : '') + '">' + (y ? esc(y.tr) : '<span class="muted">—</span>') + (ym.ikamet ? '<div class="small muted" title="HH’nin ikamet kaydı (memleketten farklı)">ikamet: ' + esc(ym.ikamet.tr) + '</div>' : '') + '</td><td class="ar small" data-v="' + esc(p.ih || '') + '">' + esc(p.ih || '') + '</td>' +
       '<td class="num" data-v="' + (x.r || 0) + '">' + (x.manual ? '<span class="muted">—</span>' : (key === 'hoca' ? '<button class="linkbtn" data-mrvh="' + esc(x.k) + '" title="Bu hocadan rivayetlerini göster">' + sayiTr(x.r) + '</button>' : sayiTr(x.r)) + (x.h != null ? ' <span class="small muted" title="İsnadlardan hesaplanan sayı programınkinden farklı">(isnadlarda ' + sayiTr(x.h) + ')</span>' : '')) + (top && x.r ? '<div class="small muted">%' + (Math.round(x.r / top * 1000) / 10).toLocaleString('tr-TR') + '</div>' : '') + '</td><td class="num" data-v="' + (x.rt || 0) + '">' + (x.rt != null ? sayiTr(x.rt) : '<span class="muted">—</span>') + '</td>' +
       '<td class="small">' + isr.map(r => '<span class="tag" title="' + esc(r.tur + (r.nit ? ' · ' + r.nit : '')) + '">' + esc(ILISKI_TR[r.tur] || r.tur) + (r.nit ? ' · ' + esc(r.nit) : '') + '</span>').join(' ') + '</td>' +
       '<td>' + kodlar((x.manual ? [] : ['HH']).concat(P ? [...P.kod].filter(k => k !== 'HH' && k !== 'TKZ') : [])) + (P && P.kod.has('TKZ') ? '<span class="tag" title="Tehzîbü’l-Kemâl listesinde de var">Tehzîb</span>' : '') + (P && P.sc.length + (P.merv ? 1 : 0) && P.adlar.some(a => adKok(a) !== adKok(x.ad)) ? '<div class="small muted ar" title="Aynı kişinin el-Câmi‘ ve CK’daki yazılışı">' + esc(P.adlar.filter(a => adKok(a) !== adKok(x.ad) && a !== (p.tamAd || '')).slice(0, 2).join(' · ')) + '</div>' : '') + '</td><td>' + dzButon(x) + '</td></tr>';
@@ -5425,7 +5431,7 @@ function tabakaYaklasik(y) { if (!y) return null; for (const [u, t] of TAB_VEFAT
 function kisiBilgi(n, key, x) {
   const h = hhKisiBul(n, key, x.v);
   const year = CTK.yearOf(x.vefat || '') || (h ? dzVefat(h.death) : null);
-  const place = x.memleket ? { tr: x.memleket, region: '' } : CTK.placeOf(x.v) || (h ? disYer((h.p || {}).ikamet, (h.p || {}).nisbe, h.name) : null);
+  const place = x.memleket ? { tr: x.memleket, region: '' } : CTK.placeOf(x.v) || (h ? disMemleket(h.p || {}, h.name).y : null);
   const tab = (h && dzTabaka(h.layer)) || tabakaYaklasik(year);
   return { year, place, placeAuto: !x.memleket && !!place, yearHH: !x.vefat && !!(h && year), tab, tabHH: !!(h && dzTabaka(h.layer)), hh: h };
 }
@@ -5655,7 +5661,7 @@ function birlesikKisiler(n, key) {
   // Her kaynağa göre değerler: vefat, yer, tabaka, durum (İbn Hacer / CK rütbesi / Takrîb), ağırlık (rivayet)
   for (const x of P) {
     const s = x.src = {};
-    if (x.hh) { const r = x.hh, p = r.p || {}, y = dzVefat(r.vefat); s.HH = { year: y, place: disYer(p.ikamet, p.nisbe, r.ad), tab: dzTabaka(r.tabaka) || tabakaYaklasik(y), ih: ihSinif(p.ih, p.sahabi), w: r.r || 0 }; }
+    if (x.hh) { const r = x.hh, p = r.p || {}, y = dzVefat(r.vefat); s.HH = { year: y, place: disMemleket(p, r.ad).y, tab: dzTabaka(r.tabaka) || tabakaYaklasik(y), ih: ihSinif(p.ih, p.sahabi), w: r.r || 0 }; }
     if (x.sc.length || x.merv) {
       const it = x.sc.find(i => i.vefat || i.memleket) || x.sc[0] || {}, y = CTK.yearOf(it.vefat || '') || null;
       s.SC = { year: y, place: it.memleket ? { tr: it.memleket, region: '' } : x.adlar.map(a => CTK.placeOf(a)).find(Boolean) || null, tab: tabakaYaklasik(y), ih: null, w: x.merv ? x.merv.n : 0 };
@@ -9164,12 +9170,15 @@ const RAPOR = (() => {
   /* ---------- 1. Normalizasyon (ofset haritalı) ---------- */
   const DROP = /[\u064B-\u065F\u0670\u0640\u200B-\u200F\uFEFF]/;
   const MAPC = { 'أ': 'ا', 'إ': 'ا', 'آ': 'ا', 'ٱ': 'ا', 'ى': 'ي', 'ة': 'ه', 'ؤ': 'و', 'ی': 'ي', 'ک': 'ك', 'ھ': 'ه', '\r': ' ' };
+  // Yazma nüsha yaprak işaretleri («[ ق 3 أ ]», Moğultay’ın İkmâl’i HH’de) adı böler: «أبو حاتم [ ق 3 أ ] ابن حبان» → «أبو حاتم ابن حبان»
+  const YAPRAK = /\s*\[\s*ق\s*\d+\s*[أاب]\s*\](?=\s)/g;
   function norm(s) {
     s = String(s == null ? '' : s);
-    const out = [], map = [];
+    const out = [], map = [], at = new Set();
+    if (s.includes('[')) s.replace(YAPRAK, (m, o) => { for (let i = 0; i < m.length; i++) at.add(o + i); return m; });
     for (let i = 0; i < s.length; i++) {
       const c = s[i];
-      if (DROP.test(c)) continue;
+      if (DROP.test(c) || at.has(i)) continue;
       out.push(MAPC[c] || c); map.push(i);
     }
     map.push(s.length);
@@ -9331,6 +9340,12 @@ const RAPOR = (() => {
     ['علي بن الحسين بن الجنيد', 'Ali b. el-Hüseyn b. el-Cüneyd er-Râzî', 291, '', ['علي بن الحسين بن الجنيد', 'علي بن الجنيد'], 'Yalın «ابن الجنيد» (İbn Maîn’e soran İbrâhîm b. Abdullah el-Huttalî olabilir) bu kayda bağlanmaz.'],
     ['موسى بن هارون الحمال', 'Mûsâ b. Hârûn el-Hammâl', 294, '', ['موسي بن هارون الحمال', 'موسي بن هارون'], ''],
     ['مطين', 'Mutayyen (Muhammed b. Abdullah el-Hadramî)', 297, '', ['مطين', 'محمد بن عبد الله الحضرمي'], ''],
+    // Hocaların okumasından (05.11.2026): kendi hükümleri “kayıtsız” kalan âlimler. Yalın «الدارمي» (Abdullah ed-Dârimî ile karışır),
+    // yalın «شريك» (Şerîk b. Abdullah b. Ebî Nemir) ve yalın «أبو نعيم» (el-Isfahânî; kullanıcı kararı: belirsiz) bağlanmaz.
+    ['عثمان بن سعيد الدارمي', 'Osmân b. Saîd ed-Dârimî', 280, '', ['عثمان بن سعيد الدارمي', 'عثمان الدارمي', 'عثمان بن سعيد بن خالد السجستاني', 'ابو سعيد الدارمي', 'عثمان بن سعيد'], 'İbn Maîn’e soruları (Târîh) meşhurdur; «قال عثمان: …» çoğu yerde soru sonrası kendi yorumudur.'],
+    ['شريك بن عبد الله النخعي', 'Şerîk b. Abdullah en-Nehaî', 177, '', ['شريك بن عبد الله النخعي', 'شريك القاضي', 'شريك النخعي'], ''],
+    ['المفضل بن غسان الغلابي', 'el-Mufaddal b. Gassân el-Ğallâbî', 246, '', ['المفضل بن غسان الغلابي', 'المفضل بن غسان', 'المفضل الغلابي'], 'Târîh’i büyük ölçüde İbn Maîn’den nakildir.'],
+    ['أبو نعيم الفضل بن دكين', 'Ebû Nuaym el-Fazl b. Dükeyn', 219, '', ['الفضل بن دكين', 'ابو نعيم الفضل بن دكين', 'ابو نعيم الملائي'], 'Yalın «أبو نعيم» bağlanmaz (el-Isfahânî ile karışır).'],
     ['مالك بن أنس', 'Mâlik b. Enes', 179, '', ['مالك بن انس', 'الامام مالك'], 'Yalın «مالك» bağlanmaz (Mâlik b. Dînâr, Ebû Mâlik … ile karışır). Rivayet ettiği râvi sika sayılır; “leyse bi-sika”sı bazen sadûk ve i‘tibâr ehli içindir (sitede −1) (Cüdey‘, Tahrîr I, 223, 623–624).'],
     // 22.10.2026: iç denetimde “münekkit listede yok” çıkan, kimliği açık söz sahipleri
     ['عبدان الأهوازي', 'Abdân el-Ahvâzî (Abdullah b. Ahmed b. Mûsâ)', 306, '', ['عبدان الاهوازي', 'عبدان بن احمد', 'عبدان'], 'İbn Adî’nin hocası; el-Kâmil’de sık nakledilir.'],
@@ -9368,7 +9383,7 @@ const RAPOR = (() => {
     'يزيد بن زريع': ['Basra', 'Irak'], 'أبو عوانة': ['Vâsıt', 'Irak'], 'وكيع بن الجراح': ['Kûfe', 'Irak'], 'سفيان بن عيينة': ['Kûfe → Mekke', 'Hicaz'],
     'محمد بن عبد الله بن نمير': ['Kûfe', 'Irak'], 'أبو زرعة الدمشقي': ['Dımaşk', 'Şam'], 'ابن عمار الموصلي': ['Musul → Bağdat', 'Irak'], 'دحيم': ['Dımaşk', 'Şam'], 'أحمد بن صالح المصري': ['Mısır', 'Mısır'],
     'عثمان بن أبي شيبة': ['Kûfe → Bağdat', 'Irak'], 'أبو مسهر': ['Dımaşk', 'Şam'], 'إسحاق بن راهويه': ['Merv → Nîsâbûr', 'Horasan'], 'إبراهيم الحربي': ['Bağdat', 'Irak'],
-    'علي بن الحسين بن الجنيد': ['Rey', 'Cibâl'], 'موسى بن هارون الحمال': ['Bağdat', 'Irak'], 'مطين': ['Kûfe', 'Irak'], 'أبو علي النيسابوري': ['Nîsâbûr', 'Horasan'], 'مالك بن أنس': ['Medine', 'Hicaz'],
+    'علي بن الحسين بن الجنيد': ['Rey', 'Cibâl'], 'موسى بن هارون الحمال': ['Bağdat', 'Irak'], 'مطين': ['Kûfe', 'Irak'], 'أبو علي النيسابوري': ['Nîsâbûr', 'Horasan'], 'مالك بن أنس': ['Medine', 'Hicaz'], 'عثمان بن سعيد الدارمي': ['Herat', 'Horasan'], 'شريك بن عبد الله النخعي': ['Kûfe', 'Irak'], 'المفضل بن غسان الغلابي': ['Bağdat', 'Irak'], 'أبو نعيم الفضل بن دكين': ['Kûfe', 'Irak'],
     'يحيى بن سعيد القطان': ['Basra', 'Irak'], 'عبد الرحمن بن مهدي': ['Basra', 'Irak'], 'يزيد بن هارون': ['Vâsıt', 'Irak'], 'عفان بن مسلم': ['Basra → Bağdat', 'Irak'],
     'ابن سعد': ['Basra → Bağdat', 'Irak'], 'يحيى بن معين': ['Bağdat', 'Irak'], 'علي بن المديني': ['Basra', 'Irak'], 'أحمد بن حنبل': ['Bağdat', 'Irak'],
     'عمرو بن علي الفلاس': ['Basra', 'Irak'], 'البخاري': ['Buhârâ', 'Mâverâünnehir'], 'الجوزجاني': ['Cûzcân → Dımaşk', 'Şam'], 'العجلي': ['Kûfe → Trablusgarp', 'Mağrib'],
@@ -9626,6 +9641,10 @@ const RAPOR = (() => {
   add('V', 0, 'tavir-', 'Ondan rivayet ettiğini duymadım (olumsuz tavır)', 0.7, ['(?:ما|لم) (?:سمعت|رايت) (?<cr>\\S+(?: \\S+){0,3}?) (?:يحدث|بحدث|حدث|يحدثان|حدثا) عن(?:ه)?']);
   // — HH taramasından öğrenilenler (Câmiu Hâdimi’l-Haremeyn’in 153.371 cerh–ta‘dîl sözü ve 5.745 lafız etiketi motordan geçirildi;
   //   tanınmayan sık lafızlar eklendi: tools/hh-lafiz-tarama.js, özet kaynak/dis/lafiz-tarama.json) —
+  // «لم أر أحدًا … ضعّفه إلا فلان»: başkasının cerhini aktaran istisna cümlesi söyleyenin cerhi değildir (İbn Adî, Bahr b. Merrâr)
+  add('X', 0, '', '', 0, ['(?:لم|ما) (?:ار|اجد|اعلم|اعرف) (?:احدا|احد)[^.:]{0,70}? (?:ضعفه|تكلم فيه|جرحه|تركه)(?= (?:الا|غير|سوي))']);
+  // … ve istisnadaki kişinin sözü ondandır: «إلا يحيى القطان ذكر أنه كان قد خولط», «إلا يحيى بن سعيد في قوله خولط»
+  add('C', 1, 'ihtilat', 'İstisnadaki münekkitin sözü (ihtilât)', 0.8, ['(?:الا|غير|سوي) (?<cr>[^\\s:.،,«»"]+(?: [^\\s:.،,«»"]+){0,3}?) (?:ذكر (?:انه|ان) (?:كان )?(?:قد )?|(?:في قوله|قال)\\s*:?\\s*)(?:خولط|خلط|اختلط|تغير)'], { crReq: true });
   add('X', 0, '', '', 0, ['(?:ادعي|يدعي|ادعت) (?:ال)?صحبه', '(?:زعم|زعموا|قيل|يقال) (?:ان )?(?:له|لها) صحبه', '(?:لا|لم) (?:تصح|تثبت|تعرف) (?:له|لها) صحبه', '(?:ليست|ليس) (?:له|لها) صحبه',
     'لا صحبه (?:له|لها)', 'مختلف في صحبته', 'في صحبته نظر', '(?:لم|لا) (?:تصح|تثبت) صحبته', 'وهم من (?:زعم|قال) ان (?:له|لها) صحبه', 'ليس من الثقات',
     // hüküm olmayan kullanımlar (23.10.2026): «وتركه الأخذ عن كل أحد» (Şu‘be’nin seçiciliği, terk değil); «لا يعرف اسمه» (adı bilinmiyor, cehâlet değil)
@@ -10238,14 +10257,15 @@ const RAPOR = (() => {
   }
   // Bilinmeyen isim: “قال X:” / “سمعت X يقول” arasındaki 1–7 kelime
   function unknownName(n, p, verb) {
-    const rest = n.slice(p, p + 70).replace(/[،,](?=\s*عن\s)/g, ' ');   // “قال إسحاق بن منصور، عن يحيى بن معين:” (uzunluk korunur)
+    const rest = n.slice(p, p + 70).replace(/[،,](?=\s*عن\s)/g, ' ')
+      .replace(/(?<=\s)في\s+(?:تاريخه|كتابه|سؤالاته|روايته)(?=\s+عن\s)/, x => ' '.repeat(x.length));   // «قال عباس في تاريخه عن ابن معين:» → nakil zinciri (uzunluk korunur)   // “قال إسحاق بن منصور، عن يحيى بن معين:” (uzunluk korunur)
     const m = verb === 'سمعت' ? /^\s*((?:[\u0621-\u064A]+\s+){0,6}?[\u0621-\u064A]+)\s*[،,]?\s*(?:يقول|قال|يذكر)(?![\u0621-\u064A])\s*:?/.exec(rest)
       : /^\s*((?:[\u0621-\u064A]+\s+){0,8}?[\u0621-\u064A]+)(?:\s+في\s+[^:.\n]{1,30})?\s*:/.exec(rest);   // «قال أبو زرعة النصري في «تاريخه»:»
     if (!m || NOT_PERSON.test(m[1])) return null;
     const w = m[1].replace(/\s+في\s+[\s\S]*$/, '');
     const parts = w.split(/\s+عن\s+/);          // “حمزة عن الحسن بن علي” → söz sahibi ikinci kişi
-    const start = p + m[0].indexOf(w), last = parts[parts.length - 1];
-    return { written: last, via: parts.length > 1 ? parts[0] : '', end: p + m[0].length, start, lastStart: start + w.lastIndexOf(last) };
+    const start = p + m[0].indexOf(m[1]), last = parts[parts.length - 1];   // konumlar özgün metinden (w kısaltılmış olabilir)
+    return { written: last, via: parts.length > 1 ? parts[0] : '', end: p + m[0].length, start, lastStart: start + m[1].lastIndexOf(last) };
   }
   // İsmin fiilden önce geldiği senedli kullanım: “حدثنا البخاري قال:”
   function nameBefore(n, pos, conv) {
@@ -10362,11 +10382,17 @@ const RAPOR = (() => {
         }
         // «قال مرة / مرة أخرى / أيضا / في موضع آخر / في رواية (أخرى) / في العلل / في ترجمته:» → önceki münekkit
         // «وقال في «الجرح والتعديل»:» (eser adı) → önceki münekkit
-        if (/^\s*(?:مره(?: اخري)?|ايضا|في (?:موضع|مكان) اخر|في روايه(?: اخري)?|في العلل|في ترجمته|في الاول|في\s+(?:كتاب\s+|كتابه\s+)?[«"“(][^:\n«»"”()]{1,30}[»"”)])\s*:/.test(n.slice(p, p + 48))) { out.push(Object.assign(base, { type: 'again', end: n.indexOf(':', p) + 1 })); continue; }
+        if (/^\s*[-–—]?\s*(?:مره(?: اخري)?|ايضا|في (?:موضع|مكان) اخر|في روايه(?: اخري)?|في العلل|في ترجمته|في الاول|في\s+(?:كتاب\s+|كتابه\s+)?[«"“(][^:\n«»"”()]{1,30}[»"”)])\s*:/.test(n.slice(p, p + 48))) { out.push(Object.assign(base, { type: 'again', end: n.indexOf(':', p) + 1 })); continue; }
         const u = unknownName(n, p, verb);
         if (u && u.written === 'ابي') { const c = fatherOf(n, m.index); if (c) { out.push(Object.assign(base, { type: 'named', names: [{ canon: c, written: 'أبي' }], end: u.end, via: 'قال أبي' })); continue; } }
         const ua = u && u.via ? parseNames(n, u.lastStart, conv, 1) : null;   // “قال عباس الدوري عن ابن معين:” → söz sahibi İbn Maîn
         if (ua && ua.names.length) { out.push(Object.assign(base, { type: 'named', names: ua.names, end: u.end, via: u.via })); continue; }
+        // «سمعت العباس يقول يحيى بن معين يقول:» → söz İbn Maîn’in, ed-Dûrî nakleden
+        if (u && verb === 'سمعت') { const r = parseNames(n, u.end, conv, 1); if (r.names.length && /^\s*[،,]?\s*(?:يقول|قال)(?![\u0621-\u064A])\s*:?/.test(n.slice(r.end, r.end + 12))) { out.push(Object.assign(base, { type: 'named', names: r.names, end: r.end + /^\s*[،,]?\s*(?:يقول|قال)\s*:?/.exec(n.slice(r.end))[0].length, via: u.written })); continue; } }
+        // Yalın «عثمان» / «عثمان بن سعيد»: blokta İbn Maîn’e soran Osmân b. Saîd ed-Dârimî geçiyorsa odur (sorudan sonraki kendi yorumu)
+        if (u && /^عثمان(?: بن سعيد)?$/.test(nz(u.written).trim()) && /عثمان بن سعيد|الدارمي/.test(n.slice(0, m.index))) {
+          out.push(Object.assign(base, { type: 'named', names: [{ canon: 'عثمان بن سعيد الدارمي', written: u.written, start: u.start, end: u.end }], end: u.end, via: u.via })); continue;
+        }
         if (u) {
           // Aynı blokta daha önce tam adıyla geçen kişiyle eşleştir (“منصور” → “منصور بن المعتمر”)
           const tok = u.written.split(/\s+/)[0];
