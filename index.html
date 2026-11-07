@@ -1505,7 +1505,7 @@ tr.mf-on td { background: color-mix(in srgb, #c0392b 6%, transparent); }
   <aside class="drawer rail" id="rail" aria-label="Râvi listesi" inert>
     <div class="drawer-head"><h3>Râviler</h3><button class="btn ghost sm icon drawer-pin" id="rail-pin" type="button" aria-pressed="false" aria-keyshortcuts="Shift+R" title="Sabitle (Shift R)"><svg class="pin-ic" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M6 1.5h4M7 1.5v4.2L4.6 8.4v1.1h6.8V8.4L9 5.7V1.5M8 9.5v5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr-only">Râvi listesini sabitle</span></button><button class="btn ghost sm icon" id="rail-close" type="button" aria-label="Râvi listesini kapat" title="Kapat (R)">✕</button></div>
     <div class="rail-head">
-      <div class="search"><label class="sr-only" for="q">Râvi ara</label><input id="q" type="search" placeholder="Râvi adı, sıra no veya münekkit…" autocomplete="off"></div>
+      <div class="search"><label class="sr-only" for="q">Râvi ara</label><input id="q" type="search" placeholder="Râvi adı, sıra no veya münekkit…" title="Düz sayı açık veri kümesinde aranır; öteki kümedeki numara için «HH 37» (HH no) ya da «#37» (el-Câmi‘ sıra no) yazın." autocomplete="off"></div>
       <div class="chips" id="rail-chips"></div>
       <div class="rail-sort"><span id="rail-count"></span>
         <label>Sırala <select id="rail-sort"><option value="seq">Sıra no</option><option value="sev">En ağır cerh</option><option value="tad">En yüksek ta‘dîl</option><option value="n">Hüküm sayısı</option><option value="conf">Teâruz önce</option></select></label>
@@ -3558,7 +3558,9 @@ function hhSozlerHTML(n, V) {
       (s.p ? ' <button class="btn ghost sm" data-diss="' + s.id + '">Kaynağı göster</button>' : '') + '</div></article>';
   };
   // Sözler hüküm olarak yukarıda münekkitlerin görüşleri arasındadır; burada yalnız tam metinleri (aranabilir, kapalı gelir)
-  return '<section class="dis-sec" id="dis-soz">' + fold('dis-soz', 'HH’deki cerh–ta‘dîl sözlerinin tam metni ' + kodlar(['HH']), '' +
+  // Hüküm dosyası sözlüğün başka bir sürümüyle hazırlanmışsa sözler sayıma giremez; sessiz «0» yerine açık uyarı (7.11.2026)
+  const Hd = (DIS.dizin || {}).hukum, uyar = Hd && !hhHukumGecerli() ? '<div class="note warn">Bu sözler şu an hüküm olarak sayılmıyor: HH hüküm dosyası sözlüğün başka bir sürümüyle hazırlanmış (dosya ' + Hd.sozluk + ', sayfa ' + CTX.LEXICON.length + ' lafız). Verinin yeniden üretilmesi gerekir (tools/hh-hukum-hazirla.js).</div>' : '';
+  return uyar + '<section class="dis-sec" id="dis-soz">' + fold('dis-soz', 'HH’deki cerh–ta‘dîl sözlerinin tam metni ' + kodlar(['HH']), '' +
     '<div class="row dis-arac"><input class="field" id="dis-q" type="search" placeholder="Sözlerde ara: Arapça ifade veya âlim adı…" value="' + esc(DIS.q) + '">' +
     '<span class="btn-group" role="group" aria-label="Söz sınıfı">' + [['', 'Tümü', L.length]].concat(Object.keys(say).sort().map(k => [k, (SINIF_TR[k] || [k])[0], say[k]])).map(([k, l, c]) => '<button class="btn sm" data-dissinif="' + k + '" aria-pressed="' + (DIS.sinif === k) + '">' + esc(l) + ' <span class="muted">' + c + '</span></button>').join('') + '</span></div>' +
     L.map(kart).join('') + '<p class="hint" id="dis-none"' + (L.some(x => !((q && !nz(x.s.t + ' ' + x.s.m.map(m => m[0] + ' ' + (m[2] || '')).join(' ')).includes(q)) || (sn !== '' && String(x.s.s) !== sn))) ? ' hidden' : '') + '>Aramayla eşleşen söz yok.</p>' +
@@ -4494,12 +4496,13 @@ function renderSourcebar() {
   // Düğme: “Tümü” (bütün eser listesi) ya da “Cilt N” (liste yalnız açık râvinin cildi); sayılar seçime göre
   const curVol = (IDXNID.get(S.nid) || {}).vol || PK.vol, seq = n ? n.source_sequence : '', narrow = S.railVol === 'vol';
   const CV = narrow && multiVol() ? VS.find(v => v.vol === curVol) : null, bd = CV ? CV.done : W.done, bn = CV ? CV.n : W.n, bp = CV ? (CV.n ? Math.round(CV.done / CV.n * 100) : 0) : pct;
+  const pkL = narrow ? (curVol === HHV ? 'HH' : 'Cilt ' + curVol) : modu() === 'sc' ? 'Tümü' : MOD_TR[modu()];   // «HH HH 10427» tekrarı olmasın
   const btitle = narrow ? 'Râvi listesi: yalnız ' + curVol + '. cilt · açık râvi #' + seq + ' · bu ciltte incelenen ' + fmt(bd) + ' / ' + fmt(bn) + (CV ? ' (bütün eser ' + fmt(W.done) + ' / ' + fmt(W.n) + ')' : '')
     : 'Râvi listesi: bütün eser · açık râvi: ' + curVol + '. cilt, #' + seq + ' · incelenen ' + fmt(W.done) + ' / ' + fmt(W.n);
   const sb = $('sourcebar'), fk = focusKey(sb), ovs = sb.querySelector('.pk-vols'), vst = ovs ? ovs.scrollTop : 0, pst = wasOpen ? pop.scrollTop : 0;   // yeniden çizimde odak, menünün ve cilt listesinin kaydırması korunur
   sb.innerHTML = modSecici() +
     '<button class="pkg-btn' + (narrow ? ' narrow' : '') + '" id="pkg-btn" type="button" aria-haspopup="true" aria-controls="pk-pop" aria-expanded="' + wasOpen + '" title="' + esc(btitle) + '" aria-label="Eser · ' + esc(btitle) + '" style="--p:' + bp + '%">' +
-    '<span class="pk-l">' + (narrow ? (curVol === HHV ? 'HH' : 'Cilt ' + curVol) : modu() === 'sc' ? 'Tümü' : MOD_TR[modu()]) + '</span><span class="pk-r">' + (seq >= HSEQ0 ? seqEt(seq) : '#' + seq) + '</span><span class="pk-n">' + fmt(bd) + '/' + fmt(bn) + '</span><span aria-hidden="true">▾</span></button>' +
+    '<span class="pk-l">' + pkL + '</span><span class="pk-r">' + (seq >= HSEQ0 ? (pkL === 'HH' ? String(seq - HSEQ0) : seqEt(seq)) : '#' + seq) + '</span><span class="pk-n">' + fmt(bd) + '/' + fmt(bn) + '</span><span aria-hidden="true">▾</span></button>' +
     '<div class="menu-pop pk-pop" id="pk-pop"' + (wasOpen ? '' : ' hidden') + '>' +
     '<div class="pk-work"><span class="work">الجامع لكتب الضعفاء والمتروكين والكذابين</span><span class="small muted">Bütün eser · ' + VS.length + ' cilt · ' + fmt(W.n) + ' râvi</span></div>' +
     '<div class="pk-prog"><span class="small">İncelenen râvi <b>' + fmt(W.done) + '/' + fmt(W.n) + '</b></span><span class="pkg-prog"><i style="width:' + pct + '%"></i></span></div>' +
@@ -4733,9 +4736,12 @@ function rowSum(r) {
 // Arama: sıra no (tam), ad ve ad varyantları, münekkit (Arapça ya da Türkçe ad)
 function railQuery() {
   const raw = (S.q || '').trim(); if (!raw) return null;
-  const q = nz(raw), ql = trk(raw), memo = new Map(), d = digitsTr(raw).replace(/^#/, '');
+  // Sayıyla arama (7.11.2026, kullanıcı: aynı numara iki kümede karışıyordu): düz sayı yalnız açık kümede aranır;
+  // «HH 37» HH numarası, «#37» el-Câmi‘ sıra numarası demektir ve öteki kümedeki râviyi de getirir
+  const dr = digitsTr(raw).replace(/\s+/g, ''), hk = /^hh#?/i.test(dr) ? 'hh' : /^#/.test(dr) ? 'sc' : null;
+  const q = nz(raw), ql = trk(raw), memo = new Map(), d = dr.replace(/^(hh#?|#)/i, '');
   const crit = c => { if (!c) return false; let v = memo.get(c); if (v === undefined) { const C = CTX.critic(c); v = nz(c).includes(q) || !!(C && trIcer(C.tr, ql)); memo.set(c, v); } return v; };
-  return { q, num: /^\d+$/.test(d) ? String(+d) : null, crit };
+  return { q, num: /^\d+$/.test(d) ? String(+d) : null, hedef: hk, crit };
 }
 function railMatch(r, Q) {
   const f = S.railFilter, x = SUMF.has(f) || Q ? rowSum(r) : null;
@@ -4749,7 +4755,7 @@ function railMatch(r, Q) {
     case 'notes': if (!rowNotes(r)) return false; break;
   }
   if (!Q) return true;
-  if (Q.num) return String(r.seq >= HSEQ0 ? r.seq - HSEQ0 : r.seq) === Q.num;
+  if (Q.num) return (!Q.hedef || Q.hedef === (r.seq >= HSEQ0 ? 'hh' : 'sc')) && String(r.seq >= HSEQ0 ? r.seq - HSEQ0 : r.seq) === Q.num;
   const nzn = x ? (x.live ? nz(x.n._names.join(' ')) : x.nzn) : (r._nz || (r._nz = nz(r.name)));
   if (nzn.includes(Q.q)) return true;
   return !!x && (x.live ? x.live.sts.some(s => Q.crit(s.critic)) : x.crit.some(Q.crit));
@@ -4770,16 +4776,17 @@ function railList() {
   const kv = new Map(list.map(r => { const x = rowSum(r); return [r, x ? key(x) : -1]; }));
   return list.sort((a, b) => kv.get(b) - kv.get(a) || a.i - b.i);
 }
-/* Sayıyla aramada öteki veri kümesindeki aynı numaralı râvi de listenin sonunda gösterilir (el-Câmi‘ sıra no ↔ HH no);
-   basınca o kümenin moduna geçilip râvi açılır (23.10.2026) */
+/* Önekli sayıyla aramada («HH 37», «#37») öteki veri kümesindeki o numaralı râvi listenin sonunda gösterilir; basınca o kümenin
+   moduna geçilip râvi açılır (23.10.2026). Düz sayı yalnız açık kümede aranır (7.11.2026). */
 function railOteki(Q) {
   if (!Q || railVol()) return [];
   const m = modu(), out = [];
   if (m !== 'hh' && DIS.dizin && DIS.dizin.hhRavi && !hhListe() && !RV.hhIstek) { RV.hhIstek = 1; hhListeYukle().then(v => { if (v) renderRail(); }); }
   if (!Q.num) return m === 'karma' ? [] : otekiAd(m);   // karma modda iki küme zaten birlikte listelenir
   const k = +Q.num;
-  if (m !== 'hh' && hhListe() && !IDXNID.has(HNID0 + k)) { const r = DIS.hhIx.get(k); if (r) out.push({ x: 'hh', seq: hhSeq(k), name: r[1] || 'HH #' + k }); }
-  if (m === 'hh') {
+  if (!Q.hedef) return out;   // düz sayı: öteki kümedeki aynı numara gösterilmez (karışmasın)
+  if (m !== 'hh' && Q.hedef === 'hh' && hhListe() && !IDXNID.has(HNID0 + k)) { const r = DIS.hhIx.get(k); if (r) out.push({ x: 'hh', seq: hhSeq(k), name: r[1] || 'HH #' + k }); }
+  if (m === 'hh' && Q.hedef === 'sc') {
     const sn = SNAP_SEQS.includes(k) && SNAP0.narrators[k];
     if (sn) out.push({ x: 'sc', vol: SNAP_VOL, seq: k, name: sn.effective.canonical_name });
     else for (const v of Object.keys(VOLS)) { const e = VOLS[v].sc.entries.find(x => x.seq === k); if (e) { out.push({ x: 'sc', vol: +v, seq: k, name: e.name }); break; } }
