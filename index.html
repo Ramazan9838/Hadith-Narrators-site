@@ -4760,11 +4760,13 @@ function railMatch(r, Q) {
   if (nzn.includes(Q.q)) return true;
   return !!x && (x.live ? x.live.sts.some(s => Q.crit(s.critic)) : x.crit.some(Q.crit));
 }
+// Latin harfle aramada asıl sonuçlar münekkit adından da gelebilir; adı da tutan râvi «adı tutanlar» bölümüne alınır (7.11.2026)
+const rowAdTutar = (r, Qs) => adPuan(r, Qs) >= adEsik(Qs);
 // Asıl sonuçlarda olmayan benzer adlar (benzerlik puanına göre, en çok 300)
 function railBenzer(Q, base, list) {
   if (!Q || Q.num) return [];
   const Qs = adSorgu(S.q); if (!adSorguYeter(Qs)) return [];
-  const asil = new Set(list), out = [], esik = adEsik(Qs);
+  const asil = new Set(latinMi(S.q || '') ? list.filter(r => !rowAdTutar(r, Qs)) : list), out = [], esik = adEsik(Qs);
   for (const r of base) { if (asil.has(r)) continue; const p = adPuan(r, Qs); if (p >= esik && railMatch(r, null)) out.push([p, r]); }
   return out.sort((a, b) => b[0] - a[0] || a[1].i - b[1].i).slice(0, 300).map(x => x[1]);
 }
@@ -4838,9 +4840,14 @@ function renderRail() {
   const heads = S.sort === 'seq' && IDX.length > 0 && IDX[0].vol !== IDX[IDX.length - 1].vol;
   const items = []; let pv = null;
   list.forEach((r, k) => { if (heads && r.vol !== pv) { items.push({ head: r.vol }); pv = r.vol; } r._pos = k + 1; items.push(r); });
-  const bz = railBenzer(railQuery(), V ? volRows(V) : IDX, list);
+  const Q0 = railQuery(), bz = railBenzer(Q0, V ? volRows(V) : IDX, list);
   // Latin harfle aramada (23.10.2026) adı tutanlar başa gelir; asıl sonuçlar o zaman adında aranan kelime geçen münekkitlerin hüküm verdiği râvilerdir
-  if (bz.length && latinMi(S.q || '')) { const L = items.splice(0); items.push({ head: 'adlar' }); bz.forEach((r, k) => { r._pos = k + 1; items.push(r); }); if (list.length) { items.push({ head: 'munekkit' }); list.forEach((r, k) => { r._pos = bz.length + k + 1; }); items.push(...L.filter(it => !it.head)); } }
+  if (bz.length && latinMi(S.q || '')) { const L = items.splice(0); items.push({ head: 'adlar' }); bz.forEach((r, k) => { r._pos = k + 1; items.push(r); }); const bzS = new Set(bz), kalan = L.filter(it => !it.head && !bzS.has(it)); if (kalan.length) { items.push({ head: 'munekkit' }); kalan.forEach((r, k) => { r._pos = bz.length + k + 1; }); items.push(...kalan); } }
+  else if (Q0 && !Q0.num && !latinMi(S.q || '')) {   // Arapça aramada (7.11.2026): adında aranan geçenler önce, yalnız münekkit adından gelenler ayrı başlıkta
+    const adda = r => (r._nz || (r._nz = nz(r.name))).includes(Q0.q), A = list.filter(adda), B = list.filter(r => !adda(r));
+    if (A.length && B.length) { items.length = 0; pv = null; A.forEach((r, k) => { if (heads && r.vol !== pv) { items.push({ head: r.vol }); pv = r.vol; } r._pos = k + 1; items.push(r); }); items.push({ head: 'munekkit' }); B.forEach((r, k) => { r._pos = A.length + k + 1; items.push(r); }); }
+    if (bz.length) { items.push({ head: 'benzer' }); bz.forEach((r, k) => { r._pos = list.length + k + 1; items.push(r); }); }
+  }
   else if (bz.length) { items.push({ head: 'benzer' }); bz.forEach((r, k) => { r._pos = list.length + k + 1; items.push(r); }); }
   const ot = railOteki(railQuery()); if (ot.length) items.push({ head: 'oteki' }, ...ot);
   RV.items = items; RV.n = list.length; RV.tops = null;
@@ -6189,7 +6196,7 @@ function trIcer(t, ql) { const T = trk(t), W = String(ql || '').trim().split(' '
    indirilir (Arapçada uzun ünlüler, hemze, ayın, tâ-i merbûta; Latin yazıda ünlüler ve transkripsiyon işaretleri atılır; ث/ص → s,
    ذ/ظ → z, ح/خ → h, ق/ك → k; ض = d ya da z); «بن، أبي، أبو، ibn, b., Ebû, el-» gibi ekler sayılmaz. Aranan her kelime adın bir kelimesinin
    başıyla tutmalıdır; sıra serbesttir: «محمد زرعة», «Muhammed Züra», «ibn Ebi Züra» → محمد بن أبي زرعة */
-const ISK_AR = { 'ب': 'b', 'ت': 't', 'ث': 's', 'ج': 'c', 'ح': 'h', 'خ': 'h', 'د': 'd', 'ذ': 'z', 'ر': 'r', 'ز': 'z', 'س': 's', 'ش': 's', 'ص': 's', 'ض': 'D', 'ط': 't', 'ظ': 'z', 'غ': 'g', 'ف': 'f', 'ق': 'k', 'ك': 'k', 'ک': 'k', 'ل': 'l', 'م': 'm', 'ن': 'n', 'ه': 'h' };
+const ISK_AR = { 'ب': 'b', 'ت': 't', 'ث': 's', 'ج': 'c', 'ح': 'h', 'خ': 'h', 'د': 'd', 'ذ': 'z', 'ر': 'r', 'ز': 'z', 'س': 's', 'ش': 's', 'ص': 's', 'ض': 'D', 'ط': 't', 'ظ': 'z', 'غ': '', 'ف': 'f', 'ق': 'k', 'ك': 'k', 'ک': 'k', 'ل': 'l', 'م': 'm', 'ن': 'n', 'ه': 'h' };
 const ISK_LA = { j: 'c', q: 'k', p: 'b', x: 'ks' };
 const ISK_EK = new Set(['بن', 'ابن', 'ابي', 'ابو', 'ابا', 'بنت', 'ام', 'b', 'bn', 'bin', 'ibn', 'ibni', 'ibnu', 'ibnul', 'bint', 'binti', 'ebu', 'ebi', 'eba', 'ebul', 'abu', 'abi', 'aba', 'abul', 'um', 'umm', 'ummu', 'el', 'al', 'er', 'es', 'ed', 'en', 'et', 'ez', 'eş', 'ur', 'us', 'ul', 'ud', 'un']);
 function adIskelet(s) {
@@ -6204,7 +6211,7 @@ function adIskelet(s) {
     } else {
       w = trk(w).replace(/\s/g, ''); if (ISK_EK.has(w)) continue;
       w = w.replace(/^(el|al|er|es|ed|en|et|ez|us|ur|ul)(?=[a-z]{3})/, '');   // «ennasri» gibi bitişik yazılmış harf-i tarif
-      for (const c of w) k += /[aeiouyvw]/.test(c) ? '' : ISK_LA[c] || (/[a-z]/.test(c) ? c : '');
+      for (const c of w) k += /[aeiouyvwg]/.test(c) ? '' : ISK_LA[c] || (/[a-z]/.test(c) ? c : '');   // g/ğ = ‘ayn ya da ğayn: yok sayılır (7.11.2026)
     }
     k = k.replace(/(.)\1+/g, '$1');
     if (k && abd) out.push(('bd' + k).replace(/(.)\1+/g, '$1'));   // «عبد الله» = «Abdullah»
@@ -6218,7 +6225,7 @@ const iskEs = (a, b) => a === b || (a === 'D' && (b === 'd' || b === 'z')) || (b
 function iskBas(ad, q) { if (q.length > ad.length) return 0; for (let i = 0; i < q.length; i++) if (!iskEs(ad[i], q[i])) return 0; return q.length === ad.length ? 2 : 1; }
 /* Sıralama için gevşek okunuş: uzun ünlüler ve Latin ünlüleri (e→a, o→u, y→i, v/w→u) korunur; aranan kelime ile adın kelimeleri
    arasında harf ikilisi (bigram) benzerliği. Örn. «Züra» زرعة’ye وزير’den yakındır. */
-const GEV_AR = Object.assign({}, ISK_AR, { 'ض': 'd', 'ا': 'a', 'ى': 'a', 'ة': 'a', 'و': 'u', 'ي': 'i' });
+const GEV_AR = Object.assign({}, ISK_AR, { 'غ': 'g', 'ض': 'd', 'ا': 'a', 'ى': 'a', 'ة': 'a', 'و': 'u', 'ي': 'i' });
 function adGevsek(s) {
   const out = [];
   for (let w of String(s || '').replace(/[\u064B-\u065F\u0670\u0640]/g, '').replace(/[أإآٱ]/g, 'ا').split(/[\s\-–—_.,;:()\[\]«»"'‘’ʿʾ`´]+/)) {
@@ -6238,16 +6245,41 @@ function ikiliBenzer(a, b) {
 // Benzerlik puanı (0 = eşleşmez): iskelet tutması + gevşek okunuş yakınlığı + Arapça aranan kelimenin adda aynen geçmesi − fazla kelime
 function adPuan(r, Q) {
   const A = r._isk || (r._isk = adIskelet(r.name)), p = adBenzer(A, Q.i); if (!p) return 0;
+  // Aranan her kelime adın bir kelimesinin iskeletiyle tam tutuyor ve okunuşu da yakın («züra» = زرعة; «eban» ≠ بنان); g ‘ayn/ğayn sayılıp atılır
+  const tam = p === 2 * Q.i.length && (() => { const G0 = (r._gev || (r._gev = adGevsek(r.name))).map(x => x.replace(/g/g, '')); return Q.g.every(q => { q = q.replace(/g/g, ''); return G0.some(a => ikiliBenzer(a, q) >= 0.6); }); })();
   const G = r._gev || (r._gev = adGevsek(r.name)); let g = 0;
   for (const q of Q.g) { let b = 0; for (const a of G) { const x = ikiliBenzer(a, q); if (x > b) b = x; } g += b; }
   let ar = 0; if (Q.a.length) { const t = ' ' + (r._nz || (r._nz = nz(r.name))) + ' '; for (const w of Q.a) if (t.includes(' ' + w + ' ')) ar += 0.5; }
-  return p + 2 * g / Math.max(1, Q.g.length) + ar - 0.05 * Math.max(0, A.length - Q.i.length);
+  const puan = p + 2 * g / Math.max(1, Q.g.length) + ar + kunyePuan(r, Q) - 0.05 * Math.max(0, A.length - Q.i.length);
+  return tam && puan < adEsik(Q) ? adEsik(Q) + puan / 100 : puan;   // sıra kendi puanına göre korunur   // kısa aramada tam iskelet eşleşmesi eşiğe takılmasın (7.11.2026)
 }
 // Kısa adlar (23.10.2026): «eban» iskelette yalnız «bn» kalır; gevşek okunuşu yeterince uzunsa (aban) aranır, ama yalnız yakın okunuşlar alınır
-const adSorguYeter = Q => Q.i.join('').length >= 3 || (Q.i.join('').length >= 2 && Q.g.join('').length >= 4);
+const adSorguYeter = Q => Q.i.join('').length >= 3 || (Q.i.join('').length >= 2 && (Q.g.join('').length >= 4 || (Q.k || []).length > 0))   // «ebu zür» künyeyle yeter
+  || (Q.i.length === 1 && Q.i[0].length === 1 && Q.g.join('').length >= 5);   // «yahya» (iskeleti yalnız «h»): uzun okunuşla, yalnız tam tutan ya da çok yakın adlar
 const adEsik = Q => Q.i.join('').length >= 3 ? 0.001 : 3.5;
 const latinMi = q => /[a-zçğıöşüâîû]/i.test(q) && !/[\u0600-\u06FF]/.test(q);
-function adSorgu(q) { return { i: adIskelet(q), g: adGevsek(q), a: /[\u0600-\u06FF]/.test(q) ? nz(q).split(' ').filter(w => w && !ISK_EK.has(w)) : [] }; }
+function adSorgu(q) { return { i: adIskelet(q), g: adGevsek(q), a: /[\u0600-\u06FF]/.test(q) ? nz(q).split(' ').filter(w => w && !ISK_EK.has(w)) : [], k: kunyeSorgu(q) }; }
+/* Künye ve nesep ekleri sıralamada (7.11.2026): «ebu züra» → adda «أبو/أبي/أبا» + iskeleti «zr» ile başlayan kelime; «ibn X» → «بن/ابن X»,
+   «ümmü X» → «أم X». Ek eşleşmeyi değiştirmez, yalnız öne alır. */
+const KUN_LA = [[/^(ebu|ebi|eba|ebul|abu|abi|aba|abul|ebû|ebî)$/, 'ابو'], [/^(ibn|ibni|ibnu|ibnul|bin|bn|b)$/, 'بن'], [/^(um|umm|ummu|ümmü|ümm)$/, 'ام']];
+function kunyeSorgu(q) {
+  const W = String(q || '').split(/[\s\-–—_.,;:()]+/).filter(Boolean), out = [];
+  for (let i = 0; i < W.length - 1; i++) {
+    const w = /[\u0600-\u06FF]/.test(W[i]) ? nz(W[i]).replace(/^(ابي|ابا)$/, 'ابو').replace(/^ابن$/, 'بن') : trk(W[i]).replace(/\s/g, '');
+    const e = /[\u0600-\u06FF]/.test(W[i]) ? (['ابو', 'بن', 'ام'].includes(w) ? w : null) : (KUN_LA.find(([re]) => re.test(w)) || [])[1];
+    const x = e && adIskelet(W[i + 1])[0]; if (x) out.push([e, x]);
+  }
+  return out;
+}
+function kunyePuan(r, Q) {
+  if (!Q.k || !Q.k.length) return 0;
+  const W = r._kw || (r._kw = nz(r.name).replace(/[أإآ]/g, 'ا').split(' ').filter(Boolean)); let b = 0;
+  for (const [e, x] of Q.k) for (let i = 0; i < W.length - 1; i++) {
+    const w = W[i] === 'ابي' || W[i] === 'ابا' ? 'ابو' : W[i] === 'ابن' ? 'بن' : W[i];
+    if (w === e) { const y = adIskelet(W[i + 1])[0] || ''; if (iskBas(y, x)) { b += 1.5 + (i === 0 ? 0.5 : 0); break; } }
+  }
+  return b;
+}
 function adBenzer(A, Q) {
   if (!Q.length) return 0; let p = 0;
   for (const q of Q) { let b = 0; for (const a of A) { const x = iskBas(a, q); if (x > b) b = x; if (b === 2) break; } if (!b) return 0; p += b; }
