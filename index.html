@@ -253,6 +253,11 @@ h1 span { font-weight: 400; color: var(--ink-3); margin-left: 5px; }
 .chip.sz-btn b { display: inline-block; min-width: 16px; padding: 0 4px; margin-left: 2px; border-radius: 999px; background: var(--accent); color: var(--paper); font-size: calc(10.5px * var(--yb)); }
 .chip.sz-aktif { background: var(--accent-soft); border-color: var(--accent-2); color: var(--accent); }
 .sz-panel { flex-basis: 100%; border: 1px solid var(--line); border-radius: 8px; background: var(--paper-2); padding: 6px 8px 8px; display: grid; gap: 5px; }
+.sz-kim { display: grid; gap: 5px; }
+.sz-kim label { display: grid; grid-template-columns: 110px 1fr; align-items: center; gap: 6px; font-size: calc(11.5px * var(--yb)); color: var(--ink-2); }
+.sz-kim .field { padding: 3px 6px; font-size: calc(12px * var(--yb)); min-width: 0; }
+.sz-alt { font-size: calc(11px * var(--yb)); color: var(--ink-2); margin-top: 3px; }
+.sz-not { font-size: calc(10.5px * var(--yb)); }
 .sz-bas { font-size: calc(11px * var(--yb)); font-weight: 600; color: var(--ink-2); margin-top: 2px; }
 .chip .sw { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 5px; vertical-align: 0; }
 .rail-sort { display: flex; justify-content: space-between; align-items: center; font-size: calc(11.5px * var(--yb)); color: var(--ink-3); }
@@ -2134,7 +2139,7 @@ let AGG = {}; function recomputeAgg() { AGG = {}; CONFC = {}; for (const n of NA
 var CONFC = {};
 
 /* ---------- Durum ---------- */
-const S = { scope: 'all', railVol: 'all', view: 'desk', nid: null, tab: 'kimlik', sel: null, railFilter: 'all', railHuk: '', railPanel: false, q: '', sort: 'seq', critQ: '', critSel: '', lexSel: '', lexK: '', page: null };
+const S = { scope: 'all', railVol: 'all', view: 'desk', nid: null, tab: 'kimlik', sel: null, railFilter: 'all', railHuk: '', railPanel: false, railNisbe: '', railAsir: '', railTab: '', q: '', sort: 'seq', critQ: '', critSel: '', lexSel: '', lexK: '', page: null };
 const VIEWS = ['home', 'desk', 'packages', 'critics', 'conflicts', 'lex', 'report', 'analyze', 'method', 'settings'];
 // Sekme sırası: râvi açılınca önce kim olduğu (Kimlik), sonra hocaları ve talebeleri, hükümler, sentez (ekip isteği)
 // “rihle” anahtarı eski adresler için korunur, sekmenin adı Mekân’dır (yer ve rıhle bilgileri birlikte); “sayfa”: el-Câmi‘in basılı sayfası (Şâdî b. Muhammed Âl-i Nu‘mân, el-Câmi‘ li-kütübi’d-du‘afâ); “uyari”: ayrıştırma uyarıları
@@ -3608,6 +3613,15 @@ function hhIliskilerHTML(n, V) {
 const HHST = new Map(), HH_BLOK = { id: 'hh', block_order: 'HH', hh: true, _text: '', effective: { source_name: 'Câmiu Hâdimi’l-Haremeyn (HH)', source_author: '', source_locator: '' } };
 // Sözün HH’deki yeri [kitap no, cilt, sayfa] varsa kaynak o eserdir (künye düğmesi kitap no’dan); yoksa genel HH bloğu (23.10.2026)
 const HHBK = new Map();
+/* Râvi aramasında (münekkit adıyla) sayılmayan HH sözleri (7.11.2026, kullanıcı kararı): kimlik kartındaki İbn Hacer (Takrîb) ve
+   Zehebî (el-Kâşif) hükümleri. Bunlar hüküm olarak yerinde kalır; yalnız «Ebû Hâtim» gibi bir adla aramada râviyi listeye getirmez. */
+const KART_KITAP = new Map();
+function aramaDisi(s) {
+  if (!s || s.origin !== 'HH' || !s.b || s.b.kitap == null) return false;
+  let v = KART_KITAP.get(s.b.kitap);
+  if (v === undefined) { const ad = disKitap(s.b.kitap).ad || ''; v = /^الكاشف|^تقريب التهذيب/.test(ad); KART_KITAP.set(s.b.kitap, v); }
+  return v;
+}
 function hhBlok(k) {
   if (!Array.isArray(k) || k[0] == null) return HH_BLOK;
   const key = k.join('-'); let b = HHBK.get(key);
@@ -4753,7 +4767,31 @@ function railQuery() {
   const crit = c => { if (!c) return false; let v = memo.get(c); if (v === undefined) { const C = CTX.critic(c); v = nz(c).includes(q) || !!(C && trIcer(C.tr, ql)); memo.set(c, v); } return v; };
   return { q, num: /^\d+$/.test(d) ? String(+d) : null, hedef: hk, crit };
 }
+/* Kimlik süzgeçleri (7.11.2026, kullanıcı isteği): nisbe/memleket, vefat asrı, Takrîb tabakası. Vefat ve tabaka HH kaydındandır
+   (el-Câmi‘ râvisinde eşleşen HH kaydı); nisbe adda ve HH’nin tam adı/şöhretinde aranır («kufi», «Basra», «الدمشقي»: iskelet başı tutmalı). */
+const kimlikSuzgecVar = () => !!(S.railNisbe.trim() || S.railAsir || S.railTab);
+function rowHH(r) {
+  if (!hhListe()) { if (DIS.dizin && DIS.dizin.hhRavi && !RV.hhIstek) { RV.hhIstek = 1; hhListeYukle().then(v => { if (v) renderRail(); }); } return null; }
+  if (r.vol === HHV) return DIS.hhIx.get(r.seq - HSEQ0) || null;
+  const k = DIS.idx && DIS.idx.m.get(r.vol + '-' + r.seq); return k ? DIS.hhIx.get(k[2]) || null : null;
+}
+const NSB = { q: null, i: [] };
+function railKimlik(r) {
+  const h = (S.railAsir || S.railTab || S.railNisbe.trim()) ? rowHH(r) : null;
+  if (S.railAsir) { const v = h && h[3]; if (!v || Math.ceil(v / 100) !== +S.railAsir) return false; }
+  if (S.railTab) { if (!h || h[4] !== +S.railTab) return false; }
+  const nq = S.railNisbe.trim();
+  if (nq) {
+    if (NSB.q !== nq) { NSB.q = nq; NSB.i = adIskelet(nq); NSB.a = /[\u0600-\u06FF]/.test(nq) ? nz(nq).replace(/^ال/, '') : ''; }
+    if (!NSB.i.length) return true;
+    if (!r._nsb || r._nsbH !== !!h) { r._nsbH = !!h; r._nsb = [r.name].concat(h ? [h[2], h[6]] : []).join(' ').replace(/[أإآ]/g, 'ا').split(/[\s،,]+/).filter(w => /^ال/.test(w)).map(w => [w, adIskelet(w)[0] || '']); }
+    const W = r._nsb;
+    return W.some(([w, k]) => (NSB.a && nz(w).includes(NSB.a)) || NSB.i.every(q => iskBas(k, q)));
+  }
+  return true;
+}
 function railMatch(r, Q) {
+  if (kimlikSuzgecVar() && !railKimlik(r)) return false;
   const f = S.railFilter, h = S.railHuk, x = SUMF.has(f) || SUMF.has(h) || Q ? rowSum(r) : null;
   if (h && h !== f && !railSuz(h, r, x)) return false;
   if (!railSuz(f, r, x)) return false;
@@ -4776,7 +4814,7 @@ function railAra(r, Q, x) {
   if (Q.num) return (!Q.hedef || Q.hedef === (r.seq >= HSEQ0 ? 'hh' : 'sc')) && String(r.seq >= HSEQ0 ? r.seq - HSEQ0 : r.seq) === Q.num;
   const nzn = x ? (x.live ? nz(x.n._names.join(' ')) : x.nzn) : (r._nz || (r._nz = nz(r.name)));
   if (nzn.includes(Q.q)) return true;
-  return !!x && (x.live ? x.live.sts.some(s => Q.crit(s.critic)) : x.crit.some(Q.crit));
+  return !!x && (x.live ? x.live.sts.some(s => !aramaDisi(s) && Q.crit(s.critic)) : x.crit.some(Q.crit));
 }
 // Latin harfle aramada asıl sonuçlar münekkit adından da gelebilir; adı da tutan râvi «adı tutanlar» bölümüne alınır (7.11.2026)
 const rowAdTutar = (r, Qs) => adPuan(r, Qs) >= adEsik(Qs);
@@ -4790,7 +4828,7 @@ function railBenzer(Q, base, list) {
 }
 function railList() {
   const Q = railQuery(), V = railVol(), base = V ? volRows(V) : IDX;
-  const list = S.railFilter === 'all' && !S.railHuk && !Q ? base.slice() : base.filter(r => railMatch(r, Q));
+  const list = S.railFilter === 'all' && !S.railHuk && !kimlikSuzgecVar() && !Q ? base.slice() : base.filter(r => railMatch(r, Q));
   const key = { sev: x => x.maxC, tad: x => x.maxT, n: x => x.g, conf: x => +x.conflict }[S.sort];
   if (!key) return list;
   const kv = new Map(list.map(r => { const x = rowSum(r); return [r, x ? key(x) : -1]; }));
@@ -4846,13 +4884,21 @@ function otekiAc(x, seq, vol) {
 const RV = { items: [], tops: null, rh: 0, hh: 0, measured: false, a: -1, b: -1, raf: 0, n: 0 };
 const VIRT_MIN = 300;
 function railSuzgecHTML() {
-  const ad = (L, k) => (L.find(c => c[0] === k) || [])[1], n = (S.railFilter !== 'all' ? 1 : 0) + (S.railHuk ? 1 : 0);
+  const ad = (L, k) => (L.find(c => c[0] === k) || [])[1], n = (S.railFilter !== 'all' ? 1 : 0) + (S.railHuk ? 1 : 0) + (S.railNisbe.trim() ? 1 : 0) + (S.railAsir ? 1 : 0) + (S.railTab ? 1 : 0);
+  const sec = (id, bos, L, cur) => '<select class="field sz-sec" id="' + id + '"><option value="">' + bos + '</option>' + L.map(([v, l]) => '<option value="' + v + '"' + (String(cur) === String(v) ? ' selected' : '') + '>' + l + '</option>').join('') + '</select>';
+  const kimlik = '<div class="sz-kim"><label>Nisbe / memleket <input class="field" id="rail-nisbe" type="search" placeholder="ör. kufi, Basra, الدمشقي" value="' + esc(S.railNisbe) + '" autocomplete="off"></label>' +
+    '<label>Vefat asrı ' + sec('rail-asir', 'Hepsi', [1, 2, 3, 4, 5, 6, 7, 8, 9].map(a => [a, 'h. ' + a + '. asır (' + ((a - 1) * 100 + 1) + '–' + a * 100 + ')']), S.railAsir) + '</label>' +
+    '<label>Tabaka (Takrîb) ' + sec('rail-tab', 'Hepsi', [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(t => [t, t + '. tabaka']), S.railTab) + '</label></div>' +
+    '<div class="hint sz-not">Vefat ve tabaka HH kaydındandır (el-Câmi‘ râvisinde eşleşen HH kaydı); kaydı olmayan râvi bu süzgeçlerde çıkmaz.</div>';
   const etiket = (k, l, ne) => '<button class="chip sz-aktif" type="button" data-szkaldir="' + ne + '" title="Bu süzgeci kaldır">' + esc(l) + ' <span aria-hidden="true">✕</span></button>';
   const grup = (L, attr, cur) => L.map(([k, l, t]) => '<button class="chip" type="button" ' + attr + '="' + k + '" aria-pressed="' + (cur === k) + '" title="' + esc(t) + '">' + esc(l) + '</button>').join('');
   return '<button class="chip sz-btn" type="button" id="rail-sz" aria-expanded="' + S.railPanel + '" aria-controls="rail-szp">Süzgeç' + (n ? ' <b>' + n + '</b>' : '') + ' <span aria-hidden="true">' + (S.railPanel ? '▴' : '▾') + '</span></button>' +
     (S.railFilter !== 'all' ? etiket(S.railFilter, ad(RAIL_CHIPS, S.railFilter), 'rf') : '') + (S.railHuk ? etiket(S.railHuk, ad(RAIL_GEL, S.railHuk), 'rh') : '') +
+    (S.railNisbe.trim() ? etiket('', 'Nisbe: ' + S.railNisbe.trim(), 'nisbe') : '') + (S.railAsir ? etiket('', S.railAsir + '. asır', 'asir') : '') + (S.railTab ? etiket('', S.railTab + '. tabaka', 'tab') : '') +
     (S.railPanel ? '<div class="sz-panel" id="rail-szp"><div class="sz-bas">Temel süzgeç <span class="muted">· inceleme durumu</span></div><div class="chips">' + grup(RAIL_TEMEL, 'data-rf', S.railFilter) + '</div>' +
-      '<div class="sz-bas">Gelişmiş süzgeç <span class="muted">· hükümlerin içeriği; temel süzgeçle birlikte</span></div><div class="chips">' + grup([['', 'Yok', 'Hüküm içeriğine göre süzme']].concat(RAIL_GEL), 'data-rh', S.railHuk) + '</div></div>' : '');
+      '<div class="sz-bas">Gelişmiş süzgeç <span class="muted">· kimlik ve hükümler; hepsi birlikte uygulanır</span></div>' + kimlik +
+      '<div class="sz-alt">Hükümlere göre</div><div class="chips">' + grup([['', 'Yok', 'Hüküm içeriğine göre süzme']].concat(RAIL_GEL), 'data-rh', S.railHuk) + '</div>' +
+      (n ? '<div><button class="btn ghost sm" type="button" data-szkaldir="hepsi">Bütün süzgeçleri kaldır</button></div>' : '') + '</div>' : '');
 }
 function renderRail() {
   const V = railVol();
@@ -4878,7 +4924,7 @@ function renderRail() {
   else if (bz.length) { items.push({ head: 'benzer' }); bz.forEach((r, k) => { r._pos = list.length + k + 1; items.push(r); }); }
   const ot = railOteki(railQuery()); if (ot.length) items.push({ head: 'oteki' }, ...ot);
   RV.items = items; RV.n = list.length; RV.tops = null;
-  const key = S.railFilter + '|' + S.railHuk + '|' + S.q + '|' + S.sort + '|' + V;
+  const key = S.railFilter + '|' + S.railHuk + '|' + S.railNisbe + '|' + S.railAsir + '|' + S.railTab + '|' + S.q + '|' + S.sort + '|' + V;
   const vchg = RV.key !== undefined && RV.key.split('|').pop() !== String(V);
   if (RV.key !== undefined && RV.key !== key) $('nlist').scrollTop = 0;   // eski konum yeni listede boş kalmasın
   RV.key = key;
@@ -6468,7 +6514,7 @@ function chunkSums(p) {
   const m = new Map();
   for (const row of L.rows) {
     const a = aggSts(by.get(row[0]) || []);
-    m.set(row[0], { byK: a.byK, g: a.gorus.length, k: a.counted.length, conflict: a.conflict, maxC: a.maxC, maxT: a.maxT, reviewed: a.reviewed, warn: row[3], crit: [...new Set(a.sts.map(s => s.critic).filter(Boolean))], nzn: nz([row[2]].concat(row[4] || []).join(' ')) });
+    m.set(row[0], { byK: a.byK, g: a.gorus.length, k: a.counted.length, conflict: a.conflict, maxC: a.maxC, maxT: a.maxT, reviewed: a.reviewed, warn: row[3], crit: [...new Set(a.sts.filter(s => !aramaDisi(s)).map(s => s.critic).filter(Boolean))], nzn: nz([row[2]].concat(row[4] || []).join(' ')) });
   }
   SUMC.set(p.id, { L, m }); return m;
 }
@@ -7856,7 +7902,7 @@ function closeDrawers() { for (const s of DSIDE) closeDrawer(s); }
 // Çentikler: kapalı paneldeki durumu da gösterir (liste süzgeci; seçili hüküm ve inceleme kararı)
 function renderNotches() {
   const rn = $('rail-notch'), inn = $('insp-notch'); if (!rn || !inn) return;
-  const V = railVol(), filt = !!V || S.railFilter !== 'all' || !!S.railHuk || !!(S.q && S.q.trim());
+  const V = railVol(), filt = !!V || S.railFilter !== 'all' || !!S.railHuk || kimlikSuzgecVar() || !!(S.q && S.q.trim());
   rn.querySelector('.fdot').hidden = !filt;
   const chip = [S.railFilter !== 'all' ? (RAIL_CHIPS.find(c => c[0] === S.railFilter) || [])[1] : '', S.railHuk ? (RAIL_CHIPS.find(c => c[0] === S.railHuk) || [])[1] : ''].filter(Boolean).join(' + ');
   rn.title = 'Râvi listesi (R)' + (filt ? ' · süzgeç: ' + [V ? 'Cilt ' + V : '', chip, S.q ? '“' + S.q + '”' : ''].filter(Boolean).join(', ') + ' · ' + railList().length + ' râvi — J/K yalnız bunlarda gezer' : '');
@@ -8071,7 +8117,7 @@ document.addEventListener('click', e => {
   const rf = t.closest('[data-rf]'); if (rf) { S.railFilter = rf.dataset.rf; if (RAIL_GEL.some(c => c[0] === S.railFilter)) { S.railHuk = S.railFilter; S.railFilter = 'all'; } renderRail(); return; }
   const rh = t.closest('[data-rh]'); if (rh) { S.railHuk = rh.dataset.rh; if (SUMF.has(S.railFilter) && S.railFilter !== 'warn') S.railFilter = 'all'; renderRail(); return; }
   if (t.closest('#rail-sz')) { S.railPanel = !S.railPanel; renderRail(); return; }
-  const szk = t.closest('[data-szkaldir]'); if (szk) { if (szk.dataset.szkaldir === 'rf') S.railFilter = 'all'; else S.railHuk = ''; renderRail(); return; }
+  const szk = t.closest('[data-szkaldir]'); if (szk) { const k = szk.dataset.szkaldir; if (k === 'rf' || k === 'hepsi') S.railFilter = 'all'; if (k === 'rh' || k === 'hepsi') S.railHuk = ''; if (k === 'nisbe' || k === 'hepsi') S.railNisbe = ''; if (k === 'asir' || k === 'hepsi') S.railAsir = ''; if (k === 'tab' || k === 'hepsi') S.railTab = ''; renderRail(); return; }
   const xo = t.closest('[data-xmod]'); if (xo) { otekiAc(xo.dataset.xmod, +xo.dataset.xseq, +xo.dataset.xvol || 0); if (DRW.mode.rail === 'overlay') closeDrawer('rail'); return; }
   const ni = t.closest('[data-nid]');
   if (ni) {
@@ -8307,6 +8353,7 @@ document.addEventListener('submit', e => {
 document.addEventListener('change', e => {
   if (e.target.id === 'narr-note' && e.target._old !== undefined && e.target._old !== e.target.value) { logAct('râvi-not', e.target.value.slice(0, 120), { nid: S.nid, seq: NBYID[S.nid].source_sequence, before: e.target._old, after: e.target.value }); e.target._old = e.target.value; }
   if (e.target.id === 'rail-sort') { S.sort = e.target.value; renderRail(); }
+  if (e.target.id === 'rail-asir' || e.target.id === 'rail-tab') { S[e.target.id === 'rail-asir' ? 'railAsir' : 'railTab'] = e.target.value; renderRail(); }
   if (e.target.dataset && e.target.dataset.mrvsec && S.mrv) { S.mrv[e.target.dataset.mrvsec] = e.target.value; S.mrv.n = 50; mervYenile(); }
   if (e.target.dataset && e.target.dataset.cff) { const k = e.target.dataset.cff; CFF[k] = e.target.type === 'checkbox' ? e.target.checked : e.target.value; UI.cff = CFF; S.confLimit = 0; saveUI(); renderConflicts(); }
   if (e.target.dataset && e.target.dataset.cf) { CF[e.target.dataset.cf] = e.target.value; UI.cf = CF; saveUI(); renderCritics(); }
@@ -8315,6 +8362,7 @@ document.addEventListener('change', e => {
 });
 document.addEventListener('input', e => {
   if (e.target.id === 'dis-q') { DIS.q = e.target.value; disSozFiltre(); return; }
+  if (e.target.id === 'rail-nisbe') { clearTimeout(RV.nT); RV.nT = setTimeout(() => { S.railNisbe = e.target.value; renderRail(); const el = $('rail-nisbe'); if (el && document.activeElement !== el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }, 200); return; }
   if (e.target.id === 'narr-note') { if (!AUTH.can('review')) return; const r = REV.narr[S.nid] = REV.narr[S.nid] || {}; if (e.target._old === undefined) e.target._old = r.note || ''; r.note = e.target.value; Object.assign(r, by()); saveRevSoon(400); }
 });
 let qT; $('q').addEventListener('input', () => { clearTimeout(qT); qT = setTimeout(() => { S.q = $('q').value; renderRail(); }, 120); });
