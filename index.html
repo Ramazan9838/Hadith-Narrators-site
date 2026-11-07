@@ -249,6 +249,11 @@ h1 span { font-weight: 400; color: var(--ink-3); margin-left: 5px; }
 .chip { border: 1px solid var(--line); background: var(--paper); border-radius: 999px; padding: 3px 9px; font-size: calc(11.5px * var(--yb)); color: var(--ink-2); white-space: nowrap; }
 .chip:hover { border-color: var(--line-2); color: var(--ink); }
 .chip[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.chip.sz-btn { font-weight: 600; }
+.chip.sz-btn b { display: inline-block; min-width: 16px; padding: 0 4px; margin-left: 2px; border-radius: 999px; background: var(--accent); color: var(--paper); font-size: calc(10.5px * var(--yb)); }
+.chip.sz-aktif { background: var(--accent-soft); border-color: var(--accent-2); color: var(--accent); }
+.sz-panel { flex-basis: 100%; border: 1px solid var(--line); border-radius: 8px; background: var(--paper-2); padding: 6px 8px 8px; display: grid; gap: 5px; }
+.sz-bas { font-size: calc(11px * var(--yb)); font-weight: 600; color: var(--ink-2); margin-top: 2px; }
 .chip .sw { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 5px; vertical-align: 0; }
 .rail-sort { display: flex; justify-content: space-between; align-items: center; font-size: calc(11.5px * var(--yb)); color: var(--ink-3); }
 .rail-sort select { border: 0; background: transparent; color: var(--ink-2); font-size: calc(11.5px * var(--yb)); }
@@ -2129,7 +2134,7 @@ let AGG = {}; function recomputeAgg() { AGG = {}; CONFC = {}; for (const n of NA
 var CONFC = {};
 
 /* ---------- Durum ---------- */
-const S = { scope: 'all', railVol: 'all', view: 'desk', nid: null, tab: 'kimlik', sel: null, railFilter: 'all', q: '', sort: 'seq', critQ: '', critSel: '', lexSel: '', lexK: '', page: null };
+const S = { scope: 'all', railVol: 'all', view: 'desk', nid: null, tab: 'kimlik', sel: null, railFilter: 'all', railHuk: '', railPanel: false, q: '', sort: 'seq', critQ: '', critSel: '', lexSel: '', lexK: '', page: null };
 const VIEWS = ['home', 'desk', 'packages', 'critics', 'conflicts', 'lex', 'report', 'analyze', 'method', 'settings'];
 // Sekme sırası: râvi açılınca önce kim olduğu (Kimlik), sonra hocaları ve talebeleri, hükümler, sentez (ekip isteği)
 // “rihle” anahtarı eski adresler için korunur, sekmenin adı Mekân’dır (yer ve rıhle bilgileri birlikte); “sayfa”: el-Câmi‘in basılı sayfası (Şâdî b. Muhammed Âl-i Nu‘mân, el-Câmi‘ li-kütübi’d-du‘afâ); “uyari”: ayrıştırma uyarıları
@@ -4723,7 +4728,12 @@ function readHash(h) {
    Liste eser dizininden (IDX) kurulur ve yalnız görünen satırlar çizilir (sanal kaydırma). Satır bilgisi açık
    dilimde canlı veriden; öteki dilimlerde depodaki inceleme kaydından (durum, not) ve hafif özetten (chunkSums)
    gelir. Özeti henüz hazırlanmamış râvi, hüküm süzgeçlerine ve hüküm sıralamasına katılmaz. */
-const RAIL_CHIPS = [['all', 'Hepsi'], ['conflict', 'Teâruz'], ['kizb', 'Kizb / vaz‘'], ['majhul', 'Cehâlet'], ['tevsik', 'Tevsik var'], ['warn', 'Uyarılı'], ['todo', 'İncelenmedi'], ['notes', 'Notlu']];
+/* Râvi süzgeçleri (7.11.2026, kullanıcı isteği): tek «Süzgeç» düğmesi; açılan panelde iki küme birlikte kullanılabilir.
+   Temel süzgeç (S.railFilter): inceleme durumu. Gelişmiş süzgeç (S.railHuk): hükümlerin içeriği. */
+const RAIL_TEMEL = [['all', 'Hepsi', 'Bütün râviler'], ['todo', 'İncelenmedi', 'Henüz inceleme kararı verilmemiş râviler'], ['notes', 'Notlu', 'Araştırmacı notu olan râviler'], ['warn', 'Uyarılı', 'Kaynak metinde ya da çözümlemede uyarı bulunan râviler']];
+const RAIL_GEL = [['conflict', 'Çelişen hükümler (teâruz)', 'Aynı râvi hakkında ta‘dîl ve cerh birlikte bulunan râviler'], ['kizb', 'Kizb / vaz‘ ithamı', 'En ağır cerh mertebesi (kezzâb, vaddâ‘ vb.) bulunan râviler'],
+  ['majhul', 'Cehâlet (mechûl)', 'Hakkında cehâlet hükmü (mechûl, lâ yu‘raf vb.) bulunan râviler'], ['tevsik', 'Tevsîk var', 'Sika ve üstü mertebede ta‘dîl bulunan râviler']];
+const RAIL_CHIPS = RAIL_TEMEL.concat(RAIL_GEL).map(([k, l]) => [k, l]);   // adlar (başlık ve bildirimlerde)
 const SUMF = new Set(['conflict', 'kizb', 'majhul', 'tevsik', 'warn']);   // özet isteyen süzgeçler
 function rowStatus(r) { return r.p === PK ? (REV.narr[r.nid] || {}).status : chunkState(r.p).st.get(r.nid); }
 function rowNotes(r) { if (r.p === PK) { const n = NBYID[r.nid]; return n ? narrNoteCount(n) : 0; } return chunkState(r.p).notes.get(r.nid) || 0; }
@@ -4744,7 +4754,12 @@ function railQuery() {
   return { q, num: /^\d+$/.test(d) ? String(+d) : null, hedef: hk, crit };
 }
 function railMatch(r, Q) {
-  const f = S.railFilter, x = SUMF.has(f) || Q ? rowSum(r) : null;
+  const f = S.railFilter, h = S.railHuk, x = SUMF.has(f) || SUMF.has(h) || Q ? rowSum(r) : null;
+  if (h && h !== f && !railSuz(h, r, x)) return false;
+  if (!railSuz(f, r, x)) return false;
+  return railAra(r, Q, x);
+}
+function railSuz(f, r, x) {
   switch (f) {
     case 'conflict': if (!x || !x.conflict) return false; break;
     case 'kizb': if (!x || x.maxC < 5) return false; break;
@@ -4754,6 +4769,9 @@ function railMatch(r, Q) {
     case 'todo': if (REVIEWED(rowStatus(r))) return false; break;
     case 'notes': if (!rowNotes(r)) return false; break;
   }
+  return true;
+}
+function railAra(r, Q, x) {
   if (!Q) return true;
   if (Q.num) return (!Q.hedef || Q.hedef === (r.seq >= HSEQ0 ? 'hh' : 'sc')) && String(r.seq >= HSEQ0 ? r.seq - HSEQ0 : r.seq) === Q.num;
   const nzn = x ? (x.live ? nz(x.n._names.join(' ')) : x.nzn) : (r._nz || (r._nz = nz(r.name)));
@@ -4772,7 +4790,7 @@ function railBenzer(Q, base, list) {
 }
 function railList() {
   const Q = railQuery(), V = railVol(), base = V ? volRows(V) : IDX;
-  const list = S.railFilter === 'all' && !Q ? base.slice() : base.filter(r => railMatch(r, Q));
+  const list = S.railFilter === 'all' && !S.railHuk && !Q ? base.slice() : base.filter(r => railMatch(r, Q));
   const key = { sev: x => x.maxC, tad: x => x.maxT, n: x => x.g, conf: x => +x.conflict }[S.sort];
   if (!key) return list;
   const kv = new Map(list.map(r => { const x = rowSum(r); return [r, x ? key(x) : -1]; }));
@@ -4827,11 +4845,20 @@ function otekiAc(x, seq, vol) {
 // Sanal kaydırma: RV.items = satırlar (+ sıra no düzeninde cilt ara başlıkları); RV.tops = satır üst konumları
 const RV = { items: [], tops: null, rh: 0, hh: 0, measured: false, a: -1, b: -1, raf: 0, n: 0 };
 const VIRT_MIN = 300;
+function railSuzgecHTML() {
+  const ad = (L, k) => (L.find(c => c[0] === k) || [])[1], n = (S.railFilter !== 'all' ? 1 : 0) + (S.railHuk ? 1 : 0);
+  const etiket = (k, l, ne) => '<button class="chip sz-aktif" type="button" data-szkaldir="' + ne + '" title="Bu süzgeci kaldır">' + esc(l) + ' <span aria-hidden="true">✕</span></button>';
+  const grup = (L, attr, cur) => L.map(([k, l, t]) => '<button class="chip" type="button" ' + attr + '="' + k + '" aria-pressed="' + (cur === k) + '" title="' + esc(t) + '">' + esc(l) + '</button>').join('');
+  return '<button class="chip sz-btn" type="button" id="rail-sz" aria-expanded="' + S.railPanel + '" aria-controls="rail-szp">Süzgeç' + (n ? ' <b>' + n + '</b>' : '') + ' <span aria-hidden="true">' + (S.railPanel ? '▴' : '▾') + '</span></button>' +
+    (S.railFilter !== 'all' ? etiket(S.railFilter, ad(RAIL_CHIPS, S.railFilter), 'rf') : '') + (S.railHuk ? etiket(S.railHuk, ad(RAIL_GEL, S.railHuk), 'rh') : '') +
+    (S.railPanel ? '<div class="sz-panel" id="rail-szp"><div class="sz-bas">Temel süzgeç <span class="muted">· inceleme durumu</span></div><div class="chips">' + grup(RAIL_TEMEL, 'data-rf', S.railFilter) + '</div>' +
+      '<div class="sz-bas">Gelişmiş süzgeç <span class="muted">· hükümlerin içeriği; temel süzgeçle birlikte</span></div><div class="chips">' + grup([['', 'Yok', 'Hüküm içeriğine göre süzme']].concat(RAIL_GEL), 'data-rh', S.railHuk) + '</div></div>' : '');
+}
 function renderRail() {
   const V = railVol();
   // Süzgeç düğmeleri yalnız değişince yeniden yazılır (arka plandaki sık yeniden çizimde klavye odağı kaybolmasın)
   const chips = (V ? '<button class="chip chip-vol" type="button" data-pkvol="all" aria-label="Cilt süzgecini kaldır: ' + V + '. cilt" title="Yalnız ' + V + '. cildin râvileri listeleniyor. Bütün eseri listelemek için basın.">Cilt ' + V + ' <span aria-hidden="true">✕</span></button>' : '') +
-    RAIL_CHIPS.map(([k, l]) => '<button class="chip" data-rf="' + k + '" aria-pressed="' + (S.railFilter === k) + '">' + l + '</button>').join('');
+    railSuzgecHTML();
   if (RV.chips !== chips) {
     const ce = $('rail-chips'), fk = focusKey(ce); ce.innerHTML = chips; RV.chips = chips;
     if (fk) { const el = ce.querySelector(fk); if (el) el.focus({ preventScroll: true }); }
@@ -4851,11 +4878,11 @@ function renderRail() {
   else if (bz.length) { items.push({ head: 'benzer' }); bz.forEach((r, k) => { r._pos = list.length + k + 1; items.push(r); }); }
   const ot = railOteki(railQuery()); if (ot.length) items.push({ head: 'oteki' }, ...ot);
   RV.items = items; RV.n = list.length; RV.tops = null;
-  const key = S.railFilter + '|' + S.q + '|' + S.sort + '|' + V;
+  const key = S.railFilter + '|' + S.railHuk + '|' + S.q + '|' + S.sort + '|' + V;
   const vchg = RV.key !== undefined && RV.key.split('|').pop() !== String(V);
   if (RV.key !== undefined && RV.key !== key) $('nlist').scrollTop = 0;   // eski konum yeni listede boş kalmasın
   RV.key = key;
-  const ix = indexProgress(), wait = (SUMF.has(S.railFilter) || S.sort !== 'seq') && ix.ready < ix.total;
+  const ix = indexProgress(), wait = (SUMF.has(S.railFilter) || SUMF.has(S.railHuk) || S.sort !== 'seq') && ix.ready < ix.total;
   $('rail-count').textContent = fmt(list.length) + ' / ' + fmt(V ? volRows(V).length : IDX.length) + ' râvi' + (bz.length ? ' · ' + fmt(bz.length) + ' benzer ad' : '') + (V ? ' · Cilt ' + V : '') + (wait ? ' · özetler hazırlanıyor (%' + Math.floor(ix.ready / ix.total * 100) + ')' : '');
   paintRail(true);
   if (vchg) railReveal(S.nid, 'center');   // liste başka cilde geçti (ya da daraltma kalktı): açık râvi görünsün
@@ -6055,7 +6082,7 @@ function stepNarrator(d) {
     else nx = list[0];
   }
   if (nx) selectNarrator(nx.nid, true);
-  else if (railVol() && list.length) toast(railVol() + '. ciltte ' + (S.railFilter !== 'all' || (S.q || '').trim() ? 'bu süzgece uyan ' : '') + (d > 0 ? 'son' : 'ilk') + ' râvi. Öteki ciltler için eser düğmesinden “Tümü” seçilebilir.');
+  else if (railVol() && list.length) toast(railVol() + '. ciltte ' + (S.railFilter !== 'all' || S.railHuk || (S.q || '').trim() ? 'bu süzgece uyan ' : '') + (d > 0 ? 'son' : 'ilk') + ' râvi. Öteki ciltler için eser düğmesinden “Tümü” seçilebilir.');
 }
 function stepStatement(d) {
   const sts = stOf(NBYID[S.nid]).filter(s => s.phrase).sort((a, b) => a.b.block_order - b.b.block_order || a.start - b.start);
@@ -7829,10 +7856,10 @@ function closeDrawers() { for (const s of DSIDE) closeDrawer(s); }
 // Çentikler: kapalı paneldeki durumu da gösterir (liste süzgeci; seçili hüküm ve inceleme kararı)
 function renderNotches() {
   const rn = $('rail-notch'), inn = $('insp-notch'); if (!rn || !inn) return;
-  const V = railVol(), filt = !!V || S.railFilter !== 'all' || !!(S.q && S.q.trim());
+  const V = railVol(), filt = !!V || S.railFilter !== 'all' || !!S.railHuk || !!(S.q && S.q.trim());
   rn.querySelector('.fdot').hidden = !filt;
-  const chip = (RAIL_CHIPS.find(c => c[0] === S.railFilter) || [])[1];
-  rn.title = 'Râvi listesi (R)' + (filt ? ' · süzgeç: ' + [V ? 'Cilt ' + V : '', S.railFilter !== 'all' ? chip : '', S.q ? '“' + S.q + '”' : ''].filter(Boolean).join(', ') + ' · ' + railList().length + ' râvi — J/K yalnız bunlarda gezer' : '');
+  const chip = [S.railFilter !== 'all' ? (RAIL_CHIPS.find(c => c[0] === S.railFilter) || [])[1] : '', S.railHuk ? (RAIL_CHIPS.find(c => c[0] === S.railHuk) || [])[1] : ''].filter(Boolean).join(' + ');
+  rn.title = 'Râvi listesi (R)' + (filt ? ' · süzgeç: ' + [V ? 'Cilt ' + V : '', chip, S.q ? '“' + S.q + '”' : ''].filter(Boolean).join(', ') + ' · ' + railList().length + ' râvi — J/K yalnız bunlarda gezer' : '');
   rn.setAttribute('aria-label', 'Râviler — ' + rn.title);
   const sel = S.sel, s = sel && sel.type === 'st' ? STBY[sel.id] : null;
   inn.className = 'notch notch-r' + (s ? ' ' + kc(eKind(s)) : '');
@@ -8032,7 +8059,7 @@ document.addEventListener('click', e => {
   const pkv = t.closest('[data-pkvol]'); if (pkv) {
     const where = t.closest('#rail-chips') ? 'chips' : t.closest('#nlist') ? 'list' : '';
     setRailVol(pkv.dataset.pkvol);
-    if (where === 'chips') { const c = document.querySelector('#rail-chips [data-rf="' + S.railFilter + '"]'); if (c) c.focus(); } else if (where === 'list') $('q').focus();
+    if (where === 'chips') { const c = document.querySelector('#rail-chips [data-rf="' + S.railFilter + '"]') || $('rail-sz'); if (c) c.focus(); } else if (where === 'list') $('q').focus();
     return;
   }
   // Cilde git: o cildin sıradaki incelenmemiş râvisi (hepsi incelendiyse ilki)
@@ -8041,7 +8068,10 @@ document.addEventListener('click', e => {
   const uu = t.closest('[data-upw],[data-uact],[data-udel]'); if (uu) { userAction(uu.dataset.upw ? 'pw' : uu.dataset.uact ? 'act' : 'del', uu.dataset.upw || uu.dataset.uact || uu.dataset.udel); return; }
   const view = t.closest('.views [data-view]'); if (view) { setView(view.dataset.view); return; }
   const exp = t.closest('[data-exp]'); if (exp) { doExport(exp.dataset.exp); return; }
-  const rf = t.closest('[data-rf]'); if (rf) { S.railFilter = rf.dataset.rf; renderRail(); return; }
+  const rf = t.closest('[data-rf]'); if (rf) { S.railFilter = rf.dataset.rf; if (RAIL_GEL.some(c => c[0] === S.railFilter)) { S.railHuk = S.railFilter; S.railFilter = 'all'; } renderRail(); return; }
+  const rh = t.closest('[data-rh]'); if (rh) { S.railHuk = rh.dataset.rh; if (SUMF.has(S.railFilter) && S.railFilter !== 'warn') S.railFilter = 'all'; renderRail(); return; }
+  if (t.closest('#rail-sz')) { S.railPanel = !S.railPanel; renderRail(); return; }
+  const szk = t.closest('[data-szkaldir]'); if (szk) { if (szk.dataset.szkaldir === 'rf') S.railFilter = 'all'; else S.railHuk = ''; renderRail(); return; }
   const xo = t.closest('[data-xmod]'); if (xo) { otekiAc(xo.dataset.xmod, +xo.dataset.xseq, +xo.dataset.xvol || 0); if (DRW.mode.rail === 'overlay') closeDrawer('rail'); return; }
   const ni = t.closest('[data-nid]');
   if (ni) {
