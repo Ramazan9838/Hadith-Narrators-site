@@ -1421,6 +1421,13 @@ tr.mf-on td { background: color-mix(in srgb, #c0392b 6%, transparent); }
 .ctag-d.zs circle { stroke: var(--k-k); stroke-width: 4; }
 @media (max-width: 700px) { .ctag-agf-l { min-width: 0; width: 100%; } .ctag-zbox { max-width: none; flex-basis: 100%; } .ctag-pop { position: fixed; left: 12px; right: 12px; top: 90px; width: auto; } }
 
+/* Hoca/talebe süzgeci (bölge, yer, tabaka, vefat, durum, rivayet) */
+.hkf { padding: 10px 14px; margin: 14px 0 6px; }
+.hkf-bas { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: calc(13px * var(--yb)); }
+.hkf-alan { display: flex; flex-wrap: wrap; gap: 10px 14px; margin-top: 8px; align-items: flex-end; }
+.hkf-ara { display: inline-flex; align-items: center; gap: 4px; }
+.hkf-tsay { color: var(--accent); margin: 2px 0 4px; }
+
 </style>
 </head>
 <body class="locked">
@@ -3005,7 +3012,7 @@ function ckBolum(n, key, B) {
     if (!id) return '<tr style="cursor:default"><td><i>Eserin müellifi</i> <span class="small muted">(râvi senedin ilk halkası: musannif ondan bizzat rivayet ediyor)</span></td><td class="num" data-v="' + nn + '">' + sayiTr(nn) + '</td><td class="num" data-v="' + tt + '">' + sayiTr(tt) + '</td><td></td><td></td><td>' + kodlar(['CK']) + '</td></tr>';
     if (CK_OZEL[id]) return '<tr style="cursor:default" class="rej"><td><i>' + CK_OZEL[id] + '</i></td><td class="num" data-v="' + nn + '">' + sayiTr(nn) + '</td><td class="num" data-v="' + tt + '">' + sayiTr(tt) + '</td><td></td><td></td><td>' + kodlar(['CK']) + '</td></tr>';
     const p = ckKisi(C, id), P = B.ckP.get(id), h = P && P.hh, kd = P ? [...P.kod].filter(k => k !== 'TKZ') : ['CK'];
-    return '<tr style="cursor:default"><td data-v="' + esc(p.ad) + '">' + kisiAdBtn(P, p.sohret || p.ad, id) + (p.sohret && p.ad !== p.sohret ? '<div class="small muted ar">' + esc(p.ad) + '</div>' : '') + '</td>' +
+    return '<tr style="cursor:default"' + hkAttr(P, 'CK', nn) + '><td data-v="' + esc(p.ad) + '">' + kisiAdBtn(P, p.sohret || p.ad, id) + (p.sohret && p.ad !== p.sohret ? '<div class="small muted ar">' + esc(p.ad) + '</div>' : '') + '</td>' +
       '<td class="num" data-v="' + nn + '">' + sayiTr(nn) + (top ? '<div class="small muted">%' + (Math.round(nn / top * 1000) / 10).toLocaleString('tr-TR') + '</div>' : '') + '</td><td class="num" data-v="' + tt + '">' + sayiTr(tt) + '</td>' +
       '<td class="num" data-v="' + (yearOfStr(p.vefat) || 0) + '">' + (p.vefat ? 'h. ' + esc(p.vefat) : '<span class="muted">—</span>') + '</td><td class="small ar">' + esc(p.rutbe) + '</td>' +
       '<td style="white-space:nowrap">' + kodlar(kd) + (P && P.kod.has('TKZ') ? '<span class="tag" title="Tehzîbü’l-Kemâl listesinde de var">Tehzîb</span>' : '') + (h ? ' <span class="small muted" title="HH’de bu kişiden/kişinin aldığı rivayet">HH ' + sayiTr(h.r) + '</span>' : '') + '</td></tr>';
@@ -3252,7 +3259,7 @@ function hhTablo(n, V, key, title) {
     if (S.dzed === x.rk) return dzForm(x, 10);
     const p = x.p || {}, ym = disMemleket(p, x.ad), y = ym.y, P = B.hhOf.get(x.rk), isr = il.get(+x.k) || [];
     const vef = dzVefat(x.vefat), tab = dzTabaka(x.tabaka);
-    return '<tr style="cursor:default" class="' + (x.sil ? 'rej' : '') + '"><td data-v="' + esc(x.ad) + '">' + dzAdHucre(x, x.manual || (x.ed && x.ad !== x.orig.ad) ? null : disKisiBtn(p.id != null ? p : null)) + '</td>' +
+    return '<tr style="cursor:default" class="' + (x.sil ? 'rej' : '') + '"' + hkAttr(P, 'HH', x.r || 0) + '><td data-v="' + esc(x.ad) + '">' + dzAdHucre(x, x.manual || (x.ed && x.ad !== x.orig.ad) ? null : disKisiBtn(p.id != null ? p : null)) + '</td>' +
       '<td class="num" data-v="' + (vef || '') + '">' + (vef ? 'h. ' + vef : '<span class="muted">—</span>') + '</td><td class="num" data-v="' + (tab || '') + '">' + (tab ? Math.round(tab) : p.sahabi === 1 ? '<span class="small">sahâbî</span>' : '<span class="muted">—</span>') + '</td>' +
       '<td data-v="' + esc(y ? y.tr : '') + '">' + (y ? esc(y.tr) : '<span class="muted">—</span>') + (ym.ikamet ? '<div class="small muted" title="HH’nin ikamet kaydı (memleketten farklı)">ikamet: ' + esc(ym.ikamet.tr) + '</div>' : '') + '</td><td class="ar small" data-v="' + esc(p.ih || '') + '">' + esc(p.ih || '') + '</td>' +
       '<td class="num" data-v="' + (x.r || 0) + '">' + (x.manual ? '<span class="muted">—</span>' : (key === 'hoca' ? '<button class="linkbtn" data-mrvh="' + esc(x.k) + '" title="Bu hocadan rivayetlerini göster">' + sayiTr(x.r) + '</button>' : sayiTr(x.r)) + (x.h != null ? ' <span class="small muted" title="İsnadlardan hesaplanan sayı programınkinden farklı">(isnadlarda ' + sayiTr(x.h) + ')</span>' : '')) + (top && x.r ? '<div class="small muted">%' + (Math.round(x.r / top * 1000) / 10).toLocaleString('tr-TR') + '</div>' : '') + '</td><td class="num" data-v="' + (x.rt || 0) + '">' + (x.rt != null ? sayiTr(x.rt) : '<span class="muted">—</span>') + '</td>' +
@@ -3404,10 +3411,10 @@ function mervPanel(n, V) {
   if (!st) return '<div id="mrv-panel"></div>';
   const D = mervVeri(h);
   if (!D) { mervYukle(h).then(() => mervYenile()); return '<div id="mrv-panel" class="card"><div class="hint">' + (MRV.err ? 'Rivayetler alınamadı: ' + esc(MRV.err) : (MRV.dizin && !(MRV.dizin.ravi || {})[h] ? 'Bu râvinin rivayet listesi henüz hazırlanmadı.' : 'Rivayetler yükleniyor…')) + '</div></div>'; }
-  const R = D.r.filter(r => (!st.kitap || r[1] === +st.kitap) && (!st.hoca || r[5] === +st.hoca));
+  const D0 = mervHocaSuz(D, V), R = D0.filter(r => (!st.kitap || r[1] === +st.kitap) && (!st.hoca || r[5] === +st.hoca));
   const kisi = id => id ? (disKisi(V, id) || {}).ad || D.kisi[id] || 'HH #' + id : '—';
   const say = (L, i) => { const m = new Map(); for (const r of L) m.set(r[i], (m.get(r[i]) || 0) + 1); return [...m.entries()].sort((a, b) => b[1] - a[1]); };
-  const kitL = say(D.r.filter(r => !st.hoca || r[5] === +st.hoca), 1), hocL = say(D.r.filter(r => !st.kitap || r[1] === +st.kitap), 5);
+  const kitL = say(D0.filter(r => !st.hoca || r[5] === +st.hoca), 1), hocL = say(D0.filter(r => !st.kitap || r[1] === +st.kitap), 5);
   const sec = (ad, k, L, ad2) => '<label class="cf"><span>' + ad + '</span><select class="field sm" data-mrvsec="' + k + '"><option value="">Tümü</option>' + L.map(([id, c]) => '<option value="' + (id || '') + '"' + (String(st[k]) === String(id) ? ' selected' : '') + '>' + esc(ad2(id)) + ' (' + c + ')</option>').join('') + '</select></label>';
   const goster = R.slice(0, st.n || 50);
   const eksik = goster.filter(r => !mervMetin(r[0])).map(r => r[0]);
@@ -3419,15 +3426,22 @@ function mervPanel(n, V) {
   return '<div id="mrv-panel" class="card mrv-panel"><div class="mrv-bas"><h3 class="panel-title" style="margin:0">Rivayetleri ' + kodlar(['HH']) + ' <span class="muted">' + R.length + ' rivayet' + (R.length !== D.r.length ? ' (toplam ' + D.r.length + ')' : '') + '</span></h3>' +
     '<span><button class="btn ghost sm" data-mrvmd title="Süzgeçteki bütün rivayetleri metinleriyle Markdown dosyası olarak indir">⇩ Markdown</button> <button class="btn ghost sm" data-mrvkapat title="Paneli kapat">✕</button></span></div>' +
     '<div class="mrv-sec">' + sec('Kitap', 'kitap', kitL, id => disKitap(id).ad) + sec('Hoca', 'hoca', hocL, kisi) + '</div>' +
+    (D0.length !== D.r.length ? '<p class="small hkf-tsay" style="margin:4px 0">Hoca süzgeci açık: hocası süzgece uyan ' + D0.length + ' rivayet (toplam ' + D.r.length + ').</p>' : '') +
     '<ol class="mrv-liste">' + goster.map(satir).join('') + '</ol>' +
     (R.length > goster.length ? '<button class="btn ghost sm" data-mrvdaha>' + Math.min(50, R.length - goster.length) + ' rivayet daha göster (' + (R.length - goster.length) + ' kaldı)</button>' : '') +
     '<p class="hint">Hoca: isnadda râvinin hemen önündeki halka; talebe: hemen ardındaki. Kaynak: Câmiu Hâdimi’l-Haremeyn (33 metin kitabı).</p></div>';
+}
+// HH rivayetleri: sekmedeki hoca süzgeci (bölge, yer, tabaka, vefat, durum) rivayetin hocasına uygulanır; hoca HH kişi kaydından
+function mervHocaSuz(D, V) {
+  if (!hkKisiSuz()) return D.r;
+  const m = new Map(), uy = id => { if (!m.has(id)) { const p = id ? disKisi(V, id) : null; m.set(id, !!p && hkUyar({ year: dzVefat(p.vefat), place: disMemleket(p, p.ad).y, tab: dzTabaka(p.tabaka), ih: ihSinif(p.ih, p.sahabi) })); } return m.get(id); };
+  return D.r.filter(r => uy(r[5]));
 }
 function mervYenile() { const el = $('mrv-panel'), n = NBYID[S.nid]; if (!el || !n) return; const V = disVeri(n); if (!V) return; const t = document.createElement('div'); t.innerHTML = mervPanel(n, V); el.replaceWith(t.firstElementChild); }
 // Süzgeçteki bütün rivayetler (metinleriyle) Markdown dosyası olarak
 async function mervMarkdown() {
   const n = NBYID[S.nid], V = n && disVeri(n), st = S.mrv, D = st && mervVeri(st.hh); if (!D) return;
-  const R = D.r.filter(r => (!st.kitap || r[1] === +st.kitap) && (!st.hoca || r[5] === +st.hoca));
+  const R = mervHocaSuz(D, V).filter(r => (!st.kitap || r[1] === +st.kitap) && (!st.hoca || r[5] === +st.hoca));
   toast('Markdown hazırlanıyor (' + R.length + ' rivayet)…');
   await mervPaketleri(R.map(r => r[0]));
   const kisi = id => id ? (disKisi(V, id) || {}).ad || D.kisi[id] || 'HH #' + id : '—';
@@ -4252,11 +4266,11 @@ async function tkzDosyaKaydet(d) {
 function tkzVeri(n) { const rec = tkzKayit(n); if (!rec) return null; const d = TKZ.data[rec.dosya]; if (!d && !TKZ.busy[rec.dosya]) tkzGetir(rec).then(x => { if (x && S.tab === 'hoca') renderCenter(); }); return d || null; }
 function rumuzHTML(d, rz) { return (rz || []).map(x => '<span class="tag rumuz" title="' + esc((d.rumuz_anahtari || {})[x] || x) + '">' + esc(x) + '</span>').join(''); }
 function tkzTablo(n, d, key, title) {
-  const L = tkzSatirlar(n, d, key), rec = tkzKayit(n), canli = L.filter(x => !x.sil);
+  const L = tkzSatirlar(n, d, key), rec = tkzKayit(n), canli = L.filter(x => !x.sil), TB = birlesikKisiler(n, key === 'hocalar' ? 'hoca' : 'talebe');
   const row = x => {
     if (S.dzed === x.rk) return dzForm(x, 6);
     const o = x.x || {}, t = o.takrib, rz = o.rumuz || [], vef = dzVefat(x.vefat), tab = dzTabaka(x.tabaka), duz = x.ed && !x.manual;
-    return '<tr style="cursor:default" class="' + (x.sil ? 'rej' : '') + '"><td data-v="' + esc(x.ad) + '">' + dzAdHucre(x) + (o.not ? ' <span class="small muted ar">' + esc(o.not) + '</span>' : '') + '</td><td>' + (x.manual ? '<span class="muted small">—</span>' : rz.length ? rumuzHTML(d, rz) : (key === 'hocalar' ? '<span class="tag warn" title="Mizzî bu hocadan rivayeti Kütüb-i Sitte’de göstermiyor">rivayeti olmayan hoca</span>' : '<span class="muted small">rumuzsuz</span>')) + '</td>' +
+    return '<tr style="cursor:default" class="' + (x.sil ? 'rej' : '') + '"' + hkAttr(TB && TB.tkzP.get(x.rk), 'TKZ', null) + '><td data-v="' + esc(x.ad) + '">' + dzAdHucre(x) + (o.not ? ' <span class="small muted ar">' + esc(o.not) + '</span>' : '') + '</td><td>' + (x.manual ? '<span class="muted small">—</span>' : rz.length ? rumuzHTML(d, rz) : (key === 'hocalar' ? '<span class="tag warn" title="Mizzî bu hocadan rivayeti Kütüb-i Sitte’de göstermiyor">rivayeti olmayan hoca</span>' : '<span class="muted small">rumuzsuz</span>')) + '</td>' +
       '<td class="num" data-v="' + (vef || '') + '">' + (vef ? 'h. ' + vef + (!duz && !x.manual && t && t.yaklasik ? ' ~' : '') : '<span class="muted">—</span>') + '</td><td class="num" data-v="' + (tab || '') + '">' + (tab ? Math.round(tab) : '<span class="muted">—</span>') + '</td>' +
       '<td class="small">' + (x.manual ? '<span class="muted">elle</span>' : t ? '<button class="linkbtn" data-tkm="' + key + ':' + (d[key] || []).indexOf(o) + '" title="' + esc(t.metin + (t.eslesme && t.eslesme !== 'ad' ? ' · eşleşme: ' + t.eslesme : '')) + '">#' + t.no + '</button>' : o.takrib_aday ? '<span class="muted" title="Birden çok aday: ' + esc(o.takrib_aday.join(', ')) + '">birden çok aday</span>' : '<span class="muted">eşleşmedi</span>') + '</td><td>' + dzButon(x) + '</td></tr>';
   };
@@ -5169,8 +5183,8 @@ function renderCenter() {
   else if (S.tab === 'hukum') body.innerHTML = renderRulingsTab(n);
   else if (S.tab === 'sentez') body.innerHTML = renderSynthesisTab(n);
   else if (S.tab === 'kimlik') body.innerHTML = isHHn(n) ? hhKimlikTab(n) : renderIdentityTab(n);
-  else if (S.tab === 'hoca') body.innerHTML = renderTeachersTab(n);
-  else if (S.tab === 'talebe') body.innerHTML = renderStudentsTab(n);
+  else if (S.tab === 'hoca') { body.innerHTML = renderTeachersTab(n); hkSuzUygula(); }
+  else if (S.tab === 'talebe') { body.innerHTML = renderStudentsTab(n); hkSuzUygula(); }
   else if (S.tab === 'ag') { body.innerHTML = renderAgTab(n); agKur(n); }
   else if (S.tab === 'uyari') body.innerHTML = renderWarningsTab(n);
   else if (S.tab === 'rihle') body.innerHTML = renderRihleTab(n);
@@ -5527,7 +5541,7 @@ function listTable(n, key, title) {
   const vis = items.filter(x => show || x.st !== 'no');
   const ok = items.filter(x => x.st === 'ok').length, no = items.filter(x => x.st === 'no').length;
   const kinds = key === 'rihle' ? [['rıhle', 'Rıhle'], ['kudûm', 'Kudûm'], ['tahdîs', 'Tahdîs'], ['semâ‘', 'Semâ‘'], ['ikamet', 'İkamet'], ['nüzûl', 'Nüzûl'], ['mücâveret', 'Mücâveret'], ['hac', 'Hac']] : null;
-  const kisi = key !== 'rihle', cols = kisi ? 6 : 4;
+  const kisi = key !== 'rihle', cols = kisi ? 6 : 4, LB = kisi ? birlesikKisiler(n, key === 'hocalar' ? 'hoca' : 'talebe') : null;
   const editForm = x => '<tr class="ledit"><td colspan="' + cols + '"><form class="row ladd" data-lsave="' + esc(key + LSEP + x.key) + '"><input class="field" name="v" dir="auto" value="' + esc(x.v) + '" placeholder="Ad (Arapça)" required>' +
     (kisi ? '<input class="field" name="vefat" dir="auto" value="' + esc(x.vefat || '') + '" placeholder="Vefat (h., ör. 160)"><input class="field" name="memleket" dir="auto" value="' + esc(x.memleket || '') + '" placeholder="Memleket (ör. Basra)">' : '') +
     '<input class="field" name="note" dir="auto" value="' + esc(x.note || '') + '" placeholder="Not / kaynak"><button class="btn primary sm">Kaydet</button><button class="btn sm" type="button" data-lcancel="1">Vazgeç</button></form>' +
@@ -5535,7 +5549,7 @@ function listTable(n, key, title) {
   const row = x => {
     if (S.ledit === key + LSEP + x.key) return editForm(x);
     const I = kisi ? kisiBilgi(n, key, x) : null;
-    return '<tr style="cursor:default" class="' + (x.st === 'no' ? 'rej' : '') + '"><td data-v="' + esc(x.v) + '"><span class="' + (/[؀-ۿ]/.test(x.v) ? 'ar' : '') + '" style="font-size:calc(17px * var(--yb))">' + esc(x.v) + '</span>' + (x.kind ? ' <span class="tag">' + esc(HOW_TR[x.kind] || x.kind) + '</span>' : '') +
+    return '<tr style="cursor:default" class="' + (x.st === 'no' ? 'rej' : '') + '"' + (LB ? hkAttr(LB.scP.get(x.key), 'SC', null) : '') + '><td data-v="' + esc(x.v) + '"><span class="' + (/[؀-ۿ]/.test(x.v) ? 'ar' : '') + '" style="font-size:calc(17px * var(--yb))">' + esc(x.v) + '</span>' + (x.kind ? ' <span class="tag">' + esc(HOW_TR[x.kind] || x.kind) + '</span>' : '') +
       (x.ed ? '<div class="small muted">✎ düzeltildi · ' + whoWhen(x.ed) + (x.orig && x.orig !== x.v ? ' · metinde: <span class="ar">' + esc(x.orig) + '</span>' : '') + '</div>' : '') + (x.note ? '<div class="small muted">' + esc(x.note) + '</div>' : '') + '</td>' +
       (kisi ? '<td class="num" data-v="' + (I.year || '') + '">' + (I.year ? 'h. ' + I.year + (I.yearHH ? ' ' + kodlar(['HH']) : '') : (x.vefat ? esc(x.vefat) : '<span class="muted">—</span>')) + '</td><td data-v="' + esc(I.place ? I.place.tr : '') + '">' + (I.place ? esc(I.place.tr) + (I.placeAuto ? ' <span class="small muted" title="Addaki nisbeden">(nisbe)</span>' : '') : '<span class="muted">—</span>') + '</td>' : '') +
       '<td class="num">' + new Set(x.ev.map(e => e.source)).size + '</td><td>' + (x.manual ? '<span class="small muted">elle · ' + whoWhen(x) + '</span>' : evChips(x.ev, 4)) + '</td><td style="white-space:nowrap">' +
@@ -5634,7 +5648,7 @@ function mervBolum(n, V, key, B) {
   const evOf = r => ({ block: r.block, start: r.start, end: r.end, source: r.source, text: r.zincir.join(' ، ') });
   const satir = x => {
     const P = B.mervP.get(x), h = P && P.hh, diger = x.adlar.filter(a => a !== x.ad);
-    return '<tr style="cursor:default"><td data-v="' + esc(x.ad) + '">' + kisiAdBtn(P, x.ad) +
+    return '<tr style="cursor:default"' + hkAttr(P, 'SC', x.n) + '><td data-v="' + esc(x.ad) + '">' + kisiAdBtn(P, x.ad) +
       (!hoca && x.rv.every(r => r.talebeMusannif) ? ' <span class="tag" title="Râvi senedin ilk halkası: eserin müellifi ondan bizzat rivayet ediyor">müellif</span>' : '') +
       (diger.length ? '<div class="small muted ar">' + diger.slice(0, 3).map(esc).join(' · ') + '</div>' : '') + '</td>' +
       '<td class="num" data-v="' + x.n + '">' + sayiTr(x.n) + '</td><td class="num" data-v="' + x.t + '">' + sayiTr(x.t) + '</td>' +
@@ -5760,10 +5774,73 @@ function birlesikKisiler(n, key) {
     if (!x.ckYalniz) s.tumu = { year: ilk('year'), place: ilk('place'), tab: ilk('tab'), ih: ilk('ih'), w: 1 };
   }
   const hhOf = new Map(P.filter(x => x.hh).map(x => [x.hh.rk, x]));
-  const out = { P, M, hhOf, mervP, ckP, var: HK_KAYNAK.filter(([k]) => k === 'tumu' || P.some(x => x.src[k])).map(([k]) => k) };
+  P.forEach((x, i) => { x.i = i; });
+  const scP = new Map(), tkzP = new Map();   // süzgeç için: el-Câmi‘ kalıp satırı ve Tehzîb satırı → kişi
+  for (const x of P) { for (const it of x.sc) scP.set(it.key, x); if (x.tkz) tkzP.set(x.tkz.rk, x); }
+  const out = { P, M, hhOf, mervP, ckP, scP, tkzP, var: HK_KAYNAK.filter(([k]) => k === 'tumu' || P.some(x => x.src[k])).map(([k]) => k) };
   BIRLESIK.set(sig, out); return out;
 }
 const hkSecim = B => B.var.includes(UI.hkaynak) ? UI.hkaynak : 'tumu';
+/* Hoca/talebe süzgeci (9.11.2026): bölge, yer (şehir), tabaka, vefat, durum ve rivayet sayısıyla sekmedeki bütün kişi tablolarını
+   (el-Câmi‘ senetleri, CK, HH, Tehzîb, kaynak metin) ve HH rivayetleri panelini birlikte süzer. Kişinin değerleri birleşik listeden
+   gelir: önce satırın kendi kümesi (HH satırında HH’nin vefat/yeri), yoksa “Tümü”deki öncelik (HH › Tehzîb › el-Câmi‘ › CK).
+   Rivayet sayısı satırın kendi sütunudur (o kümede bu kişiden/kişinin aldığı); sayısı olmayan tablolar (Tehzîb, kaynak metin)
+   rivayet süzgecinden etkilenmez. Seçim arayüz tercihlerinde saklanır, râvi değişince de geçerlidir. */
+const HKF_ALAN = ['bolge', 'yer', 'tab1', 'tab2', 'v1', 'v2', 'durum', 'riv'];
+const hkfSec = () => UI.hkf || {};
+const hkfAktif = () => HKF_ALAN.some(k => hkfSec()[k] !== undefined && hkfSec()[k] !== '');
+function hkAttr(P, src, riv) { return ' data-hsrc="' + src + '" data-hp="' + (P ? P.i : '') + '"' + (riv != null ? ' data-riv="' + riv + '"' : ''); }
+function hkDeger(P, src) { const s = P.src || {}; return s[src] || s.tumu || s.HH || s.TKZ || s.SC || s.CK || {}; }
+// Kişi değerleri süzgece uyuyor mu (rivayet hariç): { year, place: {tr, region}, tab, ih }
+function hkUyar(v) {
+  const f = hkfSec(), pl = v.place || null, t = v.tab != null ? Math.round(v.tab) : null;
+  if (f.bolge && !(pl && pl.region === f.bolge)) return false;
+  if (f.yer && !(pl && pl.tr === f.yer)) return false;
+  if ((f.tab1 || f.tab2) && (t == null || (f.tab1 && t < +f.tab1) || (f.tab2 && t > +f.tab2))) return false;
+  if ((f.v1 || f.v2) && (!v.year || (f.v1 && v.year < +f.v1) || (f.v2 && v.year > +f.v2))) return false;
+  if (f.durum && v.ih !== f.durum) return false;
+  return true;
+}
+const hkKisiSuz = () => { const f = hkfSec(); return ['bolge', 'yer', 'tab1', 'tab2', 'v1', 'v2', 'durum'].some(k => f[k]); };
+function hkSuzgecHTML(B, key) {
+  const f = hkfSec(), say = (fn) => { const m = new Map(); for (const x of B.P) { const v = fn(hkDeger(x, 'tumu')); if (v) m.set(v, (m.get(v) || 0) + 1); } return [...m.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'tr')); };
+  const bolL = say(v => v.place && v.place.region), yerL = say(v => (!f.bolge || (v.place && v.place.region === f.bolge)) && v.place && v.place.tr), ihL = say(v => v.ih);
+  const sec = (k, ad, L, ilk) => '<label class="cf"><span>' + ad + '</span><select class="field sm" data-hksz="' + k + '"><option value="">' + (ilk || 'Tümü') + '</option>' +
+    (f[k] && !L.some(([v]) => v === f[k]) ? '<option value="' + esc(f[k]) + '" selected>' + esc(f[k]) + ' (0)</option>' : '') +
+    L.map(([v, c]) => '<option value="' + esc(v) + '"' + (f[k] === v ? ' selected' : '') + '>' + esc(v) + ' (' + c + ')</option>').join('') + '</select></label>';
+  const tabSec = k => '<select class="field sm" data-hksz="' + k + '" aria-label="Tabaka ' + (k === 'tab1' ? 'en az' : 'en çok') + '"><option value="">' + (k === 'tab1' ? 'en az' : 'en çok') + '</option>' +
+    Array.from({ length: 12 }, (_, i) => i + 1).map(i => '<option value="' + i + '"' + (String(f[k]) === String(i) ? ' selected' : '') + '>' + i + '</option>').join('') + '</select>';
+  const sayi = (k, ph, gen) => '<input class="field sm" type="number" min="0" inputmode="numeric" data-hksz="' + k + '" value="' + esc(f[k] || '') + '" placeholder="' + ph + '" style="width:' + (gen || 72) + 'px">';
+  return '<section class="hkf card" aria-label="Süzgeç"><div class="hkf-bas"><b>Süzgeç</b> <span class="small muted">aşağıdaki bütün ' + (key === 'hoca' ? 'hoca' : 'talebe') + ' tablolarına' + (key === 'hoca' ? ' ve HH rivayetleri paneline' : '') + ' uygulanır</span>' +
+    '<span class="grow"></span><span class="small" data-hkfsay></span> <button class="btn ghost sm" type="button" data-hkftemizle' + (hkfAktif() ? '' : ' hidden') + '>Süzgeci kaldır</button></div>' +
+    '<div class="hkf-alan">' + sec('bolge', 'Bölge', bolL) + sec('yer', 'Yer (şehir)', yerL) +
+    '<label class="cf"><span>Tabaka</span><span class="hkf-ara">' + tabSec('tab1') + '–' + tabSec('tab2') + '</span></label>' +
+    '<label class="cf"><span>Vefat (h.)</span><span class="hkf-ara">' + sayi('v1', 'en erken', 84) + '–' + sayi('v2', 'en geç', 84) + '</span></label>' +
+    sec('durum', 'Durum', ihL) + '<label class="cf"><span>Rivayet en az</span>' + sayi('riv', 'ör. 10', 84) + '</label></div></section>';
+}
+function hkSuzUygula() {
+  const body = $('center-body'), n = NBYID[S.nid]; if (!body || !n || (S.tab !== 'hoca' && S.tab !== 'talebe')) return;
+  const B = birlesikKisiler(n, S.tab), f = hkfSec(), aktif = hkfAktif(), kisiSuz = hkKisiSuz();
+  const T = new Map();
+  for (const tr of body.querySelectorAll('tr[data-hsrc]')) {
+    let ok = true;
+    if (aktif) {
+      const P = tr.dataset.hp !== '' ? B.P[+tr.dataset.hp] : null;
+      if (kisiSuz) ok = !!P && hkUyar(hkDeger(P, tr.dataset.hsrc));
+      if (ok && f.riv && tr.dataset.riv !== undefined) ok = +tr.dataset.riv >= +f.riv;
+    }
+    tr.hidden = !ok;
+    const t = tr.closest('table'); if (!T.has(t)) T.set(t, [0, 0]); const c = T.get(t); c[1]++; if (ok) c[0]++;
+  }
+  for (const [t, [g, top]] of T) {
+    const w = t.closest('.wrap') || t; let el = [...body.querySelectorAll('.hkf-tsay[data-tid]')].find(x => x.dataset.tid === t.dataset.tid) || null;
+    if (!aktif) { if (el) el.remove(); continue; }
+    if (!el) { el = document.createElement('div'); el.className = 'hkf-tsay small'; el.dataset.tid = t.dataset.tid || ''; w.before(el); }
+    el.textContent = 'Süzgeç: ' + g + ' / ' + top + ' satır';
+  }
+  const s = body.querySelector('[data-hkfsay]'); if (s) s.textContent = aktif ? 'Süzgeç açık' : '';
+  const b = body.querySelector('[data-hkftemizle]'); if (b) b.hidden = !aktif;
+}
 // Özet tablolar (sayılar, yer, durum, vefat/tabaka): seçilen kaynağa göre; “Tümü”de yalnız CK’da bulunan kişiler sayılmaz
 function hkOzet(n, key, B) {
   const hoca = key === 'hoca', kim = hoca ? 'hoca' : 'talebe', sel = hkSecim(B), V = disVeri(n), C = ckVeri(n), M = mervOf(n);
@@ -5834,7 +5911,7 @@ function hocaTalebeTab(n, key) {
   const B = birlesikKisiler(n, key);
   return '<div class="pane">' + (V ? '' : disDurum(n)) + '<div class="toolbar-inline"><label class="small"><input type="checkbox" data-act="show-rej"' + (UI.showRejected ? ' checked' : '') + '> Reddedilenleri göster</label><span class="grow"></span>' + hintBtn(key) + '</div>' +
     (hoca ? hintP('hoca', 'Hocalar (şüyûh) “rivâ/haddese/semi‘a an …” ve Mîzân usulü “an … ve anhü …” kalıplarından çıkarılır. Olumsuz ve şartlı cümleler (“mâ haddese anhü”, “izâ revâ anhü sika”) ile senet içi adlar bu listeye alınmaz; senetlerdeki halkalar “el-Câmi‘ metnindeki senetli rivayetlerinden” bölümündedir. Adaylar doğrulanmamıştır. Talebeler ayrı sekmededir; ikisinden çıkan tahmini tabaka Sentez sekmesindedir.') : hintP('talebe', 'Talebeler (telâmîz) “ve anhü, revâ anhü, haddese anhü …” kalıplarından çıkarılır. Olumsuz ve şartlı cümleler ile senet içi adlar bu listeye alınmaz; senetlerdeki halkalar “el-Câmi‘ metnindeki senetli rivayetlerinden” bölümündedir. Adaylar doğrulanmamıştır. Hocalar ayrı sekmededir; ikisinden çıkan tahmini tabaka Sentez sekmesindedir.')) +
-    (hoca ? idrakNotu(n, B) : '') + hkOzet(n, key, B) + mervBolum(n, V, key, B) + ckBolum(n, key, B) +
+    (hoca ? idrakNotu(n, B) : '') + hkOzet(n, key, B) + hkSuzgecHTML(B, key) + mervBolum(n, V, key, B) + ckBolum(n, key, B) +
     (V ? '<h3 class="panel-title">Dış kaynakta ' + (hoca ? 'hocaları (روى عن)' : 'talebeleri (روى عنه)') + ' ' + kodlar(['HH']) + ' <span class="muted">33 metin kitabının isnadlarından · rivayet sayısıyla · düzeltilebilir</span></h3>' + hhTablo(n, V, key, hoca ? 'Hocaları (روى عن)' : 'Talebeleri (روى عنه)') + (hoca ? hhKitaplar(V) + mervPanel(n, V) : '') : '') +
     tkzBolum(n, lk) + '<h3 class="panel-title">Kaynak metinden çıkarılanlar ' + kodlar(['SC']) + ' <span class="muted">el-Câmi‘ blokları · düzeltilebilir</span></h3>' + listTable(n, lk, hoca ? 'Hocaları (şüyûh)' : 'Talebeleri (telâmîz)') + '</div>';
 }
@@ -8189,6 +8266,7 @@ document.addEventListener('click', e => {
   const dk = t.closest('[data-diskisi]'); if (dk) { disKisiKart(NBYID[S.nid], dk.dataset.diskisi); return; }
   const ckk = t.closest('[data-ckkisi]'); if (ckk) { ckKisiKart(NBYID[S.nid], ckk.dataset.ckkisi); return; }
   const dnt = t.closest('[data-dntip]'); if (dnt) { UI.dnTip = dnt.dataset.dntip; UI.dnSebep = '*'; UI.dnInc = '*'; saveUI(); renderReport(); return; }
+  if (t.closest('[data-hkftemizle]')) { UI.hkf = {}; saveUI(); renderCenter(); return; }
   const hks = t.closest('[data-hkaynak]'); if (hks) { UI.hkaynak = hks.dataset.hkaynak; saveUI(); renderCenter(); return; }
   const ds = t.closest('[data-diss]'); if (ds) { const n = NBYID[S.nid], V = disVeri(n), x = V && V.hh.sozler.find(s => s.id === +ds.dataset.diss); if (x && x.p) disMetinGoster(n, x.p, x.t); return; }
   const dt = t.closest('[data-dist]'); if (dt) { disMetinGoster(NBYID[S.nid], +dt.dataset.dist); return; }
@@ -8354,6 +8432,10 @@ document.addEventListener('change', e => {
   if (e.target.id === 'narr-note' && e.target._old !== undefined && e.target._old !== e.target.value) { logAct('râvi-not', e.target.value.slice(0, 120), { nid: S.nid, seq: NBYID[S.nid].source_sequence, before: e.target._old, after: e.target.value }); e.target._old = e.target.value; }
   if (e.target.id === 'rail-sort') { S.sort = e.target.value; renderRail(); }
   if (e.target.id === 'rail-asir' || e.target.id === 'rail-tab') { S[e.target.id === 'rail-asir' ? 'railAsir' : 'railTab'] = e.target.value; renderRail(); }
+  if (e.target.dataset && e.target.dataset.hksz) {
+    const k = e.target.dataset.hksz; UI.hkf = Object.assign({}, hkfSec(), { [k]: e.target.value.trim() }); if (k === 'bolge') UI.hkf.yer = '';
+    saveUI(); if (k === 'bolge') { renderCenter(); return; } hkSuzUygula(); if (S.mrv) { S.mrv.n = 50; mervYenile(); } return;
+  }
   if (e.target.dataset && e.target.dataset.mrvsec && S.mrv) { S.mrv[e.target.dataset.mrvsec] = e.target.value; S.mrv.n = 50; mervYenile(); }
   if (e.target.dataset && e.target.dataset.cff) { const k = e.target.dataset.cff; CFF[k] = e.target.type === 'checkbox' ? e.target.checked : e.target.value; UI.cff = CFF; S.confLimit = 0; saveUI(); renderConflicts(); }
   if (e.target.dataset && e.target.dataset.cf) { CF[e.target.dataset.cf] = e.target.value; UI.cf = CF; saveUI(); renderCritics(); }
