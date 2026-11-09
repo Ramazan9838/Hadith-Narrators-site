@@ -2976,7 +2976,7 @@ function ckVeri(n) {
   return d && kis ? { rec, d, kis, ck: d.ck } : null;
 }
 const ckKisi = (C, id) => { const x = C.kis[id]; return x ? { id, ad: x[0] || '', sohret: x[1] || '', vefat: x[2] || '', rutbe: x[3] || '', tabaka: x[4] || '' } : { id, ad: 'CK #' + id, sohret: '', vefat: '', rutbe: '', tabaka: '' }; };
-const CK_YOL = { senet: 'el-Câmi‘in naklettiği rivayetin CK’daki senedi', 'münekkit': 'münekkit sözleri el-Câmi‘de de geçiyor', 'köprü': 'HH’deki hoca/talebeleriyle ortak kişiler' };
+const CK_YOL = { senet: 'el-Câmi‘in naklettiği rivayetin CK’daki senedi', 'münekkit': 'münekkit sözleri el-Câmi‘de de geçiyor', 'köprü': 'HH’deki hoca/talebeleriyle ortak kişiler', elle: 'araştırmacı kararı (kaynağı okunarak)' };
 // Ad listesinden kişi eşleyici: baba adı yazılmışsa ism + baba ile; yalnız ism yazılmışsa listede o isimde tek kişi varsa
 function adEsleyici(L, adOf) {
   const hk = new Map(), hi = new Map();
