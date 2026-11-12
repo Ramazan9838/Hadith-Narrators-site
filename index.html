@@ -6,7 +6,7 @@
 <title>Cerh-Taʿdîl · Kaynak Kontrolü</title>
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self' https://api.github.com https://generativelanguage.googleapis.com; img-src data:; base-uri 'none'; form-action 'none'">
 <meta name="generator" content="cerh-tadil/build.py CTX 2.0.0">
-<meta name="cerh-motor" content="57e7b4506fa1632a">
+<meta name="cerh-motor" content="6084a55aa88eede8">
 <style>
 /* =========================================================
    Cerh-Ta‘dîl · Kaynak Kontrolü — arayüz stilleri
@@ -3656,8 +3656,9 @@ const modu = () => (DIS.dizin && DIS.dizin.hhRavi ? (MOD_TR[UI.mod] ? UI.mod : '
 function hhListe() { const L = DIS.dizin && DIS.dizin.hhRavi; const v = L && DIS.hl[L.liste.blob]; if (v && !DIS.hhIx) DIS.hhIx = new Map(v.satirlar.map(r => [r[0], r])); return v || null; }
 const hhSatir = h => (hhListe(), DIS.hhIx ? DIS.hhIx.get(h) || null : null);
 const volEt = v => v === HHV ? 'HH' : 'Cilt ' + v;
-const ravNo = n => isHHn(n) ? 'HH ' + n.hhNo : '#' + n.source_sequence;
-const seqEt = seq => seq >= HSEQ0 ? 'HH ' + (seq - HSEQ0) : String(seq);
+// Numarasız madde (kaynakta ◆ başlıklı, numarası yok; ayrıştırıcı 20000 + cilt × 1000 + sıra verir): önceki numaralı maddeyle birlikte gösterilir
+const ravNo = n => isHHn(n) ? 'HH ' + n.hhNo : n.unnumbered ? '◆ numarasız madde (#' + n.unnumbered.previous_sequence + ' sonrası) · ' + n.source_sequence : '#' + n.source_sequence;
+const seqEt = seq => seq >= HSEQ0 ? 'HH ' + (seq - HSEQ0) : seq >= CTP.UNNUMBERED_BASE ? '◆' + seq : String(seq);
 function hhListeYukle() {
   const L = DIS.dizin && DIS.dizin.hhRavi; if (!L) return Promise.resolve(null);
   const R = L.hukum, eksik = R ? Object.values(R.bloblar).filter(sha => !DIS.hhh[sha] && !DIS.busy['dis:hhh:' + sha] && !DIS.err['dis:hhh:' + sha]) : [];
@@ -9702,8 +9703,10 @@ const RAPOR = (() => {
     { m: 'مختصر الكامل', c: 'المقريزي', comp: 'ابن عدي' },
     { m: 'الكامل في الضعفاء', c: 'ابن عدي', extra: { 'الشيخ': 'ابن عدي', 'ابن حماد': 'الدولابي' } },
     { m: 'ضعفاء العقيلي', c: 'العقيلي', incl: true },
-    { m: 'تعليقات الدارقطني', c: 'الدارقطني', extra: { 'ابو الحسن': 'الدارقطني' } },
-    { m: 'المجروحين', c: 'ابن حبان', incl: true },
+    // Kullanıcı kararı 13.11.2026 (çapraz denetim 3, MC1): el-Mecrûhîn’de ve ona yazılan Ta‘lîkāt’ta yalın «قال أبو حاتم» müelliftir
+    // (İbn Hibbân’ın künyesi); nisbeli «أبو حاتم الرازي» er-Râzî kalır. Öteki kaynaklarda «أبو حاتم» er-Râzî’dir.
+    { m: 'تعليقات الدارقطني', c: 'الدارقطني', extra: { 'ابو الحسن': 'الدارقطني', 'ابو حاتم الرازي': 'أبو حاتم الرازي', 'ابو حاتم': 'ابن حبان' } },
+    { m: 'المجروحين', c: 'ابن حبان', incl: true, extra: { 'ابو حاتم الرازي': 'أبو حاتم الرازي', 'ابو حاتم': 'ابن حبان' } },
     { m: 'للدارقطني', c: 'الدارقطني', incl: true },
     { m: 'للنسائي', c: 'النسائي', incl: true },
     { m: 'الضعفاء للبخاري', c: 'البخاري', incl: true },
@@ -11364,6 +11367,7 @@ const RAPOR = (() => {
   const clean = s => String(s).replace(/[‌​]/g, '').replace(/ /g, ' ').trim();
 
   /* ---------- 1. Tarama: sayfalar ve madde başlıkları ---------- */
+  const UNNUMBERED_BASE = 20000;
   function scan(html, opts) {
     opts = opts || {};
     const pages = []; const re = /<div class=["']PageText["']>/g; let m; const st = [];
@@ -11442,7 +11446,23 @@ const RAPOR = (() => {
         entries.splice(i + 1, 0, ne); recovered.push(s); i++;
       }
     }
-    return { version: VERSION, volume, part, pages, entries, skipped, recovered, length: html.length };
+    // Numarasız maddeler (◆ başlıklı; kullanıcı kararı 13.11.2026, çapraz denetim 3 · MC2): altında kaynak bloğu (•) bulunan
+    // numarasız başlık ayrı bir râvi maddesidir (ör. «حبيب بن أبي حبيب كاتب مالك»). Kaynakta numarası olmadığı için sıra
+    // numarası ayrılmış aralıktan verilir: 20000 + cilt × 1000 + ciltteki sıra (el-Câmi‘ numaraları < 20000, HH ≥ 100000).
+    // Bu maddeler listenin sonuna eklenir ve ayrı dilimlenir (packages); numaralı maddelerin dizini ve dilimleri değişmez.
+    const unnumbered = []; let nk = 0;
+    for (const e of entries) {
+      const kalan = [];
+      for (const o of e.orphans) {
+        const ad = clean(String(o.title).replace(/<[^>]+>/g, '')).replace(/[\s.:،]+$/, '');
+        // Adı olmayan (yalnız rakamdan ibaret) başlık madde sayılmaz; «ayrı tutulan bölüm» olarak kalır
+        if (hasBlock(o) && /[\u0621-\u064A]{2}/.test(ad)) unnumbered.push({ seq: UNNUMBERED_BASE + (volume || 0) * 1000 + (++nk), name: ad, start: o.start, end: o.end, toc: o.toc, orphans: [], unnumbered: true, previous: e.seq });
+        else kalan.push(o);
+      }
+      e.orphans = kalan;
+    }
+    for (const u of unnumbered) entries.push(u);
+    return { version: VERSION, volume, part, pages, entries, skipped, recovered, unnumbered: unnumbered.length, length: html.length };
   }
 
   /* ---------- 2. Maddeleri kur ---------- */
@@ -11523,10 +11543,12 @@ const RAPOR = (() => {
         automatic: ident, corrected: {}, effective: JSON.parse(JSON.stringify(ident)), warnings, blocks,
         orphan_sections: orphans, unclassified: [], footnotes, identity_candidates: []
       };
+      if (en.unnumbered) narrators[nid].unnumbered = { previous_sequence: en.previous };
     }
     if (ents.length) {
       const a = ents[0].start, b = ents[ents.length - 1].end;
-      for (const p of sc.pages) if (p.source_end > a && p.source_start < b) {
+      const dagin = ents.some(e => e.unnumbered);   // numarasız maddeler cilde dağılmıştır: yalnız kendi sayfaları alınır
+      for (const p of sc.pages) if (dagin ? ents.some(e => p.source_end > e.start && p.source_start < e.end) : (p.source_end > a && p.source_start < b)) {
         const h = html.slice(p.source_start, p.source_end);
         pages[p.page_number] = { id: p.page_number, volume_id: vol, page_number: p.page_number, source_start: p.source_start, source_end: p.source_end, raw_html: h, raw_text: toText(h, true, true), clipped: 0 };
       }
@@ -11537,16 +11559,21 @@ const RAPOR = (() => {
   /* ---------- 3. Paketler ---------- */
   function packages(sc, size, skipUpTo) {
     size = size || 50;
-    const idx = []; sc.entries.forEach((e, i) => { if (!skipUpTo || e.seq > skipUpTo) idx.push(i); });
     const out = [];
-    for (let k = 0; k < idx.length; k += size) {
-      const i0 = idx[k], i1 = idx[Math.min(idx.length, k + size) - 1] + 1;
-      out.push({ i0, i1, from: sc.entries[i0].seq, to: sc.entries[i1 - 1].seq, count: i1 - i0 });
+    // Numaralı maddeler önce, numarasız maddeler ayrı dilimlerde sonra: numaralı dilimlerin sınırı ve kimliği değişmez
+    for (const numarasiz of [false, true]) {
+      const idx = []; sc.entries.forEach((e, i) => { if (!!e.unnumbered === numarasiz && (!skipUpTo || e.seq > skipUpTo)) idx.push(i); });
+      for (let k = 0; k < idx.length; k += size) {
+        const i0 = idx[k], i1 = idx[Math.min(idx.length, k + size) - 1] + 1;
+        const q = { i0, i1, from: sc.entries[i0].seq, to: sc.entries[i1 - 1].seq, count: i1 - i0 };
+        if (numarasiz) q.unnumbered = true;
+        out.push(q);
+      }
     }
     return out;
   }
 
-  return { VERSION, scan, build, packages, toText, parseReference, AUTHORS };
+  return { VERSION, scan, build, packages, toText, parseReference, AUTHORS, UNNUMBERED_BASE };
 });
 
 </script>
