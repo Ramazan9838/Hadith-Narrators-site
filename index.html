@@ -6,7 +6,7 @@
 <title>Cerh-Taʿdîl · Kaynak Kontrolü</title>
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self' https://api.github.com https://generativelanguage.googleapis.com; img-src data:; base-uri 'none'; form-action 'none'">
 <meta name="generator" content="cerh-tadil/build.py CTX 2.0.0">
-<meta name="cerh-motor" content="765798d480d89f89">
+<meta name="cerh-motor" content="43e941103864de49">
 <style>
 /* =========================================================
    Cerh-Ta‘dîl · Kaynak Kontrolü — arayüz stilleri
@@ -9706,7 +9706,7 @@ const RAPOR = (() => {
     // Kullanıcı kararı 13.11.2026 (çapraz denetim 3, MC1): el-Mecrûhîn’de ve ona yazılan Ta‘lîkāt’ta yalın «قال أبو حاتم» müelliftir
     // (İbn Hibbân’ın künyesi); nisbeli «أبو حاتم الرازي» er-Râzî kalır. Öteki kaynaklarda «أبو حاتم» er-Râzî’dir.
     { m: 'تعليقات الدارقطني', c: 'الدارقطني', extra: { 'ابو الحسن': 'الدارقطني', 'ابو حاتم الرازي': 'أبو حاتم الرازي', 'ابو حاتم': 'ابن حبان' } },
-    { m: 'المجروحين', c: 'ابن حبان', incl: true, extra: { 'ابو حاتم الرازي': 'أبو حاتم الرازي', 'ابو حاتم': 'ابن حبان' } },
+    { m: 'المجروحين', c: 'ابن حبان', incl: true, extra: { 'ابو حاتم الرازي': 'أبو حاتم الرازي', 'ابو حاتم': 'ابن حبان', 'ابو نعيم': 'أبو نعيم الفضل بن دكين' } },   // yalın «أبو نعيم»: İbn Hibbân (ö. 354) el-İsfahânî’den (ö. 430) nakledemez
     { m: 'للدارقطني', c: 'الدارقطني', incl: true },
     { m: 'للنسائي', c: 'النسائي', incl: true },
     { m: 'الضعفاء للبخاري', c: 'البخاري', incl: true },
@@ -10241,6 +10241,22 @@ const RAPOR = (() => {
   add('C', 2, 'gaflet', 'Hadisi bilmez', 0.8, ['لا يعقل (?:الحديث|ما يقول)', '(?:لم يكن|ليس) (?:بصيرا بالحديث|بصاحب حديث|صاحب حديث)', 'لم تكن له عنايه بالحديث', 'لم يكن يعرف الحديث', 'غلب عليه الصلاح فغفل عن الحفظ', 'كان متساهلا(?: في الحديث)?'], { nt: KC2 });
   // Terk, nehiy, rivayeti kabul etmeme
   add('C', 4, 'terk', 'Hadisini terk ettik / sildik', 0.85, ['(?:قد )?تركنا حديثه(?: وخرقناه)?', '(?:خرقنا|خرقت|خرقنا) حديثه(?: منذ (?:حين|دهر))?', 'خططت علي حديثه', '(?:ضربت|اضربوا|اضرب) علي(?:ه| حديث \\S+| حديثه)', 'كتبت حديثه وطرحته', 'ادركته وقد كبر فتركته', 'لم يقبل الناس حديثه', 'لم يرض الناس حديثه', '(?:انكر|ينكر) الائمه (?:حديثه|احاديثه)', 'اجتنبه الناس', 'تركت حديثه', 'فاستحق الترك', 'فتركت حديثه'], { nt: KC2 });
+  // İç çapraz denetim (13.11.2026): el-Mecrûhîn bloklarında yalnız zımnî cerh üreten tercümelerin okunmasıyla eklenen İbn Hibbân kalıpları
+  const ICD = 'İç çapraz denetim (asıl eserde kaçırılan müellif hükmü). ';
+  add('C', 3, 'terk', 'İhticâc bâtıl / terke müstehak (İbn Hibbân)', 0.85, ['(?:فبطل|بطل) الاحتجاج (?:بكل ما روي|بما روي|بخبره|باخباره|برواياته|بهما|بهم)', '(?:فاستحق|استحق) ترك الاحتجاج (?:به|بهما|بخبره|بحديثه)',
+    '(?:فاستحق|استحق) الترك', '(?:فوجب|ووجب|وجب) مجانبه (?:حديثه|روايته|رواياته|ما انفرد)', 'يستحق مجانبه ما انفرد', 'لا (?:يجوز|يحل) الاحتجاج (?:بروايته|برواياته|بهما|بهم)',
+    'لا يحل ذكره في الكتب الا علي (?:سبيل|جهه) (?:القدح فيه|الانباء عن امره|التعجب)', 'صار ممن لا يعتمد عليه'], { nt: ICD });
+  add('X', 0, '', '', 0, ['سرق(?:ه|ها|هما)? من (?:ال)?(?:ثقه|ثقات)', 'يسرق(?:ه|ها)? من (?:ال)?(?:ثقه|ثقات)']);   // «حديث سرقه من ثقة»: “sika” râvinin vasfı değildir
+  add('C', 1, 'muhalefe', 'Mütâbaatı yok (tesniye / çoğul / kayıtlı biçimler)', 0.6, ['لا يتابع(?:ه احد)? (?:عليهما|عليها)(?:،? ولا علي كثير من حديثه)?', 'لا يتابعه (?:احد )?عليه', 'لا يتابع من وجه يثبت'], { nt: ICD + 'Ukaylî ve İbn Adî’de çoğunlukla anılan hadisler içindir.' });
+  add('C', 2, 'mubhem', 'Teferrüdüyle ihticâc hoş değil (İbn Hibbân)', 0.8, ['(?:لا|فلا) يعجبني الاحتجاج (?:به|بخبره|بحديثه|بروايته)(?: اذا انفرد)?'], { nt: ICD });
+  add('C', 2, 'muhalefe', 'Rivayeti münker / cemaate muhalif (İbn Hibbân)', 0.8, ['منكر الروايه(?: جدا)?', 'خالف الناس في كل ما روي'], { nt: ICD });
+  add('C', 2, 'muhalefe', 'Hadislerinin bir kısmı münker / bâtıl', 0.8, ['في بعض حديثه (?:ال)?مناكير', '(?:يحدث|حدث) (?:' + TKR + ' ){0,8}?بالبواطيل', 'له (?:' + TKR + ' ){0,6}?غير حديث انكر عليه'], { nt: ICD });
+  add('C', 2, 'mubhem', 'Zayıflar arasında sayılır', 0.8, ['(?:وهو |هو )?في عداد الضعفاء'], { nt: ICD });
+  add('C', 3, 'terk', 'Rivayetinden uzak durmak gerekir (İbn Hibbân)', 0.85, ['(?:فوجب|ووجب|وجب) مجانبه ما (?:يروي|روي)(?: من الاحاديث)?', '(?:فبطل|بطل) الاحتاج به'], { nt: ICD });
+  add('C', 4, 'terk', 'Zâhibü’l-hadîs (tesniye)', 0.9, ['ذاهبا الحديث'], { nt: ICD });
+  add('T', 1, 'itibar', 'Hadisleri yazılır (tesniye / çoğul)', 0.8, ['(?:ممن )?يكتب (?:حديثهما|حديثهم)'], { nt: ICD });
+  add('C', 5, 'kizb', 'Hocalarına hadis uydurur', 0.9, ['يضع (?:عليهم|عليه|عليهما) الحديث(?: وضعا)?'], { nt: ICD });
+  add('C', 4, 'terk', 'Metrûk (yazım bozukluğu)', 0.85, ['مترو ك(?: الحديث)?'], { nt: ICD + 'Kaynak metinde «مترو ك» biçiminde bölünmüş yazım.' });
   add('C', 3, 'terk', 'Ondan rivayete ehil değil', 0.85, ['(?:لم يكن|ليس) (?:اهلا|باهل) ان يروي عنه', 'لا (?:يحدث|يروي) عنه من (?:يبصر الحديث|فيه خير)', 'لا ينبغي ان يحدث عنه', 'لا يحمل عن مثله الحديث', 'لا يحل ذكره الا للقدح فيه', 'لا يجوز الاحتجاج بما (?:روي|انفرد به)', '(?:لا|فلا) (?:يحتج|ينبغي ان يحتج) بما (?:انفرد به|روي|ينفرد به)', '(?:فوجب|ووجب) ترك الاحتجاج به', '(?:فبطل|بطل) الاحتجاج (?:به|بروايته|بحديثه)', 'سقط الاحتجاج بما انفرد به', 'لا يدخل في الصحيح', 'فخرج عن حد الاحتجاج(?: به| بافراده)?'], { nt: KC2 });
   add('C', 2, 'mubhem', 'Ondan razı değildi', 0.8, ['(?:فلم|لم) يكن يرضاه', 'لم يكونوا يرتضونه', 'كان (?<cr>[^\\s:.،,«»"]+(?: [^\\s:.،,«»"]+){0,3}?) لا (?:يرضي|يعبا ب)\\S*'], { nt: KC2 });
   add('C', 2, 'mubhem', 'Mu‘temed değil', 0.8, ['ليس بالذي يعتمد عليه', '(?:لم يكن|ليس) ممن يعتمد عليه', 'ما كان (?:' + TKR + ' ){1,4}?بالذي يعتمد عليه', '(?:غير|ليس) (?:موثوق|موثق)(?: به| عندهم)?', 'لم يكن يوثق به', 'لم يكن بالمحمود(?: فيما روي)?'], { nt: KC2 });
@@ -10631,6 +10647,14 @@ const RAPOR = (() => {
     // “ومرة قال:” → önceki münekkit
     const re2 = /(?:و)?مره\s+قال\s*:/g; let r2;
     while ((r2 = re2.exec(n))) out.push({ pos: r2.index, end: r2.index + r2[0].length, verb: 'قال', type: 'again' });
+    // «وكان يحيى بن معين يقول: …», «كان شعبة يقول فيه: …» → adı geçen münekkidin sözü (iç çapraz denetim, 13.11.2026; önce eser müellifine yazılıyordu)
+    const re2k = new RegExp('(?<![' + AL + '])(?:و|ف)?كان\\s+', 'g');
+    while ((r2 = re2k.exec(n))) {
+      const p0 = r2.index + r2[0].length, rk = parseNames(n, p0, conv, 1); if (!rk.names.length || !rk.names.some(x => x.canon)) continue;
+      const yk = /^[\s،,]*(?:رحمه الله\s+)?يقول(?![\u0621-\u064A])(?:\s+(?:فيه|عنه|لنا|لي))?\s*:?/.exec(n.slice(rk.end, rk.end + 30)); if (!yk) continue;
+      if (out.some(x => x.type === 'named' && x.pos >= r2.index && x.pos <= rk.end + yk[0].length)) continue;   // aynı yerde başka kuralla tanınmışsa yinelenmez
+      out.push({ pos: r2.index, end: rk.end + yk[0].length, verb: 'يقول', type: 'named', names: rk.names, via: 'كان … يقول' });
+    }
     // «وفي موضع آخر:», «وفي رواية أبي داود عنه:», «وفي كتاب ابن عدي عنه:» → önceki münekkit (el-İktifâ’da sık; toparlama 4)
     const re2b = /(?<![\u0621-\u064A])و?في\s+(?:(?:موضع|مكان)\s+اخر|روايه\s+[^:.\n]{1,30}?\s+عنه|كتاب\s+[^:.\n]{1,30}?\s+عنه)\s*:/g;
     while ((r2 = re2b.exec(n))) out.push({ pos: r2.index, end: r2.index + r2[0].length, verb: 'قال', type: 'again' });
@@ -10967,12 +10991,9 @@ const RAPOR = (() => {
       // «إسناده ضعيف», «بإسناد لين», «بأسانيد ثبت»: hüküm râvi hakkında değil isnad hakkındadır → rivâyet hükmü (13.11.2026, çapraz denetim 1)
       { const on = n.slice(Math.max(0, t.c.start - 30), t.c.start);
         // «في إسناده ضعيف» (isnadda zayıf râvi) ve «يأتي بإسناد لا يتابع عليه» (râvinin âdeti) bu kurala girmez
-        if (t.e && 'TC'.includes(t.e.k) && /(?:^|[\s،,(:])(?:و|ف)?(?:(?:اسناد|اسانيد)(?:ه|ها|هما|هم)|(?:ب|ال)(?:اسناد|اسانيد)|في\s+اسناد)\s+$/.test(on) &&
-            /^(?:كلها\s+)?(?:فيه\s+)?(?:ال)?(?:لين|ضعيف|ضعاف|واه|واهي|ثبت|صالح|جيد|جياد|مظلم|موضوع|صحيح|صحاح|حسن|حسان|مضطرب|منكر|مناكير)(?:ه|ة|ا|ات)?$/.test(n.slice(t.c.start, t.c.end).trim()) &&   // yalnız isnadı niteleyen sıfat («يقلب الأسانيد فاستحق الترك» değil)
-            !/(?:في|من)\s+(?:اسناد(?:ه|ها|هما)|الاسناد)\s+$/.test(on) && !/(?:ياتي|يجيء|ياتون|جاء|اتي)\s+(?:ب|ال)?(?:اسناد|اسانيد)\s+$/.test(on)) t.e = Object.assign({}, t.e, { k: 'R' }); }
-      // «وهذا الحديث [بهذا الإسناد] لا أعرفه/لا يُعرف إلا…»: teferrüd beyanıdır, râvinin cehâleti değil → rivâyet hükmü (13.11.2026, ikiz taraması)
-      if (t.e && t.e.k === 'J' && /^لا\s+(?:[ينا]عرف|[ين]علم)(?:ه|ها)?$/.test(n.slice(t.c.start, t.c.end).trim()) &&
-          /(?:(?:هذا|هذه)\s+(?:الحديث|الاحاديث|الخبر|الاخبار)(?:\s+ايضا)?(?:\s+بهذا\s+الاسناد)?|بهذا\s+الاسناد)[،,]?\s+$/.test(n.slice(Math.max(0, t.c.start - 45), t.c.start))) t.e = Object.assign({}, t.e, { k: 'R' });
+        if (t.e && 'TC'.includes(t.e.k) && /(?:^|[\s،,(:])(?:و|ف)?(?:اسناد(?:ه|ها|هما)|(?:ب|ال)(?:اسناد|اسانيد))\s+$/.test(on) &&
+            /^(?:كلها\s+)?(?:ال)?(?:لين|ضعيف|ضعاف|واه|واهي|ثبت|صالح|جيد|جياد|مظلم|موضوع|صحيح|صحاح|حسن|حسان|مضطرب|منكر|مناكير)(?:ه|ة|ا|ات)?$/.test(n.slice(t.c.start, t.c.end).trim()) &&   // yalnız isnadı niteleyen sıfat («يقلب الأسانيد فاستحق الترك» değil)
+            !/(?:في|من)\s+(?:اسناد(?:ه|ها|هما)?|الاسناد)\s+$/.test(on) && !/(?:ياتي|يجيء|ياتون|جاء|اتي)\s+(?:ب|ال)?(?:اسناد|اسانيد)\s+$/.test(on)) t.e = Object.assign({}, t.e, { k: 'R' }); }
       const { c, e } = t;
       // Tek kelimelik lafız bir adın parçasıysa («عبد الله بن مغفل», «علي بن المحسن بن متروك», «أبو لينة») hüküm değildir (12.11.2026).
       // «كذاب ابن كذاب» ve «ثقة ابن ثقة» türü babaya yönelik hükümler hariç.
@@ -11092,6 +11113,26 @@ const RAPOR = (() => {
           res.basis = 'müellif';
           if (conv.comp) { t.flags.push('derleme'); why += ' Derleme/ihtisar eser: hükmün asıl sahibi başkası olabilir' + (typeof conv.comp === 'string' ? ' (muhtemelen ' + conv.comp + ').' : '.'); }
           t.reasons.push(why);
+        }
+      }
+      // İç çapraz denetim (13.11.2026): el-Kâmil’de «وأرجو أنه لا بأس به», «فإني أرجو أنه …» tercüme sonundaki müellif değerlendirmesidir
+      // (İbn Adî’nin üslûbu); önceki haberin söz sahibine ya da belirsize yazılmaz. «قال: أرجو …» (cevap) bu kurala girmez.
+      if (defaultCanon === 'ابن عدي' && !(res.critics.length === 1 && res.critics[0].canon === 'ابن عدي')) {
+        const pre = n.slice(Math.max(0, c.start - 16), c.start), ph = n.slice(c.start, c.end);
+        if (/(?:^|\s)(?:وارجو|فارجو|فاني ارجو|واني ارجو)(?: انه| ان)?\s*$/.test(pre) || (/^ارجو ان/.test(ph) && /(?:^|\s)(?:و|ف|فاني |واني )$/.test(pre))) {
+          res.critics = [{ canon: 'ابن عدي', written: '' }]; res.basis = 'müellif';
+          t.flags = t.flags.filter(f => f !== 'söz-sahibi-belirsiz' && f !== 'isnad-içi' && f !== 'fiil-oznesi' && !/^anon:/.test(f)); t.flags.push('muellif-uslubu');
+          t.reasons.push('«وأرجو أنه …»: İbn Adî’nin tercüme sonundaki kendi değerlendirmesi.');
+        }
+      }
+      // el-Kâmil: aynı cümlede İbn Adî’nin birinci şahıs anlatımı varsa («ولفلان غير ما ذكرت», «لم أر له حديثا منكرا», «هذا هو عندي»,
+      // «مع ضعفه يكتب حديثه») ve söz sahibi çözülememişse hüküm müellifindir. Adı çözülmüş münekkide yazılmış hükme dokunulmaz.
+      if (defaultCanon === 'ابن عدي' && (!res.critics.some(x => x.canon) || (res.basis === 'bağlam' && !res.critics.some(x => x.canon === 'ابن عدي')))) {
+        let w = n.slice(Math.max(0, c.start - 170), c.start); const kes = Math.max(w.lastIndexOf('. '), w.lastIndexOf('.\n')); if (kes >= 0) w = w.slice(kes + 1);
+        if (/(?:غير ما ذكرت|مما لم اذكر|لم اذكرها|التي ذكرتها|ما ذكرته|لم ار (?:له|في|ب)|لا اعرف له|لا اعلم له|هذا هو عندي|وهو عندي|عندي انه|مع ضعفه)/.test(w) && !/(?:قال|فقال|يقول)\s*:?\s*$/.test(w)) {
+          res.critics = [{ canon: 'ابن عدي', written: '' }]; res.basis = 'müellif';
+          t.flags = t.flags.filter(f => f !== 'söz-sahibi-belirsiz' && f !== 'isnad-içi' && f !== 'fiil-oznesi' && !/^anon:/.test(f)); t.flags.push('muellif-uslubu');
+          t.reasons.push('Aynı cümlede İbn Adî’nin birinci şahıs anlatımı: tercüme sonundaki kendi değerlendirmesi.');
         }
       }
       // Lisân’ın “intehâ”ya kadarki kısmı Mîzân’ın metnidir: râvinin Mîzân kaydı varsa söz oradan sayılır (CTKR.raviSonrasi)
@@ -11513,11 +11554,17 @@ const RAPOR = (() => {
         const b1 = k + 1 < bs.length ? bs[k + 1] : raw.length;
         const bhtml = raw.slice(b0, b1);
         const text = toText(bhtml, false, false);
-        const lb = /\r?\n/.exec(text); const cs = lb ? lb.index : text.length;
+        const lb = /\r?\n/.exec(text); let cs = lb ? lb.index : text.length;
         const ref = parseReference(text) || { reference_text: '', start: text.length, source_name: '', source_locator: '', source_volume: null, source_page: null, malformed: false };
         let title = text.slice(0, cs);
         const ti = title.lastIndexOf('['); if (ti > 0 && ref.start < cs) title = title.slice(0, ti);
         title = clean(title.replace(/\[[^\[\]]*\]/g, ' ')).replace(/^•\s*/, '').replace(/\s{2,}/g, ' ').replace(/[.\s]+$/, '');   // rumûz ([ت]) başlıktan atılır
+        // İç çapraz denetim (13.11.2026): içerik boşken hüküm başlık satırında kalmışsa («إسماعيل بن نشيط. ليس بالقوي [الضعفاء …]»),
+        // ilk «. » ya da «: » ayracından sonrası içerik sayılır; başlık yalnız addır. İçeriği olan bloklara dokunulmaz.
+        if (ref.start <= cs || !/[\u0621-\u064A]/.test(text.slice(cs, ref.start))) {
+          const bas = text.slice(0, Math.min(cs, ref.start)); const ay = /^(.{6,}?)[.:]\s+(?=\S)/.exec(bas);
+          if (ay && /[\u0621-\u064A]{2}/.test(bas.slice(ay[0].length)) && !/^(?:\s*[\[(]|ويقال|وقيل|يقال)/.test(bas.slice(ay[0].length))) { cs = ay[0].length; title = clean(text.slice(0, ay[1].length).replace(/\[[^\[\]]*\]/g, ' ')).replace(/^•\s*/, '').replace(/\s{2,}/g, ' ').replace(/[.\s]+$/, ''); }
+        }
         const ce = ref.start >= cs ? ref.start : cs;          // künye başlık satırındaysa içerik boştur
         const s0 = en.start + b0, s1 = en.start + b1;
         const eff = {
