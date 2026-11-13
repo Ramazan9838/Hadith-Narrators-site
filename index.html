@@ -6,7 +6,7 @@
 <title>Cerh-Taʿdîl · Kaynak Kontrolü</title>
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self' https://api.github.com https://generativelanguage.googleapis.com; img-src data:; base-uri 'none'; form-action 'none'">
 <meta name="generator" content="cerh-tadil/build.py CTX 2.0.0">
-<meta name="cerh-motor" content="6f86a34da5a37013">
+<meta name="cerh-motor" content="315e4b3f68574a03">
 <style>
 /* =========================================================
    Cerh-Ta‘dîl · Kaynak Kontrolü — arayüz stilleri
@@ -9511,14 +9511,14 @@ const RAPOR = (() => {
     ['ابن منده', 'Ebû Abdillah İbn Mende', 395, '', ['ابو عبد الله بن منده', 'ابن منده'], ''],
     ['السليماني', 'Ebü’l-Fazl es-Süleymânî', 404, '', ['السليماني', 'ابو الفضل السليماني'], 'Zehebî: büyüklere tan eden bir kitabı vardır, teferrüd ettiği söz dinlenmez (Cüdey‘, Tahrîr I, 607).'],
     ['الإدريسي', 'Ebû Sa‘d el-İdrîsî', 405, '', ['الادريسي', 'ابو سعد الادريسي'], 'Târîhu Semerkand sahibi.'],
-    ['ابن مردويه', 'İbn Merdûyeh', 410, '', ['ابن مردويه'], ''],
+    ['ابن مردويه', 'İbn Merdûyeh', 410, '', ['ابن مردويه', 'ابو بكر بن مردويه'], ''],
     ['البرقاني', 'Ebû Bekr el-Berkānî', 425, '', ['البرقاني'], ''],
     ['الأزهري', 'Ebü’l-Kāsım el-Ezherî', 435, '', ['ابو القاسم الازهري', 'الازهري'], ''],
     ['العتيقي', 'Ebü’l-Hasen el-Atîkī', 441, '', ['العتيقي'], ''],
     ['الخليلي', 'Ebû Ya‘lâ el-Halîlî', 446, '', ['الخليلي', 'ابو يعلي الخليلي'], 'el-İrşâd sahibi.'],
     ['البيهقي', 'el-Beyhakī', 458, '', ['البيهقي'], ''],
     ['عبد العزيز الكتاني', 'Abdülazîz el-Kettânî', 466, '', ['عبد العزيز الكتاني', 'الكتاني'], ''],
-    ['ابن طاهر المقدسي', 'İbn Tâhir el-Makdisî', 507, '', ['ابن طاهر', 'محمد بن طاهر'], ''],
+    ['ابن طاهر المقدسي', 'İbn Tâhir el-Makdisî', 507, '', ['ابن طاهر', 'محمد بن طاهر', 'ابو الفضل بن طاهر'], ''],
     ['شجاع الذهلي', 'Şücâ‘ ez-Zühlî', 507, '', ['شجاع الذهلي', 'شجاع بن فارس'], ''],
     ['يحيى بن منده', 'Yahyâ b. Mende', 511, '', ['يحيي بن منده'], ''],
     ['ابن ناصر', 'İbn Nâsır es-Selâmî', 550, '', ['ابن ناصر'], ''],
@@ -9544,6 +9544,56 @@ const RAPOR = (() => {
     // yalın «شريك» (Şerîk b. Abdullah b. Ebî Nemir) ve yalın «أبو نعيم» (el-Isfahânî; kullanıcı kararı: belirsiz) bağlanmaz.
     ['عثمان بن سعيد الدارمي', 'Osmân b. Saîd ed-Dârimî', 280, '', ['عثمان بن سعيد الدارمي', 'عثمان الدارمي', 'عثمان بن سعيد بن خالد السجستاني', 'ابو سعيد الدارمي', 'عثمان بن سعيد'], 'İbn Maîn’e soruları (Târîh) meşhurdur; «قال عثمان: …» çoğu yerde soru sonrası kendi yorumudur.'],
     ['شريك بن عبد الله النخعي', 'Şerîk b. Abdullah en-Nehaî', 177, '', ['شريك بن عبد الله النخعي', 'شريك القاضي', 'شريك النخعي'], ''],
+    // Envanter (13.11.2026): söz sahibi yazılı olup sözlükte bulunmayan, başkasıyla karışma ihtimali düşük adlar (kaynak/denetim/soz-sahibi-yazili-ad.csv).
+    // Yalın «الحميدي», «يحيى بن يحيى», «أبو خيثمة», «أبو عاصم», «ابن عوف», «جرير», «هشام» bağlanmaz (birden çok kişi).
+    ['عامر الشعبي', 'Âmir eş-Şa‘bî', 104, '', ['الشعبي', 'عامر الشعبي', 'عامر بن شراحيل'], ''],
+    ['محمد بن سيرين', 'Muhammed b. Sîrîn', 110, '', ['محمد بن سيرين', 'ابن سيرين'], ''],
+    ['رقبة بن مصقلة', 'Rakabe b. Maskale', 129, '', ['رقبه بن مصقله'], ''],
+    ['عبد الله بن عون', 'Abdullah b. Avn', 151, '', ['عبد الله بن عون', 'ابن عون'], ''],
+    ['ابن أبي ذئب', 'İbn Ebû Zi’b', 159, '', ['ابن ابي ذيب', 'محمد بن عبد الرحمن بن ابي ذيب'], ''],
+    ['زائدة بن قدامة', 'Zâide b. Kudâme', 161, '', ['زايده بن قدامه'], ''],
+    ['وهيب بن خالد', 'Vüheyb b. Hâlid', 165, '', ['وهيب بن خالد'], ''],
+    ['هشيم بن بشير', 'Hüşeym b. Beşîr', 183, '', ['هشيم بن بشير', 'هشيم'], ''],
+    ['عباد بن العوام', 'Abbâd b. el-Avvâm', 185, '', ['عباد بن العوام'], ''],
+    ['عيسى بن يونس', 'Îsâ b. Yûnus', 187, '', ['عيسي بن يونس'], ''],
+    ['جرير بن عبد الحميد', 'Cerîr b. Abdülhamîd', 188, '', ['جرير بن عبد الحميد'], ''],
+    ['إسماعيل بن علية', 'İsmâîl b. Uleyye', 193, '', ['اسماعيل بن عليه', 'ابن عليه', 'اسماعيل بن ابراهيم بن عليه'], ''],
+    ['أبو بكر بن عياش', 'Ebû Bekir b. Ayyâş', 193, '', ['ابو بكر بن عياش'], ''],
+    ['غندر', 'Gunder (Muhammed b. Ca‘fer)', 193, '', ['غندر', 'محمد بن جعفر غندر'], ''],
+    ['حفص بن غياث', 'Hafs b. Gıyâs', 194, '', ['حفص بن غياث'], ''],
+    ['الوليد بن مسلم', 'el-Velîd b. Müslim', 195, '', ['الوليد بن مسلم'], ''],
+    ['هشام بن يوسف الصنعاني', 'Hişâm b. Yûsuf es-San‘ânî', 197, '', ['هشام بن يوسف الصنعاني', 'هشام بن يوسف'], ''],
+    ['أبو أسامة', 'Ebû Üsâme Hammâd b. Üsâme', 201, '', ['ابو اسامه', 'حماد بن اسامه'], ''],
+    ['أبو أحمد الزبيري', 'Ebû Ahmed ez-Zübeyrî', 203, '', ['ابو احمد الزبيري'], ''],
+    ['يحيى بن الضريس', 'Yahyâ b. ed-Durays', 203, '', ['يحيي بن الضريس'], ''],
+    ['أبو داود الطيالسي', 'Ebû Dâvûd et-Tayâlisî', 204, '', ['ابو داود الطيالسي'], ''],
+    ['عبد الصمد بن عبد الوارث', 'Abdüssamed b. Abdülvâris', 207, '', ['عبد الصمد بن عبد الوارث'], ''],
+    ['عبد الرزاق الصنعاني', 'Abdürrezzâk es-San‘ânî', 211, '', ['عبد الرزاق بن همام', 'عبد الرزاق الصنعاني', 'عبد الرزاق'], ''],
+    ['أبو عاصم النبيل', 'Ebû Âsım en-Nebîl', 212, '', ['ابو عاصم النبيل', 'الضحاك بن مخلد'], ''],
+    ['موسى بن إسماعيل التبوذكي', 'Mûsâ b. İsmâîl et-Tebûzekî', 223, '', ['موسي بن اسماعيل التبوذكي', 'موسي بن اسماعيل', 'التبوذكي'], ''],
+    ['سليمان بن حرب', 'Süleymân b. Harb', 224, '', ['سليمان بن حرب'], ''],
+    ['أحمد بن يونس', 'Ahmed b. Yûnus', 227, '', ['احمد بن يونس', 'احمد بن عبد الله بن يونس'], ''],
+    ['أبو الوليد الطيالسي', 'Ebü’l-Velîd et-Tayâlisî', 227, '', ['ابو الوليد الطيالسي', 'هشام بن عبد الملك الطيالسي'], ''],
+    ['أبو بكر بن أبي شيبة', 'Ebû Bekir b. Ebû Şeybe', 235, '', ['ابو بكر بن ابي شيبه', 'عبد الله بن محمد بن ابي شيبه'], ''],
+    ['إبراهيم بن المنذر الحزامي', 'İbrâhîm b. el-Münzir el-Hizâmî', 236, '', ['ابراهيم بن المنذر الحزامي', 'ابراهيم بن المنذر'], ''],
+    ['محمود بن غيلان', 'Mahmûd b. Gaylân', 239, '', ['محمود بن غيلان'], ''],
+    ['قتيبة بن سعيد', 'Kuteybe b. Saîd', 240, '', ['قتيبه بن سعيد', 'قتيبه'], ''],
+    ['علي بن حجر', 'Ali b. Hucr', 244, '', ['علي بن حجر'], ''],
+    ['مجاهد بن موسى', 'Mücâhid b. Mûsâ', 244, '', ['مجاهد بن موسي'], ''],
+    ['بندار', 'Bündâr (Muhammed b. Beşşâr)', 252, '', ['بندار', 'محمد بن بشار'], ''],
+    ['محمد بن المثنى', 'Muhammed b. el-Müsennâ', 252, '', ['محمد بن المثني', 'ابو موسي الزمن'], ''],
+    ['أحمد بن سيار المروزي', 'Ahmed b. Seyyâr el-Mervezî', 268, '', ['احمد بن سيار'], ''],
+    ['محمد بن عوف الحمصي', 'Muhammed b. Avf el-Hımsî', 272, '', ['محمد بن عوف الحمصي', 'محمد بن عوف'], ''],
+    ['ابن قتيبة', 'İbn Kuteybe', 276, '', ['ابن قتيبه'], ''],
+    ['ابن أبي عاصم', 'İbn Ebû Âsım', 287, '', ['ابن ابي عاصم'], ''],
+    ['ابن وضاح', 'İbn Vaddâh', 287, '', ['ابن وضاح', 'محمد بن وضاح'], ''],
+    ['ابن أبي داود', 'Ebû Bekir b. Ebû Dâvûd', 316, '', ['ابن ابي داود', 'ابو بكر بن ابي داود'], ''],
+    ['ابن السكن', 'İbnü’s-Seken', 353, '', ['ابن السكن', 'ابو علي بن السكن'], ''],
+    ['المرزباني', 'el-Merzübânî', 384, '', ['المرزباني'], ''],
+    ['أبو الوليد الباجي', 'Ebü’l-Velîd el-Bâcî', 474, '', ['ابو الوليد الباجي'], ''],
+    ['أبو موسى المديني', 'Ebû Mûsâ el-Medînî', 581, '', ['ابو موسي المديني'], ''],
+    ['ابن الدبيثي', 'İbnü’d-Dübeysî', 637, '', ['ابن الدبيثي', 'الدبيثي'], ''],
+    ['ابن الأبار', 'İbnü’l-Ebbâr', 658, '', ['ابن الابار'], ''],
     ['المفضل بن غسان الغلابي', 'el-Mufaddal b. Gassân el-Ğallâbî', 246, '', ['المفضل بن غسان الغلابي', 'المفضل بن غسان', 'المفضل الغلابي'], 'Târîh’i büyük ölçüde İbn Maîn’den nakildir.'],
     ['أبو نعيم الفضل بن دكين', 'Ebû Nuaym el-Fazl b. Dükeyn', 219, '', ['الفضل بن دكين', 'ابو نعيم الفضل بن دكين', 'ابو نعيم الملائي'], 'Yalın «أبو نعيم» bağlanmaz (el-Isfahânî ile karışır).'],
     ['مالك بن أنس', 'Mâlik b. Enes', 179, '', ['مالك بن انس', 'الامام مالك'], 'Yalın «مالك» bağlanmaz (Mâlik b. Dînâr, Ebû Mâlik … ile karışır). Rivayet ettiği râvi sika sayılır; “leyse bi-sika”sı bazen sadûk ve i‘tibâr ehli içindir (sitede −1) (Cüdey‘, Tahrîr I, 223, 623–624).'],
@@ -10255,6 +10305,9 @@ const RAPOR = (() => {
   add('C', 3, 'terk', 'Rivayetinden uzak durmak gerekir (İbn Hibbân)', 0.85, ['(?:فوجب|ووجب|وجب) مجانبه ما (?:يروي|روي)(?: من الاحاديث)?', '(?:فبطل|بطل) الاحتاج به'], { nt: ICD });
   add('C', 4, 'terk', 'Zâhibü’l-hadîs (tesniye)', 0.9, ['ذاهبا الحديث'], { nt: ICD });
   add('T', 1, 'itibar', 'Hadisleri yazılır (tesniye / çoğul)', 0.8, ['(?:ممن )?يكتب (?:حديثهما|حديثهم)'], { nt: ICD });
+  add('C', 2, 'muhalefe', 'Münker (Buhârî’nin kısa hükmü)', 0.7, ['منكر'], { solo: true, bukh: true });
+  add('C', 2, 'muhalefe', 'Hadisi sahih değil (Buhârî’nin kısa hükmü)', 0.7, ['(?:لم|لا) يصح'], { solo: true, bukh: true });
+  add('C', 2, 'muhalefe', 'Münker hadisler (Buhârî’nin kısa hükmü)', 0.75, ['احاديث مناكير'], { solo: true, bukh: true });
   add('C', 5, 'kizb', 'Hocalarına hadis uydurur', 0.9, ['يضع (?:عليهم|عليه|عليهما) الحديث(?: وضعا)?'], { nt: ICD });
   add('C', 4, 'terk', 'Metrûk (yazım bozukluğu)', 0.85, ['مترو ك(?: الحديث)?'], { nt: ICD + 'Kaynak metinde «مترو ك» biçiminde bölünmüş yazım.' });
   add('C', 3, 'terk', 'Ondan rivayete ehil değil', 0.85, ['(?:لم يكن|ليس) (?:اهلا|باهل) ان يروي عنه', 'لا (?:يحدث|يروي) عنه من (?:يبصر الحديث|فيه خير)', 'لا ينبغي ان يحدث عنه', 'لا يحمل عن مثله الحديث', 'لا يحل ذكره الا للقدح فيه', 'لا يجوز الاحتجاج بما (?:روي|انفرد به)', '(?:لا|فلا) (?:يحتج|ينبغي ان يحتج) بما (?:انفرد به|روي|ينفرد به)', '(?:فوجب|ووجب) ترك الاحتجاج به', '(?:فبطل|بطل) الاحتجاج (?:به|بروايته|بحديثه)', 'سقط الاحتجاج بما انفرد به', 'لا يدخل في الصحيح', 'فخرج عن حد الاحتجاج(?: به| بافراده)?'], { nt: KC2 });
@@ -10860,10 +10913,22 @@ const RAPOR = (() => {
       if (e.bas && !(c.start === 0 || /(?:^|[:.\n؛»"])\s*(?:و|ف)?$/.test(n.slice(Math.max(0, c.start - 4), c.start)))) continue;
       // “solo” lafızlar: iki nokta / virgül ile noktalama arasında tek başına durmalı
       if (e.solo) {
-        const b = n.slice(Math.max(0, c.start - 3), c.start), a = n.slice(c.end, c.end + 2);
+        const b = n.slice(Math.max(0, c.start - 4), c.start).replace(e.bukh ? /(?<=[\s،,.:])(?:و|ف)$/ : /$^/, '').slice(-3), a = n.slice(c.end, c.end + 2);   // «، ولا يصح»: Buhârî’nin kısa hükmünde bağlaç engel değildir
         const lead = /(?:^|[:،.\n]\s*|^\s*)$/.test(b) || c.start === 0 || /(?:وهو|هو|كان)\s*$/.test(n.slice(Math.max(0, c.start - 6), c.start));
         const trail = /^\s*(?:[.،,؛\n(]|$)/.test(a) || c.end >= limit;
         if (!(lead && trail)) continue;
+      }
+      // Buhârî’nin ed-Du‘afâ’sındaki kısa hükümler («منكر», «لم يصح», «لا يصح», «أحاديث مناكير»). Kullanıcı kararı (13.11.2026): lafız bağlamda
+      // anılan hadise dönüyorsa hadis hükmüdür (sayılmaz); râviye söyleniyorsa cerhtir. Hadis bağlamı: önceki ibarede Hz. Peygamber’e ref‘,
+      // metin ya da konu anılması («عن النبي …», «في الجنازة», «حديثا», «قال: …»). Yalnız Buhârî’nin kendi eserinde ve atıfsız geçtiğinde uygulanır.
+      if (e.bukh) {
+        if (!/الضعفاء للبخاري|الضعفاء الصغير|التاريخ الكبير|التاريخ الاوسط/.test(nz(opts.sourceName || ''))) continue;
+        const once = n.slice(Math.max(0, c.start - 160), c.start);
+        if (/(?:النبي|رسول الله|صلي الله عليه|عليه السلام|مرفوع|رفعه|(?:^|\s)(?:حديثا?|الحديث|حديثين)(?![\u0621-\u064A])|(?:^|\s)في (?!حديثه|احاديثه)(?:ال)?[\u0621-\u064A]+(?: [\u0621-\u064A]+){0,3}\s*[،,.]?\s*(?:و)?$|قال\s*:|[«"])/.test(once)) {
+          c.e = Object.assign({}, e, { k: 'R', lv: 0, sb: 'hadis', tr: 'Hadis hükmü (Buhârî; lafız anılan hadise döner)' });
+          terms.push({ c, e: c.e, reasons: ['Önceki ibarede hadis (ref‘, metin ya da konu) anılıyor: lafız hadis hakkındadır.'], flags: ['bukhari-hadis'] }); continue;
+        }
+        reasons.push('Buhârî’nin kısa hükmü; önceki ibarede hadis anılmıyor: râvi hakkındadır.'); flags.push('bukhari-ravi');
       }
       if (e.sb === 'sahabe' && /^.{0,80}?(?:لا (?:يصح|تصح|تثبت)|ولا يصح|وهم|غلط|والصواب|تابعي|لا صحبه|ليست له صحبه|مختلف في صحبته|في صحبته نظر|لم تثبت صحبته)/.test(n.slice(c.end, c.end + 100))) continue;   // sahâbîliği reddedilen ya da şüpheli
       const ng = negated(n, c);
@@ -11136,6 +11201,21 @@ const RAPOR = (() => {
           res.critics = [{ canon: 'ابن عدي', written: '' }]; res.basis = 'müellif';
           t.flags = t.flags.filter(f => f !== 'söz-sahibi-belirsiz' && f !== 'isnad-içi' && f !== 'fiil-oznesi' && !/^anon:/.test(f)); t.flags.push('muellif-uslubu');
           t.reasons.push('Aynı cümlede İbn Adî’nin birinci şahıs anlatımı: tercüme sonundaki kendi değerlendirmesi.');
+        }
+      }
+      // el-Kâmil: «وفلان هذا …» (tercüme sahibinin adı + «هذا») İbn Adî’nin söze yeniden girişidir; önceki naklin sahibine yazılmaz
+      // («قال البخاري: … لم يصح حديثه، وعطاء بن محمد هذا ليس بمعروف» → son hüküm İbn Adî’nin). İç çapraz denetim, ikinci tur (13.11.2026).
+      // Alıntının içindeki «قال يحيى: زهير هذا ليس بشيء» ve fiille kurulan «نسبه عمرو بن علي إلى الكذب» bu kurala girmez.
+      if (defaultCanon === 'ابن عدي' && res.basis !== 'fiil' && !(res.critics.length === 1 && res.critics[0].canon === 'ابن عدي')) {
+        const from = sc.mk ? Math.max(sc.mk.end, c.start - 220) : Math.max(0, c.start - 220), seg = n.slice(from, c.start);
+        const hz = /(?:^|[\s،,.])((?:و|ف)?)((?:[\u0621-\u064A]+\s+){1,6})هذا((?:\s+[\u0621-\u064A]+){0,7})\s*$/.exec(seg);
+        const anon = (!sc.mk || sc.mk.type === 'anon') && !res.critics.some(x => x.canon);   // isimsiz «قال:» bağlamla bir münekkide çözülmüşse («فقال لي: فلان هذا كذاب») alıntıdır
+        const onceIcerik = hz && /[،,.]/.test(seg.slice(0, hz.index + 1)) && !/:/.test(seg.slice(Math.max(seg.lastIndexOf('،', hz.index), seg.lastIndexOf('.', hz.index), 0), hz.index + 1));
+        if (hz && (anon || (hz[1] && onceIcerik)) && !/(?:^|\s)(?:قال|فقال|يقول|قلت|سمعت|حدثنا)(?:\s|$)/.test(hz[3]) &&
+            hz[2].trim().split(/\s+/).some(w => w.length > 2 && !/^(?:بن|ابن|ابو|ابي|عبد|الله)$/.test(w) && (ntok.has(w) || ntok.has(w.replace(/^ال/, ''))))) {
+          res.critics = [{ canon: 'ابن عدي', written: '' }]; res.basis = 'müellif';
+          t.flags = t.flags.filter(f => f !== 'söz-sahibi-belirsiz' && f !== 'isnad-içi' && f !== 'fiil-oznesi' && !/^anon:/.test(f)); t.flags.push('muellif-uslubu');
+          t.reasons.push('«' + hz[2].trim() + ' هذا»: İbn Adî’nin söze yeniden girişi; hüküm müellifindir.');
         }
       }
       // Lisân’ın “intehâ”ya kadarki kısmı Mîzân’ın metnidir: râvinin Mîzân kaydı varsa söz oradan sayılır (CTKR.raviSonrasi)
