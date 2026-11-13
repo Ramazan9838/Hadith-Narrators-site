@@ -6,7 +6,7 @@
 <title>Cerh-Taʿdîl · Kaynak Kontrolü</title>
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self' https://api.github.com https://generativelanguage.googleapis.com; img-src data:; base-uri 'none'; form-action 'none'">
 <meta name="generator" content="cerh-tadil/build.py CTX 2.0.0">
-<meta name="cerh-motor" content="6084a55aa88eede8">
+<meta name="cerh-motor" content="19e1996cef812204">
 <style>
 /* =========================================================
    Cerh-Ta‘dîl · Kaynak Kontrolü — arayüz stilleri
@@ -10964,6 +10964,12 @@ const RAPOR = (() => {
 
     const out = []; let prevTermEnd = 0, prevSuspect = '';
     for (const t of terms) {
+      // «إسناده ضعيف», «بإسناد لين», «بأسانيد ثبت»: hüküm râvi hakkında değil isnad hakkındadır → rivâyet hükmü (13.11.2026, çapraz denetim 1)
+      { const on = n.slice(Math.max(0, t.c.start - 30), t.c.start);
+        // «في إسناده ضعيف» (isnadda zayıf râvi) ve «يأتي بإسناد لا يتابع عليه» (râvinin âdeti) bu kurala girmez
+        if (t.e && 'TC'.includes(t.e.k) && /(?:^|[\s،,(:])(?:و|ف)?(?:اسناد(?:ه|ها|هما)|(?:ب|ال)(?:اسناد|اسانيد))\s+$/.test(on) &&
+            /^(?:كلها\s+)?(?:ال)?(?:لين|ضعيف|ضعاف|واه|واهي|ثبت|صالح|جيد|جياد|مظلم|موضوع|صحيح|صحاح|حسن|حسان|مضطرب|منكر|مناكير)(?:ه|ة|ا|ات)?$/.test(n.slice(t.c.start, t.c.end).trim()) &&   // yalnız isnadı niteleyen sıfat («يقلب الأسانيد فاستحق الترك» değil)
+            !/(?:في|من)\s+(?:اسناد(?:ه|ها|هما)?|الاسناد)\s+$/.test(on) && !/(?:ياتي|يجيء|ياتون|جاء|اتي)\s+(?:ب|ال)?(?:اسناد|اسانيد)\s+$/.test(on)) t.e = Object.assign({}, t.e, { k: 'R' }); }
       const { c, e } = t;
       // Tek kelimelik lafız bir adın parçasıysa («عبد الله بن مغفل», «علي بن المحسن بن متروك», «أبو لينة») hüküm değildir (12.11.2026).
       // «كذاب ابن كذاب» ve «ثقة ابن ثقة» türü babaya yönelik hükümler hariç.
