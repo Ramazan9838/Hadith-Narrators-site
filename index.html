@@ -1428,6 +1428,29 @@ tr.mf-on td { background: color-mix(in srgb, #c0392b 6%, transparent); }
 .hkf-ara { display: inline-flex; align-items: center; gap: 4px; }
 .hkf-tsay { color: var(--accent); margin: 2px 0 4px; }
 
+/* Şâmile kaynak doğrulaması: CTX/HH motorundan bağımsız gösterim */
+.shamila-switch {white-space:nowrap;font-weight:600;flex:none}
+.shamila-switch.shamila-open {background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+.shamila-panel {border:1px solid var(--line);background:var(--paper-2);border-radius:var(--radius);margin:10px 0 18px;padding:14px 16px;color:var(--ink)}
+.shamila-head {display:flex;align-items:start;justify-content:space-between;gap:12px;margin-bottom:9px}
+.shamila-head strong {font-size:1.02em}
+.shamila-head p {margin:3px 0 0;color:var(--ink-2);font-size:.9em}
+.shamila-count {font-variant-numeric:tabular-nums;color:var(--ink-2);white-space:nowrap}
+.shamila-item {border-top:1px solid var(--line);padding:12px 0 7px}
+.shamila-itemhead {display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.shamila-code {font-variant-numeric:tabular-nums;color:var(--accent)}
+.shamila-state {color:var(--ink-2);font-size:.9em}
+.shamila-ar {font-family:var(--ar);font-size:var(--ar-size);font-weight:600;line-height:1.9;border:0;border-right:2px solid var(--line-2);padding:7px 12px;margin:9px 0;background:var(--paper)}
+.shamila-cite {font-size:.93em;color:var(--ink-2)}
+.shamila-panel a {color:var(--accent);text-decoration:underline;text-underline-offset:2px}
+.shamila-item p {margin:6px 0;line-height:1.6}
+.shamila-note,.shamila-empty,.shamila-foot {color:var(--ink-2);font-size:.9em}
+.shamila-foot {border-top:1px solid var(--line);padding-top:9px;margin:10px 0 0}
+@media (max-width:640px) {
+  .shamila-switch {font-size:11px;padding-left:5px;padding-right:5px}
+  .shamila-panel {padding:10px 11px}
+}
+
 </style>
 </head>
 <body class="locked">
@@ -1948,6 +1971,135 @@ const CTAG = (() => {
     if (document.fonts && document.fonts.status !== 'loaded') document.fonts.ready.then(() => { if (host.isConnected) ciz(); });
   }
   return { kur, yollar };
+})();
+
+/* Şâmile ilmî denetim katmanı — mevcut CTX/HH hükümlerinden kesin olarak ayrı.
+   Kaynaklar özel depodaki JSON'dan, yetkili ORT istemcisiyle okunur.
+   Açık yayın HTML'sine Arapça kaynak metni veya sicil gömülmez. */
+const CTShamila = (() => {
+  'use strict';
+  let DATA = {version: 1, kayitlar: []};
+  let yukleyici = null;
+  let yukleniyor = false;
+  let yukleHatasi = '';
+  let istek = null;
+  const TUR = {
+    dogrulama: 'Kaynak doğrulaması',
+    yeni: 'Yeni hüküm adayı',
+    fark: 'Metin / nispet farkı',
+    nakil: 'Başka kaynak / nakil'
+  };
+  const DURUM = {
+    kaynak_dogrulandi: 'Asıl kaynak doğrulandı',
+    inceleme_bekliyor: 'Araştırmacı incelemesi bekliyor',
+    onaylandi: 'Araştırmacı tarafından onaylandı',
+    fark_bulundu: 'Fark tespit edildi',
+    dogrulanamadi: 'Doğrulanamadı'
+  };
+  let acik = false;
+  let degisince = () => {};
+  let dugme = null;
+
+  function html(t) {
+    return String(t == null ? '' : t).replace(/[&<>"']/g, c => (
+      {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]
+    ));
+  }
+  function url(u) {
+    return /^https:\/\/shamela\.ws\/book\/[0-9]+\/[0-9]+$/.test(u || '') ? u : '';
+  }
+  function liste(sira) {
+    return (DATA.kayitlar || []).filter(k => Number(k.sira) === Number(sira));
+  }
+  function dugmeYenile() {
+    if (!dugme) return;
+    dugme.textContent = 'Şâmile';   // durum: renk + aria-pressed + ipucu (üst çubuk dar ekranda taşmasın)
+    dugme.setAttribute('aria-pressed', String(acik));
+    dugme.classList.toggle('shamila-open', acik);
+    dugme.title = 'Şâmile: ' + (acik ? 'Açık' : 'Kapalı') + ' — denetim kayıtlarını ' + (acik ? 'gizle' : 'göster') + ' (ana hükümler değişmez)';
+  }
+  async function yenile() {
+    if (!acik || typeof yukleyici !== 'function') return;
+    if (istek) return istek;
+    yukleniyor = true;
+    yukleHatasi = '';
+    istek = (async () => {
+      try {
+        const veri = await yukleyici();
+        if (!veri || veri.version !== 1 || !Array.isArray(veri.kayitlar)) throw Error('Kaynak sicili alınamadı');
+        DATA = veri;
+      } catch (e) {
+        yukleHatasi = 'Şâmile siciline erişilemiyor; yetkili ortak kayıt bağlantısını kontrol edin.';
+      } finally {
+        yukleniyor = false;
+        istek = null;
+        degisince(acik);
+      }
+    })();
+    return istek;
+  }
+  function init(opts) {
+    opts = opts || {};
+    acik = !!opts.acik;
+    degisince = typeof opts.degisince === 'function' ? opts.degisince : () => {};
+    yukleyici = typeof opts.yukle === 'function' ? opts.yukle : null;
+    // Düğme râvi başlığında durur (üst çubuk dar ekranda sekmeleri gizlemesin); app.js her çizimde .nh-row'a geri koyar.
+    const nhead = document.getElementById('nhead');
+    const host = nhead || document.querySelector('.top-actions');
+    if (!host) return;
+    dugme = document.getElementById('shamila-toggle');
+    if (!dugme) {
+      dugme = document.createElement('button');
+      dugme.id = 'shamila-toggle';
+      dugme.type = 'button';
+      dugme.className = 'btn sm shamila-switch';
+      dugme.setAttribute('aria-label', 'Şâmile kaynak denetimi aç veya kapat');
+      const ara = nhead ? null : document.getElementById('open-palette');
+      host.insertBefore(dugme, ara || (nhead ? null : host.firstChild));
+      dugme.addEventListener('click', () => {
+        acik = !acik;
+        dugmeYenile();
+        degisince(acik);
+        if (acik) yenile();
+      });
+    }
+    dugmeYenile();
+    if (acik) yenile();
+  }
+  function kayitHTML(k) {
+    const baslik = TUR[k.tur] || 'Denetim kaydı';
+    const durum = DURUM[k.durum] || 'Durum belirtilmedi';
+    const link = url(k.samile_url);
+    return '<article class="shamila-item">' +
+      '<div class="shamila-itemhead"><strong class="shamila-code">' + html(k.id) +
+      '</strong><span>' + html(baslik) + '</span><span class="shamila-state">' + html(durum) + '</span></div>' +
+      (k.arapca ? '<blockquote class="shamila-ar" lang="ar" dir="rtl">' + html(k.arapca) + '</blockquote>' : '') +
+      '<p class="shamila-cite">' + html(k.muellif) + ', <em>' + html(k.eser) + '</em>' +
+      (k.cilt && k.sayfa ? ', ' + html(k.cilt) + '/' + html(k.sayfa) : '') +
+      (link ? ' · <a href="' + html(link) + '" target="_blank" rel="noopener noreferrer">Şâmile sayfası</a>' : '') + '</p>' +
+      (k.aciklama ? '<p>' + html(k.aciklama) + '</p>' : '') +
+      (k.denetim_notu ? '<p class="shamila-note">' + html(k.denetim_notu) + '</p>' : '') +
+      '</article>';
+  }
+  function mount(root, info) {
+    if (!acik || !root || !info || info.hh || !Number.isFinite(Number(info.sira))) return;
+    const entries = liste(info.sira);
+    const panel = document.createElement('section');
+    panel.id = 'shamila-panel';
+    panel.className = 'shamila-panel';
+    panel.setAttribute('aria-label', 'Şâmile kaynak denetimi');
+    panel.innerHTML = '<header class="shamila-head"><div><strong>Şâmile kaynak denetimi</strong>' +
+      '<p>Mevcut veriden bağımsız ilmî kontrol katmanı</p></div><span class="shamila-count">' +
+      entries.length + ' kayıt</span></header>' +
+      (yukleniyor ? '<p class="shamila-empty">Yetkili depodan Şâmile kayıtları yükleniyor…</p>' :
+       yukleHatasi ? '<p class="shamila-empty">' + html(yukleHatasi) + '</p>' :
+       entries.length ? entries.map(kayitHTML).join('') :
+        '<p class="shamila-empty">Bu râvi için henüz doğrulanmış veya incelemeye alınmış Şâmile kaydı yok.</p>') +
+      '<p class="shamila-foot">Şâmile kayıtları mevcut cerh–ta‘dîl hükümlerine ve sayımlara eklenmez. ' +
+      'Yeni hüküm adayları ayrıca ilmî onay gerektirir.</p>';
+    root.prepend(panel);
+  }
+  return {init, mount, liste, yenile, veriSurumu: () => DATA.version};
 })();
 
 /* =========================================================
@@ -5058,6 +5210,7 @@ function renderHead() {
   const st = (REV.narr[n.id] || {}).status || 'Kontrol edilmedi';
   const nn = narrNoteCount(n);
   // Tek satır: solda râvi değiştiren oklar, sağda ad ve hemen yanında sıra no; durum/onay ve notlar kendi sekmelerinde
+  const shSw = $('shamila-toggle');   // Şâmile düğmesi başlık yeniden yazılınca silinmesin; aşağıda geri konur
   $('nhead').innerHTML =
     donusDugmesi() + '<div class="nh-row"><span class="nav-arrows"><button class="btn ghost sm icon" data-act="prev" aria-label="Önceki râvi" title="Önceki râvi (K)">↑</button><button class="btn ghost sm icon" data-act="next" aria-label="Sonraki râvi" title="Sonraki râvi (J)">↓</button></span>' +
     '<span class="nh-name"><span class="nh-no" title="Râvi sıra numarası"><span class="sr-only">Râvi </span>' + ravNo(n) + '</span><h2>' + esc(fieldVal(n, 'isim')) + '</h2></span></div>' + idLine(n) +
@@ -5069,6 +5222,8 @@ function renderHead() {
         : nu ? '<span class="n n-unlem" title="' + nu + ' uyarı" aria-label="' + nu + ' uyarı">!</span>' : '';
       return '<button role="tab" data-tab="' + k + '" aria-selected="' + (S.tab === k) + '" title="' + (k === 'onay' ? 'Râvi durumu: ' + esc(st) + (i < 9 ? ' · ' : '') : '') + (i < 9 ? 'Kısayol: ' + (i + 1) : '') + '">' + l + ek + (cnt !== '' ? '<span class="n">' + cnt + '</span>' : '') + '</button>';
     }).join('') + '</div>';
+  const shOk = $('nhead').querySelector('.nh-row .nav-arrows');
+  if (shSw && shOk) shOk.after(shSw);
 }
 // Onay sekmesi: râvinin inceleme durumu ve “Onayla · sıradaki”
 function renderReviewTab(n) {
@@ -5194,6 +5349,7 @@ function renderCenter() {
   else if (S.tab === 'onay') body.innerHTML = renderReviewTab(n);
   else if (S.tab === 'notlar') body.innerHTML = renderNotesTab(n);
   else body.innerHTML = renderPageTab(n);
+  CTShamila.mount(body, { sira: n.source_sequence, hh: isHHn(n) });
   document.documentElement.style.setProperty('--ar-size', UI.arSize + 'px');
 }
 function legendHTML(kinds) {
@@ -8583,6 +8739,22 @@ function startApp() {
   // Açılış uyarısı, o arada bir işlemin bildirimi göründüyse onun üstüne yazılmaz (kullanıcı simgesindeki nokta kalır)
   if (AUTH.defaultPassword()) { setTimeout(() => { if ($('toast').hidden) toast('Varsayılan parola kullanılıyor; Ayarlar → Hesabım’dan en az ' + KASA.MINPW + ' karakterlik bir parola belirleyin.', true, 9000); }, 400); }
 }
+CTShamila.init({
+  acik: !!UI.samileShown,
+  degisince: acik => {
+    UI.samileShown = acik; saveUI();
+    if (S.view === 'desk') renderCenter();
+  },
+  yukle: async () => {
+    const c = ortakCfg();
+    if (!c || !AUTH.me()) throw Error('Yetkili ortak kayıt bulunamadı');
+    const gh = ORT.client(c), m = await gh.meta('kaynak/samile/denetim.json');
+    if (!m || !m.sha) throw Error('Şâmile kaynak sicili yok');
+    const t = await gh.blob(m.sha);
+    if (typeof t !== 'string' || await ORT.blobSha(t) !== m.sha) throw Error('Kaynak özeti uyuşmadı');
+    return JSON.parse(t);
+  }
+});
 startApp();
 
 </script>
