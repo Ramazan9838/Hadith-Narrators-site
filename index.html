@@ -6,7 +6,7 @@
 <title>Cerh-Taʿdîl · Kaynak Kontrolü</title>
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self' https://api.github.com https://generativelanguage.googleapis.com; img-src data:; base-uri 'none'; form-action 'none'">
 <meta name="generator" content="cerh-tadil/build.py CTX 2.0.0">
-<meta name="cerh-motor" content="5bddf8e649083d6f">
+<meta name="cerh-motor" content="22e22279f5d7b1db">
 <style>
 /* =========================================================
    Cerh-Ta‘dîl · Kaynak Kontrolü — arayüz stilleri
@@ -2213,7 +2213,7 @@ function kaydOf(s) { const f = (s.flags || []).find(x => x.startsWith('kayd:'));
 function isMkyC(s) { return (s.flags || []).includes('mukayyed') && 'CJK'.includes(eKind(s)); }
 function kaydEs(a, b) { if (!a || !b) return false; const x = a.split(' '), y = b.split(' '), k = Math.min(x.length, y.length); for (let i = 0; i < k; i++) if (x[i] !== y[i]) return false; return true; }
 const ANON_KURAL = { 'senet-sonu': 'senedin son râvisi', yanni: '«yani» açıklaması', 'fiil-soru': 'aynı cümlede soru/nakil fiilinin muhatabı ya da öznesi', 'fiil-soru-onceki': 'önceki cümlede soru/nakil fiili', 'alinti-ici': 'alıntının içinde adı geçen münekkit', 'muellif-yorum': 'hadisten sonra eser müellifinin yorumu' };
-function flagTr(f) { return f.startsWith('anon:') ? 'İsimsiz «qâle»: söz sahibi bağlamdan çıkarıldı (kural: ' + (ANON_KURAL[f.slice(5)] || f.slice(5)) + '; örneklemle doğrulandı, orta güven)' : f.startsWith('kayd:') ? 'Kayıt: ' + f.slice(5) + ' rivayeti' : f.startsWith('hhs:') ? 'HH söz #' + f.slice(4) : FLAGTXT[f] || f; }
+function flagTr(f) { return f.startsWith('kaynak:') ? 'Derlemenin muhtemel kaynağı: aynı lafız râvinin öteki kayıtlarında yalnız ' + crName(f.slice(7), f.slice(7)) + '’e aittir; söz derleme müellifinde bırakıldı, sayım değişmez' : f.startsWith('anon:') ? 'İsimsiz «qâle»: söz sahibi bağlamdan çıkarıldı (kural: ' + (ANON_KURAL[f.slice(5)] || f.slice(5)) + '; örneklemle doğrulandı, orta güven)' : f.startsWith('kayd:') ? 'Kayıt: ' + f.slice(5) + ' rivayeti' : f.startsWith('hhs:') ? 'HH söz #' + f.slice(4) : FLAGTXT[f] || f; }
 // Kayıtlı teâruz çiftleri: farklı münekkitlerden aynı hocaya mahsus kayıtlı cerh (sayılmayan) ve ta‘dîl
 function kaydTearuz(sts) {
   const ok = s => rv(s)?.v !== 'no' && !s.question && !(s.flags || []).some(f => f === 'hedef-şüpheli' || f === 'şiî-ricâl');
@@ -3964,7 +3964,7 @@ const hhStsOf = n => n ? hhAyikla(stOf(n), hhSts(disCilt(n), n.source_sequence, 
 function sayilmamaSebebi(s) {
   const r = rv(s); if (r && (r.v === 'no' || r.v === 'del')) return 'araştırmacı yanlış diye işaretledi';
   const he = hhEsasDisi(s); if (he) return hhEsasNotu(he);
-  const f = (s.flags || []).filter(x => FLAGTXT[x] || x.startsWith('kayd:')).map(x => flagTr(x) + (x === 'hedef-şüpheli' && s.target_who ? ' (“' + s.target_who + '”)' : ''));
+  const f = (s.flags || []).filter(x => FLAGTXT[x] || x.startsWith('kayd:') || x.startsWith('kaynak:')).map(x => flagTr(x) + (x === 'hedef-şüpheli' && s.target_who ? ' (“' + s.target_who + '”)' : ''));
   if (f.length) return f.join(', ');
   if (!'TCJKN'.includes(eKind(s))) return 'hüküm türü sayılmaz (' + (KNAME[eKind(s)] || eKind(s)) + ')';
   return 'güven düşük (' + s.confidence + ')';
@@ -11337,7 +11337,11 @@ const RAPOR = (() => {
           const r = parseNames(n, i, conv, e.many ? 16 : 6); names = r.names;
           if (!names.length && !e.crReq) { const a = adTam(w); names = [{ canon: a || '', written: w }]; }
         } else {
-          const r = parseNames(n, c.end, conv);
+          let r = parseNames(n, c.end, conv);
+          if (!r.names.length && e.v) {   // «اتهمه به الذهبي», «اتهمه الحافظان الذهبي وابن حجر» (İbn Arrâk okuması, 16.11.2026): özne zarf ya da unvandan sonra gelir
+            const sk = /^\s*(?:(?:به|بها|بذلك)\s+)?(?:الحافظان\s+)?/.exec(n.slice(c.end, c.end + 24));
+            if (sk && sk[0].trim()) { const r2 = parseNames(n, c.end + sk[0].length, conv); if (r2.names.length) r = r2; }
+          }
           names = r.names; if (names.length) c.end = r.end;
           if (!names.length && e.v) {   // «وضعفه أبو نعيم», «لينه الحافظ عبد الغني بن سعيد»: özne adı belirsiz ya da kayıtsız
             const m2 = /^\s*(?:الحافظ\s+|الامام\s+|الشيخ\s+)?((?:ابو|ابي|ابن|ام)\s+[\u0621-\u064A]+(?:\s+(?:بن|ابن)\s+[\u0621-\u064A]+)*(?:\s+ال[\u0621-\u064A]{3,})?|(?:عبد\s+)?[\u0621-\u064A]{3,}\s+(?:بن|ابن)\s+[\u0621-\u064A]+(?:\s+(?:بن|ابن)\s+[\u0621-\u064A]+)*)/.exec(n.slice(c.end, c.end + 60));
@@ -12692,6 +12696,15 @@ const RAPOR = (() => {
         s.flags = fl(s).filter(f => f !== 'atifsiz' && f !== 'derleme' && f !== 'mizan-nakli').concat('soz-devami-genel');
         s.reasons = (s.reasons || []).filter(r => !/^Atıfsız hüküm/.test(r)).concat(P + '’in sözünün devamı (arada yeni söyleyen yok); aynı lafız râvinin başka bir kaydında da ' + P + '’e aittir.');
       }
+    }
+    /* Derlemenin muhtemel kaynağı (kullanıcı kararı 16.11.2026): Fettenî ve İbn Arrâk gibi derlemelerde atıfsız lafız müellifte
+       kalır; aynı lafız râvinin öteki kayıtlarında yalnız tek bir münekkide aitse hükme «kaynak:<münekkit>» işareti düşülür.
+       Sayım ve söz sahibi değişmez; işaret yalnız asıl kaynağı gösterir. */
+    for (const x of B) for (const s of x.sts) {
+      if (!s.phrase || !s.critic || !fl(s).includes('derleme') || !fl(s).includes('atifsiz') || fl(s).includes('elle')) continue;
+      const P = new Set();
+      for (const y of B) if (y !== x) for (const o of y.sts) if (o.critic && o.critic !== s.critic && o.phrase && !fl(o).includes('derleme') && !fl(o).includes('zımnî') && ayniG(o.phrase, s.phrase)) P.add(o.critic);
+      if (P.size === 1) s.flags = fl(s).concat('kaynak:' + [...P][0]);
     }
     return B;
   }
