@@ -6,7 +6,7 @@
 <title>Cerh-Taʿdîl · Kaynak Kontrolü</title>
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self' https://api.github.com https://generativelanguage.googleapis.com; img-src data:; base-uri 'none'; form-action 'none'">
 <meta name="generator" content="cerh-tadil/build.py CTX 2.0.0">
-<meta name="cerh-motor" content="146d1ebc0e4638f6">
+<meta name="cerh-motor" content="f9be3fa94e33c20d">
 <style>
 /* =========================================================
    Cerh-Ta‘dîl · Kaynak Kontrolü — arayüz stilleri
@@ -10029,6 +10029,15 @@ const RAPOR = (() => {
   add('C', 1, 'mubhem', 'Tanırsın da yadırgarsın da', 0.8, ['تعرف وتنكر'], { nt: CJ + 'râvinin hadisi bir doğru bir yanlış gelir, itkânı yoktur; mücmel bir telyîndir, derecesi öteki münekkitlerin sözüne bakılarak belirlenir (Yahyâ el-Kattân, İbn Mehdî, Buhârî, Ebû Hâtim; I, 601–602).' });
   add('C', 1, 'mubhem', 'Hafif cerh', 0.85, ['فيه (?:ادني )?مقال', 'فيه ضعف', 'في حديثه ضعف', 'ليس بذاك(?: القوي)?', 'ليس بالقوي', 'ليس بقوي', 'ليس بالمتين', 'ليس بعمده', 'ليس بالمرضي', 'فيه خلف', 'طعنوا فيه', 'مطعون فيه', 'تكلموا فيه']);
   add('C', 1, 'mubhem', 'Hakkında konuşuldu', 0.75, ['تكلم فيه'], { v: true });
+  // Gözden kaçan hükümler örneklemi (15.11.2026): sözlükte bulunmayan yaygın biçimler
+  add('C', 1, 'mubhem', 'Hakkında konuşulmuş (mütekellemün fîh)', 0.8, ['متكلم فيه']);
+  add('C', 2, 'mubhem', 'Mecrûh', 0.8, ['مجروح']);
+  add('C', 2, 'muhalefe', 'Münkerü’l-hadîs', 0.85, ['منكر حديث']);
+  add('C', 3, 'mubhem', 'Şiddetli za‘f', 0.85, ['منكر حديث جدا']);
+  add('J', 1, 'cehalet', 'Tanınmıyor (gayru ma‘rûf)', 0.75, ['غير معروفه?(?! ب)']);
+  add('C', 1, 'suhifz', 'Zâbıt değil', 0.8, ['ليس بالضابط', 'لم يكن بالضابط']);
+  add('C', 1, 'muhalefe', 'Garîb rivayetleri var', 0.7, ['صاحب غرائب']);
+  add('C', 4, 'terk', 'Helâk olanlardan', 0.85, ['من الهلكي']);
   add('C', 1, 'suhifz', 'Leyyin', 0.85, ['لين(?: الحديث)?', 'فيه لين'], { nt: CJ + 'ed-Dârekutnî: “leyyin” diyince metrûk ve sâkıt değil, adâletten düşürmeyen bir şeyle mecrûh râviyi kastederim. Aslı hıfz zaafıdır (I, 588–589).' });
   add('C', 1, 'suhifz', 'Tel’în etti (leyyenehû)', 0.9, ['لينه'], { v: true });
   add('C', 1, 'mubhem', 'Tenkit etti (ğamezehû)', 0.8, ['غمزه'], { v: true });
@@ -10577,6 +10586,8 @@ const RAPOR = (() => {
   const MATN = /(?:مرفوعا|رفعه)\s*[:،]?|صلي الله عليه وسلم\s*(?:انه\s+)?(?:قال|يقول|فقال)?\s*:|\{/g;
   const FIRSTP = /(?:^|[\s،,])(?:ف|و)?(?:رايته|اتيته|وجدته|فوجدته|ذهبت|رايت|لقيته|سمعته|كتبت عنه|جالسته)(?![\u0621-\u064A])/;
   const STOP = new Set(('و ف هو وهو فهو هذا وهذا ذا كان وكان قد وقد فقد لكنه ولكنه لكن ولكن الا انه ان ايضا جدا ثم بل قال فقال وقال يقول شيخ رجل ' +
+    // gözden kaçan hükümler örneklemi (15.11.2026): hedef denetiminde ad sanılan sıradan sözcükler
+    'العجب الصحيح احاديث الغفله لفظ لان الصدوق التقشف العراق الحجاز الرجل تبعه ' +
     'الحديث الروايه الروايات الناس الشيخ الكذب الوضع الحفظ الاسناد المتن الخطا البصره الكوفه المدينه الشام الجامع التشيع المذهب ' +
     'الجرح الثقات الضعفاء الله الذي التي الذين الامر الدهر الاعتبار الاحتجاج الصدق الصواب الحق الاصل الكليه العلم القوي المعروف ' +
     'المشهور المتين الشيعه الاماميه البته هكذا يعني اي هو هي منه عنه فيه له به انما بمره عنده امره حاله اهل اصحاب اصله ' +
@@ -12514,6 +12525,8 @@ const RAPOR = (() => {
           critic_written: '', basis: 'elle-hh', transmission: 'Doğrudan', transmitter: x.ak || '', formula: '', chain: '', target: 'explicit', target_who: '',
           flags: ['elle'].concat(x.hh ? ['hhs:' + x.hh] : []), question: false, confidence: 0.95, reasons: [not], notes: [], terms: [], origin_elle: true };
         elleMunekkit(st, x.cr || ''); elleTur(st, x.k, x.lv, x.sb);
+        if (!x.cr && x.cw) st.critic_written = x.cw;   // listede olmayan söz sahibi (gözden kaçan hükümler okuması, 15.11.2026)
+        if (x.fl) st.flags = st.flags.concat(x.fl);
         st.counts = 'TCJKN'.includes(st.kind);
         out.push(st);
       }
