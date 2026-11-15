@@ -3941,7 +3941,13 @@ function hhAyikla(sc, hh) {
     const ayni = x => eCritic(x) === c && eKind(x) === h.kind && ((T.size && termSet(x).size && (subOf(T, termSet(x)) || subOf(termSet(x), T))) || (pk && phKey(x) === pk));
     // Elle düzeltme kaydı (kaynak/elle) bu HH sözünden okunmuşsa («hhs:» işareti) aynı söz sayılır: elle okunan el-Câmi‘ hükmü sayılır, HH kopyası ayıklanır
     const elle = elleBy.get('hhs:' + h.hhSoz);
-    const m = elle || (c ? (byC.get(c) || []).find(ayni) || out.find(ayni) : null);   // önce el-Câmi‘, sonra HH’nin kendi tekrarları
+    let m = elle || (c ? (byC.get(c) || []).find(ayni) : null);   // önce el-Câmi‘, sonra HH’nin kendi tekrarları
+    if (!m && c) {
+      const i = out.findIndex(ayni);
+      // Aynı sözün iki okuması (motorun saymadığı ve HH sınıfından sayılan): sayılan kalır, sayılmayan onun tekrarı olur (15.11.2026)
+      if (i >= 0 && h.counts && !out[i].counts) { const e = out[i]; e.ayni = h.uid; e.ayniHH = true; h.ayni = null; h.ayniHH = false; h.hhAyni = null; out[i] = h; continue; }
+      if (i >= 0) m = out[i];
+    }
     if (m) { m.hhAyni = m.hhAyni || []; if (!m.hhAyni.includes(h.hhSoz)) m.hhAyni.push(h.hhSoz); h.ayni = m.uid; h.ayniHH = m.origin === 'HH'; } else { h.ayni = null; h.ayniHH = false; h.hhAyni = null; out.push(h); }
   }
   return out;
@@ -5222,12 +5228,12 @@ function renderHead() {
     donusDugmesi() + '<div class="nh-row"><span class="nav-arrows"><button class="btn ghost sm icon" data-act="prev" aria-label="Önceki râvi" title="Önceki râvi (K)">↑</button><button class="btn ghost sm icon" data-act="next" aria-label="Sonraki râvi" title="Sonraki râvi (J)">↓</button></span>' +
     '<span class="nh-name"><span class="nh-no" title="Râvi sıra numarası"><span class="sr-only">Râvi </span>' + ravNo(n) + '</span><h2>' + esc(fieldVal(n, 'isim')) + '</h2></span></div>' + idLine(n) +
     '<div class="subtabs" role="tablist">' + deskTabs().map(([k, l], i) => {
-      const cnt = k === 'kaynak' ? (isHHn(n) ? ((disVeri(n) || { hh: {} }).hh.tercemeler || []).length : n.blocks.length) : k === 'hukum' ? a.sts.length : k === 'notlar' ? (nn || '') : '';
+      const cnt = k === 'kaynak' ? (isHHn(n) ? ((disVeri(n) || { hh: {} }).hh.tercemeler || []).length : n.blocks.length) : k === 'hukum' ? a.gorus.length : k === 'notlar' ? (nn || '') : '';
       const nu = k === 'uyari' ? uyariListesi(n).length : 0;
       const D = DURUM_ISARET[st] || DURUM_ISARET['Kontrol edilmedi'];
       const ek = k === 'onay' ? '<span class="n n-durum ' + D[1] + '" title="' + esc(st) + '" aria-label="' + esc(st) + '">' + D[0] + '</span>'
         : nu ? '<span class="n n-unlem" title="' + nu + ' uyarı" aria-label="' + nu + ' uyarı">!</span>' : '';
-      return '<button role="tab" data-tab="' + k + '" aria-selected="' + (S.tab === k) + '" title="' + (k === 'onay' ? 'Râvi durumu: ' + esc(st) + (i < 9 ? ' · ' : '') : '') + (i < 9 ? 'Kısayol: ' + (i + 1) : '') + '">' + l + ek + (cnt !== '' ? '<span class="n">' + cnt + '</span>' : '') + '</button>';
+      return '<button role="tab" data-tab="' + k + '" aria-selected="' + (S.tab === k) + '" title="' + (k === 'onay' ? 'Râvi durumu: ' + esc(st) + (i < 9 ? ' · ' : '') : '') + (i < 9 ? 'Kısayol: ' + (i + 1) : '') + '">' + l + ek + (cnt !== '' ? '<span class="n"' + (k === 'hukum' ? ' title="Görüş sayısı (râvi listesindekiyle aynı ölçü): sayılan hükümler; aynı münekkitin aynı hükmünün nakilleri tek görüştür. Kayıt toplamı: ' + a.sts.length + '"' : '') + '>' + cnt + '</span>' : '') + '</button>';
     }).join('') + '</div>';
   const shOk = $('nhead').querySelector('.nh-row .nav-arrows');
   if (shSw && shOk) shOk.after(shSw);
