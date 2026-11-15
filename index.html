@@ -3821,7 +3821,7 @@ function hhListeYukle() {
     if (eksik.length) Promise.all(eksik.map(sha => disGetir('hhh', sha))).then(() => { if (hhListe()) hhHukumHazir(); });
   };
   if (DIS.hl[L.liste.blob]) { const v = hhListe(); if (v && modu() !== 'sc' && !PKGS.some(p => p.kind === 'hh')) modUygula(true); hukumIndir(); return Promise.resolve(v); }
-  return disGetir('hl', L.liste.blob).then(() => { DIS.hhIx = null; const yeni = hhListe(); if (yeni) { modUygula(true); hhHukumHazir(); } hukumIndir(); return yeni; });
+  return disGetir('hl', L.liste.blob).then(() => { DIS.hhIx = null; const yeni = hhListe(), b = HH_BEKLEYEN; HH_BEKLEYEN = null; if (yeni) { modUygula(true); hhHukumHazir(); hhSonKonum(b); } hukumIndir(); return yeni; });
 }
 // HH dilimleri: HH numarasının 200’lük bölümleri; karma modda el-Câmi‘ ile eşleşenler çıkarılır
 function hhPaketleri(m) {
@@ -4538,7 +4538,14 @@ async function loadVolumes() {
       renderAll(); writeHash(); railReveal(S.nid, 'center');
       if (S.view === 'desk' && S.sel && S.sel.type === 'st') openInspector();
     }
-  } else { renderSourcebar(); renderRail(); railReveal(S.nid, 'center'); if (S.view === 'packages') renderPackages(); if (S.view === 'home') renderHome(); }
+  } else {
+    renderSourcebar(); renderRail(); railReveal(S.nid, 'center'); if (S.view === 'packages') renderPackages(); if (S.view === 'home') renderHome();
+    // İstenen râvi HH râvisi ve liste henüz yok: konum bekletilir (adres ve son konum kaydı eski yerinde kalır)
+    if (free && !already && m && +m[1] >= HSEQ0 && !IDXSEQ.get(+m[1]) && MOD_TR[UI.mod] && UI.mod !== 'sc') {
+      HH_BEKLEYEN = { h: want, bg, fh: hashSimdi() };
+      UI.last = want0 || want; UI.lastR = want; saveUI(); if (!bg && location.hash !== want) history.replaceState(null, '', want);
+    }
+  }
   kickIndex(2500);
 }
 async function addVolumeFiles(files) {
@@ -4898,8 +4905,18 @@ function setView(v, push = true) {
   if (v === 'settings') renderSettings();
   if (push) writeHash();
 }
+const hashSimdi = () => S.view === 'desk' ? '#/r/' + NBYID[S.nid].source_sequence + '/' + S.tab + (S.sel && S.sel.type === 'st' ? '/' + encodeURIComponent(S.sel.id) : '') : '#/' + S.view;
+// Son açık râvi bir HH râvisiyse ve HH listesi henüz gelmediyse (sayfa yenilendi) konum bekletilir: liste gelince o râvi açılır.
+// Beklerken adres ve son konum kaydı korunur; kullanıcı bu arada başka yere giderse (adres değişir) bekleyen konum bırakılır (15.11.2026)
+let HH_BEKLEYEN = null;
+function hhSonKonum(b) {
+  const v0 = S.view; if (!b || !readHash(b.h)) return;
+  if (b.bg) { S.view = v0; UI.lastR = b.h; saveUI(); renderSourcebar(); renderRail(); railReveal(S.nid, 'center'); if (v0 === 'home') renderHome(); }
+  else { renderAll(); writeHash(); railReveal(S.nid, 'center'); if (S.view === 'desk' && S.sel && S.sel.type === 'st') openInspector(); }
+}
 function writeHash() {
-  const h = S.view === 'desk' ? '#/r/' + NBYID[S.nid].source_sequence + '/' + S.tab + (S.sel && S.sel.type === 'st' ? '/' + encodeURIComponent(S.sel.id) : '') : '#/' + S.view;
+  const h = hashSimdi();
+  if (HH_BEKLEYEN) { if (h === HH_BEKLEYEN.fh) return; HH_BEKLEYEN = null; }
   if (location.hash !== h) history.replaceState(null, '', h);
   UI.last = h; if (S.view === 'desk') UI.lastR = h; saveUI();
 }
