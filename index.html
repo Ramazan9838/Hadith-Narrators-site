@@ -6,7 +6,7 @@
 <title>Cerh-Taʿdîl · Kaynak Kontrolü</title>
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self' https://api.github.com https://generativelanguage.googleapis.com; img-src data:; base-uri 'none'; form-action 'none'">
 <meta name="generator" content="cerh-tadil/build.py CTX 2.0.0">
-<meta name="cerh-motor" content="73736293d0bfaecf">
+<meta name="cerh-motor" content="5bddf8e649083d6f">
 <style>
 /* =========================================================
    Cerh-Ta‘dîl · Kaynak Kontrolü — arayüz stilleri
@@ -9801,6 +9801,7 @@ const RAPOR = (() => {
     ['ابن الدبيثي', 'İbnü’d-Dübeysî', 637, '', ['ابن الدبيثي', 'الدبيثي'], ''],
     ['ابن الأبار', 'İbnü’l-Ebbâr', 658, '', ['ابن الابار'], ''],
     ['المفضل بن غسان الغلابي', 'el-Mufaddal b. Gassân el-Ğallâbî', 246, '', ['المفضل بن غسان الغلابي', 'المفضل بن غسان', 'المفضل الغلابي'], 'Târîh’i büyük ölçüde İbn Maîn’den nakildir.'],
+    ['ابن شاقلا', 'İbn Şâkilâ (Ebû İshâk İbrâhîm b. Ahmed)', 369, '', ['ابن شاقلا', 'ابراهيم بن احمد بن شاقلا', 'ابو اسحاق بن شاقلا'], 'Hanbelî fakihi; Ta‘lîkâtü’d-Dârekutnî’deki «يقول إبراهيم بن أحمد» hâşiyelerinin sahibi (kullanıcı onayı, 16.11.2026). Yalın «إبراهيم بن أحمد» yalnız o eserde bağlanır.'],
     ['أبو نعيم الفضل بن دكين', 'Ebû Nuaym el-Fazl b. Dükeyn', 219, '', ['الفضل بن دكين', 'ابو نعيم الفضل بن دكين', 'ابو نعيم الملائي'], 'Yalın «أبو نعيم» bağlanmaz (el-Isfahânî ile karışır).'],
     ['مالك بن أنس', 'Mâlik b. Enes', 179, '', ['مالك بن انس', 'الامام مالك'], 'Yalın «مالك» bağlanmaz (Mâlik b. Dînâr, Ebû Mâlik … ile karışır). Rivayet ettiği râvi sika sayılır; “leyse bi-sika”sı bazen sadûk ve i‘tibâr ehli içindir (sitede −1) (Cüdey‘, Tahrîr I, 223, 623–624).'],
     // 22.10.2026: iç denetimde “münekkit listede yok” çıkan, kimliği açık söz sahipleri
@@ -9961,7 +9962,7 @@ const RAPOR = (() => {
     { m: 'ضعفاء العقيلي', c: 'العقيلي', incl: true },
     // Kullanıcı kararı 13.11.2026 (çapraz denetim 3, MC1): el-Mecrûhîn’de ve ona yazılan Ta‘lîkāt’ta yalın «قال أبو حاتم» müelliftir
     // (İbn Hibbân’ın künyesi); nisbeli «أبو حاتم الرازي» er-Râzî kalır. Öteki kaynaklarda «أبو حاتم» er-Râzî’dir.
-    { m: 'تعليقات الدارقطني', c: 'الدارقطني', extra: { 'ابو الحسن': 'الدارقطني', 'ابو حاتم الرازي': 'أبو حاتم الرازي', 'ابو حاتم': 'ابن حبان' } },
+    { m: 'تعليقات الدارقطني', c: 'الدارقطني', extra: { 'ابراهيم بن احمد': 'ابن شاقلا', 'ابو الحسن': 'الدارقطني', 'ابو حاتم الرازي': 'أبو حاتم الرازي', 'ابو حاتم': 'ابن حبان' } },
     { m: 'المجروحين', c: 'ابن حبان', incl: true, extra: { 'ابو حاتم الرازي': 'أبو حاتم الرازي', 'ابو حاتم': 'ابن حبان', 'ابو نعيم': 'أبو نعيم الفضل بن دكين' } },   // yalın «أبو نعيم»: İbn Hibbân (ö. 354) el-İsfahânî’den (ö. 430) nakledemez
     { m: 'للدارقطني', c: 'الدارقطني', incl: true },
     { m: 'للنسائي', c: 'النسائي', incl: true },
@@ -10860,7 +10861,7 @@ const RAPOR = (() => {
       }
       if (verb === 'سمعت' && /^\s*ابي(?![\u0621-\u064A])/.test(n.slice(p, p + 6))) { const c = fatherOf(n, m.index); if (c) out.push(Object.assign(base, { type: 'named', names: [{ canon: c, written: 'أبي', start: p, end: p + 4 }], via: 'سمعت أبي' })); continue; }
       const r = parseNames(n, p, conv);
-      if (r.names.length && verb !== 'يقول') {
+      if (r.names.length && (verb !== 'يقول' || /^\s*:/.test(n.slice(r.end, r.end + 3)))) {   // «يقول إبراهيم بن أحمد: …» (Ta‘lîkât hâşiyeleri, 16.11.2026): ad + iki nokta varsa söz sahibi işaretidir
         let end = r.end, via = '';
         // İbn Ebî Hâtim / Abdullah b. Ahmed “عن ابيه” → baba
         const fa = /^[\s،,]*عن ابيه/.exec(n.slice(end, end + 14));
