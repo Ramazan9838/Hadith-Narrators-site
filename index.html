@@ -3813,13 +3813,15 @@ const volEt = v => v === HHV ? 'HH' : 'Cilt ' + v;
 // Numarasız madde (kaynakta ◆ başlıklı, numarası yok; ayrıştırıcı 20000 + cilt × 1000 + sıra verir): önceki numaralı maddeyle birlikte gösterilir
 const ravNo = n => isHHn(n) ? 'HH ' + n.hhNo : n.unnumbered ? '◆ numarasız madde (#' + n.unnumbered.previous_sequence + ' sonrası) · ' + n.source_sequence : '#' + n.source_sequence;
 const seqEt = seq => seq >= HSEQ0 ? 'HH ' + (seq - HSEQ0) : seq >= CTP.UNNUMBERED_BASE ? '◆' + seq : String(seq);
+// Önce liste (râviler hemen görünsün), HH hüküm dosyaları ondan sonra iner; hükümler gelince sayılar yenilenir (15.11.2026)
 function hhListeYukle() {
   const L = DIS.dizin && DIS.dizin.hhRavi; if (!L) return Promise.resolve(null);
-  const R = L.hukum, eksik = R ? Object.values(R.bloblar).filter(sha => !DIS.hhh[sha] && !DIS.busy['dis:hhh:' + sha] && !DIS.err['dis:hhh:' + sha]) : [];
-  const isler = eksik.map(sha => disGetir('hhh', sha));
-  if (!DIS.hl[L.liste.blob]) isler.push(disGetir('hl', L.liste.blob).then(v => { DIS.hhIx = null; return v; }));
-  if (!isler.length) { const v = hhListe(); if (v && modu() !== 'sc' && !PKGS.some(p => p.kind === 'hh')) modUygula(true); return Promise.resolve(v); }
-  return Promise.all(isler).then(() => { const yeni = hhListe(); if (yeni) { modUygula(true); hhHukumHazir(); } return yeni; });
+  const hukumIndir = () => {
+    const R = L.hukum, eksik = R ? Object.values(R.bloblar).filter(sha => !DIS.hhh[sha] && !DIS.busy['dis:hhh:' + sha] && !DIS.err['dis:hhh:' + sha]) : [];
+    if (eksik.length) Promise.all(eksik.map(sha => disGetir('hhh', sha))).then(() => { if (hhListe()) hhHukumHazir(); });
+  };
+  if (DIS.hl[L.liste.blob]) { const v = hhListe(); if (v && modu() !== 'sc' && !PKGS.some(p => p.kind === 'hh')) modUygula(true); hukumIndir(); return Promise.resolve(v); }
+  return disGetir('hl', L.liste.blob).then(() => { DIS.hhIx = null; const yeni = hhListe(); if (yeni) { modUygula(true); hhHukumHazir(); } hukumIndir(); return yeni; });
 }
 // HH dilimleri: HH numarasının 200’lük bölümleri; karma modda el-Câmi‘ ile eşleşenler çıkarılır
 function hhPaketleri(m) {
@@ -3875,6 +3877,11 @@ function modSecici() {
     ['sc', 'hh', 'karma'].map(k => '<button type="button" role="radio" data-mod="' + k + '" aria-checked="' + (k === m) + '" title="' + esc(t[k]) + '">' + MOD_TR[k] + '</button>').join('') + '</div>';
 }
 function hhHukumYukle() {
+  // HH ya da karma modda râvi listesi öteki dosyalardan önce indirilir (bant genişliğini paylaşmasın)
+  if (modu() !== 'sc' && !hhListe()) { hhListeYukle().then(hhHukumYukleAsil, hhHukumYukleAsil); return; }
+  hhHukumYukleAsil();
+}
+function hhHukumYukleAsil() {
   const D = denetimGecerli(); if (D && !DIS.den[D.blob] && !DIS.busy['dis:den:' + D.blob]) disGetir('den', D.blob).then(x => { if (x) { DENIX = null; hhHukumHazir(); } });
   const MD = metinDenetimGecerli(); if (MD && !DIS.md[MD.blob] && !DIS.busy['dis:md:' + MD.blob]) disGetir('md', MD.blob).then(x => { if (x && S.view === 'report') renderReport(); });
   const IC = icDenetimGecerli(); if (IC && !DIS.ic[IC.blob] && !DIS.busy['dis:ic:' + IC.blob]) disGetir('ic', IC.blob).then(x => { if (x && S.view === 'report') renderReport(); });
@@ -6782,6 +6789,7 @@ async function runIndex() {
     await Promise.all(PKGS.filter(p => !SATIR.recs[p.id]).map(p => IDB.get('dizin', p.id + '#satir').then(r => { if (r && r.rows) SATIR.recs[p.id] = r; }).catch(() => { })));
     railDirty();
   }
+  if (modu() !== 'sc' && !hhListe()) { try { await hhListeYukle(); } catch (e) { } }   // özet dosyaları râvi listesinin önüne geçmesin
   try { await korpusUygun(); } catch (e) { }
   for (;;) {
     const p = PKGS.find(x => x !== PK && !(SATIR.recs[x.id] && SATIR.recs[x.id].sig === corpusSig(x)));
