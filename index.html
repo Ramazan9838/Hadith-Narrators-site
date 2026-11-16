@@ -6,7 +6,7 @@
 <title>Cerh-Taʿdîl · Kaynak Kontrolü</title>
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self' https://api.github.com https://generativelanguage.googleapis.com; img-src data:; base-uri 'none'; form-action 'none'">
 <meta name="generator" content="cerh-tadil/build.py CTX 2.0.0">
-<meta name="cerh-motor" content="22e22279f5d7b1db">
+<meta name="cerh-motor" content="caee7ee96bcf920c">
 <style>
 /* =========================================================
    Cerh-Ta‘dîl · Kaynak Kontrolü — arayüz stilleri
@@ -10365,6 +10365,9 @@ const RAPOR = (() => {
   add('C', 4, 'mubhem', 'Sika değil (lem yekün bi-sika)', 0.9, ['لم يكن بثقه', 'لم يكن ثقه'], { nt: LMZ + '“leyse bi-sika” ile aynı (mücmel cerh; Cüdey‘, I, 623–625).' });
   add('C', 1, 'mubhem', 'Pek değil (lem yekün bi-zâk)', 0.85, ['لم يكن (?:في الحديث )?بذاك(?: القوي)?', 'غيره اثبت منه'], { nt: LMZ + '“leyse bi-zâk” gibi telyîndir.' });
   add('C', 2, 'muhalefe', 'Münkerler rivayet etti', 0.85, ['حدث (?:بمناكير|بالمناكير)', '(?:عامه|اكثر) (?:حديثه|احاديثه|رواياته) (?:مناكير|منكره)', 'في (?:حديثه|احاديثه|رواياته) (?:بعض )?(?:المناكير|مناكير)'], { nt: LMZ });
+  add('R', 0, 'hadis', 'Bu rivayette mütâbii yok', 0.7, ['لم يتابعه علي(?:ه|ها) (?:ثقه|احد)', 'لم يتابعه (?:ثقه|احد) علي(?:ه|ها)']);   // geçmiş zaman: belirli hadis (ölçüm, 16.11.2026)
+  add('C', 1, 'muhalefe', 'Mütâbaatı yok (sika mütâbii yok)', 0.7, ['لا يتابعه علي(?:ه|ها) (?:ثقه|احد)', 'لا يتابعه (?:ثقه|احد) علي(?:ه|ها)'], { nt: 'Doğruluk ölçümü (16.11.2026): «ثقة» mütâbii niteler, râviyi değil.' });
+  add('X', 0, '', '', 0, ['(?<!غير |ليس ب|ليس |لا )(?:ثقه|امام|حجه|ثبت|صدوق|راس) في (?:القراءه|القراءات|الحروف|العربيه|النحو|اللغه|الفرائض|الاشعار|الشعر)']);   // başka ilimde övgü: hadis ta‘dîli değildir (ölçüm, 16.11.2026)
   add('C', 1, 'muhalefe', 'Mütâbaatı yok (lâ yütâba‘ aleyh)', 0.6, ['لا يتابع عليه', 'لم يتابع عليه'], { nt: LMZ + 'Buhârî ve Ukaylî’de çoğunlukla belirli bir hadis içindir (Lisânü’l-Muhaddisîn); râvi hakkında hafif kayıt sayılır.' });
   add('C', 2, 'vehm', 'Hadisinde vehim galip', 0.85, ['الغالب علي (?:حديثه|رواياته) الوهم', 'الغالب علي حديثه'], { nt: LMZ });
   add('C', 2, 'ihtilat', 'Muhallit', 0.8, ['مخلطا?', 'كان يخلط'], { nt: LMZ });
@@ -11357,7 +11360,7 @@ const RAPOR = (() => {
       }
       // «كتب عنه أبو حاتم ثم ضرب على حديثه»: özne önceki cümlecikten taşınır
       if (!res.critics.length) {
-        const km = /(?:كتب عنه|سمع منه|روي عنه|حدث عنه|اخذ عنه|جالسه|لقيه)\s+((?:ابو|ابن)?\s*[\u0621-\u064A]+(?:\s+(?:بن|ابن|الرازي|حاتم|زرعه)\s*[\u0621-\u064A]*)?)\s+(?:ثم|و|ف)\s*$/.exec(n.slice(Math.max(0, c.start - 50), c.start));
+        const km = (e.v && /^\s*(?:جدا|ايضا)?\s*(?:[.،,؛\n]|$)/.test(n.slice(c.end, c.end + 8)) ? /(?:كتب عنه|سمع منه|روي عنه|حدث عنه|اخذ عنه|جالسه|لقيه)\s+((?:ابو|ابن)?\s*[\u0621-\u064A]+(?:\s+(?:بن|ابن|الرازي|حاتم|زرعه)\s*[\u0621-\u064A]*)?)\s*[،,]?\s+(?:ثم|و|ف)\s*$/ : /(?:كتب عنه|سمع منه|روي عنه|حدث عنه|اخذ عنه|جالسه|لقيه)\s+((?:ابو|ابن)?\s*[\u0621-\u064A]+(?:\s+(?:بن|ابن|الرازي|حاتم|زرعه)\s*[\u0621-\u064A]*)?)\s+(?:ثم|و|ف)\s*$/).exec(n.slice(Math.max(0, c.start - 50), c.start));   // virgüllü biçim («روى عنه الدارقطني، وضعفه») yalnız zamirli fiilde (ölçüm, 16.11.2026)
         const a = km && adTam(km[1].trim());
         if (a) { res.critics = [{ canon: a, written: km[1].trim() }]; res.basis = 'fiil'; t.reasons.push('Özne önceki cümlecikten (' + km[1].trim() + ').'); }
       }
