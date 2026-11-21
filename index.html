@@ -6,7 +6,7 @@
 <title>Cerh-Taʿdîl · Kaynak Kontrolü</title>
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self' https://api.github.com https://generativelanguage.googleapis.com; img-src data:; base-uri 'none'; form-action 'none'">
 <meta name="generator" content="cerh-tadil/build.py CTX 2.0.0">
-<meta name="cerh-motor" content="f59a6fbbbb678c57">
+<meta name="cerh-motor" content="7f3b14219288c460">
 <style>
 /* =========================================================
    Cerh-Ta‘dîl · Kaynak Kontrolü — arayüz stilleri
@@ -2347,7 +2347,13 @@ function rebuildIndex() {
   for (const p of PKGS) {
     if (p.kind === 'snapshot') for (const n of Object.values(SNAP0.narrators).sort((a, b) => a.source_sequence - b.source_sequence)) out.push({ p, vol: p.vol, seq: n.source_sequence, nid: n.id, name: n.effective.canonical_name, w: n.warnings.length + n.unclassified.length + n.orphan_sections.length });
     else if (p.kind === 'hh') for (const r of p.rows) out.push({ p, vol: HHV, seq: hhSeq(r[0]), nid: HNID0 + r[0], name: r[1] || ('HH #' + r[0]), w: 0 });
-    else { const e = VOLS[p.vol].sc.entries; for (let i = p.i0; i < p.i1; i++) out.push({ p, vol: p.vol, seq: e[i].seq, nid: p.vol * 100000 + e[i].seq, name: e[i].name, w: e[i].orphans.length + (e[i].name ? 0 : 1) }); }
+    else {
+      const e = VOLS[p.vol].sc.entries, Y = CTKR.yeniKayitlar().filter(y => y.vol === p.vol);   // eklenen râvi kayıtları (duzeltme.json «yeni», 21.11.2026)
+      for (let i = p.i0; i < p.i1; i++) {
+        out.push({ p, vol: p.vol, seq: e[i].seq, nid: p.vol * 100000 + e[i].seq, name: e[i].name, w: e[i].orphans.length + (e[i].name ? 0 : 1) });
+        for (const y of Y) if (y.yer === p.vol + '-' + e[i].seq) out.push({ p, vol: p.vol, seq: y.seq, nid: p.vol * 100000 + y.seq, name: y.ad, w: 0, yeni: true });
+      }
+    }
   }
   out.forEach((r, i) => { r.i = i; });
   IDX = out; IDXSEQ = new Map(out.map(r => [r.seq, r])); IDXNID = new Map(out.map(r => [r.nid, r]));
@@ -2373,7 +2379,8 @@ function packageData(p) {
   if (p.kind === 'snapshot') return SNAP0;
   if (p.kind === 'hh') return hhPaketVerisi(p);
   const V = VOLS[p.vol]; const b = CTP.build(V.html, V.sc, p.i0, p.i1, { volume: p.vol, batch: p.idx });
-  const ns = Object.values(b.narrators); const warned = ns.filter(n => n.warnings.length); const nb = ns.reduce((a, n) => a + n.blocks.length, 0);
+  CTKR.yeniRavileriEkle(b.narrators, p.vol);   // el-Câmi‘de kaydı olmayan kişiler için eklenen râvi kayıtları (21.11.2026)
+  const ns = Object.values(b.narrators).filter(n => !n.yeni); const warned = ns.filter(n => n.warnings.length); const nb = ns.reduce((a, n) => a + n.blocks.length, 0);
   return {
     exported_at: V.added_at, readonly: false, pkg: p.id, list: [], narrators: b.narrators, pages: b.pages, history: {},
     integrity_at_export: { source_unchanged: true, sha256: V.sha, sqlite: 'yok', file: V.name },
@@ -4270,10 +4277,12 @@ function disHukumBolumu(n) {
 }
 
 // ----- Kaynak metin: kaynak kaynak liste (kronolojik); el-Câmi‘ blokları ve HH tercemeleri -----
+// Müellifi tanınan ama vefatı doğrulanamamış eser (ör. Tahrîru Lisâni’l-Mîzân): önceki bloğun yılı devralınmaz (21.11.2026)
+function vefatiBilinmeyen(b) { const c = CTX.convention(b.effective.source_name, b.effective.source_author).c; const C = c && CTX.critic(c); return !!(C && !C.death); }
 function blokVefat(b) { const c = CTX.convention(b.effective.source_name, b.effective.source_author).c; const C = c && CTX.critic(c); return C && C.death ? C.death : null; }
 function kaynakListesi(n, V) {
   const out = []; let son = 0;
-  for (const b of n.blocks) { const v = blokVefat(b); if (v) son = v; out.push({ key: 'b:' + b.id, ad: srcShort(b), muellif: authorTr(b), vefat: v || son || null, kod: ['SC'], b, i: out.length }); }
+  for (const b of n.blocks) { const v = blokVefat(b); if (v) son = v; out.push({ key: 'b:' + b.id, ad: srcShort(b), muellif: authorTr(b), vefat: v || (vefatiBilinmeyen(b) ? null : son) || null, kod: ['SC'], b, i: out.length }); }
   if (V) for (const [pid, kitap, cilt, sayfa] of V.hh.tercemeler || []) {
     const k = disKitap(kitap);
     const ayni = out.find(x => x.b && !x.pid && ((kitap === 53 && /^لسان الميزان/.test(x.ad)) || (kitap === 54 && /^الكامل/.test(x.ad))));
@@ -6677,7 +6686,9 @@ function elleUygula(d, sha) {
   // Açık dilim yalnız eski ya da yeni düzeltmelerden biri onun râvilerine dokunuyorsa yeniden çözümlenir (açılışta çift çözümleme olmasın)
   const anah = n => (n.volume_id || Math.floor(n.id / 100000) || 1) + '-' + n.source_sequence;
   const yeni = d && d.kayitlar ? d : null, yeniden = new Set(NARR.filter(n => [ELLED.d, yeni].some(D => D && D.kayitlar[anah(n)])).map(n => n.id));
+  const yapi = D => JSON.stringify([(D && D.yeni) || {}, (D && D.tasi) || {}]), yapiDegisti = yapi(ELLED.d) !== yapi(yeni);   // yeni râvi / blok taşıma (21.11.2026)
   CTKR.setElle(d); ELLED.sha = sha || ''; ELLED.d = yeni;
+  if (yapiDegisti) { rebuildIndex(); if (PK && !['snapshot', 'hh'].includes(PK.kind) && SNAP) { prepare(packageData(PK)); renderAll(); return; } }
   if (SNAP) { if (yeniden.size) prepare(SNAP, yeniden); renderAll(); }
 }
 async function elleGetir(zorla) {
@@ -12577,6 +12588,27 @@ const RAPOR = (() => {
         parser_note: 'Taşınan blok: el-Câmi‘de ' + k + ' konumunda başka bir râvinin altındadır; buraya taşındı' + (T.nt ? ' (' + T.nt + ')' : '') + '.', _tasinan: k });
     }
   }
+  /* Yeni râvi kaydı (kullanıcı kararı 21.11.2026): el-Câmi‘de numaralı kaydı olmayan kişi için elle düzeltme dosyasının «yeni» alanı.
+     { "<cilt>-<sıra>": { ad, varyant: [], yer: "<cilt>-<sıra>", nt } } — sıra 90001’den başlar (el-Câmi‘in numaralarıyla çakışmaz, eser boyunca tektir);
+     kayıt «yer» râvisinin diliminde gösterilir. Blokları «tasi» ile gelir (hedef bu kayıt). */
+  const YENI_SIRA = 90001;
+  // Dizin için: [{ vol, seq, ad, yer }] (sayfa râvi listesine yeni kayıtları yanındaki râvinin ardına ekler)
+  function yeniKayitlar() { return ELLE && ELLE.yeni ? Object.entries(ELLE.yeni).map(([k, Y]) => { const [vol, seq] = k.split('-').map(Number); return { vol, seq, ad: Y.ad, yer: Y.yer }; }) : []; }
+  function yeniRavileriEkle(narrators, vol) {
+    if (!ELLE || !ELLE.yeni) return narrators;
+    const L = Object.values(narrators);
+    for (const [k, Y] of Object.entries(ELLE.yeni)) {
+      const [v, seq] = k.split('-').map(Number); if (v !== vol) continue;
+      const [yv, ys] = String(Y.yer || '').split('-').map(Number), host = L.find(n => n.source_sequence === ys && (n.volume_id || yv) === yv);
+      if (!host) continue;
+      const id = vol * 100000 + seq; if (narrators[id]) continue;
+      const eff = { canonical_name: Y.ad, kunyah: '', nisbah: '', locality: '', death_date: '', sect_affiliation: '', notes: Y.nt || '', name_variants: [Y.ad, ...(Y.varyant || [])], teachers: [], students: [] };
+      narrators[id] = { id, volume_id: vol, batch_id: host.batch_id, source_sequence: seq, heading_id: null, page_start: host.page_start, page_end: host.page_end, source_start: host.source_start, source_end: host.source_start,
+        raw_html: '', raw_text: '• ' + Y.ad + ' (el-Câmi‘de numaralı kaydı yok; ' + (Y.yer || '') + ' yanında eklendi)', review_status: 'Kontrol edilmedi', review_note: '', revision: 0,
+        automatic: Object.assign({}, eff), corrected: {}, effective: eff, warnings: [], blocks: [], orphan_sections: [], unclassified: [], footnotes: [], identity_candidates: [], yeni: { yer: Y.yer, nt: Y.nt || '' } };
+    }
+    return narrators;
+  }
   function elleUygula(statements, vol, seq, order, text, ids) {
     const out = elleUygula0(statements, vol, seq, order, text, ids), T = tasiKaydi(vol, seq, order);
     if (T) for (const s of out) {
@@ -12794,7 +12826,8 @@ const RAPOR = (() => {
       n._st.push(...b._st);
     }
   }
-  function kim(n) { if (!n._kim) n._kim = CTK.extract({ names: n._names, blocks: n.blocks.map(b => ({ id: b.id, text: b._text, source: b.effective.source_name })) }); return n._kim; }
+  // Kimlik alanları başka kişiye taşınmış bloklardan çıkarılmaz (21.11.2026)
+  function kim(n) { if (!n._kim) { const vol = n.volume_id || Math.floor(n.id / 100000) || 1; n._kim = CTK.extract({ names: n._names, blocks: n.blocks.filter(b => !tasiKaydi(vol, n.source_sequence, b.block_order)).map(b => ({ id: b.id, text: b._text, source: b.effective.source_name })) }); } return n._kim; }
   // Kimlik alanının otomatik değeri (metinden çıkarılan adaylar birleştirilerek)
   function alan(n, k) {
     const K = kim(n);
@@ -12857,7 +12890,7 @@ const RAPOR = (() => {
     const sts = rec.sts.filter(x => !del.has(x.uid)), bh = new Set(sts.map(x => x.bid));
     return Object.assign({}, rec, { sts, hit: bh.size });
   }
-  return { setElle, elleVefatYok, elleIzBaslat, elleUygula, raviSonrasi, bloklariCozumle, BICIM, HOW_TR, uniq, yearText, stUid, blockOpts, applyBlockFix, analiz, kim, alan, ozet, hazirUygun, kaldirileniAyikla, hafif, hafifAyikla };
+  return { yeniKayitlar, yeniRavileriEkle, YENI_SIRA, setElle, elleVefatYok, elleIzBaslat, elleUygula, raviSonrasi, bloklariCozumle, BICIM, HOW_TR, uniq, yearText, stUid, blockOpts, applyBlockFix, analiz, kim, alan, ozet, hazirUygun, kaldirileniAyikla, hafif, hafifAyikla };
 });
 
 </script>
