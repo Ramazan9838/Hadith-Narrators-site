@@ -6,7 +6,7 @@
 <title>Cerh-Taʿdîl · Kaynak Kontrolü</title>
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self' https://api.github.com https://generativelanguage.googleapis.com; img-src data:; base-uri 'none'; form-action 'none'">
 <meta name="generator" content="cerh-tadil/build.py CTX 2.0.0">
-<meta name="cerh-motor" content="7f3b14219288c460">
+<meta name="cerh-motor" content="a7db138d15d52f55">
 <style>
 /* =========================================================
    Cerh-Ta‘dîl · Kaynak Kontrolü — arayüz stilleri
@@ -12678,6 +12678,10 @@ const RAPOR = (() => {
         out.push(st);
       }
     }
+    // Elle eklenen ya da elle münekkide verilen açık hüküm, aynı blokta o münekkidin örtük zikrinin («zımnî», lafızsız) yerine geçer;
+    // yoksa münekkit aynı blokta iki kez sayılır (iç çapraz denetim, kalan kayıtlar, 21.11.2026)
+    const acik = new Set(out.filter(s => s.phrase && s.counts && (s.flags || []).includes('elle') && s.critic).map(s => s.critic));
+    if (acik.size) out = out.filter(s => !(acik.has(s.critic) && !s.phrase && (s.flags || []).includes('zımnî')));
     return out.sort((p, q) => p.start - q.start);
   }
   /* Râvi düzeyinde son geçiş (kullanıcı kararı 22.10.2026); bütün blokların hükümleri çözümlendikten sonra, uid verilmeden önce:
